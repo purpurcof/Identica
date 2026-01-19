@@ -1,0 +1,11 @@
+{
+  "id": "premium",
+  "name": "Premium",
+  "version": "dev",
+
+  "main": "me.whereareiam.identica.provider.premium.PremiumProvider",
+
+  "authors": ["whereareiam"],
+  "supportedPlatforms": ["VELOCITY"],
+  "priorityDefault": 100
+}

@@ -1,0 +1,112 @@
+[versions]
+
+# plugins
+shadow = "9.3.0"
+buildconfig = "6.0.7"
+
+# compile time processing
+lombok = "1.18.42"
+
+# general
+attache = "dev-69791b2"
+configura = "dev-edb606f"
+commandant = "dev-87f0972"
+keystone = "dev-176fd53"
+dialectica = "dev-332d268"
+
+guice = "7.0.0"
+annotations = "26.0.1"
+
+# adventure
+adventure = "4.25.0"
+
+# cloud
+cloud-core = "2.0.0"
+cloud-velocity = "2.0.0-beta.14"
+cloud-cooldown = "1.0.0-rc.1"
+cloud-minecraft-extras = "2.0.0-beta.14"
+
+# platform api
+velocity = "3.4.0-SNAPSHOT"
+
+# database
+jdbi = "3.50.0"
+hikaricp = "7.0.2"
+postgresql = "42.7.8"
+mysql = "8.4.0"
+sqlite = "3.45.3.0"
+
+# redis
+jedis = "7.0.0"
+
+# security
+argon2 = "2.11"
+bcrypt = "0.10.2"
+
+# testing
+junit = "6.0.1"
+mockito = "5.20.0"
+
+[libraries]
+
+# compile time processing
+lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+
+# general
+attache-common = { group = "me.whereareiam", name = "attache-common", version.ref = "attache" }
+attache-velocity = { group = "me.whereareiam", name = "attache-velocity", version.ref = "attache" }
+attache-standalone = { group = "me.whereareiam", name = "attache-standalone", version.ref = "attache" }
+configura = { group = "me.whereareiam", name = "configura", version.ref = "configura" }
+commandant = { group = "me.whereareiam", name = "commandant", version.ref = "commandant" }
+keystone = { group = "me.whereareiam", name = "keystone", version.ref = "keystone" }
+dialectica = { group = "me.whereareiam", name = "dialectica", version.ref = "dialectica" }
+
+guice = { group = "com.google.inject", name = "guice", version.ref = "guice" }
+annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
+
+# adventure
+adventure = { group = "net.kyori", name = "adventure-api", version.ref = "adventure" }
+adventure-minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "adventure" }
+adventure-plain = { group = "net.kyori", name = "adventure-text-serializer-plain", version.ref = "adventure" }
+
+# cloud
+cloud-core = { group = "org.incendo", name = "cloud-core", version.ref = "cloud-core" }
+cloud-annotations = { group = "org.incendo", name = "cloud-annotations", version.ref = "cloud-core" }
+cloud-cooldowns = { group = "org.incendo", name = "cloud-processors-cooldown", version.ref = "cloud-cooldown" }
+cloud-velocity = { group = "org.incendo", name = "cloud-velocity", version.ref = "cloud-velocity" }
+cloud-minecraft-extras = { group = "org.incendo", name = "cloud-minecraft-extras", version.ref = "cloud-minecraft-extras" }
+
+# platform api
+velocity = { group = "com.velocitypowered", name = "velocity-api", version.ref = "velocity" }
+
+# database
+jdbi-core = { group = "org.jdbi", name = "jdbi3-core", version.ref = "jdbi" }
+jdbi-sqlobject = { group = "org.jdbi", name = "jdbi3-sqlobject", version.ref = "jdbi" }
+hikaricp = { group = "com.zaxxer", name = "HikariCP", version.ref = "hikaricp" }
+postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
+mysql = { group = "com.mysql", name = "mysql-connector-j", version.ref = "mysql" }
+sqlite = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite" }
+
+# redis
+jedis = { group = "redis.clients", name = "jedis", version.ref = "jedis" }
+
+# security
+argon2 = { group = "de.mkammerer", name = "argon2-jvm", version.ref = "argon2" }
+bcrypt = { group = "at.favre.lib", name = "bcrypt", version.ref = "bcrypt" }
+
+# testing
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
+junit-platform = { group = "org.junit.platform", name = "junit-platform-launcher" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+mockito-junit = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
+
+[bundles]
+
+adventure = ["adventure", "adventure-minimessage", "adventure-plain"]
+cloud = ["cloud-core", "cloud-annotations", "cloud-cooldowns", "cloud-minecraft-extras"]
+database = ["jdbi-core", "jdbi-sqlobject", "hikaricp", "postgresql", "mysql", "sqlite"]
+
+[plugins]
+
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }

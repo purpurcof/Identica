@@ -4,13 +4,14 @@ import lombok.Getter;
 import lombok.Setter;
 import me.whereareiam.dialectica.EntitySchemaProvider;
 import me.whereareiam.dialectica.annotation.Entity;
-import me.whereareiam.dialectica.type.DatabaseType;
+
+import java.util.UUID;
 
 @Getter
 @Setter
 @Entity(tableName = "identica_identities")
 public class IdentityEntity implements EntitySchemaProvider {
-	private String uuid;
+	private UUID uniqueId;
 	private String providerId;
 	private String providerSubject;
 	private long createdAt;
@@ -18,9 +19,16 @@ public class IdentityEntity implements EntitySchemaProvider {
 
 	@Override
 	public String statement(String databaseType) {
-		String uuidType = DatabaseType.POSTGRES.equals(databaseType) ? "UUID"
-				: DatabaseType.SQLITE.equals(databaseType) ? "TEXT" : "CHAR(36)";
-		String timeType = DatabaseType.SQLITE.equals(databaseType) ? "INTEGER" : "BIGINT";
+		String type = databaseType == null ? "" : databaseType.toUpperCase();
+		String uuidType = switch (type) {
+			case "POSTGRES" -> "UUID";
+			case "SQLITE" -> "TEXT";
+			default -> "CHAR(36)";
+		};
+		String timeType = switch (type) {
+			case "SQLITE" -> "INTEGER";
+			default -> "BIGINT";
+		};
 		return """
 				CREATE TABLE IF NOT EXISTS identica_identities (
 					uuid %s NOT NULL,

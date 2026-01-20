@@ -13,16 +13,34 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 		Providers.ConflictPolicy premiumWins = new Providers.ConflictPolicy();
 		premiumWins.setWhen(List.of("Premium", "Cracked"));
 		premiumWins.setKey("username");
-		premiumWins.setActions(List.of("allow", "kick_existing", "rename_existing"));
+		premiumWins.setPriority("Premium");
+
+		Providers.Resolution premiumResolution = new Providers.Resolution();
+		Providers.Loser premiumLoser = new Providers.Loser();
+		premiumLoser.setProvider("Cracked");
+		premiumLoser.setSolution("username_prefix");
+		premiumResolution.setLoser(premiumLoser);
+
+		Providers.Winner premiumWinner = new Providers.Winner();
+		premiumWinner.setAction("kick_existing");
+		premiumResolution.setWinner(premiumWinner);
+
+		premiumWins.setResolution(premiumResolution);
 
 		Providers.ConflictPolicy deny = new Providers.ConflictPolicy();
 		deny.setWhen(List.of("Cracked", "Cracked"));
 		deny.setKey("username");
-		deny.setActions(List.of("deny"));
 
-		Providers.Conflict conflicts = new Providers.Conflict();
+		Providers.Resolution denyResolution = new Providers.Resolution();
+		Providers.NewConnection denyNew = new Providers.NewConnection();
+		denyNew.setAction("deny");
+		denyNew.setMessage("Username already in use by another cracked account");
+		denyResolution.setNewConnection(denyNew);
+		deny.setResolution(denyResolution);
+
+		Providers.Conflicts conflicts = new Providers.Conflicts();
 		conflicts.setKeys(List.of("username"));
-		conflicts.setDefaultActions(List.of("allow"));
+		conflicts.setDefaultPolicy("proceed");
 		conflicts.setPolicies(List.of(premiumWins, deny));
 		config.setConflicts(conflicts);
 

@@ -61,7 +61,7 @@ public class DefaultDatabaseService implements DatabaseService, EventListener {
 
 			// Initialize schema using Dialectica with automatic package scanning
 			SchemaManager schemaManager = Dialectica.schema(jdbi)
-					.scanPackages("me.whereareiam.intercept.adapter.database.entity")
+					.scanPackages("me.whereareiam.identica.adapter.database.entity")
 					.setFailOnError(false);
 			schemaManager.initialize();
 		} catch (Exception e) {

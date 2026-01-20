@@ -3,10 +3,12 @@ package me.whereareiam.identica.model.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
+import me.whereareiam.configura.annotation.Field;
 import me.whereareiam.identica.model.Event;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -21,9 +23,26 @@ public class Settings {
 	@Setter
 	@ToString
 	public static class Routing {
-		private String defaultTarget;
-		private String fallback;
-		private Map<String, String> steps = new HashMap<>();
+		@Field(name = "default")
+		private Defaults defaults;
+		private Map<String, Map<String, String>> providers = new HashMap<>();
+		private Intent intent;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Defaults {
+			private String completedTarget;
+			private String fallback;
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Intent {
+			private String mode;
+			private List<String> allowedServers = new ArrayList<>();
+		}
 	}
 
 	@Getter

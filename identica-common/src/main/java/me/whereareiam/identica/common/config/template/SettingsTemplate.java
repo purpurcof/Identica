@@ -6,6 +6,7 @@ import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.event.EventPriority;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -15,13 +16,21 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 	@Override
 	public Settings supply(Settings settings) {
 		Settings.Routing routing = new Settings.Routing();
-		routing.setDefaultTarget("lobby");
-		routing.setFallback("auth");
-		routing.setSteps(Map.of(
-				"preLogin", "auth",
-				"auth", "auth",
-				"postAuth", "lobby"
+		Settings.Routing.Defaults defaults = new Settings.Routing.Defaults();
+		defaults.setCompletedTarget("lobby");
+		defaults.setFallback("auth");
+		routing.setDefaults(defaults);
+
+		routing.setProviders(new HashMap<>());
+		routing.getProviders().put("Cracked", Map.of(
+				"register", "register-1",
+				"login", "auth-1"
 		));
+
+		Settings.Routing.Intent intent = new Settings.Routing.Intent();
+		intent.setMode("allow");
+		intent.setAllowedServers(new ArrayList<>());
+		routing.setIntent(intent);
 		settings.setRouting(routing);
 
 		Settings.Listeners listeners = new Settings.Listeners();

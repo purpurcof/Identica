@@ -17,7 +17,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<Commands> {
 				.aliases(List.of("register", "reg"))
 				.permission("")
 				.description("Register a cracked account")
-				.usage("{command} {alias} <password> <repeat>")
+				.usage("{alias} <password> <repeat>")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
 						.duration(2)
@@ -32,7 +32,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<Commands> {
 				.aliases(List.of("login", "l"))
 				.permission("")
 				.description("Login to a cracked account")
-				.usage("{command} {alias} <password>")
+				.usage("{alias} <password>")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
 						.duration(2)
@@ -47,7 +47,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<Commands> {
 				.aliases(List.of("changepassword", "changepass", "password"))
 				.permission("")
 				.description("Change cracked account password")
-				.usage("{command} {alias} <current> <new> <repeat>")
+				.usage("{alias} <current> <new> <repeat>")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
 						.duration(2)
@@ -59,7 +59,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<Commands> {
 
 		CommandDefinition adminDelete = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("crackeddelete", "cracked-delete"))
+				.aliases(List.of("cracked delete"))
 				.permission("identica.admin")
 				.description("Delete a cracked account")
 				.usage("{command} {alias} <username>")
@@ -74,7 +74,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<Commands> {
 
 		CommandDefinition adminForceRegister = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("crackedregister", "cracked-register"))
+				.aliases(List.of("cracked register"))
 				.permission("identica.admin")
 				.description("Force register a cracked account")
 				.usage("{command} {alias} <username> <password>")
@@ -89,7 +89,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<Commands> {
 
 		CommandDefinition adminDropSessions = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("crackeddropsessions", "cracked-drop-sessions"))
+				.aliases(List.of("cracked dropsession"))
 				.permission("identica.admin")
 				.description("Drop cracked sessions for a user")
 				.usage("{command} {alias} <username>")
@@ -104,7 +104,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<Commands> {
 
 		CommandDefinition adminSetPassword = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("crackedsetpassword", "cracked-set-password"))
+				.aliases(List.of("cracked setpassword"))
 				.permission("identica.admin")
 				.description("Set a cracked account password")
 				.usage("{command} {alias} <username> <password>")
@@ -122,7 +122,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<Commands> {
 		commands.getCommands().put("change_password", changePassword);
 		commands.getCommands().put("admin_delete", adminDelete);
 		commands.getCommands().put("admin_force_register", adminForceRegister);
-		commands.getCommands().put("admin_drop_sessions", adminDropSessions);
+		commands.getCommands().put("admin_drop_session", adminDropSessions);
 		commands.getCommands().put("admin_set_password", adminSetPassword);
 
 		return commands;

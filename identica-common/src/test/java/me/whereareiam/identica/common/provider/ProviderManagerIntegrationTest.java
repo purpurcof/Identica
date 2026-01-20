@@ -2,6 +2,7 @@ package me.whereareiam.identica.common.provider;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import me.whereareiam.identica.auth.AuthenticationStep;
 import me.whereareiam.identica.common.loader.ProviderDiscovery;
 import me.whereareiam.identica.common.loader.DefaultProviderManager;
 import me.whereareiam.identica.common.loader.ProviderLifecycleController;
@@ -46,8 +47,13 @@ class ProviderManagerIntegrationTest {
 
 				import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 				import me.whereareiam.identica.loader.IdenticaProvider;
+				import me.whereareiam.identica.auth.AuthenticationStep;
+				import me.whereareiam.identica.model.auth.IdentityClaim;
+				import me.whereareiam.identica.model.conflict.ConflictContext;
+				import me.whereareiam.identica.model.conflict.ConflictResolution;
 				import java.util.ArrayList;
 				import java.util.List;
+				import java.util.Set;
 
 				public class TestProvider extends IdenticaProvider {
 					private final List<String> calls = new ArrayList<>();
@@ -55,6 +61,30 @@ class ProviderManagerIntegrationTest {
 					@Override
 					public ProviderLibraries libraries() {
 						return ProviderLibraries.empty();
+					}
+
+					@Override
+					public List<AuthenticationStep> getAuthenticationSteps() {
+						return List.of();
+					}
+
+					@Override
+					public java.util.Set<String> getConflictKeys() {
+						return java.util.Set.of();
+					}
+
+					@Override
+					public java.util.Set<String> getAvailableConflictSolutions() {
+						return java.util.Set.of();
+					}
+
+					@Override
+					public ConflictResolution applyConflictSolution(
+							String solutionId,
+							IdentityClaim claim,
+							ConflictContext context
+					) {
+						return ConflictResolution.deny("Not implemented");
 					}
 
 					@Override
@@ -90,6 +120,10 @@ class ProviderManagerIntegrationTest {
 		assertNotNull(compiler, "Java compiler not available");
 
 		String classpath = System.getProperty("java.class.path");
+		String apiLocation = AuthSupport.classpathLocation();
+		if (!classpath.contains(apiLocation)) {
+			classpath = classpath + System.getProperty("path.separator") + apiLocation;
+		}
 		int result = compiler.run(null, null, null,
 				"-classpath", classpath,
 				"-d", classesDir.toString(),
@@ -193,6 +227,20 @@ class ProviderManagerIntegrationTest {
 			jarOutputStream.putNextEntry(classEntry);
 			jarOutputStream.write(Files.readAllBytes(classFile));
 			jarOutputStream.closeEntry();
+		}
+	}
+
+	private static final class AuthSupport {
+		private static String classpathLocation() {
+			try {
+				return Path.of(AuthenticationStep.class
+						.getProtectionDomain()
+						.getCodeSource()
+						.getLocation()
+						.toURI()).toString();
+			} catch (Exception e) {
+				throw new IllegalStateException("Failed to resolve identica-api classpath location", e);
+			}
 		}
 	}
 }

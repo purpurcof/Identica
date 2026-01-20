@@ -22,7 +22,7 @@ public final class Key<T> {
 		return new Key<>(name, type);
 	}
 
-	T cast(Object value) {
+	public T cast(Object value) {
 		return type.cast(value);
 	}
 }

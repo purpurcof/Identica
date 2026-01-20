@@ -16,6 +16,7 @@ import me.whereareiam.configura.writer.ConfigWriter;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.common.config.provider.*;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
+import me.whereareiam.identica.common.auth.AuthPipeline;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.loader.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.loader.reader.DefaultProviderDescriptorReader;
@@ -76,6 +77,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
 		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
 		bind(ProviderDependencyResolver.class).asEagerSingleton();
+		bind(AuthPipeline.class).asEagerSingleton();
 	}
 
 	@Inject

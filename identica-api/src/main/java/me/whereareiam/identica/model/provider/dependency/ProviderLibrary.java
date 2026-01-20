@@ -1,4 +1,4 @@
-package me.whereareiam.identica.model.provider;
+package me.whereareiam.identica.model.provider.dependency;
 
 import lombok.Getter;
 import lombok.Setter;

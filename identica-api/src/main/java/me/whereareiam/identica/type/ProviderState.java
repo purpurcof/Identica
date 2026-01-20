@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.provider;
+package me.whereareiam.identica.type;
 
 public enum ProviderState {
 	DISCOVERED,

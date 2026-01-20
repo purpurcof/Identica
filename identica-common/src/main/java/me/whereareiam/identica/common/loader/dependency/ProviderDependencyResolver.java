@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.provider;
+package me.whereareiam.identica.common.loader.dependency;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -6,23 +6,25 @@ import com.google.inject.name.Named;
 import me.whereareiam.attache.model.LibraryRequest;
 import me.whereareiam.attache.platform.standalone.StandaloneLibraryManager;
 import me.whereareiam.attache.type.VerbosityMode;
-import me.whereareiam.identica.model.provider.ProviderLibraries;
+import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 
 import java.nio.file.Path;
 import java.util.List;
 
 @Singleton
-public class AttacheProviderDependencyResolver implements ProviderDependencyResolver {
+public class ProviderDependencyResolver {
 	private final Path providersPath;
-	private final AttacheLoggingHelperAdapter loggingHelper;
+	private final ProviderDependencyLoggingAdapter loggingHelper;
 
 	@Inject
-	public AttacheProviderDependencyResolver(@Named("providersPath") Path providersPath) {
+	public ProviderDependencyResolver(
+			@Named("providersPath") Path providersPath,
+			ProviderDependencyLoggingAdapter loggingHelper
+	) {
 		this.providersPath = providersPath;
-		this.loggingHelper = new AttacheLoggingHelperAdapter();
+		this.loggingHelper = loggingHelper;
 	}
 
-	@Override
 	public void loadLibraries(String providerId, ProviderLibraries libraries, ClassLoader classLoader) {
 		if (libraries == null) return;
 
@@ -39,11 +41,11 @@ public class AttacheProviderDependencyResolver implements ProviderDependencyReso
 		libraryManager.addMavenCentral();
 		libraryManager.addRepository("https://maven.whereareiam.me/release");
 		libraryManager.addRepository("https://maven.whereareiam.me/development");
-		if (libraries.getRepositories() != null) {
-			for (String repo : libraries.getRepositories()) {
+
+		if (libraries.getRepositories() != null)
+			for (String repo : libraries.getRepositories())
 				libraryManager.addRepository(repo);
-			}
-		}
+
 		libraryManager.loadLibraries(requests);
 	}
 }

@@ -17,18 +17,17 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.common.config.provider.*;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
 import me.whereareiam.identica.common.event.EventController;
-import me.whereareiam.identica.common.provider.AttacheProviderDependencyResolver;
-import me.whereareiam.identica.common.provider.ConfiguraProviderDescriptorReader;
-import me.whereareiam.identica.common.provider.ProviderDependencyResolver;
-import me.whereareiam.identica.common.provider.ProviderDescriptorReader;
-import me.whereareiam.identica.common.provider.ProviderManager;
+import me.whereareiam.identica.common.loader.dependency.ProviderDependencyResolver;
+import me.whereareiam.identica.common.loader.reader.DefaultProviderDescriptorReader;
+import me.whereareiam.identica.loader.ProviderDescriptorReader;
+import me.whereareiam.identica.common.loader.DefaultProviderManager;
+import me.whereareiam.identica.loader.ProviderManager;
 import me.whereareiam.identica.common.provider.SerializerEngineProvider;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.registry.Registry;
-import me.whereareiam.identica.service.*;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.keystone.serializer.SerializerEngine;
@@ -74,9 +73,9 @@ public class CommonConfiguration extends AbstractModule {
 
 		// Plugin
 		bind(Identica.class).asEagerSingleton();
-		bind(ProviderManager.class).asEagerSingleton();
-		bind(ProviderDescriptorReader.class).to(ConfiguraProviderDescriptorReader.class).asEagerSingleton();
-		bind(ProviderDependencyResolver.class).to(AttacheProviderDependencyResolver.class).asEagerSingleton();
+		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
+		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
+		bind(ProviderDependencyResolver.class).asEagerSingleton();
 	}
 
 	@Inject

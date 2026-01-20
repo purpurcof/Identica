@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.provider;
+package me.whereareiam.identica.loader;
 
 import me.whereareiam.identica.model.ProviderDescriptor;
 

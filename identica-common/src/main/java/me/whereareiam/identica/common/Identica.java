@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.common.logging.WelcomeBannerPrinter;
-import me.whereareiam.identica.common.provider.ProviderManager;
+import me.whereareiam.identica.loader.ProviderManager;
 import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;

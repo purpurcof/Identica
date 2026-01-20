@@ -1,8 +1,21 @@
 package me.whereareiam.identica.common.provider;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import me.whereareiam.identica.common.loader.ProviderDiscovery;
+import me.whereareiam.identica.common.loader.DefaultProviderManager;
+import me.whereareiam.identica.common.loader.ProviderLifecycleController;
+import me.whereareiam.identica.loader.ProviderManager;
+import me.whereareiam.identica.loader.ProviderDescriptorReader;
+import me.whereareiam.identica.common.loader.dependency.ProviderDependencyLoggingAdapter;
+import me.whereareiam.identica.common.loader.dependency.ProviderDependencyResolver;
+import me.whereareiam.identica.common.loader.resolver.ProviderPlatformResolver;
+import me.whereareiam.identica.logging.LoggingHelper;
+import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.ProviderDescriptor;
 import me.whereareiam.identica.model.config.Providers;
-import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.loader.IdenticaProvider;
+import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -31,8 +44,8 @@ class ProviderManagerIntegrationTest {
 		String source = """
 				package testprovider;
 
-				import me.whereareiam.identica.model.provider.ProviderLibraries;
-				import me.whereareiam.identica.provider.IdenticaProvider;
+				import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
+				import me.whereareiam.identica.loader.IdenticaProvider;
 				import java.util.ArrayList;
 				import java.util.List;
 
@@ -97,17 +110,41 @@ class ProviderManagerIntegrationTest {
 			return descriptor;
 		};
 
-		ProviderDependencyResolver dependencyResolver = (_, _, _) -> {};
+		ProviderDependencyLoggingAdapter loggingAdapter = new ProviderDependencyLoggingAdapter(new LoggingHelper() {
+			@Override
+			public void info(String message, Object... objects) {
+			}
+
+			@Override
+			public void warn(String message, Object... objects) {
+			}
+
+			@Override
+			public void severe(String message, Object... objects) {
+			}
+
+			@Override
+			public void debug(String message, Object... objects) {
+			}
+		});
+
+		ProviderDependencyResolver dependencyResolver = new ProviderDependencyResolver(providersPath, loggingAdapter) {
+			@Override
+			public void loadLibraries(String providerId, ProviderLibraries libraries, ClassLoader classLoader) {
+			}
+		};
 
 		ProviderDiscovery discovery = new ProviderDiscovery(providersPath, descriptorReader);
-		ProviderSelector selector = new ProviderSelector();
-		ProviderLoader loader = new ProviderLoader(providersPath, dependencyResolver);
-		ProviderLifecycle lifecycle = new ProviderLifecycle();
-		ProviderManager manager = new ProviderManager(
+		Injector injector = Guice.createInjector();
+		ProviderLifecycleController lifecycleController = new ProviderLifecycleController(
+				providersPath,
+				dependencyResolver,
+				injector,
+				new ProviderPlatformResolver()
+		);
+		ProviderManager manager = new DefaultProviderManager(
 				discovery,
-				selector,
-				loader,
-				lifecycle,
+				lifecycleController,
 				Providers::new
 		);
 
@@ -115,7 +152,7 @@ class ProviderManagerIntegrationTest {
 
 		assertEquals(1, manager.getProviders().size());
 		InternalProvider internal = manager.getProviders().getFirst();
-		assertEquals(ProviderState.ENABLED, internal.getState());
+		assertEquals(me.whereareiam.identica.type.ProviderState.ENABLED, internal.getState());
 		assertNotNull(internal.getProvider());
 		assertTrue(Files.isDirectory(internal.getWorkingPath()));
 
@@ -124,7 +161,7 @@ class ProviderManagerIntegrationTest {
 		assertEquals(List.of("load", "enable"), calls);
 
 		manager.unloadProviders();
-		assertEquals(ProviderState.UNLOADED, internal.getState());
+		assertEquals(me.whereareiam.identica.type.ProviderState.UNLOADED, internal.getState());
 		List<String> after = getCalls(provider);
 		assertEquals(List.of("load", "enable", "disable", "unload"), after);
 	}

@@ -20,7 +20,7 @@ public class PersistenceProvider extends DefaultConfigProvider<Persistence> {
 
 	@Override
 	protected Persistence load() {
-		return Config.update(getBasePath().resolve("database"), Persistence.class);
+		return Config.update(getBasePath().resolve("persistence"), Persistence.class);
 	}
 
 	@Override

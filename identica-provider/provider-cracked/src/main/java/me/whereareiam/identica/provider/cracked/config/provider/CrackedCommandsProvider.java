@@ -14,8 +14,11 @@ import java.nio.file.Path;
 @Singleton
 public class CrackedCommandsProvider extends CrackedConfigProvider<Commands> {
 	@Inject
-	public CrackedCommandsProvider(@Named("providersPath") Path providersPath, Registry<Reloadable> reloadables) {
-		super(providersPath.resolve("Cracked"), reloadables);
+	public CrackedCommandsProvider(
+			@Named("workingPath") Path workingPath,
+			Registry<Reloadable> reloadables
+	) {
+		super(workingPath, reloadables);
 	}
 
 	@Override

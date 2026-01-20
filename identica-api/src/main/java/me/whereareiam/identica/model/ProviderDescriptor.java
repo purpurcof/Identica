@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import me.whereareiam.identica.model.provider.ProviderLibraries;
+import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 
 import java.util.List;
 

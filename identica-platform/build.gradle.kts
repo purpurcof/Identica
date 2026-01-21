@@ -10,6 +10,9 @@ subprojects {
 
     tasks.withType<ShadowJar> {
         archiveBaseName.set(rootProject.name)
+
+        relocate("org.jdbi", "me.whereareiam.identica.library.jdbi")
+        relocate("me.whereareiam.dialectica", "me.whereareiam.identica.library.dialectica")
     }
 
     tasks.named<Jar>("jar") {

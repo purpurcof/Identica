@@ -24,8 +24,12 @@ extensions.configure<SpawnerConfig>("spawner") {
     velocity.forwardingMode.set("legacy")
     velocity.pluginJar.set(tasks.named<Jar>("shadowJar").flatMap { it.archiveFile })
 
-    val crackedJar = project(":identica-provider:provider-cracked").tasks.named<Jar>("jar")
-    val premiumJar = project(":identica-provider:provider-premium").tasks.named<Jar>("jar")
+    evaluationDependsOn(":identica-provider:provider-cracked:cracked")
+    evaluationDependsOn(":identica-provider:provider-premium:premium")
+
+    val crackedJar = project(":identica-provider:provider-cracked:cracked").tasks.named<ShadowJar>("shadowJar")
+    val premiumJar = project(":identica-provider:provider-premium:premium").tasks.named<ShadowJar>("shadowJar")
+
     velocity.extraFiles.from(crackedJar.flatMap { it.archiveFile })
     velocity.extraFiles.from(premiumJar.flatMap { it.archiveFile })
     velocity.extraFiles.builtBy(crackedJar, premiumJar)

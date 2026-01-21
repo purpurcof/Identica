@@ -3,25 +3,70 @@ package me.whereareiam.identica.model.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.commandant.model.message.ExceptionMessages;
 import me.whereareiam.commandant.model.message.HelpMessages;
 import me.whereareiam.commandant.model.message.PaginationMessages;
+
+import java.util.List;
 
 @Getter
 @Setter
 @ToString
 public class Messages {
-	private String prefix = "<gold>ɪᴅᴇɴᴛɪᴄᴀ</gold> <dark_gray>| ";
-	private Commands commands = new Commands();
+	private String prefix;
+	private Commands commands;
+	private Providers providers;
+	private Authentication authentication;
 
 	@Getter
 	@Setter
 	@ToString
 	public static class Commands {
-		private String main = "{prefix}<white>Identica is running.</white>";
-		private String reloadStart = "{prefix}<white>Reloading configuration...</white>";
-		private String reloadSuccess = "{prefix}<green>Reload complete.</green>";
-		private String reloadError = "{prefix}<red>Reload failed: {error}</red>";
-		private PaginationMessages pagination = new PaginationMessages();
-		private HelpMessages help = new HelpMessages();
+		private ExceptionMessages exceptions;
+		private PaginationMessages pagination;
+		private HelpMessages help;
+		private String main;
+		private Reload reload;
+
+		/**
+		 * Configuration for reload command messages.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Reload {
+			/**
+			 * Success message when reload completes successfully.
+			 * Placeholders:
+			 * - <prefix>: The global message prefix
+			 */
+			private String success;
+
+			/**
+			 * Error message when reload fails.
+			 * Placeholders:
+			 * - <prefix>: The global message prefix
+			 * - <error>: The error message
+			 */
+			private String error;
+		}
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Providers {
+		private List<String> noProvidersAvailable;
+		private List<String> noProvidersMatched;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Authentication {
+		private List<String> handshakeDenied;
+		private List<String> authenticationFailed;
+		private List<String> noCompletionStep;
+		private List<String> stepNoStatus;
 	}
 }

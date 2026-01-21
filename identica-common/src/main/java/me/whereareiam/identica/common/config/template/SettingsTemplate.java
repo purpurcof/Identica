@@ -60,11 +60,17 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 
 	private Map<String, Event> defaultListenerEvents() {
 		Map<String, Event> events = new HashMap<>();
-		Event event = Event.builder().register(true).priority(EventPriority.LOWEST).build();
-
-		events.put("com.velocitypowered.api.event.connection.PostLoginEvent", event);
-		events.put("com.velocitypowered.api.event.connection.DisconnectEvent", event);
+		events.put("com.velocitypowered.api.event.connection.PreLoginEvent", defaultEvent());
+		events.put("com.velocitypowered.api.event.connection.LoginEvent", defaultEvent());
+		events.put("com.velocitypowered.api.event.connection.DisconnectEvent", defaultEvent());
 
 		return events;
+	}
+
+	private Event defaultEvent() {
+		return Event.builder()
+				.register(true)
+				.priority(EventPriority.NORMAL)
+				.build();
 	}
 }

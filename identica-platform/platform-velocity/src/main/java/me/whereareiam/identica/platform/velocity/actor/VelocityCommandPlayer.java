@@ -2,7 +2,7 @@ package me.whereareiam.identica.platform.velocity.actor;
 
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.keystone.Actor;
+import me.whereareiam.identica.actor.Identity;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public class VelocityCommandPlayer implements Actor {
+public class VelocityCommandPlayer implements Identity {
 	private final Player player;
 
 	public Player getSource() {
@@ -31,6 +31,11 @@ public class VelocityCommandPlayer implements Actor {
 	@Override
 	public void sendMessage(@NotNull Component message) {
 		player.sendMessage(message);
+	}
+
+	@Override
+	public void disconnect(@NotNull Component reason) {
+		player.disconnect(reason);
 	}
 
 	@Override

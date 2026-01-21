@@ -14,9 +14,14 @@ import me.whereareiam.configura.reader.ConfigReader;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.configura.writer.ConfigWriter;
 import me.whereareiam.identica.Reloadable;
+import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.common.config.provider.*;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
+import me.whereareiam.identica.auth.AuthCoordinator;
+import me.whereareiam.identica.auth.AuthenticationService;
 import me.whereareiam.identica.common.auth.AuthPipeline;
+import me.whereareiam.identica.common.auth.DefaultAuthCoordinator;
+import me.whereareiam.identica.common.auth.handshake.HandshakePolicyRegistry;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.loader.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.loader.reader.DefaultProviderDescriptorReader;
@@ -47,10 +52,16 @@ public class CommonConfiguration extends AbstractModule {
 		requestInjection(this);
 
 		// Reloadables
-		bind(new TypeLiteral<Registry<Reloadable>>() {
-		}).to(ReloadableRegistry.class).asEagerSingleton();
-		bind(new TypeLiteral<Set<Reloadable>>() {
-		}).annotatedWith(Names.named("reloadables")).toProvider(ReloadableRegistry.class).asEagerSingleton();
+		bind(new TypeLiteral<Registry<Reloadable>>() {})
+				.to(ReloadableRegistry.class)
+				.asEagerSingleton();
+		bind(new TypeLiteral<Set<Reloadable>>() {})
+				.annotatedWith(Names.named("reloadables"))
+				.toProvider(ReloadableRegistry.class)
+				.asEagerSingleton();
+		bind(new TypeLiteral<Registry<HandshakePolicy>>() {})
+				.to(HandshakePolicyRegistry.class)
+				.asEagerSingleton();
 
 		// Configuration
 		bind(ConfigurationTypeResolver.class)
@@ -68,6 +79,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(Providers.class).toProvider(ProvidersProvider.class);
 		bind(PersistenceProvider.class).asEagerSingleton();
 		bind(Persistence.class).toProvider(PersistenceProvider.class);
+
 		// Services
 		bind(SerializerEngine.class).toProvider(SerializerEngineProvider.class);
 		bind(EventManager.class).to(EventController.class);
@@ -77,7 +89,8 @@ public class CommonConfiguration extends AbstractModule {
 		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
 		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
 		bind(ProviderDependencyResolver.class).asEagerSingleton();
-		bind(AuthPipeline.class).asEagerSingleton();
+		bind(AuthenticationService.class).to(AuthPipeline.class).asEagerSingleton();
+		bind(AuthCoordinator.class).to(DefaultAuthCoordinator.class).asEagerSingleton();
 	}
 
 	@Inject

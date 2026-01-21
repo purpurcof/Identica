@@ -6,15 +6,21 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.commandant.Commandant;
 import me.whereareiam.commandant.CommandantKeys;
+import me.whereareiam.commandant.ExceptionHandlerRegistrar;
+import me.whereareiam.commandant.model.message.ExceptionMessages;
+import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.adapter.command.annotation.IdenticaAnnotationParser;
 import me.whereareiam.identica.adapter.command.definition.CommandDefinitionAdapter;
 import me.whereareiam.identica.adapter.command.executor.HelpCommand;
 import me.whereareiam.identica.adapter.command.executor.MainCommand;
 import me.whereareiam.identica.adapter.command.executor.ReloadCommand;
+import me.whereareiam.identica.adapter.command.serializer.ScopedSerializerEngine;
 import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.command.CommandService;
+import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.keystone.Actor;
+import me.whereareiam.keystone.serializer.SerializerEngine;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.CommandManager;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +32,9 @@ import java.util.Map;
 @Singleton
 public class DefaultCommandService implements CommandService {
 	private final Provider<Commands> commandsProvider;
+	private final Provider<Messages> messagesProvider;
 	private final Provider<CommandManager<Actor>> commandManagerProvider;
+	private final SerializerEngine serializer;
 	private final Injector injector;
 
 	private final Map<String, CommandDefinition> registeredDefinitions = new HashMap<>();
@@ -35,11 +43,15 @@ public class DefaultCommandService implements CommandService {
 	@Inject
 	public DefaultCommandService(
 			Provider<Commands> commandsProvider,
+			Provider<Messages> messagesProvider,
 			Provider<CommandManager<Actor>> commandManagerProvider,
+			SerializerEngine serializer,
 			Injector injector
 	) {
 		this.commandsProvider = commandsProvider;
+		this.messagesProvider = messagesProvider;
 		this.commandManagerProvider = commandManagerProvider;
+		this.serializer = serializer;
 		this.injector = injector;
 
 		initialize();
@@ -120,5 +132,16 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(HelpCommand.class),
 				injector.getInstance(ReloadCommand.class)
 		);
+
+		registerExceptionHandlers(commandManagerProvider.get());
+	}
+
+	private void registerExceptionHandlers(@NotNull CommandManager<Actor> commandManager) {
+		ExceptionMessages exceptionMessages = messagesProvider.get().getCommands() != null
+				? messagesProvider.get().getCommands().getExceptions()
+				: new ExceptionMessages();
+
+		SerializerEngine scopedSerializer = new ScopedSerializerEngine(serializer, Serializer.SCOPE);
+		ExceptionHandlerRegistrar.register(commandManager, exceptionMessages, scopedSerializer, Actor::getAudience);
 	}
 }

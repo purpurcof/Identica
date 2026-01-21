@@ -3,19 +3,22 @@ package me.whereareiam.identica.common.auth;
 import me.whereareiam.identica.loader.IdenticaProvider;
 import me.whereareiam.identica.loader.ProviderManager;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.auth.AuthenticationStep;
-import me.whereareiam.identica.auth.type.SeamlessStep;
+import me.whereareiam.identica.auth.step.AuthenticationStep;
+import me.whereareiam.identica.auth.step.type.SeamlessStep;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.auth.IdentityClaim;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.base.Event;
+import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.type.HandshakeMode;
+import me.whereareiam.identica.type.event.EventOrder;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,7 +32,11 @@ class AuthPipelineTest {
 				new RecordingStep("two", calls, StepResult.StepStatus.COMPLETE)
 		));
 
-		AuthPipeline pipeline = new AuthPipeline(new StubProviderManager(List.of(provider)));
+		AuthPipeline pipeline = new AuthPipeline(
+				new StubProviderManager(List.of(provider)),
+				AuthPipelineTest::messages,
+				new NoopEventManager()
+		);
 		StepResult result = pipeline.authenticate(context()).join();
 
 		assertEquals(StepResult.StepStatus.COMPLETE, result.getStatus());
@@ -44,7 +51,11 @@ class AuthPipelineTest {
 				new RecordingStep("run", calls, StepResult.StepStatus.COMPLETE)
 		));
 
-		AuthPipeline pipeline = new AuthPipeline(new StubProviderManager(List.of(provider)));
+		AuthPipeline pipeline = new AuthPipeline(
+				new StubProviderManager(List.of(provider)),
+				AuthPipelineTest::messages,
+				new NoopEventManager()
+		);
 		StepResult result = pipeline.authenticate(context()).join();
 
 		assertEquals(StepResult.StepStatus.COMPLETE, result.getStatus());
@@ -61,7 +72,11 @@ class AuthPipelineTest {
 				new RecordingStep("second", calls, StepResult.StepStatus.COMPLETE)
 		));
 
-		AuthPipeline pipeline = new AuthPipeline(new StubProviderManager(List.of(first, second)));
+		AuthPipeline pipeline = new AuthPipeline(
+				new StubProviderManager(List.of(first, second)),
+				AuthPipelineTest::messages,
+				new NoopEventManager()
+		);
 		StepResult result = pipeline.authenticate(context()).join();
 
 		assertEquals(StepResult.StepStatus.COMPLETE, result.getStatus());
@@ -69,7 +84,12 @@ class AuthPipelineTest {
 	}
 
 	private static AuthContext context() {
-		return new AuthContext("Steve", "127.0.0.1", UUID.randomUUID(), "lobby");
+		return AuthContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.username("Steve")
+				.ip("127.0.0.1")
+				.intendedServer("lobby")
+				.build();
 	}
 
 	private static final class StubProviderManager implements ProviderManager {
@@ -160,6 +180,45 @@ class AuthPipelineTest {
 			case WAITING -> StepResult.waiting("waiting");
 			case COMPLETE -> StepResult.complete(context);
 			case FAILED -> StepResult.failed("failed");
+			case DENIED -> StepResult.denied("denied");
+			case REQUIRE_RECONNECT -> StepResult.requireReconnect(HandshakeMode.ONLINE, "reconnect");
+			case NO_PENDING -> StepResult.noPending();
 		};
+	}
+
+	private static Messages messages() {
+		Messages messages = new Messages();
+
+		Messages.Providers providers = new Messages.Providers();
+		providers.setNoProvidersAvailable(List.of("no providers"));
+		providers.setNoProvidersMatched(List.of("no match"));
+		messages.setProviders(providers);
+
+		Messages.Authentication auth = new Messages.Authentication();
+		auth.setNoCompletionStep(Collections.singletonList("no completion"));
+		auth.setStepNoStatus(Collections.singletonList("no status"));
+		auth.setAuthenticationFailed(Collections.singletonList("auth failed"));
+		auth.setHandshakeDenied(Collections.singletonList("handshake denied"));
+		messages.setAuthentication(auth);
+
+		return messages;
+	}
+
+	private static final class NoopEventManager implements EventManager {
+		@Override
+		public void register(EventListener eventListener) {
+		}
+
+		@Override
+		public <T extends Event> void registerListener(Class<T> event, Object listener, java.lang.reflect.Method method, EventOrder order) {
+		}
+
+		@Override
+		public void unregister(EventListener eventListener) {
+		}
+
+		@Override
+		public void call(Event event) {
+		}
 	}
 }

@@ -9,9 +9,10 @@ import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.keystone.Actor;
+import me.whereareiam.keystone.model.SerializerContent;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
 import java.util.Set;
 
 public class ReloadCommand {
@@ -30,19 +31,25 @@ public class ReloadCommand {
 	@Definition("reload")
 	@Command("identica reload")
 	public void command(@NotNull Actor sender) {
-		Messages messages = messagesProvider.get();
-		sender.sendMessage(Serializer.serialize(sender, messages.getCommands().getReloadStart()));
+		Messages.Commands.Reload reload = messagesProvider.get().getCommands().getReload();
+
 		try {
-			for (Reloadable reloadable : reloadablesProvider.get()) {
+			// Reload all registered reloadable components
+			Set<Reloadable> reloadables = reloadablesProvider.get();
+			for (Reloadable reloadable : reloadables)
 				reloadable.reload();
-			}
-			sender.sendMessage(Serializer.serialize(sender, messages.getCommands().getReloadSuccess()));
-		} catch (Exception ex) {
-			sender.sendMessage(Serializer.serialize(
-					sender,
-					messages.getCommands().getReloadError(),
-					Map.of("error", ex.getMessage() == null ? "unknown" : ex.getMessage())
-			));
+
+			reload = messagesProvider.get().getCommands().getReload();
+
+			Component component = Serializer.serialize(sender, reload.getSuccess());
+			sender.sendMessage(component);
+		} catch (Exception e) {
+			Component component = Serializer.serialize(SerializerContent.builder()
+					.receiver(sender)
+					.message(reload.getError())
+					.placeholder("error", e.getMessage())
+					.build());
+			sender.sendMessage(component);
 		}
 	}
 }

@@ -2,7 +2,7 @@ package me.whereareiam.identica.loader;
 
 import lombok.Setter;
 import me.whereareiam.identica.model.ProviderDescriptor;
-import me.whereareiam.identica.auth.AuthenticationStep;
+import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.model.auth.IdentityClaim;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;

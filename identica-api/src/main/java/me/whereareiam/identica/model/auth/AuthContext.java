@@ -1,8 +1,10 @@
 package me.whereareiam.identica.model.auth;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.util.Key;
+import lombok.Setter;
+import me.whereareiam.identica.Key;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,14 +14,24 @@ import java.util.UUID;
 /**
  * Authentication context containing connection info and mutable state.
  */
+@Setter
 @Getter
-@RequiredArgsConstructor
+@Builder(toBuilder = true)
+@AllArgsConstructor
 public class AuthContext {
+	private final UUID connectionUniqueId;
+	private UUID identicaUniqueId;
+
+	private String profileUniqueId;
+	private boolean onlineMode;
+
 	private final String username;
 	private final String ip;
-	private final UUID connectionUniqueId;
 	private final String intendedServer;
 
+	private IdentityClaim identityClaim;
+
+	@Builder.Default
 	private final Map<Key<?>, Object> data = new HashMap<>();
 
 	public <T> void put(Key<T> key, T value) {

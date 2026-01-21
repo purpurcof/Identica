@@ -13,5 +13,12 @@ include("identica-platform")
 include("identica-platform:platform-velocity")
 
 include("identica-provider")
+
 include("identica-provider:provider-cracked")
+include("identica-provider:provider-cracked:cracked")
+include("identica-provider:provider-cracked:cracked-api")
 include("identica-provider:provider-premium")
+
+include("identica-provider:provider-premium:premium")
+include("identica-provider:provider-premium:premium-adapter-database")
+include("identica-provider:provider-premium:premium-api")

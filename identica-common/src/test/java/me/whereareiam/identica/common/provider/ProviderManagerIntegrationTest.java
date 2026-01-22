@@ -2,14 +2,19 @@ package me.whereareiam.identica.common.provider;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import me.whereareiam.identica.auth.AuthenticationStep;
+import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.common.loader.ProviderDiscovery;
 import me.whereareiam.identica.common.loader.DefaultProviderManager;
 import me.whereareiam.identica.common.loader.ProviderLifecycleController;
+import me.whereareiam.identica.common.loader.resolver.ProviderWorkingPathResolver;
+import me.whereareiam.identica.common.loader.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.loader.ProviderManager;
 import me.whereareiam.identica.loader.ProviderDescriptorReader;
 import me.whereareiam.identica.common.loader.dependency.ProviderDependencyLoggingAdapter;
 import me.whereareiam.identica.common.loader.dependency.ProviderDependencyResolver;
+import me.whereareiam.identica.common.loader.factory.ProviderClassLoaderFactory;
+import me.whereareiam.identica.common.loader.factory.ProviderInstanceFactory;
+import me.whereareiam.identica.common.loader.injector.ProviderInjectorFactory;
 import me.whereareiam.identica.common.loader.resolver.ProviderPlatformResolver;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.model.provider.InternalProvider;
@@ -22,6 +27,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +53,7 @@ class ProviderManagerIntegrationTest {
 
 				import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 				import me.whereareiam.identica.loader.IdenticaProvider;
-				import me.whereareiam.identica.auth.AuthenticationStep;
+				import me.whereareiam.identica.auth.step.AuthenticationStep;
 				import me.whereareiam.identica.model.auth.IdentityClaim;
 				import me.whereareiam.identica.model.conflict.ConflictContext;
 				import me.whereareiam.identica.model.conflict.ConflictResolution;
@@ -122,7 +128,7 @@ class ProviderManagerIntegrationTest {
 		String classpath = System.getProperty("java.class.path");
 		String apiLocation = AuthSupport.classpathLocation();
 		if (!classpath.contains(apiLocation)) {
-			classpath = classpath + System.getProperty("path.separator") + apiLocation;
+			classpath = classpath + File.pathSeparator + apiLocation;
 		}
 		int result = compiler.run(null, null, null,
 				"-classpath", classpath,
@@ -170,16 +176,21 @@ class ProviderManagerIntegrationTest {
 
 		ProviderDiscovery discovery = new ProviderDiscovery(providersPath, descriptorReader);
 		Injector injector = Guice.createInjector();
+		ProviderResolverRegistry resolverRegistry = new ProviderResolverRegistry();
 		ProviderLifecycleController lifecycleController = new ProviderLifecycleController(
-				providersPath,
+				new ProviderWorkingPathResolver(providersPath),
+				new ProviderClassLoaderFactory(),
 				dependencyResolver,
-				injector,
-				new ProviderPlatformResolver()
+				new ProviderInjectorFactory(injector),
+				new ProviderInstanceFactory(),
+				resolverRegistry
 		);
 		ProviderManager manager = new DefaultProviderManager(
 				discovery,
 				lifecycleController,
-				Providers::new
+				Providers::new,
+				resolverRegistry,
+				new ProviderPlatformResolver()
 		);
 
 		manager.loadProviders();

@@ -10,20 +10,27 @@ import me.whereareiam.identica.model.auth.IdentityClaim;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.type.HandshakeMode;
-import me.whereareiam.identica.type.event.EventOrder;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class AuthPipelineTest {
+	@Mock
+	private ProviderManager providerManager;
+	@Mock
+	private EventManager eventManager;
+
 	@Test
 	void executesStepsInOrder() {
 		List<String> calls = new ArrayList<>();
@@ -31,11 +38,12 @@ class AuthPipelineTest {
 				new RecordingStep("one", calls, StepResult.StepStatus.CONTINUE),
 				new RecordingStep("two", calls, StepResult.StepStatus.COMPLETE)
 		));
+		stubProviders(List.of(provider));
 
 		AuthPipeline pipeline = new AuthPipeline(
-				new StubProviderManager(List.of(provider)),
+				providerManager,
 				AuthPipelineTest::messages,
-				new NoopEventManager()
+				eventManager
 		);
 		StepResult result = pipeline.authenticate(context()).join();
 
@@ -50,11 +58,12 @@ class AuthPipelineTest {
 				new ConditionalStep("skip", false, calls),
 				new RecordingStep("run", calls, StepResult.StepStatus.COMPLETE)
 		));
+		stubProviders(List.of(provider));
 
 		AuthPipeline pipeline = new AuthPipeline(
-				new StubProviderManager(List.of(provider)),
+				providerManager,
 				AuthPipelineTest::messages,
-				new NoopEventManager()
+				eventManager
 		);
 		StepResult result = pipeline.authenticate(context()).join();
 
@@ -71,11 +80,12 @@ class AuthPipelineTest {
 		IdenticaProvider second = new TestProvider(List.of(
 				new RecordingStep("second", calls, StepResult.StepStatus.COMPLETE)
 		));
+		stubProviders(List.of(first, second));
 
 		AuthPipeline pipeline = new AuthPipeline(
-				new StubProviderManager(List.of(first, second)),
+				providerManager,
 				AuthPipelineTest::messages,
-				new NoopEventManager()
+				eventManager
 		);
 		StepResult result = pipeline.authenticate(context()).join();
 
@@ -92,27 +102,11 @@ class AuthPipelineTest {
 				.build();
 	}
 
-	private static final class StubProviderManager implements ProviderManager {
-		private final List<InternalProvider> providers;
-
-		private StubProviderManager(List<IdenticaProvider> providers) {
-			this.providers = providers.stream()
-					.map(provider -> InternalProvider.builder().provider(provider).build())
-					.toList();
-		}
-
-		@Override
-		public void loadProviders() {
-		}
-
-		@Override
-		public void unloadProviders() {
-		}
-
-		@Override
-		public List<InternalProvider> getProviders() {
-			return providers;
-		}
+	private void stubProviders(List<IdenticaProvider> providers) {
+		List<InternalProvider> internalProviders = providers.stream()
+				.map(provider -> InternalProvider.builder().provider(provider).build())
+				.toList();
+		when(providerManager.getProviders()).thenReturn(internalProviders);
 	}
 
 	private static final class TestProvider extends IdenticaProvider {
@@ -204,21 +198,4 @@ class AuthPipelineTest {
 		return messages;
 	}
 
-	private static final class NoopEventManager implements EventManager {
-		@Override
-		public void register(EventListener eventListener) {
-		}
-
-		@Override
-		public <T extends Event> void registerListener(Class<T> event, Object listener, java.lang.reflect.Method method, EventOrder order) {
-		}
-
-		@Override
-		public void unregister(EventListener eventListener) {
-		}
-
-		@Override
-		public void call(Event event) {
-		}
-	}
 }

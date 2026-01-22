@@ -1,6 +1,7 @@
 package me.whereareiam.identica.common.loader.resolver;
 
 import com.google.inject.Singleton;
+import me.whereareiam.identica.loader.resolver.ProviderResolver;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.InternalProvider;

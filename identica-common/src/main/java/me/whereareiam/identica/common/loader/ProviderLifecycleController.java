@@ -2,45 +2,47 @@ package me.whereareiam.identica.common.loader;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Module;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import me.whereareiam.identica.common.loader.dependency.ProviderDependencyResolver;
-import me.whereareiam.identica.common.loader.injector.ProviderInjectorConfiguration;
-import me.whereareiam.identica.common.loader.resolver.ProviderPlatformResolver;
-import me.whereareiam.identica.common.loader.resolver.ProviderResolver;
+import me.whereareiam.identica.common.loader.factory.ProviderClassLoaderFactory;
+import me.whereareiam.identica.common.loader.factory.ProviderInstanceFactory;
+import me.whereareiam.identica.common.loader.injector.ProviderInjectorFactory;
+import me.whereareiam.identica.common.loader.resolver.ProviderWorkingPathResolver;
+import me.whereareiam.identica.common.loader.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.loader.IdenticaProvider;
+import me.whereareiam.identica.loader.resolver.ProviderResolver;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.type.ProviderState;
 
-import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 @Singleton
 public class ProviderLifecycleController {
-	private final Path providersPath;
+	private final ProviderWorkingPathResolver workingPathResolver;
+	private final ProviderClassLoaderFactory classLoaderFactory;
 	private final ProviderDependencyResolver dependencyResolver;
-	private final Injector injector;
-	private final List<ProviderResolver> resolvers;
+	private final ProviderInjectorFactory injectorFactory;
+	private final ProviderInstanceFactory instanceFactory;
+	private final ProviderResolverRegistry resolverRegistry;
 
 	@Inject
 	public ProviderLifecycleController(
-			@Named("providersPath") Path providersPath,
+			ProviderWorkingPathResolver workingPathResolver,
+			ProviderClassLoaderFactory classLoaderFactory,
 			ProviderDependencyResolver dependencyResolver,
-			Injector injector,
-			ProviderPlatformResolver platformResolver
+			ProviderInjectorFactory injectorFactory,
+			ProviderInstanceFactory instanceFactory,
+			ProviderResolverRegistry resolverRegistry
 	) {
-		this.providersPath = providersPath;
+		this.workingPathResolver = workingPathResolver;
+		this.classLoaderFactory = classLoaderFactory;
 		this.dependencyResolver = dependencyResolver;
-		this.injector = injector;
-		this.resolvers = List.of(platformResolver);
+		this.injectorFactory = injectorFactory;
+		this.instanceFactory = instanceFactory;
+		this.resolverRegistry = resolverRegistry;
 	}
 
 	public void loadProvider(InternalProvider internal) {
@@ -48,41 +50,38 @@ public class ProviderLifecycleController {
 
 		try {
 			ProviderDescriptor descriptor = internal.getDescriptor();
-			Path workingPath = ensureWorkingPath(resolveWorkingDirectoryName(descriptor));
-			URLClassLoader classLoader = new URLClassLoader(
-					new URL[]{internal.getPath().toUri().toURL()},
-					getClass().getClassLoader()
-			);
+			Path workingPath = workingPathResolver.resolve(descriptor);
+			URLClassLoader classLoader = classLoaderFactory.create(internal.getPath());
 
-			ProviderLibraries descriptorLibraries = descriptor.getLibraries();
-			dependencyResolver.loadLibraries(descriptor.getId(), descriptorLibraries, classLoader);
+			dependencyResolver.loadDescriptorLibraries(descriptor, classLoader);
 
 			Class<?> providerClass = classLoader.loadClass(descriptor.getMain());
-			Object instance = providerClass.getDeclaredConstructor().newInstance();
-			if (!(instance instanceof IdenticaProvider provider)) {
+			if (!IdenticaProvider.class.isAssignableFrom(providerClass)) {
 				Logger.warn("Provider main class does not extend IdenticaProvider: %s", descriptor.getId());
 				internal.setState(ProviderState.FAILED);
-				closeClassLoader(classLoader);
+				classLoaderFactory.close(classLoader);
 
+				return;
+			}
+
+			IdenticaProvider probeProvider = instanceFactory.instantiateProvider(providerClass);
+			if (probeProvider != null) {
+				probeProvider.setDescriptor(descriptor);
+				probeProvider.setWorkingPath(workingPath);
+			}
+
+			dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
+
+			Injector providerInjector = injectorFactory.create(workingPath, descriptor, probeProvider);
+			IdenticaProvider provider = instanceFactory.createInjectedProvider(providerInjector, providerClass, probeProvider);
+			if (provider == null) {
+				internal.setState(ProviderState.FAILED);
+				classLoaderFactory.close(classLoader);
 				return;
 			}
 
 			provider.setDescriptor(descriptor);
 			provider.setWorkingPath(workingPath);
-
-			ProviderLibraries extraLibraries = provider.libraries();
-			if (extraLibraries != null) {
-				dependencyResolver.loadLibraries(descriptor.getId(), extraLibraries, classLoader);
-			}
-
-			List<Module> modules = new ArrayList<>();
-			modules.add(new ProviderInjectorConfiguration(workingPath, descriptor));
-			List<Module> providerModules = provider.modules();
-			if (providerModules != null && !providerModules.isEmpty())
-				modules.addAll(providerModules);
-
-			Injector providerInjector = injector.createChildInjector(modules);
-			providerInjector.injectMembers(provider);
 
 			internal.setProvider(provider);
 			internal.setWorkingPath(workingPath);
@@ -136,12 +135,12 @@ public class ProviderLifecycleController {
 			internal.setState(ProviderState.FAILED);
 			Logger.warn("Failed to unload provider %s: %s", safeId(internal), e.getMessage());
 		} finally {
-			closeClassLoader(internal.getClassLoader());
+			classLoaderFactory.close(internal.getClassLoader());
 		}
 	}
 
 	private boolean checkRequirements(InternalProvider provider) {
-		for (ProviderResolver resolver : resolvers) {
+		for (ProviderResolver resolver : resolverRegistry.getAll()) {
 			if (!resolver.resolve(provider)) {
 				provider.setState(ProviderState.FAILED);
 				return true;
@@ -149,38 +148,6 @@ public class ProviderLifecycleController {
 		}
 
 		return false;
-	}
-
-	private Path ensureWorkingPath(String directoryName) {
-		Path path = providersPath.resolve(directoryName);
-		try {
-			Files.createDirectories(path);
-		} catch (Exception e) {
-			throw new IllegalStateException("Failed to create provider working path: " + path, e);
-		}
-
-		return path;
-	}
-
-	private String resolveWorkingDirectoryName(ProviderDescriptor descriptor) {
-		String name = descriptor != null ? descriptor.getName() : null;
-		if (name == null || name.isBlank())
-			name = descriptor != null ? descriptor.getId() : null;
-
-		if (name == null || name.isBlank())
-			return "unknown";
-
-		return name.trim().replaceAll("[\\\\/:*?\"<>|]", "_");
-	}
-
-	private void closeClassLoader(Object classLoader) {
-		if (classLoader instanceof AutoCloseable closeable) {
-			try {
-				closeable.close();
-			} catch (Exception e) {
-				Logger.warn("Failed to close provider classloader: %s", e.getMessage());
-			}
-		}
 	}
 
 	private String safeId(InternalProvider internal) {

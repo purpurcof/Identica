@@ -1,7 +1,9 @@
 package me.whereareiam.identica.common.loader;
 
-import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.loader.ProviderManager;
+import me.whereareiam.identica.loader.resolver.ProviderResolver;
+import me.whereareiam.identica.common.loader.resolver.ProviderPlatformResolver;
+import me.whereareiam.identica.common.loader.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.config.Providers;
 import com.google.inject.Inject;
@@ -18,13 +20,29 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultProviderManager implements ProviderManager {
 	private final ProviderDiscovery discovery;
 	private final ProviderLifecycleController lifecycleController;
 	private final Provider<Providers> providersConfig;
+	private final ProviderResolverRegistry resolverRegistry;
 
 	private final List<InternalProvider> providers = new ArrayList<>();
+
+	@Inject
+	public DefaultProviderManager(
+			ProviderDiscovery discovery,
+			ProviderLifecycleController lifecycleController,
+			Provider<Providers> providersConfig,
+			ProviderResolverRegistry resolverRegistry,
+			ProviderPlatformResolver platformResolver
+	) {
+		this.discovery = discovery;
+		this.lifecycleController = lifecycleController;
+		this.providersConfig = providersConfig;
+		this.resolverRegistry = resolverRegistry;
+
+		registerResolver(platformResolver);
+	}
 
 	@Override
 	public void loadProviders() {
@@ -54,6 +72,21 @@ public class DefaultProviderManager implements ProviderManager {
 	@Override
 	public List<InternalProvider> getProviders() {
 		return Collections.unmodifiableList(providers);
+	}
+
+	@Override
+	public void registerResolver(ProviderResolver resolver) {
+		resolverRegistry.register(resolver);
+	}
+
+	@Override
+	public void unregisterResolver(ProviderResolver resolver) {
+		resolverRegistry.unregister(resolver);
+	}
+
+	@Override
+	public List<ProviderResolver> getResolvers() {
+		return resolverRegistry.getAll();
 	}
 
 	private List<InternalProvider> selectEnabled(List<InternalProvider> discovered, Providers config) {

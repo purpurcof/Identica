@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.loader.resolver;
+package me.whereareiam.identica.loader.resolver;
 
 import me.whereareiam.identica.model.provider.InternalProvider;
 

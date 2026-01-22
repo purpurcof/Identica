@@ -26,7 +26,6 @@ import me.whereareiam.identica.common.auth.AuthPipeline;
 import me.whereareiam.identica.common.auth.DefaultAuthCoordinator;
 import me.whereareiam.identica.common.auth.handshake.HandshakePolicyRegistry;
 import me.whereareiam.identica.common.event.EventController;
-import me.whereareiam.identica.common.loader.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.loader.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.loader.ProviderDescriptorReader;
 import me.whereareiam.identica.common.loader.DefaultProviderManager;
@@ -98,7 +97,6 @@ public class CommonConfiguration extends AbstractModule {
 		bind(Identica.class).asEagerSingleton();
 		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
 		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
-		bind(ProviderDependencyResolver.class).asEagerSingleton();
 		bind(AuthenticationService.class).to(AuthPipeline.class).asEagerSingleton();
 		bind(AuthCoordinator.class).to(DefaultAuthCoordinator.class).asEagerSingleton();
 	}

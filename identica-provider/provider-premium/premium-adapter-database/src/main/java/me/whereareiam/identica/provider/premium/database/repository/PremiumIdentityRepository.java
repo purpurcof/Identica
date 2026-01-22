@@ -12,7 +12,7 @@ import java.util.UUID;
 @RegisterBeanMapper(PremiumIdentityEntity.class)
 public interface PremiumIdentityRepository {
 	@SqlQuery("""
-			SELECT identica_unique_id AS uniqueId,
+			SELECT unique_id AS uniqueId,
 			       mojang_unique_id AS mojangUniqueId
 			  FROM identica_premium_identities
 			 WHERE mojang_unique_id = :mojangUniqueId
@@ -20,16 +20,16 @@ public interface PremiumIdentityRepository {
 	Optional<PremiumIdentityEntity> findByMojangUniqueId(@Bind("mojangUniqueId") UUID mojangUniqueId);
 
 	@SqlQuery("""
-			SELECT identica_unique_id AS uniqueId,
+			SELECT unique_id AS uniqueId,
 			       mojang_unique_id AS mojangUniqueId
 			  FROM identica_premium_identities
-			 WHERE identica_unique_id = :uniqueId
+			 WHERE unique_id = :uniqueId
 			""")
 	Optional<PremiumIdentityEntity> findByUniqueId(@Bind("uniqueId") UUID uniqueId);
 
 	@SqlUpdate("""
 			DELETE FROM identica_premium_identities
-			 WHERE identica_unique_id = :uniqueId
+			 WHERE unique_id = :uniqueId
 			    OR mojang_unique_id = :mojangUniqueId
 			""")
 	void deleteByIdenticaOrMojang(
@@ -38,7 +38,7 @@ public interface PremiumIdentityRepository {
 	);
 
 	@SqlUpdate("""
-			INSERT INTO identica_premium_identities (identica_unique_id, mojang_unique_id)
+			INSERT INTO identica_premium_identities (unique_id, mojang_unique_id)
 			VALUES (:uniqueId, :mojangUniqueId)
 			""")
 	void insert(

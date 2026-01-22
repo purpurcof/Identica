@@ -30,9 +30,9 @@ public class PremiumIdentityEntity implements EntitySchemaProvider {
 		};
 		return """
 				CREATE TABLE IF NOT EXISTS identica_premium_identities (
-					identica_unique_id %s NOT NULL,
+					unique_id %s NOT NULL,
 					mojang_unique_id %s NOT NULL,
-					UNIQUE (identica_unique_id),
+					UNIQUE (unique_id),
 					UNIQUE (mojang_unique_id)
 				)
 				""".formatted(uuidType, uuidType);

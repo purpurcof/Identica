@@ -2,6 +2,7 @@ package me.whereareiam.identica.common;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import me.whereareiam.identica.IdenticaAPI;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.common.logging.WelcomeBannerPrinter;
 import me.whereareiam.identica.loader.ProviderManager;
@@ -42,6 +43,8 @@ public class Identica implements EventListener {
 		injector.getInstance(Providers.class);
 
 		injector.getInstance(DatabaseService.class);
+
+		IdenticaAPI.initialize(injector);
 	}
 
 	@IdenticEvent(EventOrder.LOW)
@@ -55,5 +58,7 @@ public class Identica implements EventListener {
 	@IdenticEvent(EventOrder.LOW)
 	public void onShutdown(IdenticaShutdownEvent event) {
 		injector.getInstance(ProviderManager.class).unloadProviders();
+
+		IdenticaAPI.shutdown();
 	}
 }

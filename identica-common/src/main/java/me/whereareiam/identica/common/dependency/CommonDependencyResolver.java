@@ -165,6 +165,7 @@ public abstract class CommonDependencyResolver implements DependencyResolver {
 				.groupId("redis{}clients")
 				.artifactId("jedis")
 				.version(Constants.Dependency.JEDIS)
+				.resolveTransitiveDependencies(true)
 				.build());
 	}
 

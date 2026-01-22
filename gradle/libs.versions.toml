@@ -46,6 +46,8 @@ bcrypt = "0.10.2"
 # testing
 junit = "6.0.1"
 mockito = "5.20.0"
+testcontainers = "2.0.2"
+testcontainers-redis = "2.2.4"
 
 [libraries]
 
@@ -99,6 +101,8 @@ junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.r
 junit-platform = { group = "org.junit.platform", name = "junit-platform-launcher" }
 mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 mockito-junit = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
+testcontainers-junit = { group = "org.testcontainers", name = "testcontainers-junit-jupiter", version.ref = "testcontainers" }
+testcontainers-redis = { group = "com.redis", name = "testcontainers-redis", version.ref = "testcontainers-redis" }
 
 [bundles]
 

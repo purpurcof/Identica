@@ -70,7 +70,7 @@ public class Settings {
 			private String password;
 
 			private boolean ssl;
-			private long timeout;
+			private int timeout;
 
 			private Channels channels;
 		}

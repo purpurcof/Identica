@@ -10,6 +10,8 @@ import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
+import java.util.Optional;
+
 @Singleton
 public class JedisPoolProvider implements Provider<JedisPool>, Reloadable {
 	private final Provider<Settings> configProvider;
@@ -23,7 +25,9 @@ public class JedisPoolProvider implements Provider<JedisPool>, Reloadable {
 		this.configProvider = configProvider;
 
 		reloadableRegistry.register(this);
-		get();
+		Settings.Synchronization sync = configProvider.get().getSynchronization();
+		if (sync != null && sync.isEnabled())
+			get();
 	}
 
 	@Override
@@ -32,18 +36,23 @@ public class JedisPoolProvider implements Provider<JedisPool>, Reloadable {
 			return jedisPool;
 
 		Settings.Synchronization sync = configProvider.get().getSynchronization();
-		if (sync == null || sync.getRedis() == null) {
-			throw new RuntimeException("Synchronization settings are missing");
-		}
+		if (sync == null || !sync.isEnabled() || sync.getRedis() == null)
+			throw new RuntimeException("Synchronization settings are missing or disabled");
+
 		Settings.Synchronization.Redis redis = sync.getRedis();
 
 		try {
 			JedisPoolConfig poolConfig = new JedisPoolConfig();
+			String password = redis.getPassword();
+			if (password != null && password.isBlank())
+				password = null;
+
 			jedisPool = new JedisPool(
 					poolConfig,
 					redis.getHost(),
 					redis.getPort(),
-					(int) redis.getTimeout(),
+					redis.getTimeout(),
+					password,
 					redis.isSsl()
 			);
 
@@ -63,10 +72,20 @@ public class JedisPoolProvider implements Provider<JedisPool>, Reloadable {
 		}
 	}
 
+	public Optional<JedisPool> getOptional() {
+		try {
+			return Optional.of(get());
+		} catch (RuntimeException ignored) {
+			return Optional.empty();
+		}
+	}
+
 	@Override
 	public void reload() {
-		if (jedisPool != null)
-			jedisPool.close();
+		close();
+
+		Settings.Synchronization sync = configProvider.get().getSynchronization();
+		if (!sync.isEnabled()) return;
 
 		jedisPool = get();
 	}

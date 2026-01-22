@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
@@ -15,6 +16,8 @@ import me.whereareiam.configura.type.Format;
 import me.whereareiam.configura.writer.ConfigWriter;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.auth.HandshakePolicy;
+import me.whereareiam.identica.common.cache.DefaultCacheService;
+import me.whereareiam.identica.common.synchronization.DefaultSynchronizationService;
 import me.whereareiam.identica.common.config.provider.*;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
 import me.whereareiam.identica.auth.AuthCoordinator;
@@ -33,9 +36,11 @@ import me.whereareiam.identica.common.registry.ReloadableRegistry;
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
+import me.whereareiam.identica.cache.CacheService;
+import me.whereareiam.identica.synchronization.SynchronizationService;
+import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 
 import java.io.IOException;
@@ -67,6 +72,11 @@ public class CommonConfiguration extends AbstractModule {
 		bind(ConfigurationTypeResolver.class)
 				.to(FileSystemConfigurationTypeResolver.class)
 				.asEagerSingleton();
+
+		// Synchronization providers (optional)
+		Multibinder.newSetBinder(binder(), SynchronizationService.class, Names.named("synchronizationProviders"));
+		bind(SynchronizationService.class).to(DefaultSynchronizationService.class).asEagerSingleton();
+		bind(CacheService.class).to(DefaultCacheService.class).asEagerSingleton();
 
 		// Configs
 		bind(SettingsProvider.class).asEagerSingleton();

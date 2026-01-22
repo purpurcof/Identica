@@ -1,6 +1,8 @@
 dependencies {
     "api"(project(":identica-api"))
-    "implementation"(project(":identica-common"))
+    "compileOnly"(rootProject.libs.jedis)
 
-    "implementation"(rootProject.libs.jedis)
+    "testImplementation"(rootProject.libs.jedis)
+    "testImplementation"(rootProject.libs.testcontainers.junit)
+    "testImplementation"(rootProject.libs.testcontainers.redis)
 }

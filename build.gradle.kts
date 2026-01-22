@@ -26,6 +26,8 @@ subprojects {
         // lombok
         "compileOnly"(rootProject.libs.lombok)
         "annotationProcessor"(rootProject.libs.lombok)
+        "testImplementation"(rootProject.libs.lombok)
+        "testAnnotationProcessor"(rootProject.libs.lombok)
 
         // general
         "compileOnly"(rootProject.libs.guice)
@@ -38,9 +40,10 @@ subprojects {
         "implementation"(rootProject.libs.attache.common)
 
         // test
-        "testImplementation"(rootProject.libs.junit.jupiter)
         "testRuntimeOnly"(rootProject.libs.junit.platform)
+        "testImplementation"(rootProject.libs.junit.jupiter)
         "testImplementation"(rootProject.libs.guice)
+        "testImplementation"(rootProject.libs.configura)
         "testImplementation"(rootProject.libs.mockito.core)
         "testImplementation"(rootProject.libs.mockito.junit)
     }

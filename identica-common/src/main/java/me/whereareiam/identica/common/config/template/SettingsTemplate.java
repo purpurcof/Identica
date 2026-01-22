@@ -62,6 +62,8 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		Map<String, Event> events = new HashMap<>();
 		events.put("com.velocitypowered.api.event.connection.PreLoginEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.connection.LoginEvent", defaultEvent());
+		events.put("com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent", defaultEvent());
+		events.put("com.velocitypowered.api.event.player.ServerPreConnectEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.connection.DisconnectEvent", defaultEvent());
 
 		return events;

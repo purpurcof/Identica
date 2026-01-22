@@ -1,9 +1,10 @@
 package me.whereareiam.identica.provider.cracked;
 
+import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Provider;
-import com.google.inject.Inject;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import me.whereareiam.identica.loader.IdenticaProvider;
 import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.model.auth.IdentityClaim;
@@ -15,9 +16,10 @@ import java.util.List;
 import java.util.Set;
 
 @SuppressWarnings("unused")
-@RequiredArgsConstructor(onConstructor_ = @Inject)
+@NoArgsConstructor
+@AllArgsConstructor(onConstructor_ = @Inject)
 public class CrackedProvider extends IdenticaProvider {
-	private final Provider<CrackedMessages> messagesProvider;
+	private Provider<CrackedMessages> messagesProvider;
 
 	@Override
 	public List<Module> modules() {

@@ -48,13 +48,6 @@ public class Settings {
 	@Getter
 	@Setter
 	@ToString
-	public static class Listeners {
-		private Map<String, Event> events;
-	}
-
-	@Getter
-	@Setter
-	@ToString
 	public static class Synchronization {
 		private boolean enabled;
 		private String serverId;
@@ -83,5 +76,12 @@ public class Settings {
 			private String sessions;
 			private String conflicts;
 		}
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Listeners {
+		private Map<String, Event> events;
 	}
 }

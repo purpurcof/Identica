@@ -20,7 +20,7 @@ import me.whereareiam.identica.event.auth.AuthDecisionEvent;
 import me.whereareiam.identica.event.handshake.HandshakeDirectiveEvent;
 import me.whereareiam.identica.event.handshake.HandshakeDecisionEvent;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.Account;
+import me.whereareiam.identica.model.account.Account;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.AuthDecision;
 import me.whereareiam.identica.model.auth.HandshakeDecision;

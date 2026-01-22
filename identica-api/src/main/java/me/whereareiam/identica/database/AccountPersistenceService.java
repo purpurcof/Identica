@@ -1,6 +1,6 @@
 package me.whereareiam.identica.database;
 
-import me.whereareiam.identica.model.Account;
+import me.whereareiam.identica.model.account.Account;
 
 import java.util.Optional;
 import java.util.UUID;

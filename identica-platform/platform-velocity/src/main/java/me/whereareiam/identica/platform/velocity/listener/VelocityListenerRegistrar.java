@@ -9,6 +9,8 @@ import com.velocitypowered.api.event.AwaitingEventExecutor;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
+import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import me.whereareiam.identica.common.CommonListenerRegistrar;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.logging.Logger;
@@ -17,6 +19,8 @@ import me.whereareiam.identica.platform.velocity.VelocityIdentica;
 import me.whereareiam.identica.platform.velocity.listener.connection.PreLoginListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.LoginListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.PlayerDisconnectListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.RoutingInitialServerListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.RoutingPreConnectListener;
 import me.whereareiam.identica.platform.velocity.util.VelocityUtil;
 
 @Singleton
@@ -42,6 +46,8 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 	public void registerListeners() {
 		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(PreLoginListener.class));
 		registerListener(LoginEvent.class, injector.getInstance(LoginListener.class));
+		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(RoutingInitialServerListener.class));
+		registerListener(ServerPreConnectEvent.class, injector.getInstance(RoutingPreConnectListener.class));
 		registerListener(DisconnectEvent.class, injector.getInstance(PlayerDisconnectListener.class));
 	}
 

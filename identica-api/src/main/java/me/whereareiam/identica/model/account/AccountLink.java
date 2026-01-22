@@ -1,4 +1,4 @@
-package me.whereareiam.identica.model;
+package me.whereareiam.identica.model.account;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.auth.AuthenticationService;
 import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.auth.AuthPendingClearedEvent;
 import me.whereareiam.identica.event.auth.AuthProviderSelectedEvent;
 import me.whereareiam.identica.event.auth.step.AuthStepFinishedEvent;
 import me.whereareiam.identica.event.auth.step.AuthStepStartedEvent;
@@ -77,7 +78,10 @@ public class AuthPipeline implements AuthenticationService {
 		if (connectionUniqueId == null)
 			return false;
 
-		return waitingPipelines.remove(connectionUniqueId) != null;
+		boolean removed = waitingPipelines.remove(connectionUniqueId) != null;
+		eventManager.call(new AuthPendingClearedEvent(connectionUniqueId, removed));
+
+		return removed;
 	}
 
 	private CompletableFuture<StepResult> executeProviders(List<InternalProvider> providers, AuthContext context) {

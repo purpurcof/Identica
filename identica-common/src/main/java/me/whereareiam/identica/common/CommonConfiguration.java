@@ -25,6 +25,10 @@ import me.whereareiam.identica.auth.AuthenticationService;
 import me.whereareiam.identica.common.auth.AuthPipeline;
 import me.whereareiam.identica.common.auth.DefaultAuthCoordinator;
 import me.whereareiam.identica.common.auth.handshake.HandshakePolicyRegistry;
+import me.whereareiam.identica.common.routing.DefaultRoutingService;
+import me.whereareiam.identica.common.routing.InMemoryRoutingStateStore;
+import me.whereareiam.identica.common.routing.lifecycle.RoutingTargetDispatcher;
+import me.whereareiam.identica.common.routing.lifecycle.RountingListener;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.loader.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.loader.ProviderDescriptorReader;
@@ -41,6 +45,9 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.keystone.serializer.SerializerEngine;
+import me.whereareiam.identica.routing.RoutingService;
+import me.whereareiam.identica.routing.RoutingStateStore;
+import me.whereareiam.identica.routing.RoutingTargetApplier;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -76,6 +83,7 @@ public class CommonConfiguration extends AbstractModule {
 		Multibinder.newSetBinder(binder(), SynchronizationService.class, Names.named("synchronizationProviders"));
 		bind(SynchronizationService.class).to(DefaultSynchronizationService.class).asEagerSingleton();
 		bind(CacheService.class).to(DefaultCacheService.class).asEagerSingleton();
+		Multibinder.newSetBinder(binder(), RoutingTargetApplier.class);
 
 		// Configs
 		bind(SettingsProvider.class).asEagerSingleton();
@@ -92,6 +100,10 @@ public class CommonConfiguration extends AbstractModule {
 		// Services
 		bind(SerializerEngine.class).toProvider(SerializerEngineProvider.class);
 		bind(EventManager.class).to(EventController.class);
+		bind(RoutingService.class).to(DefaultRoutingService.class).asEagerSingleton();
+		bind(RoutingStateStore.class).to(InMemoryRoutingStateStore.class).asEagerSingleton();
+		bind(RoutingTargetDispatcher.class).asEagerSingleton();
+		bind(RountingListener.class).asEagerSingleton();
 
 		// Plugin
 		bind(Identica.class).asEagerSingleton();

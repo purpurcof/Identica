@@ -2,6 +2,7 @@ package me.whereareiam.identica.platform.velocity;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -11,6 +12,8 @@ import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.platform.velocity.listener.VelocityListenerRegistrar;
 import me.whereareiam.identica.platform.velocity.logging.VelocityLoggingHelper;
 import me.whereareiam.identica.platform.velocity.mapper.CommandSourceMapper;
+import me.whereareiam.identica.platform.velocity.routing.VelocityRoutingTargetApplier;
+import me.whereareiam.identica.routing.RoutingTargetApplier;
 import me.whereareiam.keystone.Actor;
 import org.incendo.cloud.CommandManager;
 import org.slf4j.Logger;
@@ -33,6 +36,10 @@ public class VelocityConfiguration extends AbstractModule {
 		bind(ListenerRegistrar.class).to(VelocityListenerRegistrar.class);
 
 		bind(CommandSourceMapper.class).asEagerSingleton();
+		Multibinder.newSetBinder(binder(), RoutingTargetApplier.class)
+				.addBinding()
+				.to(VelocityRoutingTargetApplier.class);
+
 		bind(new TypeLiteral<CommandManager<Actor>>() {}).toProvider(VelocityCommandManagerProvider.class);
 	}
 }

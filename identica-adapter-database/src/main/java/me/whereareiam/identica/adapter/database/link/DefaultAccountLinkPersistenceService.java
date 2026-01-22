@@ -8,7 +8,7 @@ import me.whereareiam.identica.adapter.database.mapper.AccountLinkMapper;
 import me.whereareiam.identica.adapter.database.repository.link.AccountLinkRepository;
 import me.whereareiam.identica.database.AccountLinkPersistenceService;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.AccountLink;
+import me.whereareiam.identica.model.account.AccountLink;
 import org.jdbi.v3.core.Jdbi;
 
 import java.util.Collections;

@@ -7,11 +7,13 @@ import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.listener.DynamicListener;
+import me.whereareiam.identica.routing.RoutingStateStore;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PlayerDisconnectListener implements DynamicListener<DisconnectEvent> {
 	private final AuthCoordinator authCoordinator;
+	private final RoutingStateStore routingStateStore;
 
 	@Override
 	public void onEvent(DisconnectEvent event) {
@@ -19,5 +21,6 @@ public class PlayerDisconnectListener implements DynamicListener<DisconnectEvent
 		if (player == null) return;
 
 		authCoordinator.clearPending(player.getUniqueId());
+		routingStateStore.clear(player.getUniqueId());
 	}
 }

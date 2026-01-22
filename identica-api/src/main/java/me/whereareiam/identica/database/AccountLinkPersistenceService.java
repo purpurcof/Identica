@@ -1,6 +1,6 @@
 package me.whereareiam.identica.database;
 
-import me.whereareiam.identica.model.AccountLink;
+import me.whereareiam.identica.model.account.AccountLink;
 
 import java.util.List;
 import java.util.Optional;

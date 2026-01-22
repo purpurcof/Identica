@@ -3,7 +3,8 @@ package me.whereareiam.identica.provider.premium;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.loader.IdenticaProvider;
@@ -20,15 +21,16 @@ import me.whereareiam.identica.registry.Registry;
 import java.util.List;
 import java.util.Set;
 
-@RequiredArgsConstructor(onConstructor_ = @Inject)
+@NoArgsConstructor
+@AllArgsConstructor(onConstructor_ = @Inject)
 @SuppressWarnings("unused")
 public class PremiumProvider extends IdenticaProvider {
-	private final Injector injector;
+	private Injector injector;
 
-	private final CommandRegistrar commandRegistrar;
-	private final Registry<HandshakePolicy> handshakePolicies;
-	private final PremiumHandshakePolicy premiumHandshakePolicy;
-	private final PremiumListenerRegistrar listenerRegistrar;
+	private CommandRegistrar commandRegistrar;
+	private Registry<HandshakePolicy> handshakePolicies;
+	private PremiumHandshakePolicy premiumHandshakePolicy;
+	private PremiumListenerRegistrar listenerRegistrar;
 
 	@Override
 	public List<Module> modules() {

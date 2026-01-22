@@ -9,7 +9,7 @@ import me.whereareiam.identica.model.auth.HandshakeDecision;
 import me.whereareiam.identica.model.auth.HandshakeRequest;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileLookup;
-import me.whereareiam.identica.provider.premium.type.VerificationIntent;
+import me.whereareiam.identica.provider.premium.type.VerificationFlow;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -26,7 +26,7 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
 		PremiumSettings.Verification verification = settingsProvider.get().getVerification();
-		if (verification.getIntent() != VerificationIntent.DIRECT)
+		if (verification.getIntent() != VerificationFlow.SILENT)
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
 		return profileLookup.hasPremiumProfile(request.getUsername())

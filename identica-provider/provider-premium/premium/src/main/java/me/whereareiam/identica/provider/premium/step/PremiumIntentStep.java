@@ -7,7 +7,7 @@ import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileLookup;
-import me.whereareiam.identica.provider.premium.type.VerificationIntent;
+import me.whereareiam.identica.provider.premium.type.VerificationFlow;
 
 import java.util.concurrent.CompletableFuture;
 import com.google.inject.Provider;
@@ -36,7 +36,7 @@ public class PremiumIntentStep extends InteractiveStep {
 		return profileLookup.hasPremiumProfile(context.getUsername())
 				.thenApply(hasProfile -> {
 					if (!hasProfile) return StepResult.failed(null);
-					if (settingsProvider.get().getVerification().getIntent() == VerificationIntent.DIRECT)
+					if (settingsProvider.get().getVerification().getIntent() == VerificationFlow.SILENT)
 						return StepResult.requireReconnect(
 								HandshakeMode.ONLINE,
 								String.join("\n", verificationMessages.getInvalidSession())

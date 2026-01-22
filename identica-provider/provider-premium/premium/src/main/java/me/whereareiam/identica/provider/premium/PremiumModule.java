@@ -1,8 +1,10 @@
 package me.whereareiam.identica.provider.premium;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.provider.premium.command.PremiumCommand;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumCommandsProvider;
@@ -22,5 +24,9 @@ public class PremiumModule extends AbstractModule {
 		bind(Commands.class)
 				.annotatedWith(Names.named("premium"))
 				.toProvider(PremiumCommandsProvider.class);
+
+		Multibinder.newSetBinder(binder(), Object.class, Names.named("premiumCommandInstances"))
+				.addBinding()
+				.to(PremiumCommand.class);
 	}
 }

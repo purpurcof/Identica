@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * SerializerEngine wrapper that applies a default scope when missing.
  */
-@RequiredArgsConstructor(onConstructor_ = @Inject)
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public final class ScopedSerializerEngine implements SerializerEngine {
 	private final SerializerEngine delegate;
 	private final String scope;

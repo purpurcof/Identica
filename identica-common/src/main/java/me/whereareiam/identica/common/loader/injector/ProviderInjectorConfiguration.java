@@ -5,7 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.model.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 
 import java.nio.file.Path;
 

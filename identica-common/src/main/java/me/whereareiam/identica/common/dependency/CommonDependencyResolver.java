@@ -150,9 +150,9 @@ public abstract class CommonDependencyResolver implements DependencyResolver {
 				.build());
 
 		addDependency(LibraryRequest.builder()
-				.groupId("com{}mysql")
-				.artifactId("mysql-connector-j")
-				.version(Constants.Dependency.MYSQL)
+				.groupId("org{}mariadb{}jdbc")
+				.artifactId("mariadb-java-client")
+				.version(Constants.Dependency.MARIADB)
 				.build());
 
 		addDependency(LibraryRequest.builder()

@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.provider.premium.config.PremiumCommands;
 import me.whereareiam.identica.provider.premium.command.PremiumCommand;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
@@ -20,6 +21,10 @@ public class PremiumModule extends AbstractModule {
 		bind(PremiumMessagesProvider.class).asEagerSingleton();
 		bind(PremiumMessages.class).toProvider(PremiumMessagesProvider.class);
 		bind(PremiumCommandsProvider.class).asEagerSingleton();
+
+		bind(PremiumCommands.class)
+				.annotatedWith(Names.named("premium"))
+				.toProvider(PremiumCommandsProvider.class);
 
 		bind(Commands.class)
 				.annotatedWith(Names.named("premium"))

@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.codec.CacheCodec;
 import me.whereareiam.identica.cache.CacheService;
-import me.whereareiam.identica.synchronization.SynchronizationService;
+import me.whereareiam.identica.common.cache.type.LocalCache;
+import me.whereareiam.identica.common.cache.type.SynchronizedCache;
+import me.whereareiam.identica.service.SynchronizationService;
 
 
 @Singleton

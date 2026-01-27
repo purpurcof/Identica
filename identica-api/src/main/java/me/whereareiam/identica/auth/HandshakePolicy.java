@@ -1,7 +1,7 @@
 package me.whereareiam.identica.auth;
 
-import me.whereareiam.identica.model.auth.HandshakeDecision;
-import me.whereareiam.identica.model.auth.HandshakeRequest;
+import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
+import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 
 import java.util.concurrent.CompletionStage;
 

@@ -23,7 +23,7 @@ public class PremiumSettingsProvider extends PremiumConfigProvider<PremiumSettin
 
 	@Override
 	protected PremiumSettings load() {
-		return Config.update(getBasePath().resolve("config"), PremiumSettings.class);
+		return Config.update(getBasePath().resolve("settings"), PremiumSettings.class);
 	}
 
 	@Override

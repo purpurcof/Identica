@@ -3,7 +3,7 @@ import me.whereareiam.spawner.SpawnerConfig
 import org.gradle.jvm.tasks.Jar
 
 plugins {
-    id("me.whereareiam.spawner")
+    alias(libs.plugins.spawner)
 }
 
 tasks.withType<ShadowJar> {

@@ -3,22 +3,25 @@ package me.whereareiam.identica.common.auth;
 import me.whereareiam.identica.loader.IdenticaProvider;
 import me.whereareiam.identica.loader.ProviderManager;
 import me.whereareiam.identica.model.auth.AuthContext;
+import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.model.auth.ConnectionInfo;
 import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.auth.step.type.SeamlessStep;
 import me.whereareiam.identica.model.auth.StepResult;
-import me.whereareiam.identica.model.auth.IdentityClaim;
-import me.whereareiam.identica.model.conflict.ConflictContext;
-import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.type.HandshakeMode;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -96,8 +99,9 @@ class AuthPipelineTest {
 	private static AuthContext context() {
 		return AuthContext.builder()
 				.connectionUniqueId(UUID.randomUUID())
-				.username("Steve")
-				.ip("127.0.0.1")
+				.connectionInfo(ConnectionInfo.builder()
+						.identity(new OfflineIdentity("Steve", "127.0.0.1"))
+						.build())
 				.intendedServer("lobby")
 				.build();
 	}
@@ -117,23 +121,8 @@ class AuthPipelineTest {
 		}
 
 		@Override
-		public List<AuthenticationStep> getAuthenticationSteps() {
+		public @NonNull List<AuthenticationStep> getAuthenticationSteps() {
 			return steps;
-		}
-
-		@Override
-		public Set<String> getConflictKeys() {
-			return Set.of();
-		}
-
-		@Override
-		public Set<String> getAvailableConflictSolutions() {
-			return Set.of();
-		}
-
-		@Override
-		public ConflictResolution applyConflictSolution(String solutionId, IdentityClaim claim, ConflictContext context) {
-			return ConflictResolution.deny("Not implemented");
 		}
 	}
 

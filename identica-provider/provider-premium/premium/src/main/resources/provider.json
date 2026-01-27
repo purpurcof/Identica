@@ -2,10 +2,12 @@
   "id": "premium",
   "name": "Premium",
   "version": "dev",
-
   "main": "me.whereareiam.identica.provider.premium.PremiumProvider",
-
   "authors": ["whereareiam"],
   "supportedPlatforms": ["VELOCITY"],
-  "priorityDefault": 100
+  "priority": 100,
+  "capabilities": [
+    "online",
+    "authoritative_username"
+  ]
 }

@@ -26,6 +26,8 @@ public class CommandDefinition {
 
 	@Builder.Default
 	private Map<String, String> arguments = new HashMap<>();
+	@Builder.Default
+	private boolean hide = false;
 
 	@Getter
 	@ToString

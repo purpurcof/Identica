@@ -1,31 +1,23 @@
 package me.whereareiam.identica.platform.velocity.actor;
 
 import com.velocitypowered.api.proxy.Player;
-import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.actor.Identity;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
-import java.util.UUID;
 
-@RequiredArgsConstructor
-public class VelocityCommandPlayer implements Identity {
+public class VelocityCommandPlayer extends Identity {
 	private final Player player;
+
+	public VelocityCommandPlayer(@NotNull Player player) {
+		super(player.getUniqueId(), player.getUsername());
+		this.player = player;
+	}
 
 	public Player getSource() {
 		return player;
-	}
-
-	@Override
-	public @NotNull UUID getUniqueId() {
-		return player.getUniqueId();
-	}
-
-	@Override
-	public @NotNull String getUsername() {
-		return player.getUsername();
 	}
 
 	@Override
@@ -40,6 +32,7 @@ public class VelocityCommandPlayer implements Identity {
 
 	@Override
 	public boolean hasPermission(@NotNull String permission) {
+		if (permission.isBlank()) return true;
 		return player.hasPermission(permission);
 	}
 

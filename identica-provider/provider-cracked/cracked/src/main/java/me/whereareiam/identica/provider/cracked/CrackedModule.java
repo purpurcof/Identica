@@ -3,6 +3,7 @@ package me.whereareiam.identica.provider.cracked;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.provider.cracked.config.CrackedCommands;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
 import me.whereareiam.identica.provider.cracked.config.provider.CrackedCommandsProvider;
@@ -19,6 +20,9 @@ public class CrackedModule extends AbstractModule {
 		bind(CrackedMessages.class).toProvider(CrackedMessagesProvider.class);
 
 		bind(CrackedCommandsProvider.class).asEagerSingleton();
+		bind(CrackedCommands.class)
+				.annotatedWith(Names.named("cracked"))
+				.toProvider(CrackedCommandsProvider.class);
 		bind(Commands.class)
 				.annotatedWith(Names.named("cracked"))
 				.toProvider(CrackedCommandsProvider.class);

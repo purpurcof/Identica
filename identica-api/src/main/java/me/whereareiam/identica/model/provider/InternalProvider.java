@@ -3,9 +3,8 @@ package me.whereareiam.identica.model.provider;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import me.whereareiam.identica.model.ProviderDescriptor;
 import me.whereareiam.identica.loader.IdenticaProvider;
-import me.whereareiam.identica.type.ProviderState;
+import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.nio.file.Path;
 

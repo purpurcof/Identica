@@ -4,13 +4,56 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.model.CommandDefinition;
+import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Configuration for command definitions and command-scoped behavior settings.
+ */
 @Getter
 @Setter
 @ToString
 public class Commands {
-	private Map<String, CommandDefinition> commands = new HashMap<>();
+	private @NotNull Behavior behavior;
+	private @NotNull Map<String, CommandDefinition> commands = new HashMap<>();
+
+	/**
+	 * Configuration for command-specific behavior.
+	 */
+	@Getter
+	@Setter
+	@ToString
+	public static class Behavior {
+		private @NotNull Clear clear;
+		private @NotNull Sessions sessions;
+
+		/**
+		 * Configuration for clear command behavior.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Clear {
+			/**
+			 * Time window for confirming a clear request.
+			 */
+			private @NotNull Duration confirmTtl;
+		}
+
+		/**
+		 * Configuration for session command behavior.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Sessions {
+			/**
+			 * Page size for session listings.
+			 */
+			private int listPageSize;
+		}
+	}
 }

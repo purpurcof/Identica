@@ -11,8 +11,6 @@ public final class Constants {
 		public static final String KEYSTONE = BuildConfig.KEYSTONE;
 		public static final String DIALECTICA = BuildConfig.DIALECTICA;
 
-		public static final String ADVENTURE = BuildConfig.ADVENTURE;
-
 		public static final String CLOUD_CORE = BuildConfig.CLOUD_CORE;
 		public static final String CLOUD_ANNOTATIONS = BuildConfig.CLOUD_CORE;
 		public static final String CLOUD_COOLDOWN = BuildConfig.CLOUD_COOLDOWN;
@@ -22,7 +20,7 @@ public final class Constants {
 		public static final String JDBI = BuildConfig.JDBI;
 		public static final String HIKARI = BuildConfig.HIKARICP;
 		public static final String POSTGRES = BuildConfig.POSTGRESQL;
-		public static final String MYSQL = BuildConfig.MYSQL;
+		public static final String MARIADB = BuildConfig.MARIADB;
 		public static final String SQLITE = BuildConfig.SQLITE;
 
 		public static final String JEDIS = BuildConfig.JEDIS;

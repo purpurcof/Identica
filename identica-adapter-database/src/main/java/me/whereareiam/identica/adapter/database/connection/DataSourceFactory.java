@@ -110,7 +110,7 @@ public final class DataSourceFactory {
 	private static String getDriverClassName(DatabaseType type) {
 		return switch (type) {
 			case POSTGRES -> "org.postgresql.Driver";
-			case MYSQL -> "com.mysql.cj.jdbc.Driver";
+			case MYSQL -> "org.mariadb.jdbc.Driver";
 			case SQLITE -> "org.sqlite.JDBC";
 		};
 	}

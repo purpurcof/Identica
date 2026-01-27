@@ -5,8 +5,8 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.auth.HandshakePolicy;
-import me.whereareiam.identica.model.auth.HandshakeDecision;
-import me.whereareiam.identica.model.auth.HandshakeRequest;
+import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
+import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileLookup;
 import me.whereareiam.identica.provider.premium.type.VerificationFlow;
@@ -22,14 +22,18 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 
 	@Override
 	public CompletionStage<HandshakeDecision> evaluate(HandshakeRequest request) {
-		if (request == null || request.getUsername() == null || request.getUsername().isBlank())
+		String username = request != null
+				? request.getIdentity().getUsername()
+				: null;
+
+		if (username == null || username.isBlank())
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
 		PremiumSettings.Verification verification = settingsProvider.get().getVerification();
 		if (verification.getIntent() != VerificationFlow.SILENT)
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
-		return profileLookup.hasPremiumProfile(request.getUsername())
+		return profileLookup.hasPremiumProfile(username)
 				.thenApply(hasProfile -> hasProfile ? HandshakeDecision.forceOnline() : HandshakeDecision.allow());
 	}
 }

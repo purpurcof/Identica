@@ -5,14 +5,14 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import me.whereareiam.configura.Config;
 import me.whereareiam.identica.Reloadable;
-import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.provider.cracked.config.CrackedCommands;
 import me.whereareiam.identica.provider.cracked.config.template.CrackedCommandsTemplate;
 import me.whereareiam.identica.registry.Registry;
 
 import java.nio.file.Path;
 
 @Singleton
-public class CrackedCommandsProvider extends CrackedConfigProvider<Commands> {
+public class CrackedCommandsProvider extends CrackedConfigProvider<CrackedCommands> {
 	@Inject
 	public CrackedCommandsProvider(
 			@Named("workingPath") Path workingPath,
@@ -22,8 +22,8 @@ public class CrackedCommandsProvider extends CrackedConfigProvider<Commands> {
 	}
 
 	@Override
-	protected Commands load() {
-		return Config.update(getBasePath().resolve("commands"), Commands.class);
+	protected CrackedCommands load() {
+		return Config.update(getBasePath().resolve("commands"), CrackedCommands.class);
 	}
 
 	@Override

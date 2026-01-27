@@ -6,6 +6,7 @@ import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.event.EventPriority;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		routing.setDefaults(defaults);
 
 		routing.setProviders(new HashMap<>());
-		routing.getProviders().put("Cracked", Map.of(
+		routing.getProviders().put("cracked", Map.of(
 				"register", "register-1",
 				"login", "auth-1"
 		));
@@ -45,6 +46,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		redis.setHost("localhost");
 		redis.setPort(6379);
 		redis.setPassword("");
+		redis.setSessionsIndexKey("identica:sessions:index");
 
 		Settings.Synchronization.Channels channels = new Settings.Synchronization.Channels();
 		channels.setAccountUpdates("identica:accounts");
@@ -55,6 +57,19 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 
 		settings.setSynchronization(synchronization);
 
+		Settings.Sessions sessions = new Settings.Sessions();
+		sessions.setDefaultTtlMinutes(Duration.ofHours(2));
+		sessions.setRefreshMinutes(Duration.ofMinutes(10));
+		sessions.setProviders(Map.of(
+				"premium", Duration.ofHours(12)
+		));
+		settings.setSessions(sessions);
+
+		Settings.Authentication authentication = new Settings.Authentication();
+		authentication.setHandshakeInstructionTtlMinutes(Duration.ofMinutes(10));
+		authentication.setPendingUuidTtlMinutes(Duration.ofMinutes(15));
+		settings.setAuthentication(authentication);
+
 		return settings;
 	}
 
@@ -62,6 +77,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		Map<String, Event> events = new HashMap<>();
 		events.put("com.velocitypowered.api.event.connection.PreLoginEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.connection.LoginEvent", defaultEvent());
+		events.put("com.velocitypowered.api.event.player.GameProfileRequestEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.player.ServerPreConnectEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.connection.DisconnectEvent", defaultEvent());

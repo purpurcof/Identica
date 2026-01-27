@@ -1,7 +1,10 @@
 package me.whereareiam.identica.common.cache;
 
 import me.whereareiam.identica.cache.codec.CacheCodec;
-import me.whereareiam.identica.synchronization.SynchronizationService;
+import me.whereareiam.identica.common.cache.type.LocalCache;
+import me.whereareiam.identica.common.cache.type.SynchronizedCache;
+import me.whereareiam.identica.service.SynchronizationService;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -90,31 +93,31 @@ class SynchronizedCacheTest {
 		}
 
 		@Override
-		public CompletableFuture<Optional<byte[]>> get(String cacheName, String key) {
+		public @NonNull CompletableFuture<Optional<byte[]>> get(@NonNull String cacheName, @NonNull String key) {
 			getCalls.incrementAndGet();
 			return CompletableFuture.completedFuture(Optional.ofNullable(storage.get(cacheName + ":" + key)));
 		}
 
 		@Override
-		public CompletableFuture<Void> put(String cacheName, String key, byte[] value, long ttlMs) {
+		public @NonNull CompletableFuture<Void> put(@NonNull String cacheName, @NonNull String key, byte[] value, long ttlMs) {
 			storage.put(cacheName + ":" + key, value);
 			return CompletableFuture.completedFuture(null);
 		}
 
 		@Override
-		public CompletableFuture<Void> invalidate(String cacheName, String key) {
+		public @NonNull CompletableFuture<Void> invalidate(@NonNull String cacheName, @NonNull String key) {
 			invalidateCalls.incrementAndGet();
 			storage.remove(cacheName + ":" + key);
 			return CompletableFuture.completedFuture(null);
 		}
 
 		@Override
-		public CompletableFuture<Void> publish(String channel, byte[] payload) {
+		public @NonNull CompletableFuture<Void> publish(@NonNull String channel, byte[] payload) {
 			return CompletableFuture.completedFuture(null);
 		}
 
 		@Override
-		public void subscribe(String channel, java.util.function.Consumer<byte[]> handler) {
+		public void subscribe(@NonNull String channel, java.util.function.@NonNull Consumer<byte[]> handler) {
 		}
 
 		void putRaw(String key, byte[] value) {

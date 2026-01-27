@@ -6,8 +6,8 @@ import com.google.inject.name.Named;
 import me.whereareiam.identica.loader.ProviderDescriptorReader;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.model.ProviderDescriptor;
-import me.whereareiam.identica.type.ProviderState;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
+import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.io.InputStream;
 import java.nio.file.Files;

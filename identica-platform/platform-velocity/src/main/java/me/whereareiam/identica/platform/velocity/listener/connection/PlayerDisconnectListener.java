@@ -8,12 +8,14 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.routing.RoutingStateStore;
+import me.whereareiam.identica.registry.IdentityRegistry;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PlayerDisconnectListener implements DynamicListener<DisconnectEvent> {
 	private final AuthCoordinator authCoordinator;
 	private final RoutingStateStore routingStateStore;
+	private final IdentityRegistry identityRegistry;
 
 	@Override
 	public void onEvent(DisconnectEvent event) {
@@ -22,5 +24,6 @@ public class PlayerDisconnectListener implements DynamicListener<DisconnectEvent
 
 		authCoordinator.clearPending(player.getUniqueId());
 		routingStateStore.clear(player.getUniqueId());
+		identityRegistry.detachOnline(player.getUniqueId());
 	}
 }

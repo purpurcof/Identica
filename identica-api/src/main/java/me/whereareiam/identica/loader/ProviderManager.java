@@ -2,6 +2,9 @@ package me.whereareiam.identica.loader;
 
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.loader.resolver.ProviderResolver;
+import me.whereareiam.identica.type.provider.ProviderCapability;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -26,6 +29,22 @@ public interface ProviderManager {
 	 * @return immutable view of managed providers
 	 */
 	List<InternalProvider> getProviders();
+
+	/**
+	 * Finds providers that advertise all requested capabilities.
+	 *
+	 * @param capabilities required capabilities
+	 * @return immutable list of matching providers ordered by priority
+	 */
+	@NotNull List<InternalProvider> findProviders(@NotNull ProviderCapability... capabilities);
+
+	/**
+	 * Finds the highest priority provider that advertises all requested capabilities.
+	 *
+	 * @param capabilities required capabilities
+	 * @return matching provider or {@code null} when none match
+	 */
+	@Nullable InternalProvider findProvider(@NotNull ProviderCapability... capabilities);
 
 	/**
 	 * Registers a resolver used during provider loading.

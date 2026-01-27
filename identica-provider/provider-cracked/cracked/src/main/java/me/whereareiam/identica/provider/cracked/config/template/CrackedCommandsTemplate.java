@@ -3,15 +3,15 @@ package me.whereareiam.identica.provider.cracked.config.template;
 import com.google.inject.Singleton;
 import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.model.CommandDefinition;
-import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.provider.cracked.config.CrackedCommands;
 
 import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class CrackedCommandsTemplate implements TemplateProvider<Commands> {
+public class CrackedCommandsTemplate implements TemplateProvider<CrackedCommands> {
 	@Override
-	public Commands supply(Commands commands) {
+	public CrackedCommands supply(CrackedCommands commands) {
 		CommandDefinition register = CommandDefinition.builder()
 				.enabled(true)
 				.aliases(List.of("register", "reg"))

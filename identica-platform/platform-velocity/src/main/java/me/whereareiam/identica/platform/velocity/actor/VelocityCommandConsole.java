@@ -33,6 +33,7 @@ public class VelocityCommandConsole implements Actor {
 
 	@Override
 	public boolean hasPermission(@NotNull String permission) {
+		if (permission.isBlank()) return true;
 		return source.hasPermission(permission);
 	}
 

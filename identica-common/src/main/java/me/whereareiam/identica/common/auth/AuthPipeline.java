@@ -106,7 +106,7 @@ public class AuthPipeline implements AuthenticationService {
 		eventManager.call(new AuthProviderSelectedEvent(provider, context));
 
 		List<AuthenticationStep> steps = provider.getAuthenticationSteps();
-		if (steps == null || steps.isEmpty()) return executeProviderIndex(providers, context, index + 1);
+		if (steps.isEmpty()) return executeProviderIndex(providers, context, index + 1);
 
 		return executeStepPipeline(provider, steps, context, 0)
 				.thenCompose(result -> {

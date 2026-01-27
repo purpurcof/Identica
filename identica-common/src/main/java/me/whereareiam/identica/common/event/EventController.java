@@ -108,9 +108,9 @@ public class EventController implements EventManager {
 	}
 
 	private void logExecutionError(Event event, RegisteredListener listener, Exception e) {
-		Logger.severe("Failed to call event %s for listener %s",
+		Logger.severe("Failed to call event %s for listener %s %s",
 				event.getClass().getSimpleName(),
-				listener.getListener().getClass().getSimpleName());
-		e.printStackTrace();
+				listener.getListener().getClass().getSimpleName(),
+				e.fillInStackTrace());
 	}
 }

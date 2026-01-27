@@ -3,14 +3,14 @@ package me.whereareiam.identica.provider.premium.config.template;
 import com.google.inject.Singleton;
 import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.model.CommandDefinition;
-import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.provider.premium.config.PremiumCommands;
 
 import java.util.List;
 
 @Singleton
-public class PremiumCommandsTemplate implements TemplateProvider<Commands> {
+public class PremiumCommandsTemplate implements TemplateProvider<PremiumCommands> {
 	@Override
-	public Commands supply(Commands commands) {
+	public PremiumCommands supply(PremiumCommands commands) {
 		CommandDefinition premium = CommandDefinition.builder()
 				.enabled(true)
 				.aliases(List.of("premium"))

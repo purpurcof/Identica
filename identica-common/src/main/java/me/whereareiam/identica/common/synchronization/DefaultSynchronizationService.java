@@ -3,7 +3,8 @@ package me.whereareiam.identica.common.synchronization;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import me.whereareiam.identica.synchronization.SynchronizationService;
+import me.whereareiam.identica.service.SynchronizationService;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.Set;
@@ -12,11 +13,11 @@ import java.util.function.Consumer;
 
 @Singleton
 public class DefaultSynchronizationService implements SynchronizationService {
-	private final Set<SynchronizationService> providers;
+	private final @NotNull Set<SynchronizationService> providers;
 
 	@Inject
 	public DefaultSynchronizationService(
-			@Named("synchronizationProviders") Set<SynchronizationService> providers
+			@Named("synchronizationProviders") @NotNull Set<SynchronizationService> providers
 	) {
 		this.providers = providers;
 	}
@@ -27,7 +28,7 @@ public class DefaultSynchronizationService implements SynchronizationService {
 	}
 
 	@Override
-	public CompletableFuture<Optional<byte[]>> get(String namespace, String key) {
+	public @NotNull CompletableFuture<Optional<byte[]>> get(@NotNull String namespace, @NotNull String key) {
 		SynchronizationService provider = selectProvider();
 		if (provider == null) {
 			return CompletableFuture.completedFuture(Optional.empty());
@@ -37,7 +38,12 @@ public class DefaultSynchronizationService implements SynchronizationService {
 	}
 
 	@Override
-	public CompletableFuture<Void> put(String namespace, String key, byte[] value, long ttlMs) {
+	public @NotNull CompletableFuture<Void> put(
+			@NotNull String namespace,
+			@NotNull String key,
+			byte[] value,
+			long ttlMs
+	) {
 		SynchronizationService provider = selectProvider();
 		if (provider == null) {
 			return CompletableFuture.completedFuture(null);
@@ -47,7 +53,7 @@ public class DefaultSynchronizationService implements SynchronizationService {
 	}
 
 	@Override
-	public CompletableFuture<Void> invalidate(String namespace, String key) {
+	public @NotNull CompletableFuture<Void> invalidate(@NotNull String namespace, @NotNull String key) {
 		SynchronizationService provider = selectProvider();
 		if (provider == null) {
 			return CompletableFuture.completedFuture(null);
@@ -57,7 +63,7 @@ public class DefaultSynchronizationService implements SynchronizationService {
 	}
 
 	@Override
-	public CompletableFuture<Void> publish(String channel, byte[] payload) {
+	public @NotNull CompletableFuture<Void> publish(@NotNull String channel, byte @NotNull [] payload) {
 		SynchronizationService provider = selectProvider();
 		if (provider == null) {
 			return CompletableFuture.completedFuture(null);
@@ -67,7 +73,7 @@ public class DefaultSynchronizationService implements SynchronizationService {
 	}
 
 	@Override
-	public void subscribe(String channel, Consumer<byte[]> handler) {
+	public void subscribe(@NotNull String channel, @NotNull Consumer<byte[]> handler) {
 		SynchronizationService provider = selectProvider();
 		if (provider == null) return;
 

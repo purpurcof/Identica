@@ -1,39 +1,38 @@
 package me.whereareiam.identica.common.auth;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.auth.AuthenticationService;
 import me.whereareiam.identica.auth.HandshakePolicy;
-import me.whereareiam.identica.common.auth.handshake.HandshakeDirectiveStore;
-import me.whereareiam.identica.util.UniqueIdGenerator;
-import me.whereareiam.identica.database.AccountLinkPersistenceService;
-import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.event.account.AccountLinkResolveEvent;
-import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionStore;
 import me.whereareiam.identica.event.auth.attempt.AuthAttemptFinishedEvent;
 import me.whereareiam.identica.event.auth.attempt.AuthAttemptStartedEvent;
 import me.whereareiam.identica.event.auth.AuthContextBuildEvent;
 import me.whereareiam.identica.event.auth.AuthDecisionEvent;
-import me.whereareiam.identica.event.handshake.HandshakeDirectiveEvent;
+import me.whereareiam.identica.event.handshake.HandshakeInstructionEvent;
 import me.whereareiam.identica.event.handshake.HandshakeDecisionEvent;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.account.Account;
+import me.whereareiam.identica.model.account.AccountPreparation;
+import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.AuthDecision;
-import me.whereareiam.identica.model.auth.HandshakeDecision;
-import me.whereareiam.identica.model.auth.HandshakeDirective;
-import me.whereareiam.identica.model.auth.HandshakeRequest;
-import me.whereareiam.identica.model.auth.IdentityClaim;
-import me.whereareiam.identica.model.auth.LoginRequest;
+import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
+import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
+import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
+import me.whereareiam.identica.model.auth.request.LoginRequest;
+import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.service.AccountService;
+import me.whereareiam.identica.registry.IdentityRegistry;
 import me.whereareiam.identica.type.HandshakeMode;
+import me.whereareiam.identica.util.EventUtil;
+import org.jetbrains.annotations.NotNull;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -45,29 +44,30 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultAuthCoordinator implements AuthCoordinator {
 	private final AuthenticationService authenticationService;
-	private final HandshakeDirectiveStore directiveStore;
-	private final EventManager eventManager;
-	private final Provider<Messages> messagesProvider;
-	private final AccountPersistenceService accountPersistenceService;
-	private final AccountLinkPersistenceService accountLinkPersistenceService;
+	private final HandshakeInstructionStore instructionStore;
+	private final com.google.inject.Provider<Messages> messagesProvider;
+	private final AccountService accountService;
 	private final Registry<HandshakePolicy> handshakePolicies;
+	private final IdentityRegistry identityRegistry;
 
 	@Override
-	public CompletionStage<HandshakeDecision> handshake(HandshakeRequest request) {
-		HandshakeDecision decision = directiveStore.consume(request.getUsername())
-				.map(directive -> directive.getMode() == HandshakeMode.ONLINE
+	public @NotNull CompletionStage<HandshakeDecision> handshake(HandshakeRequest request) {
+		String username = request != null
+				? request.getIdentity().getUsername()
+				: null;
+
+		HandshakeDecision decision = instructionStore.consume(username)
+				.map(instruction -> instruction.getMode() == HandshakeMode.ONLINE
 						? HandshakeDecision.forceOnline()
 						: HandshakeDecision.forceOffline())
 				.orElse(HandshakeDecision.allow());
 
-		if (decision.getStatus() != HandshakeDecision.Status.ALLOW || handshakePolicies.values().isEmpty()) {
+		if (decision.getStatus() != HandshakeDecision.Status.ALLOW || handshakePolicies.values().isEmpty())
 			return CompletableFuture.completedFuture(finalizeHandshakeDecision(request, decision));
-		}
 
 		List<CompletionStage<HandshakeDecision>> evaluations = new ArrayList<>();
-		for (HandshakePolicy policy : handshakePolicies.values()) {
+		for (HandshakePolicy policy : handshakePolicies.values())
 			evaluations.add(evaluatePolicy(policy, request));
-		}
 
 		CompletableFuture<?>[] futures = evaluations.stream()
 				.map(CompletionStage::toCompletableFuture)
@@ -79,96 +79,108 @@ public class DefaultAuthCoordinator implements AuthCoordinator {
 	}
 
 	@Override
-	public AuthDecision authenticate(LoginRequest request) {
+	public UUID prepareProfile(ProfileRequest request) {
+		if (request == null) return null;
+		return identityRegistry.resolveUniqueId(request);
+	}
+
+	@Override
+	public @NotNull AuthDecision authenticate(LoginRequest request) {
+		if (request == null || request.getIdentity() == null || request.getIdentity().getUniqueId() == null) {
+			Logger.severe("Authentication request missing Identica UUID (profile rewrite not applied)");
+			return AuthDecision.deny(joinMessage(messagesProvider.get().getAuthentication().getAuthenticationFailed()));
+		}
+
 		AuthContext context = buildContext(request);
-		eventManager.call(new AuthContextBuildEvent(context));
-		eventManager.call(new AuthAttemptStartedEvent(context));
+		EventUtil.callEvent(new AuthContextBuildEvent(context));
+		EventUtil.callEvent(new AuthAttemptStartedEvent(context));
 
 		StepResult result;
 		try {
 			result = authenticationService.authenticate(context).join();
 		} catch (Exception e) {
-			Logger.severe("Authentication failed", e);
+			Logger.severe("Authentication failed %s", e.fillInStackTrace());
 			return AuthDecision.deny(joinMessage(messagesProvider.get().getAuthentication().getAuthenticationFailed()));
 		}
 
-		eventManager.call(new AuthAttemptFinishedEvent(context, result));
+		EventUtil.callEvent(new AuthAttemptFinishedEvent(context, result));
 		AuthDecision decision = mapDecision(result, context);
 
 		AuthDecisionEvent decisionEvent = new AuthDecisionEvent(context, decision);
-		eventManager.call(decisionEvent);
+		EventUtil.callEvent(decisionEvent);
 		AuthDecision finalDecision = decisionEvent.getDecision();
-		return finalDecision != null ? finalDecision : decision;
+
+		return finalDecision != null
+				? finalDecision
+				: decision;
 	}
 
 	@Override
-	public AuthDecision resume(UUID connectionUniqueId) {
+	public @NotNull AuthDecision resume(@NotNull UUID connectionUniqueId) {
 		return resume(connectionUniqueId, null);
 	}
 
 	@Override
-	public AuthDecision resume(UUID connectionUniqueId, Consumer<AuthContext> contextUpdater) {
+	public @NotNull AuthDecision resume(@NotNull UUID connectionUniqueId, Consumer<AuthContext> contextUpdater) {
 		StepResult result;
 		try {
 			result = authenticationService.resume(connectionUniqueId, contextUpdater).join();
 		} catch (Exception e) {
-			Logger.severe("Authentication resume failed", e);
+			Logger.severe("Authentication resume failed %s", e.fillInStackTrace());
 			return AuthDecision.deny(joinMessage(messagesProvider.get().getAuthentication().getAuthenticationFailed()));
 		}
 
 		AuthContext context = result != null ? result.getUpdatedContext() : null;
 		if (context != null) {
-			eventManager.call(new AuthAttemptFinishedEvent(context, result));
+			EventUtil.callEvent(new AuthAttemptFinishedEvent(context, result));
 		}
 
 		AuthDecision decision = mapDecision(result, context);
 		if (context != null) {
 			AuthDecisionEvent decisionEvent = new AuthDecisionEvent(context, decision);
-			eventManager.call(decisionEvent);
+			EventUtil.callEvent(decisionEvent);
 			AuthDecision finalDecision = decisionEvent.getDecision();
-			return finalDecision != null ? finalDecision : decision;
+
+			return finalDecision != null
+					? finalDecision
+					: decision;
 		}
 
 		return decision;
 	}
 
 	@Override
-	public boolean hasPending(UUID connectionUniqueId) {
+	public boolean hasPending(@NotNull UUID connectionUniqueId) {
 		return authenticationService.hasPending(connectionUniqueId);
 	}
 
 	@Override
-	public boolean clearPending(UUID connectionUniqueId) {
+	public boolean clearPending(@NotNull UUID connectionUniqueId) {
 		return authenticationService.clearPending(connectionUniqueId);
 	}
 
 	@Override
-	public void requestHandshakeDirective(String username, HandshakeMode mode) {
+	public void requestHandshakeInstruction(String username, HandshakeMode mode) {
 		if (username == null || mode == null)
 			return;
 
-		HandshakeDirectiveEvent event = new HandshakeDirectiveEvent(HandshakeDirective.create(
-				username, mode, directiveStore.getDefaultTtlMillis()
+		OfflineIdentity identity = new OfflineIdentity(username, null);
+		HandshakeInstructionEvent event = new HandshakeInstructionEvent(HandshakeInstruction.create(
+				identity, mode, instructionStore.getDefaultTtlMillis()
 		));
 
-		eventManager.call(event);
+		EventUtil.callEvent(event);
 		if (event.isCancelled())
 			return;
 
-		directiveStore.put(event.getDirective());
+		instructionStore.put(event.getInstruction());
 	}
 
 	private AuthContext buildContext(LoginRequest request) {
-		String profileUniqueId = resolveProfileUniqueId(request);
 		AuthContext.AuthContextBuilder builder = AuthContext.builder()
 				.connectionUniqueId(request.getConnectionUniqueId())
-				.username(request.getUsername())
-				.ip(request.getIp())
-				.intendedServer(request.getIntendedServer())
-				.onlineMode(request.isOnlineMode());
-
-		if (profileUniqueId != null && !profileUniqueId.isBlank())
-			builder.profileUniqueId(profileUniqueId);
+				.connectionInfo(request.getConnectionInfo())
+				.intendedServer(request.getIntendedServer());
 
 		return builder.build();
 	}
@@ -181,14 +193,17 @@ public class DefaultAuthCoordinator implements AuthCoordinator {
 		return switch (result.getStatus()) {
 			case CONTINUE -> AuthDecision.allow();
 			case COMPLETE -> {
-				ensureAccount(context);
+				AuthDecision accountDecision = handleAccount(context);
+				if (accountDecision != null)
+					yield accountDecision;
+
 				yield AuthDecision.allow();
 			}
 			case WAITING -> AuthDecision.waiting(result.getMessage());
 			case FAILED, DENIED -> AuthDecision.deny(messageOrFallback(result.getMessage()));
 			case REQUIRE_RECONNECT -> {
 				HandshakeMode mode = result.getHandshakeMode();
-				if (mode != null && context != null) requestHandshakeDirective(context.getUsername(), mode);
+				if (mode != null && context != null) requestHandshakeInstruction(context.getUsername(), mode);
 
 				yield AuthDecision.requireReconnect(mode, messageOrFallback(result.getMessage()));
 			}
@@ -203,14 +218,16 @@ public class DefaultAuthCoordinator implements AuthCoordinator {
 
 			return stage.handle((decision, error) -> {
 				if (error != null) {
-					Logger.severe("Handshake policy failed", error);
+					Logger.severe("Handshake policy failed %s", error.fillInStackTrace());
 					return HandshakeDecision.allow();
 				}
 
-				return decision != null ? decision : HandshakeDecision.allow();
+				return decision != null
+						? decision
+						: HandshakeDecision.allow();
 			});
 		} catch (Exception e) {
-			Logger.severe("Handshake policy failed", e);
+			Logger.severe("Handshake policy failed %s", e.fillInStackTrace());
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 	}
@@ -236,6 +253,7 @@ public class DefaultAuthCoordinator implements AuthCoordinator {
 				}
 			}
 		}
+
 		if (forceOnline != null) return forceOnline;
 		if (forceOffline != null) return forceOffline;
 
@@ -244,7 +262,7 @@ public class DefaultAuthCoordinator implements AuthCoordinator {
 
 	private HandshakeDecision finalizeHandshakeDecision(HandshakeRequest request, HandshakeDecision decision) {
 		HandshakeDecisionEvent event = new HandshakeDecisionEvent(request, decision);
-		eventManager.call(event);
+		EventUtil.callEvent(event);
 
 		HandshakeDecision finalDecision = event.getDecision();
 		if (finalDecision == null) finalDecision = decision;
@@ -259,54 +277,37 @@ public class DefaultAuthCoordinator implements AuthCoordinator {
 		return finalDecision;
 	}
 
-	private void ensureAccount(AuthContext context) {
-		if (context == null) return;
+	private AuthDecision handleAccount(AuthContext context) {
+		if (context == null) return null;
+		AuthContext.Provider provider = context.getProvider();
+		if (provider == null) return null;
 
-		IdentityClaim claim = context.getIdentityClaim();
-		if (claim == null) return;
+		String providerId = provider.getProviderId();
+		if (providerId == null || providerId.isBlank()) return null;
 
-		String providerId = claim.getProviderId();
-		if (providerId == null || providerId.isBlank()) return;
+		String providerSubject = provider.getProviderSubject();
+		if (providerSubject == null || providerSubject.isBlank()) return null;
 
-		long now = System.currentTimeMillis();
-		UUID identicaUniqueId = context.getIdenticaUniqueId();
-		if (identicaUniqueId == null) {
-			AccountLinkResolveEvent resolveEvent = new AccountLinkResolveEvent(context, claim);
-			eventManager.call(resolveEvent);
-			identicaUniqueId = resolveEvent.getUniqueId();
+		String providerUsername = provider.getProviderUsername();
+		if (providerUsername.isBlank()) {
+			Logger.severe("Missing provider username for %s", providerId);
+			return AuthDecision.deny(joinMessage(messagesProvider.get().getAuthentication().getAuthenticationFailed()));
 		}
 
-		if (identicaUniqueId != null) {
-			accountPersistenceService.updateLastSeen(identicaUniqueId, now);
-			accountLinkPersistenceService.touch(identicaUniqueId, providerId, false, now);
-			context.setIdenticaUniqueId(identicaUniqueId);
-			return;
-		}
-
-		identicaUniqueId = UniqueIdGenerator.newIdenticaUniqueId();
-		Account account = Account.builder()
-				.uniqueId(identicaUniqueId)
-				.createdAt(now)
-				.lastSeenAt(now)
+		AccountProviderProfile profile = AccountProviderProfile.builder()
+				.providerId(providerId)
+				.providerSubject(providerSubject)
+				.providerUsername(providerUsername)
 				.build();
 
-		accountPersistenceService.create(account);
-		accountLinkPersistenceService.touch(identicaUniqueId, providerId, true, now);
+		AccountPreparation preparation = accountService.prepareAccount(profile, context.getIdenticaUniqueId());
+		if (preparation.getDecision().isDenied())
+			return AuthDecision.deny(messageOrFallback(preparation.getDecision().getMessage()));
 
-		context.setIdenticaUniqueId(identicaUniqueId);
-	}
+		context.setIdenticaUniqueId(preparation.getAccount().getUniqueId());
+		accountService.startSession(preparation, context.getIp());
 
-	private String resolveProfileUniqueId(LoginRequest request) {
-		if (request == null) return null;
-
-		String profileId = request.getProfileUniqueId();
-		if (profileId != null && !profileId.isBlank()) return profileId;
-
-		String username = request.getUsername();
-		if (username == null || username.isBlank()) return null;
-
-		UUID offlineUuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
-		return offlineUuid.toString();
+		return null;
 	}
 
 	private String messageOrFallback(String message) {
@@ -314,6 +315,7 @@ public class DefaultAuthCoordinator implements AuthCoordinator {
 
 		return joinMessage(messagesProvider.get().getAuthentication().getAuthenticationFailed());
 	}
+
 
 	private String joinMessage(List<String> lines) {
 		if (lines == null || lines.isEmpty()) return "";

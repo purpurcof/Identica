@@ -2,6 +2,8 @@ package me.whereareiam.identica.common.routing;
 
 import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.model.auth.AuthContext;
+import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.model.auth.ConnectionInfo;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.RoutingTarget;
@@ -24,7 +26,7 @@ class DefaultRoutingServiceTest {
 	@Test
 	void resolvesStepTargetFromProviderConfig() {
 		Settings settings = baseSettings();
-		settings.getRouting().getProviders().put("Cracked", Map.of("register", "register-1"));
+		settings.getRouting().getProviders().put("cracked", Map.of("register", "register-1"));
 
 		RoutingService service = new DefaultRoutingService(() -> settings);
 		AuthenticationStep step = new TestStep("REGISTER", AuthStepType.INTERACTIVE);
@@ -110,8 +112,9 @@ class DefaultRoutingServiceTest {
 	private static AuthContext context() {
 		return AuthContext.builder()
 				.connectionUniqueId(UUID.randomUUID())
-				.username("Steve")
-				.ip("127.0.0.1")
+				.connectionInfo(ConnectionInfo.builder()
+						.identity(new OfflineIdentity("Steve", "127.0.0.1"))
+						.build())
 				.intendedServer("lobby")
 				.build();
 	}

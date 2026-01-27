@@ -7,7 +7,7 @@ import me.whereareiam.attache.model.LibraryRequest;
 import me.whereareiam.attache.platform.standalone.StandaloneLibraryManager;
 import me.whereareiam.attache.type.VerbosityMode;
 import me.whereareiam.identica.loader.IdenticaProvider;
-import me.whereareiam.identica.model.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 
 import java.nio.file.Path;
@@ -59,8 +59,6 @@ public class ProviderDependencyResolver {
 	public void loadProviderLibraries(ProviderDescriptor descriptor, IdenticaProvider provider, ClassLoader classLoader) {
 		if (descriptor == null || provider == null) return;
 		ProviderLibraries libraries = provider.libraries();
-		if (libraries != null) {
-			loadLibraries(descriptor.getId(), libraries, classLoader);
-		}
+		loadLibraries(descriptor.getId(), libraries, classLoader);
 	}
 }

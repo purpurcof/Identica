@@ -9,12 +9,13 @@ import me.whereareiam.identica.common.loader.factory.ProviderInstanceFactory;
 import me.whereareiam.identica.common.loader.injector.ProviderInjectorFactory;
 import me.whereareiam.identica.common.loader.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.common.loader.resolver.ProviderResolverRegistry;
+import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.loader.IdenticaProvider;
 import me.whereareiam.identica.loader.resolver.ProviderResolver;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.type.ProviderState;
+import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
@@ -27,6 +28,7 @@ public class ProviderLifecycleController {
 	private final ProviderInjectorFactory injectorFactory;
 	private final ProviderInstanceFactory instanceFactory;
 	private final ProviderResolverRegistry resolverRegistry;
+	private final ConflictService conflictService;
 
 	@Inject
 	public ProviderLifecycleController(
@@ -35,7 +37,8 @@ public class ProviderLifecycleController {
 			ProviderDependencyResolver dependencyResolver,
 			ProviderInjectorFactory injectorFactory,
 			ProviderInstanceFactory instanceFactory,
-			ProviderResolverRegistry resolverRegistry
+			ProviderResolverRegistry resolverRegistry,
+			ConflictService conflictService
 	) {
 		this.workingPathResolver = workingPathResolver;
 		this.classLoaderFactory = classLoaderFactory;
@@ -43,6 +46,7 @@ public class ProviderLifecycleController {
 		this.injectorFactory = injectorFactory;
 		this.instanceFactory = instanceFactory;
 		this.resolverRegistry = resolverRegistry;
+		this.conflictService = conflictService;
 	}
 
 	public void loadProvider(InternalProvider internal) {
@@ -104,6 +108,7 @@ public class ProviderLifecycleController {
 
 		internal.setState(ProviderState.ENABLED);
 		try {
+			registerConflictResolvers(internal.getProvider());
 			internal.getProvider().onEnable();
 		} catch (Exception e) {
 			internal.setState(ProviderState.FAILED);
@@ -117,6 +122,7 @@ public class ProviderLifecycleController {
 
 		internal.setState(ProviderState.DISABLED);
 		try {
+			unregisterConflictResolvers(internal.getProvider());
 			internal.getProvider().onDisable();
 		} catch (Exception e) {
 			internal.setState(ProviderState.FAILED);
@@ -150,10 +156,28 @@ public class ProviderLifecycleController {
 		return false;
 	}
 
+	private void registerConflictResolvers(IdenticaProvider provider) {
+		if (provider == null) return;
+		for (var resolver : provider.getConflictResolvers())
+			conflictService.register(resolver);
+
+		for (var type : provider.getConflictTypes())
+			conflictService.register(type);
+	}
+
+	private void unregisterConflictResolvers(IdenticaProvider provider) {
+		if (provider == null) return;
+		for (var resolver : provider.getConflictResolvers())
+			conflictService.unregister(resolver);
+
+		for (var type : provider.getConflictTypes())
+			conflictService.unregister(type);
+
+	}
+
 	private String safeId(InternalProvider internal) {
-		if (internal == null || internal.getDescriptor() == null) {
+		if (internal == null || internal.getDescriptor() == null)
 			return "unknown";
-		}
 
 		String id = internal.getDescriptor().getId();
 		return id != null && !id.isBlank() ? id : "unknown";

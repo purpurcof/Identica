@@ -1,16 +1,15 @@
 package me.whereareiam.identica.loader;
 
 import lombok.Setter;
-import me.whereareiam.identica.model.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.auth.step.AuthenticationStep;
-import me.whereareiam.identica.model.auth.IdentityClaim;
-import me.whereareiam.identica.model.conflict.ConflictContext;
-import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
+import me.whereareiam.identica.conflict.resolver.ConflictResolver;
+import me.whereareiam.identica.conflict.ConflictType;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 import com.google.inject.Module;
 
@@ -20,11 +19,21 @@ public abstract class IdenticaProvider {
 	protected ProviderDescriptor descriptor;
 	protected Path workingPath;
 
-	public ProviderLibraries libraries() {
+	/**
+	 * Provides dependency metadata for this provider.
+	 *
+	 * @return provider libraries descriptor
+	 */
+	public @NotNull ProviderLibraries libraries() {
 		return ProviderLibraries.empty();
 	}
 
-	public List<Module> modules() {
+	/**
+	 * Provides Guice modules for this provider.
+	 *
+	 * @return list of modules to install
+	 */
+	public @NotNull List<Module> modules() {
 		return List.of();
 	}
 
@@ -33,48 +42,50 @@ public abstract class IdenticaProvider {
 	 *
 	 * @return ordered list of step instances
 	 */
-	public abstract List<AuthenticationStep> getAuthenticationSteps();
+	public abstract @NotNull List<AuthenticationStep> getAuthenticationSteps();
 
 	/**
-	 * Declare which fields this provider uses for conflict detection.
+	 * Provide conflict resolvers owned by this provider.
 	 *
-	 * @return set of conflict key names
+	 * @return list of provider-defined resolvers
 	 */
-	public abstract Set<String> getConflictKeys();
+	public @NotNull List<ConflictResolver> getConflictResolvers() {
+		return List.of();
+	}
 
 	/**
-	 * Declare which conflict solution IDs this provider supports.
+	 * Provide conflict types owned by this provider.
 	 *
-	 * @return set of supported solution IDs
+	 * @return list of provider-defined conflict types
 	 */
-	public abstract Set<String> getAvailableConflictSolutions();
+	public @NotNull List<ConflictType> getConflictTypes() {
+		return List.of();
+	}
 
 	/**
-	 * Apply the specified conflict solution to resolve a conflict.
-	 *
-	 * @param solutionId the solution ID from {@link #getAvailableConflictSolutions()}
-	 * @param claim the new authentication claim attempting to join
-	 * @param context conflict context (existing sessions, conflict key/value, etc.)
-	 * @return resolution result (allow/deny, username modification, etc.)
+	 * Called after the provider is loaded.
 	 */
-	public abstract ConflictResolution applyConflictSolution(
-			String solutionId,
-			IdentityClaim claim,
-			ConflictContext context
-	);
-
 	public void onLoad() {
 
 	}
 
+	/**
+	 * Called when the provider is enabled.
+	 */
 	public void onEnable() {
 
 	}
 
+	/**
+	 * Called when the provider is disabled.
+	 */
 	public void onDisable() {
 
 	}
 
+	/**
+	 * Called when the provider is unloaded.
+	 */
 	public void onUnload() {
 
 	}

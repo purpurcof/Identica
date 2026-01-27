@@ -1,5 +1,7 @@
 package me.whereareiam.identica.provider.premium.step;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import me.whereareiam.identica.type.HandshakeMode;
 import me.whereareiam.identica.auth.step.type.InteractiveStep;
 import me.whereareiam.identica.model.auth.AuthContext;
@@ -12,11 +14,13 @@ import me.whereareiam.identica.provider.premium.type.VerificationFlow;
 import java.util.concurrent.CompletableFuture;
 import com.google.inject.Provider;
 
+@Singleton
 public class PremiumIntentStep extends InteractiveStep {
 	private final Provider<PremiumSettings> settingsProvider;
 	private final Provider<PremiumMessages> messagesProvider;
 	private final PremiumProfileLookup profileLookup;
 
+	@Inject
 	public PremiumIntentStep(
 			Provider<PremiumSettings> settingsProvider,
 			Provider<PremiumMessages> messagesProvider,

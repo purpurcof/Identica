@@ -4,85 +4,59 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.annotation.Field;
+import me.whereareiam.configura.node.Node;
+import me.whereareiam.configura.node.ObjectNode;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+/**
+ * Provider configuration settings.
+ */
 @Getter
 @Setter
 @ToString
 public class Providers {
-	private Conflicts conflicts;
-	private List<ProviderEntry> providers;
+	private @NotNull Map<String, ConflictRules> conflicts = new HashMap<>();
+	private @NotNull List<ProviderEntry> providers = new ArrayList<>();
 
+	/**
+	 * Conflict rules for a single conflict key.
+	 */
+	@Getter
+	@Setter
+	@ToString
+	public static class ConflictRules {
+		@Field(name = "default")
+		private @NotNull ConflictRule defaultRule;
+		private @NotNull List<ConflictRule> pairs = new ArrayList<>();
+	}
+
+	/**
+	 * Conflict rule for provider pairs or default scope.
+	 */
+	@Getter
+	@Setter
+	@ToString
+	public static class ConflictRule {
+		private @NotNull List<String> providers = new ArrayList<>();
+		private @NotNull String resolver;
+		private boolean force;
+		private @NotNull Node parameters = new ObjectNode();
+	}
+
+	/**
+	 * Provider definition entry.
+	 */
 	@Getter
 	@Setter
 	@ToString
 	public static class ProviderEntry {
-		private String id;
+		private @NotNull String id;
 		private boolean enabled;
 		private int priority;
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class Conflicts {
-		private List<String> keys;
-		private String defaultPolicy;
-		private List<ConflictPolicy> policies;
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class ConflictPolicy {
-		private List<String> when;
-		private String key;
-		private String priority;
-		private Resolution resolution;
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class Resolution {
-		private Loser loser;
-		private Winner winner;
-		@Field(name = "new")
-		private NewConnection newConnection;
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class Loser {
-		private String provider;
-		private String solution;
-		private String strategy;
-
-		public String resolveSolutionId() {
-			if (solution != null && !solution.isBlank())
-				return solution;
-			if (strategy != null && !strategy.isBlank())
-				return strategy;
-
-			return null;
-		}
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class Winner {
-		private String action;
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class NewConnection {
-		private String action;
-		private String message;
-		private Boolean prompt;
 	}
 }

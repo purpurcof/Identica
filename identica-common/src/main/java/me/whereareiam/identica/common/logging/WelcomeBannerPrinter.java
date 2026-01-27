@@ -49,7 +49,7 @@ public class WelcomeBannerPrinter {
 		List<String> l = new ArrayList<>();
 		int commandCount = 0;
 		Commands commands = commandsProvider.get();
-		if (commands != null && commands.getCommands() != null)
+		if (commands != null)
 			commandCount = commands.getCommands().size();
 
 		int providerCount = providerManager.getProviders().size();

@@ -1,6 +1,6 @@
 package me.whereareiam.identica.loader;
 
-import me.whereareiam.identica.model.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 
 import java.io.InputStream;
 

@@ -2,7 +2,7 @@ package me.whereareiam.identica.common.loader.reader;
 
 import me.whereareiam.configura.Config;
 import me.whereareiam.identica.loader.ProviderDescriptorReader;
-import me.whereareiam.identica.model.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 
 import java.io.InputStream;
 

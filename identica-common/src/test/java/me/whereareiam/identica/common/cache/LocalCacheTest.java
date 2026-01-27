@@ -1,5 +1,6 @@
 package me.whereareiam.identica.common.cache;
 
+import me.whereareiam.identica.common.cache.type.LocalCache;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;

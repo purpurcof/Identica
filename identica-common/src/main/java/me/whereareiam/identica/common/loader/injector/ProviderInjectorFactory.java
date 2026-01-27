@@ -6,7 +6,7 @@ import com.google.inject.Module;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.loader.IdenticaProvider;
-import me.whereareiam.identica.model.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public class ProviderInjectorFactory {
 		modules.add(new ProviderInjectorConfiguration(workingPath, descriptor));
 
 		List<Module> providerModules = probeProvider != null ? probeProvider.modules() : List.of();
-		if (providerModules != null && !providerModules.isEmpty())
+		if (!providerModules.isEmpty())
 			modules.addAll(providerModules);
 
 		return injector.createChildInjector(modules);

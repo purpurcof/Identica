@@ -6,7 +6,6 @@ plugins {
 
 dependencies {
     "implementation"(project(":identica-provider:provider-premium:premium-api"))
-    "implementation"(project(":identica-provider:provider-premium:premium-adapter-database"))
 }
 
 tasks.named<ShadowJar>("shadowJar") {

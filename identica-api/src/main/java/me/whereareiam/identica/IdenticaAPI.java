@@ -9,7 +9,8 @@ import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.loader.ProviderManager;
-import me.whereareiam.identica.synchronization.SynchronizationService;
+import me.whereareiam.identica.service.AccountService;
+import me.whereareiam.identica.service.SynchronizationService;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -158,6 +159,17 @@ public final class IdenticaAPI {
 	@NotNull
 	public static CacheService getCacheService() {
 		return getService(CacheService.class);
+	}
+
+	/**
+	 * Gets the AccountService for account lifecycle operations.
+	 *
+	 * @return the AccountService instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
+	@NotNull
+	public static AccountService getAccountService() {
+		return getService(AccountService.class);
 	}
 
 	/**

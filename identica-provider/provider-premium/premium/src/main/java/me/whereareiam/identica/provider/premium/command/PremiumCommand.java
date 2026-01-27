@@ -33,13 +33,14 @@ public class PremiumCommand {
 	}
 
 	private void confirmPremium(@NotNull Actor sender) {
-		authCoordinator.requestHandshakeDirective(sender.getUsername(), HandshakeMode.ONLINE);
+		authCoordinator.requestHandshakeInstruction(sender.getUsername(), HandshakeMode.ONLINE);
 		authCoordinator.clearPending(sender.getUniqueId());
 
 		disconnectWithMessage(sender, joinMessage(messagesProvider.get().getCommands().getPremium().getConfirmed()));
 	}
 
 	private void startMigration(@NotNull Actor sender) {
+		// TODO
 	}
 
 	private void disconnectWithMessage(@NotNull Actor sender, @NotNull String message) {

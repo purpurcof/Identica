@@ -9,8 +9,10 @@ import me.whereareiam.identica.adapter.database.repository.account.AccountReposi
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.account.Account;
-import org.jdbi.v3.core.Jdbi;
+import me.whereareiam.identica.type.UsernameSource;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,18 +20,11 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultAccountPersistenceService implements AccountPersistenceService {
 	private final AccountRepository accountRepository;
-	private final Jdbi jdbi;
 
 	@Override
-	public Optional<Account> findByUniqueId(UUID uniqueId) {
-		if (uniqueId == null) {
-			Logger.warn("Attempted to load account with null unique id");
-			return Optional.empty();
-		}
-
+	public @NotNull Optional<Account> findByUniqueId(@NotNull UUID uniqueId) {
 		try {
-			return jdbi.inTransaction(_ ->
-					accountRepository.findByUniqueId(uniqueId).map(AccountMapper::toModel));
+			return accountRepository.findByUniqueId(uniqueId).map(AccountMapper::toModel);
 		} catch (Exception e) {
 			Logger.warn("Failed to load account %s: %s", uniqueId, e.getMessage());
 			return Optional.empty();
@@ -37,14 +32,32 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 	}
 
 	@Override
-	public Account create(Account account) {
-		if (account == null || account.getUniqueId() == null) {
-			throw new IllegalArgumentException("Account unique id is required");
-		}
+	public @NotNull List<Account> findByUsername(@NotNull String username) {
+		if (username.isBlank()) return List.of();
 
-		AccountEntity entity = AccountMapper.toEntity(account);
 		try {
-			jdbi.useTransaction(_ -> accountRepository.save(entity));
+			return accountRepository.findByUsername(username).stream()
+					.map(AccountMapper::toModel)
+					.toList();
+		} catch (Exception e) {
+			Logger.warn("Failed to load accounts by username %s: %s", username, e.getMessage());
+			return List.of();
+		}
+	}
+
+	@Override
+	public @NotNull Account create(@NotNull Account account) {
+		AccountEntity entity = AccountMapper.toEntity(account);
+
+		try {
+			accountRepository.insert(
+					entity.getUniqueId(),
+					entity.getUsername(),
+					entity.getUsernameSource(),
+					entity.getCreatedAt(),
+					entity.getLastSeenAt()
+			);
+
 			return AccountMapper.toModel(entity);
 		} catch (Exception e) {
 			Logger.warn("Failed to create account %s: %s", account.getUniqueId(), e.getMessage());
@@ -53,31 +66,40 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 	}
 
 	@Override
-	public void updateLastSeen(UUID uniqueId, long lastSeenAt) {
-		if (uniqueId == null) {
-			Logger.warn("Attempted to update last seen for null unique id");
-			return;
-		}
-
+	public void updateLastSeen(@NotNull UUID uniqueId, long lastSeenAt) {
 		try {
-			jdbi.useTransaction(_ -> accountRepository.updateLastSeen(uniqueId, lastSeenAt));
+			accountRepository.updateLastSeen(uniqueId, lastSeenAt);
 		} catch (Exception e) {
 			Logger.warn("Failed to update last seen for %s: %s", uniqueId, e.getMessage());
 		}
 	}
 
 	@Override
-	public void delete(UUID uniqueId) {
-		if (uniqueId == null) {
-			Logger.warn("Attempted to delete account with null unique id");
-			return;
-		}
+	public void updateUsername(@NotNull UUID uniqueId, @NotNull String username) {
+		if (username.isBlank()) return;
 
 		try {
-			jdbi.useTransaction(_ -> accountRepository.delete(uniqueId));
+			accountRepository.updateUsername(uniqueId, username);
+		} catch (Exception e) {
+			Logger.warn("Failed to update username for %s: %s", uniqueId, e.getMessage());
+		}
+	}
+
+	@Override
+	public void updateUsernameSource(@NotNull UUID uniqueId, @NotNull UsernameSource source) {
+		try {
+			accountRepository.updateUsernameSource(uniqueId, source.getId());
+		} catch (Exception e) {
+			Logger.warn("Failed to update username source for %s: %s", uniqueId, e.getMessage());
+		}
+	}
+
+	@Override
+	public void delete(@NotNull UUID uniqueId) {
+		try {
+			accountRepository.delete(uniqueId);
 		} catch (Exception e) {
 			Logger.warn("Failed to delete account %s: %s", uniqueId, e.getMessage());
 		}
 	}
-
 }

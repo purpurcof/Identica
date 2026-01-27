@@ -6,21 +6,24 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.ResultedEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.util.GameProfile;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.actor.OfflineIdentity;
 import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.auth.AuthDecision;
-import me.whereareiam.identica.model.auth.LoginRequest;
+import me.whereareiam.identica.model.auth.ConnectionInfo;
+import me.whereareiam.identica.model.auth.request.LoginRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
+import me.whereareiam.identica.registry.IdentityRegistry;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor_ = @Inject)
+@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class LoginListener implements DynamicListener<LoginEvent> {
 	private final AuthCoordinator authCoordinator;
 	private final Provider<Messages> messagesProvider;
+	private final IdentityRegistry identityRegistry;
 
 	@Override
 	public void onEvent(LoginEvent event) {
@@ -31,29 +34,33 @@ public class LoginListener implements DynamicListener<LoginEvent> {
 				.orElse(null);
 
 		LoginRequest request = LoginRequest.builder()
-				.username(player.getUsername())
-				.ip(ip)
+				.connectionInfo(ConnectionInfo.builder()
+						.identity(new OfflineIdentity(player.getUniqueId(), player.getUsername(), ip))
+						.onlineMode(player.isOnlineMode())
+						.build())
 				.connectionUniqueId(player.getUniqueId())
 				.intendedServer(intendedServer)
-				.onlineMode(player.isOnlineMode())
-				.profileUniqueId(readProfileId(player))
 				.build();
 
 		AuthDecision decision = authCoordinator.authenticate(request);
 
-		if (decision == null || decision.getStatus() == null)
+		if (decision.getStatus() == null)
 			return;
 
 		VelocityCommandPlayer actor = new VelocityCommandPlayer(player);
+		identityRegistry.attachOnline(actor);
 		switch (decision.getStatus()) {
 			case WAIT -> {
 				if (decision.getMessage() != null && !decision.getMessage().isBlank()) {
 					player.sendMessage(Serializer.serialize(actor, decision.getMessage()));
 				}
 			}
-			case DENY, REQUIRE_RECONNECT -> event.setResult(ResultedEvent.ComponentResult.denied(
-					Serializer.serialize(actor, resolveAuthMessage(decision.getMessage()))
-			));
+			case DENY, REQUIRE_RECONNECT -> {
+				identityRegistry.detachOnline(player.getUniqueId());
+				event.setResult(ResultedEvent.ComponentResult.denied(
+						Serializer.serialize(actor, resolveAuthMessage(decision.getMessage()))
+				));
+			}
 			default -> {
 			}
 		}
@@ -71,13 +78,4 @@ public class LoginListener implements DynamicListener<LoginEvent> {
 		return String.join("\n", lines);
 	}
 
-	private String readProfileId(Player player) {
-		if (!player.isOnlineMode()) return null;
-
-		GameProfile profile = player.getGameProfile();
-		if (profile == null || profile.getId() == null)
-			return null;
-
-		return profile.getId().toString();
-	}
 }

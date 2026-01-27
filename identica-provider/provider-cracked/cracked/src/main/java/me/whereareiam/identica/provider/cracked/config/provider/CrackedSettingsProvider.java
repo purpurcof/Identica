@@ -23,7 +23,7 @@ public class CrackedSettingsProvider extends CrackedConfigProvider<CrackedSettin
 
 	@Override
 	protected CrackedSettings load() {
-		return Config.update(getBasePath().resolve("config"), CrackedSettings.class);
+		return Config.update(getBasePath().resolve("settings"), CrackedSettings.class);
 	}
 
 	@Override

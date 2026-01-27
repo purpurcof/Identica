@@ -35,7 +35,7 @@ public class DefaultRoutingService implements RoutingService {
 
 		String target = resolveStepServer(routing.getProviders(), providerId, step.getName());
 		if (isBlank(target)) {
-			target = routing.getDefaults() != null ? routing.getDefaults().getFallback() : null;
+			target = routing.getDefaults().getFallback();
 		}
 
 		if (isBlank(target)) return Optional.empty();
@@ -47,15 +47,14 @@ public class DefaultRoutingService implements RoutingService {
 		if (context == null) return Optional.empty();
 
 		Settings.Routing routing = routing();
-		if (routing == null || routing.getDefaults() == null) return Optional.empty();
+		if (routing == null) return Optional.empty();
 
 		String finalTarget = routing.getDefaults().getCompletedTarget();
 
 		Settings.Routing.Intent intent = routing.getIntent();
-		String mode = intent != null ? intent.getMode() : null;
 		String intendedServer = context.getIntendedServer();
 
-		if ("allow".equalsIgnoreCase(mode)
+		if ("allow".equalsIgnoreCase(intent.getMode())
 				&& !isBlank(intendedServer)
 				&& isAllowed(intent.getAllowedServers(), intendedServer)) {
 			finalTarget = intendedServer;

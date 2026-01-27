@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import me.whereareiam.configura.Config;
 import me.whereareiam.identica.Reloadable;
-import me.whereareiam.identica.common.config.template.MessagesTemplate;
+import me.whereareiam.identica.common.config.template.messages.MessagesTemplate;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.registry.Registry;
 

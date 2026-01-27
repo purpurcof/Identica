@@ -8,6 +8,11 @@ import me.whereareiam.identica.common.loader.DefaultProviderManager;
 import me.whereareiam.identica.common.loader.ProviderLifecycleController;
 import me.whereareiam.identica.common.loader.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.common.loader.resolver.ProviderResolverRegistry;
+import me.whereareiam.identica.model.conflict.ConflictContext;
+import me.whereareiam.identica.model.conflict.ConflictResolution;
+import me.whereareiam.identica.conflict.resolver.ConflictResolver;
+import me.whereareiam.identica.conflict.ConflictService;
+import me.whereareiam.identica.conflict.ConflictType;
 import me.whereareiam.identica.loader.ProviderManager;
 import me.whereareiam.identica.loader.ProviderDescriptorReader;
 import me.whereareiam.identica.common.loader.dependency.ProviderDependencyLoggingAdapter;
@@ -18,10 +23,12 @@ import me.whereareiam.identica.common.loader.injector.ProviderInjectorFactory;
 import me.whereareiam.identica.common.loader.resolver.ProviderPlatformResolver;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.model.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.loader.IdenticaProvider;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
+import me.whereareiam.identica.type.provider.ProviderState;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -34,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -54,12 +62,8 @@ class ProviderManagerIntegrationTest {
 				import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 				import me.whereareiam.identica.loader.IdenticaProvider;
 				import me.whereareiam.identica.auth.step.AuthenticationStep;
-				import me.whereareiam.identica.model.auth.IdentityClaim;
-				import me.whereareiam.identica.model.conflict.ConflictContext;
-				import me.whereareiam.identica.model.conflict.ConflictResolution;
 				import java.util.ArrayList;
 				import java.util.List;
-				import java.util.Set;
 
 				public class TestProvider extends IdenticaProvider {
 					private final List<String> calls = new ArrayList<>();
@@ -72,25 +76,6 @@ class ProviderManagerIntegrationTest {
 					@Override
 					public List<AuthenticationStep> getAuthenticationSteps() {
 						return List.of();
-					}
-
-					@Override
-					public java.util.Set<String> getConflictKeys() {
-						return java.util.Set.of();
-					}
-
-					@Override
-					public java.util.Set<String> getAvailableConflictSolutions() {
-						return java.util.Set.of();
-					}
-
-					@Override
-					public ConflictResolution applyConflictSolution(
-							String solutionId,
-							IdentityClaim claim,
-							ConflictContext context
-					) {
-						return ConflictResolution.deny("Not implemented");
 					}
 
 					@Override
@@ -145,7 +130,7 @@ class ProviderManagerIntegrationTest {
 			descriptor.setName("Test Provider");
 			descriptor.setVersion("1.0.0");
 			descriptor.setMain("testprovider.TestProvider");
-			descriptor.setPriorityDefault(10);
+			descriptor.setPriority(10);
 
 			return descriptor;
 		};
@@ -177,13 +162,51 @@ class ProviderManagerIntegrationTest {
 		ProviderDiscovery discovery = new ProviderDiscovery(providersPath, descriptorReader);
 		Injector injector = Guice.createInjector();
 		ProviderResolverRegistry resolverRegistry = new ProviderResolverRegistry();
+		ConflictService conflictService = new ConflictService() {
+			@Override
+			public void register(@NonNull ConflictResolver resolver) {
+			}
+
+			@Override
+			public void unregister(@NonNull ConflictResolver resolver) {
+			}
+
+			@Override
+			public ConflictResolver getResolver(@NonNull String id) {
+				return null;
+			}
+
+			@Override
+			public void register(@NonNull ConflictType type) {
+			}
+
+			@Override
+			public void unregister(@NonNull ConflictType type) {
+			}
+
+			@Override
+			public ConflictType getType(@NonNull String key) {
+				return null;
+			}
+
+			@Override
+			public @NonNull Set<ConflictType> getTypes() {
+				return Set.of();
+			}
+
+			@Override
+			public ConflictResolution resolve(@NonNull ConflictContext context) {
+				return null;
+			}
+		};
 		ProviderLifecycleController lifecycleController = new ProviderLifecycleController(
 				new ProviderWorkingPathResolver(providersPath),
 				new ProviderClassLoaderFactory(),
 				dependencyResolver,
 				new ProviderInjectorFactory(injector),
 				new ProviderInstanceFactory(),
-				resolverRegistry
+				resolverRegistry,
+				conflictService
 		);
 		ProviderManager manager = new DefaultProviderManager(
 				discovery,
@@ -197,7 +220,7 @@ class ProviderManagerIntegrationTest {
 
 		assertEquals(1, manager.getProviders().size());
 		InternalProvider internal = manager.getProviders().getFirst();
-		assertEquals(me.whereareiam.identica.type.ProviderState.ENABLED, internal.getState());
+		assertEquals(ProviderState.ENABLED, internal.getState());
 		assertNotNull(internal.getProvider());
 		assertTrue(Files.isDirectory(internal.getWorkingPath()));
 
@@ -206,7 +229,7 @@ class ProviderManagerIntegrationTest {
 		assertEquals(List.of("load", "enable"), calls);
 
 		manager.unloadProviders();
-		assertEquals(me.whereareiam.identica.type.ProviderState.UNLOADED, internal.getState());
+		assertEquals(ProviderState.UNLOADED, internal.getState());
 		List<String> after = getCalls(provider);
 		assertEquals(List.of("load", "enable", "disable", "unload"), after);
 	}

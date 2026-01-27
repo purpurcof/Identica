@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.loader.resolver;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import me.whereareiam.identica.model.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

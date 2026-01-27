@@ -3,8 +3,8 @@ package me.whereareiam.identica.event.handshake;
 import lombok.*;
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
-import me.whereareiam.identica.model.auth.HandshakeDecision;
-import me.whereareiam.identica.model.auth.HandshakeRequest;
+import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
+import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 
 @Getter
 @Setter

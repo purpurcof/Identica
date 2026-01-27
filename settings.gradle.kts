@@ -1,6 +1,12 @@
-rootProject.name = "Identica"
+pluginManagement {
+    repositories {
+        maven("https://maven.whereareiam.me/release")
+        maven("https://maven.whereareiam.me/development")
+        gradlePluginPortal()
+    }
+}
 
-includeBuild("../Spawner")
+rootProject.name = "Identica"
 
 include("identica-api")
 include("identica-common")
@@ -20,5 +26,4 @@ include("identica-provider:provider-cracked:cracked-api")
 include("identica-provider:provider-premium")
 
 include("identica-provider:provider-premium:premium")
-include("identica-provider:provider-premium:premium-adapter-database")
 include("identica-provider:provider-premium:premium-api")

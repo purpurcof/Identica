@@ -2,6 +2,8 @@ package me.whereareiam.identica.common.config.template;
 
 import com.google.inject.Singleton;
 import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.node.ObjectNode;
+import me.whereareiam.configura.node.StringNode;
 import me.whereareiam.identica.model.config.Providers;
 
 import java.util.List;
@@ -10,51 +12,41 @@ import java.util.List;
 public class ProvidersTemplate implements TemplateProvider<Providers> {
 	@Override
 	public Providers supply(Providers config) {
-		Providers.ConflictPolicy premiumWins = new Providers.ConflictPolicy();
-		premiumWins.setWhen(List.of("Premium", "Cracked"));
-		premiumWins.setKey("username");
-		premiumWins.setPriority("Premium");
+		Providers.ConflictRules usernameRules = new Providers.ConflictRules();
+		Providers.ConflictRule defaultRule = new Providers.ConflictRule();
+		defaultRule.setResolver("format_display");
+		defaultRule.setParameters(formatParams("{username}*"));
+		usernameRules.setDefaultRule(defaultRule);
 
-		Providers.Resolution premiumResolution = new Providers.Resolution();
-		Providers.Loser premiumLoser = new Providers.Loser();
-		premiumLoser.setProvider("Cracked");
-		premiumLoser.setSolution("username_prefix");
-		premiumResolution.setLoser(premiumLoser);
+		Providers.ConflictRule premiumVsCracked = new Providers.ConflictRule();
+		premiumVsCracked.setProviders(List.of("premium", "cracked"));
+		premiumVsCracked.setResolver("format_display");
+		premiumVsCracked.setParameters(formatParams("{username} [{incomingProvider}]#{random:2}"));
+		usernameRules.setPairs(List.of(premiumVsCracked));
 
-		Providers.Winner premiumWinner = new Providers.Winner();
-		premiumWinner.setAction("kick_existing");
-		premiumResolution.setWinner(premiumWinner);
-
-		premiumWins.setResolution(premiumResolution);
-
-		Providers.ConflictPolicy deny = new Providers.ConflictPolicy();
-		deny.setWhen(List.of("Cracked", "Cracked"));
-		deny.setKey("username");
-
-		Providers.Resolution denyResolution = new Providers.Resolution();
-		Providers.NewConnection denyNew = new Providers.NewConnection();
-		denyNew.setAction("deny");
-		denyNew.setMessage("Username already in use by another cracked account");
-		denyResolution.setNewConnection(denyNew);
-		deny.setResolution(denyResolution);
-
-		Providers.Conflicts conflicts = new Providers.Conflicts();
-		conflicts.setKeys(List.of("username"));
-		conflicts.setDefaultPolicy("proceed");
-		conflicts.setPolicies(List.of(premiumWins, deny));
-		config.setConflicts(conflicts);
+		config.getConflicts().put("username", usernameRules);
 
 		Providers.ProviderEntry cracked = new Providers.ProviderEntry();
-		cracked.setId("Cracked");
+		cracked.setId("cracked");
 		cracked.setEnabled(true);
 		cracked.setPriority(50);
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
-		premium.setId("Premium");
+		premium.setId("premium");
 		premium.setEnabled(true);
 		premium.setPriority(100);
 
 		config.setProviders(List.of(cracked, premium));
 		return config;
+	}
+
+	private ObjectNode formatParams(String pattern) {
+		ObjectNode format = new ObjectNode();
+		format.getValues().put("pattern", new StringNode(pattern));
+
+		ObjectNode node = new ObjectNode();
+		node.getValues().put("format", format);
+		node.getValues().put("target", new StringNode("joiner"));
+		return node;
 	}
 }

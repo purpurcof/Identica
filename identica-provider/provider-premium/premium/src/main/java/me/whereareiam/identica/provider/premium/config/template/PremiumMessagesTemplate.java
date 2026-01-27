@@ -13,7 +13,7 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 		PremiumMessages.Verification verification = new PremiumMessages.Verification();
 		verification.setPrompt("{prefix}<yellow>Join with premium? Use /premium to verify or /cracked to continue cracked.</yellow>");
 		verification.setInvalidSession(List.of(
-				"<gold>ɪᴅᴇɴᴛɪᴄᴀ",
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Invalid Mojang session.",
 				"<white>Rejoin with your premium account",

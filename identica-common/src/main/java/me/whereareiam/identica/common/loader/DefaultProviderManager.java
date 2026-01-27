@@ -5,11 +5,14 @@ import me.whereareiam.identica.loader.resolver.ProviderResolver;
 import me.whereareiam.identica.common.loader.resolver.ProviderPlatformResolver;
 import me.whereareiam.identica.common.loader.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.config.Providers;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.type.ProviderState;
+import me.whereareiam.identica.type.provider.ProviderState;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,6 +78,39 @@ public class DefaultProviderManager implements ProviderManager {
 	}
 
 	@Override
+	public @NotNull List<InternalProvider> findProviders(ProviderCapability... capabilities) {
+		if (providers.isEmpty()) return List.of();
+
+		List<InternalProvider> matches = new ArrayList<>();
+		for (InternalProvider provider : providers) {
+			if (provider == null || provider.getState() != ProviderState.ENABLED) continue;
+
+			ProviderDescriptor descriptor = provider.getDescriptor();
+			if (descriptor == null) continue;
+
+			String id = descriptor.getId();
+			if (id == null || id.isBlank()) continue;
+			if (!supportsAll(descriptor, capabilities)) continue;
+
+			matches.add(provider);
+		}
+
+		matches.sort(Comparator.comparingInt(InternalProvider::getPriority)
+				.reversed()
+				.thenComparing(left -> left.getDescriptor().getId(), String.CASE_INSENSITIVE_ORDER));
+
+		return Collections.unmodifiableList(matches);
+	}
+
+	@Override
+	public InternalProvider findProvider(ProviderCapability... capabilities) {
+		List<InternalProvider> matches = findProviders(capabilities);
+		if (matches.isEmpty()) return null;
+
+		return matches.getFirst();
+	}
+
+	@Override
 	public void registerResolver(ProviderResolver resolver) {
 		resolverRegistry.register(resolver);
 	}
@@ -90,18 +126,18 @@ public class DefaultProviderManager implements ProviderManager {
 	}
 
 	private List<InternalProvider> selectEnabled(List<InternalProvider> discovered, Providers config) {
-		if (config == null || config.getProviders() == null || config.getProviders().isEmpty()) {
+		if (config == null || config.getProviders().isEmpty()) {
 			return discovered.stream()
-					.peek(provider -> provider.setPriority(provider.getDescriptor().getPriorityDefault()))
+					.peek(provider -> provider.setPriority(provider.getDescriptor().getPriority()))
 					.sorted(Comparator.comparingInt(InternalProvider::getPriority).reversed())
 					.collect(Collectors.toList());
 		}
 
 		Map<String, Providers.ProviderEntry> entries = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 		for (Providers.ProviderEntry entry : config.getProviders()) {
-			if (entry == null || entry.getId() == null || entry.getId().isBlank()) {
+			if (entry == null || entry.getId().isBlank())
 				continue;
-			}
+
 			entries.putIfAbsent(entry.getId().trim(), entry);
 		}
 
@@ -112,10 +148,22 @@ public class DefaultProviderManager implements ProviderManager {
 				})
 				.peek(provider -> {
 					Providers.ProviderEntry entry = entries.get(provider.getDescriptor().getId());
-					int priority = entry != null ? entry.getPriority() : provider.getDescriptor().getPriorityDefault();
+					int priority = entry != null ? entry.getPriority() : provider.getDescriptor().getPriority();
 					provider.setPriority(priority);
 				})
 				.sorted(Comparator.comparingInt(InternalProvider::getPriority).reversed())
 				.collect(Collectors.toList());
+	}
+
+	private boolean supportsAll(ProviderDescriptor descriptor, ProviderCapability[] capabilities) {
+		if (capabilities == null) return true;
+
+		for (ProviderCapability capability : capabilities) {
+			if (capability == null) continue;
+			if (!descriptor.hasCapability(capability))
+				return false;
+		}
+
+		return true;
 	}
 }

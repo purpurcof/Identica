@@ -6,27 +6,60 @@ import lombok.ToString;
 import me.whereareiam.commandant.model.message.ExceptionMessages;
 import me.whereareiam.commandant.model.message.HelpMessages;
 import me.whereareiam.commandant.model.message.PaginationMessages;
+import org.jetbrains.annotations.NotNull;
+
+import me.whereareiam.configura.annotation.Field;
 
 import java.util.List;
 
+/**
+ * Root message configuration model.
+ */
 @Getter
 @Setter
 @ToString
 public class Messages {
-	private String prefix;
-	private Commands commands;
-	private Providers providers;
-	private Authentication authentication;
+	private @NotNull String prefix;
+	private @NotNull Format format;
+	private @NotNull Commands commands;
+	private @NotNull Providers providers;
+	private @NotNull Authentication authentication;
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Format {
+		private @NotNull Temporal temporal;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Temporal {
+			/**
+			 * Formatter pattern used for date-only placeholders.
+			 */
+			@Field(name = "date")
+			private @NotNull DateTimePattern date;
+
+			/**
+			 * Formatter pattern used for date-time placeholders.
+			 */
+			@Field(name = "dateTime")
+			private @NotNull DateTimePattern dateTime;
+		}
+	}
 
 	@Getter
 	@Setter
 	@ToString
 	public static class Commands {
-		private ExceptionMessages exceptions;
-		private PaginationMessages pagination;
-		private HelpMessages help;
-		private String main;
-		private Reload reload;
+		private @NotNull ExceptionMessages exceptions;
+		private @NotNull PaginationMessages pagination;
+		private @NotNull HelpMessages help;
+		private @NotNull String main;
+		private @NotNull Reload reload;
+		private @NotNull Clear clear;
+		private @NotNull Sessions sessions;
 
 		/**
 		 * Configuration for reload command messages.
@@ -38,17 +71,234 @@ public class Messages {
 			/**
 			 * Success message when reload completes successfully.
 			 * Placeholders:
-			 * - <prefix>: The global message prefix
+			 * - {prefix}: The global message prefix
 			 */
-			private String success;
+			private @NotNull String success;
 
 			/**
 			 * Error message when reload fails.
 			 * Placeholders:
-			 * - <prefix>: The global message prefix
-			 * - <error>: The error message
+			 * - {prefix}: The global message prefix
+			 * - {error}: The error message
 			 */
-			private String error;
+			private @NotNull String error;
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Clear {
+			/**
+			 * Confirmation message shown before clearing.
+			 * Placeholders:
+			 * - {prefix}: The global message prefix
+			 * - {target}: Provided input
+			 * - {scope}: clear scope (cache/all)
+			 * - {uniqueId}: Identica UUID
+			 */
+			private @NotNull List<String> confirm;
+
+			/**
+			 * Message shown when no pending clear exists.
+			 */
+			private @NotNull String noPending;
+
+			/**
+			 * Message shown when pending clear expired.
+			 */
+			private @NotNull String expired;
+
+			/**
+			 * Message shown when clear is cancelled.
+			 */
+			private @NotNull String cancelled;
+
+			/**
+			 * Message shown when no account could be resolved.
+			 */
+			private @NotNull String notFound;
+
+			private @NotNull Multiple multiple;
+
+			/**
+			 * Message shown on successful clear.
+			 * Placeholders:
+			 * - {scope}
+			 * - {uniqueId}
+			 */
+			private @NotNull String success;
+
+			/**
+			 * Message shown when a clear fails.
+			 * Placeholders:
+			 * - {error}
+			 */
+			private @NotNull String error;
+
+			/**
+			 * Message sent to the target when disconnected.
+			 */
+			private @NotNull List<String> disconnect;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Multiple {
+				/**
+				 * Lines shown before listing matches.
+				 * Placeholders:
+				 * - {target}
+				 * - {count}
+				 * - {entries}
+				 */
+				private @NotNull List<String> body;
+
+				/**
+				 * Entry formats for each match.
+				 * Placeholders:
+				 * - {username}
+				 * - {uniqueId}
+				 * - {command}
+				 */
+				private @NotNull EntryFormat entry;
+			}
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Sessions {
+			/**
+			 * Placeholder value used when session fields are missing.
+			 */
+			private @NotNull String unknown;
+			@Field(name = "list")
+			private @NotNull Listing listing;
+			private @NotNull Info info;
+			private @NotNull End end;
+			private @NotNull Multiple multiple;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Listing {
+				/**
+				 * Lines shown in session list output.
+				 * Placeholders:
+				 * - {entries}
+				 */
+				private @NotNull List<String> body;
+
+				/**
+				 * Entry format for a single session in list output.
+				 * Placeholders:
+				 * - {username}
+				 * - {uniqueId}
+				 * - {provider}
+				 * - {session}
+				 * - {ip}
+				 */
+				private @NotNull EntryFormat entry;
+
+				/**
+				 * Message shown when no sessions are available.
+				 */
+				private @NotNull String empty;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Info {
+				/**
+				 * Detailed session info lines.
+				 * Placeholders:
+				 * - {username}
+				 * - {original}
+				 * - {effective}
+				 * - {uniqueId}
+				 * - {provider}
+				 * - {subject}
+				 * - {session}
+				 * - {ip}
+				 * - {created} (same as {createdDateTime})
+				 * - {createdDate}
+				 * - {createdDateTime}
+				 */
+				private @NotNull List<String> body;
+
+				/**
+				 * Message shown when no active session found.
+				 * Placeholders:
+				 * - {target}
+				 */
+				private @NotNull String notFound;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class End {
+				/**
+				 * Message shown on successful session end.
+				 * Placeholders:
+				 * - {username}
+				 * - {uniqueId}
+				 */
+				private @NotNull String ended;
+
+				/**
+				 * Message shown when no active session found.
+				 * Placeholders:
+				 * - {target}
+				 */
+				private @NotNull String notFound;
+
+				/**
+				 * Message sent to the player when their session ends.
+				 */
+				private @NotNull List<String> disconnect;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Multiple {
+				/**
+				 * Lines shown before listing matches.
+				 * Placeholders:
+				 * - {target}
+				 * - {count}
+				 * - {entries}
+				 */
+				private @NotNull List<String> body;
+
+				/**
+				 * Entry formats for each match.
+				 * Placeholders:
+				 * - {username}
+				 * - {uniqueId}
+				 * - {command}
+				 */
+				private @NotNull EntryFormat entry;
+			}
+		}
+
+		/**
+		 * Format definitions for command entry rendering.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class EntryFormat {
+			/**
+			 * Format used when all required placeholders are present.
+			 */
+			private @NotNull String format;
+			/**
+			 * Format used when one or more placeholders are missing.
+			 */
+			private @NotNull String emptyFormat;
 		}
 	}
 
@@ -56,17 +306,17 @@ public class Messages {
 	@Setter
 	@ToString
 	public static class Providers {
-		private List<String> noProvidersAvailable;
-		private List<String> noProvidersMatched;
+		private @NotNull List<String> noProvidersAvailable;
+		private @NotNull List<String> noProvidersMatched;
 	}
 
 	@Getter
 	@Setter
 	@ToString
 	public static class Authentication {
-		private List<String> handshakeDenied;
-		private List<String> authenticationFailed;
-		private List<String> noCompletionStep;
-		private List<String> stepNoStatus;
+		private @NotNull List<String> handshakeDenied;
+		private @NotNull List<String> authenticationFailed;
+		private @NotNull List<String> noCompletionStep;
+		private @NotNull List<String> stepNoStatus;
 	}
 }

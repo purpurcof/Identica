@@ -21,7 +21,7 @@ public final class JdbcUrlFactory {
 		return switch (persistence.getType()) {
 			case SQLITE -> createSqliteUrl(persistence, dataPath);
 			case POSTGRES -> createExternalUrl(persistence, "jdbc:postgresql://%s/%s");
-			case MYSQL -> createExternalUrl(persistence, "jdbc:mysql://%s/%s");
+			case MYSQL -> createExternalUrl(persistence, "jdbc:mariadb://%s/%s");
 		};
 	}
 

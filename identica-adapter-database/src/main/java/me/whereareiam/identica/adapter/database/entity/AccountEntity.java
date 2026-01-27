@@ -18,6 +18,8 @@ import java.util.UUID;
 @Entity(tableName = "identica_accounts")
 public class AccountEntity implements EntitySchemaProvider {
 	private UUID uniqueId;
+	private String username;
+	private String usernameSource;
 	private long createdAt;
 	private long lastSeenAt;
 
@@ -35,7 +37,9 @@ public class AccountEntity implements EntitySchemaProvider {
 		};
 		return """
 				CREATE TABLE IF NOT EXISTS identica_accounts (
-					uuid %s PRIMARY KEY,
+					unique_id %s PRIMARY KEY,
+					username VARCHAR(64) NOT NULL,
+					username_source VARCHAR(32) NOT NULL,
 					created_at %s,
 					last_seen_at %s
 				)

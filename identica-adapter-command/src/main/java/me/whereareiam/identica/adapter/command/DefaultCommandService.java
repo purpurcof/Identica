@@ -14,6 +14,8 @@ import me.whereareiam.identica.adapter.command.definition.CommandDefinitionAdapt
 import me.whereareiam.identica.adapter.command.executor.HelpCommand;
 import me.whereareiam.identica.adapter.command.executor.MainCommand;
 import me.whereareiam.identica.adapter.command.executor.ReloadCommand;
+import me.whereareiam.identica.adapter.command.executor.ClearCommand;
+import me.whereareiam.identica.adapter.command.executor.SessionsCommand;
 import me.whereareiam.identica.adapter.command.serializer.ScopedSerializerEngine;
 import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.command.CommandService;
@@ -25,9 +27,7 @@ import org.incendo.cloud.Command;
 import org.incendo.cloud.CommandManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Singleton
 public class DefaultCommandService implements CommandService {
@@ -55,6 +55,18 @@ public class DefaultCommandService implements CommandService {
 		this.injector = injector;
 
 		initialize();
+	}
+
+	private void initialize() {
+		registerInternal(
+				injector.getInstance(MainCommand.class),
+				injector.getInstance(HelpCommand.class),
+				injector.getInstance(ReloadCommand.class),
+				injector.getInstance(ClearCommand.class),
+				injector.getInstance(SessionsCommand.class)
+		);
+
+		registerExceptionHandlers(commandManagerProvider.get());
 	}
 
 	@Override
@@ -93,8 +105,10 @@ public class DefaultCommandService implements CommandService {
 	public @NotNull Map<String, CommandDefinition> getRegisteredDefinitions() {
 		Map<String, CommandDefinition> all = new HashMap<>(registeredDefinitions);
 		Commands commands = commandsProvider.get();
-		if (commands != null && commands.getCommands() != null)
-			commands.getCommands().forEach(all::putIfAbsent);
+		if (commands != null) {
+			commands.getCommands()
+					.forEach(all::putIfAbsent);
+		}
 
 		return all;
 	}
@@ -106,16 +120,84 @@ public class DefaultCommandService implements CommandService {
 		}
 
 		Collection<Command<Actor>> parsed = annotationParser.parse(commandInstances);
+		processParsedCommands(parsed, commandManager);
+	}
+
+	private void processParsedCommands(
+			@NotNull Collection<Command<Actor>> parsed,
+			@NotNull CommandManager<Actor> commandManager
+	) {
 		CommandDefinitionAdapter adapter = new CommandDefinitionAdapter();
+		String rootCommand = resolveRootCommand();
 
 		for (Command<Actor> command : parsed) {
 			String defId = command.commandMeta().optional(CommandantKeys.DEFINITION_ID).orElse(null);
 			CommandDefinition definition = defId != null ? lookupDefinition(defId) : null;
+			CommandDefinition effectiveDefinition = definition;
+
+			if (definition != null && isSubcommand(definition) && definition.getAliases() != null) {
+				effectiveDefinition = definition.toBuilder()
+						.aliases(prefixAliases(definition.getAliases(), rootCommand))
+						.build();
+			}
 
 			Commandant.process(command, commandManager)
-					.withDefinition(definition, adapter)
+					.withDefinition(effectiveDefinition, adapter)
 					.register();
 		}
+	}
+
+	private @NotNull String resolveRootCommand() {
+		CommandDefinition main = lookupDefinition("main");
+		if (main == null || main.getAliases() == null || main.getAliases().isEmpty())
+			return "";
+
+		for (String alias : main.getAliases()) {
+			if (alias == null) continue;
+			String trimmed = alias.trim();
+			if (!trimmed.isEmpty()) return trimmed;
+		}
+
+		return "";
+	}
+
+	private boolean isSubcommand(@NotNull CommandDefinition definition) {
+		String usage = definition.getUsage();
+		return usage != null && usage.contains("{command}");
+	}
+
+	private List<String> prefixAliases(@NotNull List<String> aliases, @NotNull String rootCommand) {
+		if (rootCommand.isBlank()) return aliases;
+		LinkedHashSet<String> prefixed = new LinkedHashSet<>();
+		for (String alias : aliases) {
+			if (alias == null) continue;
+			String trimmed = alias.trim();
+			if (trimmed.isEmpty()) continue;
+
+			if (isAlreadyPrefixed(trimmed, rootCommand)) {
+				prefixed.add(trimmed);
+				continue;
+			}
+
+			String rootTrimmed = rootCommand.trim();
+			if (rootTrimmed.isEmpty()) {
+				prefixed.add(trimmed);
+				continue;
+			}
+			prefixed.add(rootTrimmed + " " + trimmed);
+		}
+
+		return List.copyOf(prefixed);
+	}
+
+	private boolean isAlreadyPrefixed(@NotNull String alias, @NotNull String rootCommand) {
+		String lowerAlias = alias.toLowerCase();
+
+		String trimmedRoot = rootCommand.trim();
+		if (trimmedRoot.isEmpty()) return false;
+
+		String lowerRoot = trimmedRoot.toLowerCase();
+		return lowerAlias.equals(lowerRoot) || lowerAlias.startsWith(lowerRoot + " ");
 	}
 
 	private CommandDefinition lookupDefinition(@NotNull String key) {
@@ -126,20 +208,8 @@ public class DefaultCommandService implements CommandService {
 		return commands.getCommands().get(key);
 	}
 
-	private void initialize() {
-		registerInternal(
-				injector.getInstance(MainCommand.class),
-				injector.getInstance(HelpCommand.class),
-				injector.getInstance(ReloadCommand.class)
-		);
-
-		registerExceptionHandlers(commandManagerProvider.get());
-	}
-
 	private void registerExceptionHandlers(@NotNull CommandManager<Actor> commandManager) {
-		ExceptionMessages exceptionMessages = messagesProvider.get().getCommands() != null
-				? messagesProvider.get().getCommands().getExceptions()
-				: new ExceptionMessages();
+		ExceptionMessages exceptionMessages = messagesProvider.get().getCommands().getExceptions();
 
 		SerializerEngine scopedSerializer = new ScopedSerializerEngine(serializer, Serializer.SCOPE);
 		ExceptionHandlerRegistrar.register(commandManager, exceptionMessages, scopedSerializer, Actor::getAudience);

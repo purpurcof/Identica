@@ -6,13 +6,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.identica.model.Session;
-import me.whereareiam.identica.model.auth.IdentityClaim;
+import me.whereareiam.identica.model.account.Account;
+import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
+import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Context provided to providers when applying conflict resolution.
+ * Context passed to conflict resolvers.
  */
 @Getter
 @Setter
@@ -20,9 +24,57 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
+@SuppressWarnings("unused")
 public class ConflictContext {
-	private IdentityClaim claim;
-	private List<Session> existingSessions;
-	private String conflictKey;
-	private String conflictValue;
+	/**
+	 * Conflict key identifier (e.g. {@code username}, {@code email}).
+	 */
+	private @NotNull String key;
+
+	/**
+	 * Candidate value that is in conflict.
+	 */
+	private @NotNull String candidate;
+
+	private @Nullable Account incomingAccount;
+	private @Nullable AccountProviderLink incomingLink;
+	private @Nullable AccountProviderProfile incomingProfile;
+
+	private @Nullable Account existingAccount;
+	private @Nullable AccountProviderLink existingLink;
+	private @Nullable AccountProviderProfile existingProfile;
+
+	/**
+	 * Additional provider-specific attributes.
+	 */
+	@Builder.Default
+	private @NotNull Map<String, Object> extras = new HashMap<>();
+
+	/**
+	 * Read a typed extra value.
+	 *
+	 * @param key extra key
+	 * @param type expected type
+	 * @return extra value or {@code null}
+	 */
+	public @Nullable <T> T getExtra(@NotNull String key, @NotNull Class<T> type) {
+		Object value = extras.get(key);
+		if (type.isInstance(value)) return type.cast(value);
+		return null;
+	}
+
+	/**
+	 * Store an extra value.
+	 *
+	 * @param key extra key
+	 * @param value extra value
+	 */
+	public void putExtra(@NotNull String key, @Nullable Object value) {
+		if (key.isBlank()) return;
+		if (value == null) {
+			extras.remove(key);
+			return;
+		}
+		extras.put(key, value);
+	}
 }

@@ -1,13 +1,14 @@
 package me.whereareiam.identica.common.auth;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.auth.AuthenticationService;
 import me.whereareiam.identica.auth.HandshakePolicy;
-import me.whereareiam.identica.actor.OfflineIdentity;
-import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionStore;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
+import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
 import me.whereareiam.identica.event.auth.attempt.AuthAttemptFinishedEvent;
 import me.whereareiam.identica.event.auth.attempt.AuthAttemptStartedEvent;
 import me.whereareiam.identica.event.auth.AuthContextBuildEvent;
@@ -27,8 +28,7 @@ import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.registry.Registry;
-import me.whereareiam.identica.service.AccountService;
-import me.whereareiam.identica.registry.IdentityRegistry;
+import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.type.HandshakeMode;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
@@ -44,11 +44,10 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultAuthCoordinator implements AuthCoordinator {
 	private final AuthenticationService authenticationService;
-	private final HandshakeInstructionStore instructionStore;
-	private final com.google.inject.Provider<Messages> messagesProvider;
-	private final AccountService accountService;
+	private final HandshakeInstructionRegistry instructionStore;
 	private final Registry<HandshakePolicy> handshakePolicies;
-	private final IdentityRegistry identityRegistry;
+	private final Provider<Messages> messagesProvider;
+	private final IdentityService identityService;
 
 	@Override
 	public @NotNull CompletionStage<HandshakeDecision> handshake(HandshakeRequest request) {
@@ -81,7 +80,7 @@ public class DefaultAuthCoordinator implements AuthCoordinator {
 	@Override
 	public UUID prepareProfile(ProfileRequest request) {
 		if (request == null) return null;
-		return identityRegistry.resolveUniqueId(request);
+		return identityService.reserveIdentity(request);
 	}
 
 	@Override
@@ -300,12 +299,12 @@ public class DefaultAuthCoordinator implements AuthCoordinator {
 				.providerUsername(providerUsername)
 				.build();
 
-		AccountPreparation preparation = accountService.prepareAccount(profile, context.getIdenticaUniqueId());
+		AccountPreparation preparation = identityService.prepareAccount(profile, context.getIdenticaUniqueId());
 		if (preparation.getDecision().isDenied())
 			return AuthDecision.deny(messageOrFallback(preparation.getDecision().getMessage()));
 
 		context.setIdenticaUniqueId(preparation.getAccount().getUniqueId());
-		accountService.startSession(preparation, context.getIp());
+		identityService.openSession(preparation.toSession(context.getIp()));
 
 		return null;
 	}

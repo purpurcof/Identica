@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.actor.Identity;
+import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.type.HandshakeMode;

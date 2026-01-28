@@ -9,7 +9,8 @@ import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.loader.ProviderManager;
-import me.whereareiam.identica.service.AccountService;
+import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.session.SessionService;
 import me.whereareiam.identica.service.SynchronizationService;
 import org.jetbrains.annotations.NotNull;
 
@@ -162,14 +163,25 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the AccountService for account lifecycle operations.
+	 * Gets the IdentityService for identity lifecycle operations.
 	 *
-	 * @return the AccountService instance
+	 * @return the IdentityService instance
 	 * @throws IllegalStateException if the API is not initialized
 	 */
 	@NotNull
-	public static AccountService getAccountService() {
-		return getService(AccountService.class);
+	public static IdentityService getIdentityService() {
+		return getService(IdentityService.class);
+	}
+
+	/**
+	 * Gets the SessionService for session lifecycle operations.
+	 *
+	 * @return the SessionService instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
+	@NotNull
+	public static SessionService getSessionService() {
+		return getService(SessionService.class);
 	}
 
 	/**

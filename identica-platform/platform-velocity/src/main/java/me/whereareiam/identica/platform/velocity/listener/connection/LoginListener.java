@@ -8,7 +8,7 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.auth.AuthDecision;
@@ -19,7 +19,7 @@ import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import me.whereareiam.identica.registry.IdentityRegistry;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
+@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class LoginListener implements DynamicListener<LoginEvent> {
 	private final AuthCoordinator authCoordinator;
 	private final Provider<Messages> messagesProvider;

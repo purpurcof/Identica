@@ -13,10 +13,11 @@ import me.whereareiam.identica.model.account.AccountDecision;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.type.ConflictHook;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
-import me.whereareiam.identica.session.SessionStore;
+import me.whereareiam.identica.session.SessionService;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.registry.IdentityRegistry;
+import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.conflict.ConflictType;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
@@ -36,7 +37,8 @@ public class UsernameConflictType implements ConflictType {
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final ProviderProfilePersistenceService providerProfilePersistenceService;
 	private final IdentityRegistry identityRegistry;
-	private final SessionStore sessionStore;
+	private final SessionService sessionService;
+	private final IdentityService identityService;
 	private final FormatUsernameConflictResolver formatResolver;
 
 	@Inject
@@ -45,7 +47,8 @@ public class UsernameConflictType implements ConflictType {
 			ProviderLinkPersistenceService providerLinkPersistenceService,
 			ProviderProfilePersistenceService providerProfilePersistenceService,
 			IdentityRegistry identityRegistry,
-			SessionStore sessionStore,
+			SessionService sessionService,
+			IdentityService identityService,
 			FormatUsernameConflictResolver formatResolver,
 			ConflictService conflictService
 	) {
@@ -53,7 +56,8 @@ public class UsernameConflictType implements ConflictType {
 		this.providerLinkPersistenceService = providerLinkPersistenceService;
 		this.providerProfilePersistenceService = providerProfilePersistenceService;
 		this.identityRegistry = identityRegistry;
-		this.sessionStore = sessionStore;
+		this.sessionService = sessionService;
+		this.identityService = identityService;
 		this.formatResolver = formatResolver;
 
 		conflictService.register(this);
@@ -129,10 +133,10 @@ public class UsernameConflictType implements ConflictType {
 
 		Account existing = context.getExistingAccount();
 		if (existing != null && resolution.getAction() == ConflictResolution.Action.KICK_EXISTING)
-			identityRegistry.closeSession(existing.getUniqueId()).join();
+			identityService.closeSession(existing.getUniqueId()).join();
 
 		if (existing != null && resolution.getAction() == ConflictResolution.Action.KICK_BOTH) {
-			identityRegistry.closeSession(existing.getUniqueId()).join();
+			identityService.closeSession(existing.getUniqueId()).join();
 			event.setDecision(AccountDecision.deny(resolution.getMessage()));
 			return;
 		}
@@ -167,14 +171,14 @@ public class UsernameConflictType implements ConflictType {
 		if (existing == null) return;
 
 		UUID uniqueId = existing.getUniqueId();
-		identityRegistry.findSession(uniqueId)
+		sessionService.findByUniqueId(uniqueId)
 				.thenCompose(found -> {
 					if (found.isEmpty())
 						return CompletableFuture.completedFuture(null);
 
 					Session session = found.get();
 					session.setEffectiveUsername(overrideValue);
-					return sessionStore.store(session)
+					return sessionService.open(session)
 							.thenApply(stored -> {
 								identityRegistry.findState(uniqueId)
 										.ifPresent(state -> state.transitionToSession(stored));
@@ -208,7 +212,8 @@ public class UsernameConflictType implements ConflictType {
 	}
 
 	private boolean isActive(@NotNull UUID uniqueId) {
-		CompletableFuture<Optional<Session>> future = identityRegistry.findSession(uniqueId);
-		return future.thenApply(Optional::isPresent).join();
+		return sessionService.findByUniqueId(uniqueId)
+				.thenApply(Optional::isPresent)
+				.join();
 	}
 }

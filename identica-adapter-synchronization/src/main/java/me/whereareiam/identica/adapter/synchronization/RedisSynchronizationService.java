@@ -4,8 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.adapter.synchronization.provider.JedisPoolProvider;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.service.SynchronizationService;
 import org.jetbrains.annotations.NotNull;
 import redis.clients.jedis.BinaryJedisPubSub;
@@ -13,21 +14,22 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
+@RequiredArgsConstructor(onConstructor_ = @Inject)
 @SuppressWarnings("resource")
 public class RedisSynchronizationService implements SynchronizationService {
 	private static final String KV_PREFIX = "identica";
 
 	private final JedisPoolProvider poolProvider;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Replication> replicationProvider;
 
 	@Override
 	public boolean isAvailable() {
-		return settingsProvider.get().getSynchronization().isEnabled();
+		return replicationProvider.get().isEnabled();
 	}
 
 	@Override
@@ -62,6 +64,8 @@ public class RedisSynchronizationService implements SynchronizationService {
 			try (Jedis jedis = pool.getResource()) {
 				if (ttlMs > 0) {
 					jedis.psetex(rawKey, ttlMs, value);
+					long expiresAt = System.currentTimeMillis() + ttlMs;
+					jedis.zadd(buildIndexKey(namespace), expiresAt, key);
 				} else {
 					jedis.set(rawKey, value);
 				}
@@ -83,8 +87,49 @@ public class RedisSynchronizationService implements SynchronizationService {
 			byte[] rawKey = buildKey(namespace, key);
 			try (Jedis jedis = pool.getResource()) {
 				jedis.del(rawKey);
+				jedis.zrem(buildIndexKey(namespace), key);
 			} catch (Exception ignored) {
 				// ignore failures for sync
+			}
+		});
+	}
+
+	@Override
+	public @NotNull CompletableFuture<Cache.Page> listKeys(
+			@NotNull String namespace,
+			int page,
+			int pageSize
+	) {
+		int safePage = Math.max(1, page);
+		int safeSize = Math.max(1, pageSize);
+
+		if (!isAvailable()) {
+			return CompletableFuture.completedFuture(new Cache.Page(List.of(), safePage, safeSize, 0));
+		}
+
+		return CompletableFuture.supplyAsync(() -> {
+			JedisPool pool = poolProvider.getOptional().orElse(null);
+			if (pool == null) {
+				return new Cache.Page(List.of(), safePage, safeSize, 0);
+			}
+			long now = System.currentTimeMillis();
+			String indexKey = buildIndexKey(namespace);
+
+			try (Jedis jedis = pool.getResource()) {
+				jedis.zremrangeByScore(indexKey, 0, now);
+				long total = jedis.zcard(indexKey);
+
+				int fromIndex = Math.min((safePage - 1) * safeSize, (int) total);
+				int toIndex = Math.min(fromIndex + safeSize - 1, (int) total - 1);
+
+				if (total == 0 || fromIndex > toIndex) {
+					return new Cache.Page(List.of(), safePage, safeSize, (int) total);
+				}
+
+				List<String> members = jedis.zrange(indexKey, fromIndex, toIndex);
+				return new Cache.Page(members, safePage, safeSize, (int) total);
+			} catch (Exception ignored) {
+				return new Cache.Page(List.of(), safePage, safeSize, 0);
 			}
 		});
 	}
@@ -139,5 +184,13 @@ public class RedisSynchronizationService implements SynchronizationService {
 			builder.append(':').append(key);
 		}
 		return builder.toString().getBytes(StandardCharsets.UTF_8);
+	}
+
+	private String buildIndexKey(String namespace) {
+		StringBuilder builder = new StringBuilder(KV_PREFIX).append(":index");
+		if (namespace != null && !namespace.isBlank()) {
+			builder.append(':').append(namespace);
+		}
+		return builder.toString();
 	}
 }

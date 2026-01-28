@@ -4,7 +4,7 @@ import com.redis.testcontainers.RedisContainer;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.adapter.synchronization.RedisSynchronizationService;
 import me.whereareiam.identica.adapter.synchronization.provider.JedisPoolProvider;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.registry.Registry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,20 +31,18 @@ class RedisSynchronizationServiceTest {
 
 	@Test
 	void putGetAndInvalidate() throws Exception {
-		Settings settings = new Settings();
-		Settings.Synchronization sync = new Settings.Synchronization();
-		sync.setEnabled(true);
-		Settings.Synchronization.Redis redis = new Settings.Synchronization.Redis();
+		Replication replication = new Replication();
+		replication.setEnabled(true);
+		Replication.Redis redis = new Replication.Redis();
 		redis.setHost(REDIS.getRedisHost());
 		redis.setPort(REDIS.getRedisPort());
 		redis.setPassword("");
 		redis.setTimeout(2000);
 		redis.setSsl(false);
-		sync.setRedis(redis);
-		settings.setSynchronization(sync);
+		replication.setRedis(redis);
 
-		JedisPoolProvider poolProvider = new JedisPoolProvider(() -> settings, reloadableRegistry);
-		RedisSynchronizationService backend = new RedisSynchronizationService(poolProvider, () -> settings);
+		JedisPoolProvider poolProvider = new JedisPoolProvider(() -> replication, reloadableRegistry);
+		RedisSynchronizationService backend = new RedisSynchronizationService(poolProvider, () -> replication);
 
 		byte[] payload = "payload".getBytes(StandardCharsets.UTF_8);
 		backend.put("premium-profile", "Steve", payload, 5000).get(2, TimeUnit.SECONDS);

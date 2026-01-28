@@ -3,7 +3,7 @@ package me.whereareiam.identica.model.auth;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;

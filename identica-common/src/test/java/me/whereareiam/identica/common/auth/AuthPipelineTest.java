@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.auth;
 import me.whereareiam.identica.loader.IdenticaProvider;
 import me.whereareiam.identica.loader.ProviderManager;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.model.auth.ConnectionInfo;
 import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.auth.step.type.SeamlessStep;

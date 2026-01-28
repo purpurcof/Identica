@@ -6,7 +6,10 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.cache.codec.type.JsonCodec;
+import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -18,16 +21,20 @@ import java.time.Duration;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Resolves premium profile status and caches lookup results when enabled.
+ */
 @Singleton
 public class PremiumProfileLookup {
-	private final HttpClient httpClient;
-	private final Provider<PremiumSettings> settingsProvider;
-	private final Cache<Boolean> cache;
+	private final @NotNull HttpClient httpClient;
+	private final @NotNull Provider<PremiumSettings> settingsProvider;
+	private final @NotNull Cache<Boolean> cache;
 
 	@Inject
 	public PremiumProfileLookup(
-			Provider<PremiumSettings> settingsProvider,
-			CacheService cacheService
+			@NotNull Provider<PremiumSettings> settingsProvider,
+			@NotNull CacheService cacheService,
+			@NotNull Provider<Replication> replicationProvider
 	) {
 		this.httpClient = HttpClient.newBuilder()
 				.followRedirects(HttpClient.Redirect.NORMAL)
@@ -35,12 +42,18 @@ public class PremiumProfileLookup {
 
 		this.settingsProvider = settingsProvider;
 		this.cache = cacheService.synchronizedCache(
-				"premium-profile",
+				resolveNamespace(replicationProvider),
 				new JsonCodec<>(Boolean.class)
 		);
 	}
 
-	public CompletableFuture<Boolean> hasPremiumProfile(String username) {
+	/**
+	 * Resolves whether the given username has a premium profile, using cached results when enabled.
+	 *
+	 * @param username username to check
+	 * @return future that completes with the premium profile state
+	 */
+	public @NotNull CompletableFuture<Boolean> hasPremiumProfile(@Nullable String username) {
 		if (username == null || username.isBlank())
 			return CompletableFuture.completedFuture(false);
 
@@ -115,5 +128,17 @@ public class PremiumProfileLookup {
 
 	private String normalize(String username) {
 		return username.trim().toLowerCase(Locale.ROOT);
+	}
+
+	private static String resolveNamespace(Provider<Replication> replicationProvider) {
+		Replication replication = replicationProvider.get();
+		if (replication == null)
+			throw new IllegalStateException("replication is missing");
+
+		String namespace = replication.getCache().getPremiumProfile();
+		if (namespace.isBlank())
+			throw new IllegalStateException("replication.cache.premiumProfile is missing");
+
+		return namespace;
 	}
 }

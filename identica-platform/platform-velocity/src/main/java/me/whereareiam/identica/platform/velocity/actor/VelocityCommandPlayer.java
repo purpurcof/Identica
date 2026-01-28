@@ -1,7 +1,7 @@
 package me.whereareiam.identica.platform.velocity.actor;
 
 import com.velocitypowered.api.proxy.Player;
-import me.whereareiam.identica.actor.Identity;
+import me.whereareiam.identica.identity.actor.Identity;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;

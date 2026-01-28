@@ -5,13 +5,13 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.cache.codec.type.JsonCodec;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.service.SynchronizationService;
 import me.whereareiam.identica.type.ClearScope;
 import org.jetbrains.annotations.NotNull;
@@ -23,25 +23,26 @@ import java.util.UUID;
 public class AccountClearSynchronizationListener implements EventListener {
 	private static final JsonCodec<AccountClearMessage> CODEC = JsonCodec.of(AccountClearMessage.class);
 
-	private final SynchronizationService synchronizationService;
-	private final Provider<Settings> settingsProvider;
-	private final EventManager eventManager;
+	private final @NotNull SynchronizationService synchronizationService;
+	private final @NotNull Provider<Replication> replicationProvider;
+	private final @NotNull EventManager eventManager;
 
 	@Inject
 	public AccountClearSynchronizationListener(
-			SynchronizationService synchronizationService,
-			Provider<Settings> settingsProvider,
-			EventManager eventManager
+			@NotNull SynchronizationService synchronizationService,
+			@NotNull Provider<Replication> replicationProvider,
+			@NotNull EventManager eventManager
 	) {
 		this.synchronizationService = synchronizationService;
-		this.settingsProvider = settingsProvider;
+		this.replicationProvider = replicationProvider;
 		this.eventManager = eventManager;
+		eventManager.register(this);
 		subscribe();
 	}
 
 	@IdenticEvent
-	public void onAccountClear(AccountClearEvent event) {
-		if (event == null || event.isSynchronizedEvent()) return;
+	public void onAccountClear(@NotNull AccountClearEvent event) {
+		if (event.isSynchronizedEvent()) return;
 		String channel = getAccountUpdatesChannel();
 		if (channel.isBlank()) return;
 
@@ -78,7 +79,12 @@ public class AccountClearSynchronizationListener implements EventListener {
 		});
 	}
 
-	private byte[] encode(String serverId, ClearScope scope, UUID uniqueId, String username) {
+	private byte @Nullable [] encode(
+			@Nullable String serverId,
+			@Nullable ClearScope scope,
+			@Nullable UUID uniqueId,
+			@Nullable String username
+	) {
 		if (scope == null || uniqueId == null) return null;
 
 		AccountClearMessage message = new AccountClearMessage(
@@ -91,20 +97,19 @@ public class AccountClearSynchronizationListener implements EventListener {
 		return CODEC.encode(message);
 	}
 
-	private AccountClearMessage decode(byte[] payload) {
+	private @Nullable AccountClearMessage decode(byte @Nullable [] payload) {
 		if (payload == null || payload.length == 0) return null;
 
 		return CODEC.decode(payload);
 	}
 
-	private String getServerId() {
-		return settingsProvider.get().getSynchronization().getServerId();
+	private @NotNull String getServerId() {
+		return replicationProvider.get().getServerId();
 	}
 
-	private String getAccountUpdatesChannel() {
-		Settings.Synchronization sync = settingsProvider.get().getSynchronization();
-
-		return sync.getRedis().getChannels().getAccountUpdates();
+	private @NotNull String getAccountUpdatesChannel() {
+		Replication replication = replicationProvider.get();
+		return replication.getRedis().getChannels().getAccountUpdates();
 	}
 
 	@NoArgsConstructor

@@ -8,7 +8,7 @@ import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;

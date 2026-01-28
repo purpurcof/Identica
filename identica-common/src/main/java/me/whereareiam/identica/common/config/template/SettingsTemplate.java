@@ -10,7 +10,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Singleton
 public class SettingsTemplate implements TemplateProvider<Settings> {
@@ -38,36 +37,17 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		listeners.setEvents(defaultListenerEvents());
 		settings.setListeners(listeners);
 
-		Settings.Synchronization synchronization = new Settings.Synchronization();
-		synchronization.setEnabled(false);
-		synchronization.setServerId(UUID.randomUUID().toString());
-
-		Settings.Synchronization.Redis redis = new Settings.Synchronization.Redis();
-		redis.setHost("localhost");
-		redis.setPort(6379);
-		redis.setPassword("");
-		redis.setSessionsIndexKey("identica:sessions:index");
-
-		Settings.Synchronization.Channels channels = new Settings.Synchronization.Channels();
-		channels.setAccountUpdates("identica:accounts");
-		channels.setSessions("identica:sessions");
-		channels.setConflicts("identica:conflicts");
-		redis.setChannels(channels);
-		synchronization.setRedis(redis);
-
-		settings.setSynchronization(synchronization);
-
 		Settings.Sessions sessions = new Settings.Sessions();
-		sessions.setDefaultTtlMinutes(Duration.ofHours(2));
-		sessions.setRefreshMinutes(Duration.ofMinutes(10));
+		sessions.setDefaultTtl(Duration.ofHours(2));
+		sessions.setRefreshTtl(Duration.ofMinutes(10));
 		sessions.setProviders(Map.of(
 				"premium", Duration.ofHours(12)
 		));
 		settings.setSessions(sessions);
 
 		Settings.Authentication authentication = new Settings.Authentication();
-		authentication.setHandshakeInstructionTtlMinutes(Duration.ofMinutes(10));
-		authentication.setPendingUuidTtlMinutes(Duration.ofMinutes(15));
+		authentication.setHandshakeInstructionTtl(Duration.ofMinutes(10));
+		authentication.setReservationTtl(Duration.ofMinutes(15));
 		settings.setAuthentication(authentication);
 
 		return settings;

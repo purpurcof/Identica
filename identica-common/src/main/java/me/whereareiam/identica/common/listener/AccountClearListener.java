@@ -3,36 +3,57 @@ package me.whereareiam.identica.common.listener;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.actor.Identity;
-import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.auth.AuthCoordinator;
-import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionStore;
+import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.registry.IdentityRegistry;
 import me.whereareiam.identica.type.ClearScope;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class AccountClearListener implements EventListener {
-	private final AccountPersistenceService accountPersistenceService;
-	private final ProviderLinkPersistenceService providerLinkPersistenceService;
-	private final HandshakeInstructionStore instructionStore;
-	private final AuthCoordinator authCoordinator;
-	private final IdentityRegistry identityRegistry;
-	private final Provider<Messages> messagesProvider;
+	private final @NotNull AccountPersistenceService accountPersistenceService;
+	private final @NotNull ProviderLinkPersistenceService providerLinkPersistenceService;
+	private final @NotNull HandshakeInstructionRegistry instructionStore;
+	private final @NotNull AuthCoordinator authCoordinator;
+	private final @NotNull IdentityRegistry identityRegistry;
+	private final @NotNull Provider<Messages> messagesProvider;
+
+	@Inject
+	public AccountClearListener(
+			@NotNull AccountPersistenceService accountPersistenceService,
+			@NotNull ProviderLinkPersistenceService providerLinkPersistenceService,
+			@NotNull HandshakeInstructionRegistry instructionStore,
+			@NotNull AuthCoordinator authCoordinator,
+			@NotNull IdentityRegistry identityRegistry,
+			@NotNull Provider<Messages> messagesProvider,
+			@NotNull EventManager eventManager
+	) {
+		this.accountPersistenceService = accountPersistenceService;
+		this.providerLinkPersistenceService = providerLinkPersistenceService;
+		this.instructionStore = instructionStore;
+		this.authCoordinator = authCoordinator;
+		this.identityRegistry = identityRegistry;
+		this.messagesProvider = messagesProvider;
+		eventManager.register(this);
+	}
 
 	@IdenticEvent
-	public void onClear(AccountClearEvent event) {
+	public void onClear(@NotNull AccountClearEvent event) {
 		OfflineIdentity offlineIdentity = event.getIdentity();
 		String username = offlineIdentity.getUsername();
 		instructionStore.invalidate(username);
@@ -54,7 +75,7 @@ public class AccountClearListener implements EventListener {
 		}
 	}
 
-	private Optional<Identity> findOnlineIdentity(UUID uniqueId, String username) {
+	private @NotNull Optional<Identity> findOnlineIdentity(@Nullable UUID uniqueId, @Nullable String username) {
 		if (uniqueId != null) {
 			Optional<Identity> byId = identityRegistry.findOnline(uniqueId);
 			if (byId.isPresent()) return byId;
@@ -64,7 +85,7 @@ public class AccountClearListener implements EventListener {
 		return identityRegistry.findOnline(username);
 	}
 
-	private String joinLines(java.util.List<String> lines) {
+	private @NotNull String joinLines(@Nullable List<String> lines) {
 		if (lines == null || lines.isEmpty()) return "";
 		return String.join("\n", lines);
 	}

@@ -17,6 +17,7 @@ import me.whereareiam.identica.listener.ListenerRegistrar;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.event.EventOrder;
 
@@ -32,6 +33,7 @@ public class Identica implements EventListener {
 	) {
 		this.injector = injector;
 		this.listenerRegistrar = listenerRegistrar;
+
 		eventManager.register(this);
 	}
 
@@ -41,6 +43,7 @@ public class Identica implements EventListener {
 		injector.getInstance(Messages.class);
 		injector.getInstance(Commands.class);
 		injector.getInstance(Providers.class);
+		injector.getInstance(Replication.class);
 
 		injector.getInstance(DatabaseService.class);
 

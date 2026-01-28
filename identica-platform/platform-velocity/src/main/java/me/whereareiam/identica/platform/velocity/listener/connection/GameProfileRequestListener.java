@@ -6,7 +6,7 @@ import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.util.GameProfile;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.auth.AuthCoordinator;
-import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.auth.ConnectionInfo;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;

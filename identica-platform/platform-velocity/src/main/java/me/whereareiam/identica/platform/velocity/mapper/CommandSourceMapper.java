@@ -6,7 +6,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.actor.Identity;
+import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandConsole;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import me.whereareiam.identica.registry.IdentityRegistry;

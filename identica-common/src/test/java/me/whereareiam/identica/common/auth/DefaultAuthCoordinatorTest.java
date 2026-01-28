@@ -1,11 +1,11 @@
 package me.whereareiam.identica.common.auth;
 
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.auth.AuthenticationService;
 import me.whereareiam.identica.auth.HandshakePolicy;
-import me.whereareiam.identica.common.account.DefaultAccountService;
-import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionStore;
+import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
+import me.whereareiam.identica.common.identity.DefaultIdentityService;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.ProviderProfilePersistenceService;
@@ -21,10 +21,16 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.account.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
+import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.registry.IdentityRegistry;
 import me.whereareiam.identica.util.EventUtil;
+import me.whereareiam.identica.identity.ReservationCache;
+import me.whereareiam.identica.session.SessionService;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -38,11 +44,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class DefaultAuthCoordinatorTest {
+	@Mock
+	private Registry<HandshakePolicy> handshakePolicies;
+
 	@Test
 	void createsAccountWhenMissing() {
 		UUID identicaId = UUID.randomUUID();
@@ -56,25 +67,32 @@ class DefaultAuthCoordinatorTest {
 		});
 
 		EventManager eventManager = mock(EventManager.class);
-		HandshakeInstructionStore instructionStore = mock(HandshakeInstructionStore.class);
+		HandshakeInstructionRegistry instructionStore = mock(HandshakeInstructionRegistry.class);
 		AccountPersistenceService accountPersistenceService = mock(AccountPersistenceService.class);
 		ProviderLinkPersistenceService linkPersistence = mock(ProviderLinkPersistenceService.class);
 		ProviderProfilePersistenceService profilePersistence = mock(ProviderProfilePersistenceService.class);
 		UsernameHistoryPersistenceService usernameHistoryPersistenceService = mock(UsernameHistoryPersistenceService.class);
 		ProviderManager providerManager = mock(ProviderManager.class);
 		when(providerManager.getProviders()).thenReturn(List.of());
-		Registry<HandshakePolicy> handshakePolicies = mock(Registry.class);
 		IdentityRegistry identityRegistry = mock(IdentityRegistry.class);
-		when(identityRegistry.openSession(any()))
+		SessionService sessionService = mock(SessionService.class);
+		when(sessionService.open(any()))
 				.thenAnswer(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
+		ReservationCache reservationCache = mock(ReservationCache.class);
+		when(reservationCache.get(anyString())).thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+		doAnswer(_ -> CompletableFuture.completedFuture(null)).when(reservationCache).put(anyString(), any(), anyLong());
+		doAnswer(_ -> CompletableFuture.completedFuture(null)).when(reservationCache).invalidate(anyString());
 
-		DefaultAccountService accountService = new DefaultAccountService(
+		DefaultIdentityService identityService = new DefaultIdentityService(
 				accountPersistenceService,
 				linkPersistence,
 				profilePersistence,
 				usernameHistoryPersistenceService,
 				identityRegistry,
-				providerManager
+				providerManager,
+				sessionService,
+				reservationCache,
+				Settings::new
 		);
 
 		when(accountPersistenceService.findByUniqueId(identicaId)).thenReturn(Optional.empty());
@@ -89,10 +107,9 @@ class DefaultAuthCoordinatorTest {
 		DefaultAuthCoordinator coordinator = new DefaultAuthCoordinator(
 				authenticationService,
 				instructionStore,
-				Messages::new,
-				accountService,
 				handshakePolicies,
-				identityRegistry
+				Messages::new,
+				identityService
 		);
 
 		LoginRequest request = LoginRequest.builder()
@@ -108,7 +125,7 @@ class DefaultAuthCoordinatorTest {
 		verify(accountPersistenceService).create(any(Account.class));
 		verify(linkPersistence).upsert(any(AccountProviderLink.class));
 		verify(profilePersistence).upsert(any(AccountProviderProfile.class));
-		verify(identityRegistry).openSession(any());
+		verify(sessionService).open(any());
 	}
 
 	@Test
@@ -124,25 +141,32 @@ class DefaultAuthCoordinatorTest {
 		});
 
 		EventManager eventManager = mock(EventManager.class);
-		HandshakeInstructionStore instructionStore = mock(HandshakeInstructionStore.class);
+		HandshakeInstructionRegistry instructionStore = mock(HandshakeInstructionRegistry.class);
 		AccountPersistenceService accountPersistenceService = mock(AccountPersistenceService.class);
 		ProviderLinkPersistenceService linkPersistence = mock(ProviderLinkPersistenceService.class);
 		ProviderProfilePersistenceService profilePersistence = mock(ProviderProfilePersistenceService.class);
 		UsernameHistoryPersistenceService usernameHistoryPersistenceService = mock(UsernameHistoryPersistenceService.class);
 		ProviderManager providerManager = mock(ProviderManager.class);
 		when(providerManager.getProviders()).thenReturn(List.of());
-		Registry<HandshakePolicy> handshakePolicies = mock(Registry.class);
 		IdentityRegistry identityRegistry = mock(IdentityRegistry.class);
-		when(identityRegistry.openSession(any()))
+		SessionService sessionService = mock(SessionService.class);
+		when(sessionService.open(any()))
 				.thenAnswer(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
+		ReservationCache reservationCache = mock(ReservationCache.class);
+		when(reservationCache.get(anyString())).thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+		doAnswer(_ -> CompletableFuture.completedFuture(null)).when(reservationCache).put(anyString(), any(), anyLong());
+		doAnswer(_ -> CompletableFuture.completedFuture(null)).when(reservationCache).invalidate(anyString());
 
-		DefaultAccountService accountService = new DefaultAccountService(
+		DefaultIdentityService identityService = new DefaultIdentityService(
 				accountPersistenceService,
 				linkPersistence,
 				profilePersistence,
 				usernameHistoryPersistenceService,
 				identityRegistry,
-				providerManager
+				providerManager,
+				sessionService,
+				reservationCache,
+				Settings::new
 		);
 
 		when(accountPersistenceService.findByUniqueId(identicaId)).thenReturn(Optional.of(Account.builder()
@@ -162,10 +186,9 @@ class DefaultAuthCoordinatorTest {
 		DefaultAuthCoordinator coordinator = new DefaultAuthCoordinator(
 				authenticationService,
 				instructionStore,
-				Messages::new,
-				accountService,
 				handshakePolicies,
-				identityRegistry
+				Messages::new,
+				identityService
 		);
 
 		LoginRequest request = LoginRequest.builder()
@@ -181,7 +204,7 @@ class DefaultAuthCoordinatorTest {
 		verify(accountPersistenceService).updateLastSeen(eq(identicaId), anyLong());
 		verify(linkPersistence).upsert(any(AccountProviderLink.class));
 		verify(profilePersistence).upsert(any(AccountProviderProfile.class));
-		verify(identityRegistry).openSession(any());
+		verify(sessionService).open(any());
 	}
 
 	@RequiredArgsConstructor
@@ -213,4 +236,5 @@ class DefaultAuthCoordinatorTest {
 			return false;
 		}
 	}
+
 }

@@ -6,7 +6,7 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import me.whereareiam.identica.platform.velocity.VelocityIdentica;
-import me.whereareiam.identica.session.SessionStore;
+import me.whereareiam.identica.session.SessionService;
 import me.whereareiam.identica.session.SessionRefreshApplier;
 import org.jspecify.annotations.NonNull;
 
@@ -26,9 +26,9 @@ public class VelocitySessionRefresher extends SessionRefreshApplier {
 	public VelocitySessionRefresher(
 			ProxyServer proxyServer,
 			VelocityIdentica plugin,
-			SessionStore sessionStore
+			SessionService sessionService
 	) {
-		super(sessionStore);
+		super(sessionService);
 		this.proxyServer = proxyServer;
 		this.plugin = plugin;
 	}

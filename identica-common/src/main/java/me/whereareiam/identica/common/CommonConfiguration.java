@@ -2,56 +2,79 @@ package me.whereareiam.identica.common;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Provides;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.configura.Config;
+import me.whereareiam.configura.node.Node;
 import me.whereareiam.configura.reader.ConfigReader;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.configura.writer.ConfigWriter;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.common.cache.DefaultCacheService;
+import me.whereareiam.identica.common.identity.DefaultReservationCache;
+import me.whereareiam.identica.common.listener.AccountClearListener;
+import me.whereareiam.identica.common.listener.AccountClearSynchronizationListener;
+import me.whereareiam.identica.common.session.DefaultSessionService;
+import me.whereareiam.identica.common.session.SessionRefreshCoordinator;
 import me.whereareiam.identica.common.synchronization.DefaultSynchronizationService;
+import me.whereareiam.identica.common.synchronization.NoopSynchronizationService;
+import me.whereareiam.identica.common.config.adapter.DateTimePatternAdapter;
+import me.whereareiam.identica.common.config.adapter.DurationAdapter;
+import me.whereareiam.identica.common.config.adapter.NodeAdapter;
+import me.whereareiam.identica.common.config.adapter.ProviderCapabilityAdapter;
 import me.whereareiam.identica.common.config.provider.*;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
 import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.auth.AuthenticationService;
 import me.whereareiam.identica.common.auth.AuthPipeline;
 import me.whereareiam.identica.common.auth.DefaultAuthCoordinator;
+import me.whereareiam.identica.common.conflict.ConflictPrepareLifecycle;
+import me.whereareiam.identica.common.identity.DefaultIdentityService;
 import me.whereareiam.identica.common.auth.handshake.HandshakePolicyRegistry;
 import me.whereareiam.identica.common.routing.DefaultRoutingService;
 import me.whereareiam.identica.common.routing.InMemoryRoutingStateStore;
-import me.whereareiam.identica.common.routing.lifecycle.RoutingTargetDispatcher;
-import me.whereareiam.identica.common.routing.lifecycle.RountingListener;
+import me.whereareiam.identica.common.routing.RoutingLifecycle;
+import me.whereareiam.identica.common.conflict.DefaultConflictService;
+import me.whereareiam.identica.common.conflict.type.UsernameConflictType;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.loader.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.loader.ProviderDescriptorReader;
 import me.whereareiam.identica.common.loader.DefaultProviderManager;
 import me.whereareiam.identica.loader.ProviderManager;
 import me.whereareiam.identica.common.provider.SerializerEngineProvider;
+import me.whereareiam.identica.common.registry.DefaultIdentityRegistry;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.cache.CacheService;
-import me.whereareiam.identica.synchronization.SynchronizationService;
+import me.whereareiam.identica.service.SynchronizationService;
 import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.registry.IdentityRegistry;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 import me.whereareiam.identica.routing.RoutingService;
+import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.identica.routing.RoutingStateStore;
-import me.whereareiam.identica.routing.RoutingTargetApplier;
+import me.whereareiam.identica.identity.ReservationCache;
+import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.conflict.ConflictService;
+import me.whereareiam.identica.type.provider.ProviderCapability;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -62,7 +85,26 @@ public class CommonConfiguration extends AbstractModule {
 	protected void configure() {
 		requestInjection(this);
 
-		// Reloadables
+		// Configuration core
+		bind(ConfigurationTypeResolver.class)
+				.to(FileSystemConfigurationTypeResolver.class)
+				.asEagerSingleton();
+
+		// Configuration providers
+		bind(SettingsProvider.class).asEagerSingleton();
+		bind(Settings.class).toProvider(SettingsProvider.class);
+		bind(MessagesProvider.class).asEagerSingleton();
+		bind(Messages.class).toProvider(MessagesProvider.class);
+		bind(CommandsProvider.class).asEagerSingleton();
+		bind(Commands.class).toProvider(CommandsProvider.class);
+		bind(ProvidersProvider.class).asEagerSingleton();
+		bind(Providers.class).toProvider(ProvidersProvider.class);
+		bind(PersistenceProvider.class).asEagerSingleton();
+		bind(Persistence.class).toProvider(PersistenceProvider.class);
+		bind(ReplicationProvider.class).asEagerSingleton();
+		bind(Replication.class).toProvider(ReplicationProvider.class);
+
+		// Registries & reloadables
 		bind(new TypeLiteral<Registry<Reloadable>>() {})
 				.to(ReloadableRegistry.class)
 				.asEagerSingleton();
@@ -74,48 +116,60 @@ public class CommonConfiguration extends AbstractModule {
 				.to(HandshakePolicyRegistry.class)
 				.asEagerSingleton();
 
-		// Configuration
-		bind(ConfigurationTypeResolver.class)
-				.to(FileSystemConfigurationTypeResolver.class)
+		// Synchronization + cache
+		OptionalBinder.newOptionalBinder(binder(), Key.get(SynchronizationService.class, Names.named("synchronizationProvider")))
+				.setDefault()
+				.to(NoopSynchronizationService.class)
 				.asEagerSingleton();
 
-		// Synchronization providers (optional)
-		Multibinder.newSetBinder(binder(), SynchronizationService.class, Names.named("synchronizationProviders"));
 		bind(SynchronizationService.class).to(DefaultSynchronizationService.class).asEagerSingleton();
 		bind(CacheService.class).to(DefaultCacheService.class).asEagerSingleton();
-		Multibinder.newSetBinder(binder(), RoutingTargetApplier.class);
+		bind(ReservationCache.class).to(DefaultReservationCache.class).asEagerSingleton();
 
-		// Configs
-		bind(SettingsProvider.class).asEagerSingleton();
-		bind(Settings.class).toProvider(SettingsProvider.class);
-		bind(MessagesProvider.class).asEagerSingleton();
-		bind(Messages.class).toProvider(MessagesProvider.class);
-		bind(CommandsProvider.class).asEagerSingleton();
-		bind(Commands.class).toProvider(CommandsProvider.class);
-		bind(ProvidersProvider.class).asEagerSingleton();
-		bind(Providers.class).toProvider(ProvidersProvider.class);
-		bind(PersistenceProvider.class).asEagerSingleton();
-		bind(Persistence.class).toProvider(PersistenceProvider.class);
+		// Identity lifecycle
+		bind(IdentityRegistry.class).to(DefaultIdentityRegistry.class).asEagerSingleton();
+		bind(IdentityService.class).to(DefaultIdentityService.class).asEagerSingleton();
 
-		// Services
-		bind(SerializerEngine.class).toProvider(SerializerEngineProvider.class);
-		bind(EventManager.class).to(EventController.class);
-		bind(RoutingService.class).to(DefaultRoutingService.class).asEagerSingleton();
-		bind(RoutingStateStore.class).to(InMemoryRoutingStateStore.class).asEagerSingleton();
-		bind(RoutingTargetDispatcher.class).asEagerSingleton();
-		bind(RountingListener.class).asEagerSingleton();
+		// Session lifecycle
+		bind(SessionService.class).to(DefaultSessionService.class).asEagerSingleton();
+		bind(SessionRefreshCoordinator.class).asEagerSingleton();
 
-		// Plugin
-		bind(Identica.class).asEagerSingleton();
-		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
-		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
+		// Authentication
 		bind(AuthenticationService.class).to(AuthPipeline.class).asEagerSingleton();
 		bind(AuthCoordinator.class).to(DefaultAuthCoordinator.class).asEagerSingleton();
+
+		// Routing
+		bind(RoutingStateStore.class).to(InMemoryRoutingStateStore.class).asEagerSingleton();
+		bind(RoutingService.class).to(DefaultRoutingService.class).asEagerSingleton();
+		bind(RoutingLifecycle.class).asEagerSingleton();
+
+		// Conflict resolution
+		bind(ConflictService.class).to(DefaultConflictService.class).asEagerSingleton();
+		bind(UsernameConflictType.class).asEagerSingleton();
+
+		// Event listeners
+		bind(AccountClearListener.class).asEagerSingleton();
+		bind(AccountClearSynchronizationListener.class).asEagerSingleton();
+		bind(ConflictPrepareLifecycle.class).asEagerSingleton();
+
+		// Provider system
+		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
+		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
+
+		// Core services
+		bind(EventManager.class).to(EventController.class);
+		bind(SerializerEngine.class).toProvider(SerializerEngineProvider.class);
+		bind(Identica.class).asEagerSingleton();
 	}
 
 	@Inject
 	void initializeSerializationHelper(Provider<SerializerEngine> serializerProvider) {
 		Serializer.initialize(serializerProvider);
+	}
+
+	@Inject
+	void initializeEventUtil(EventManager eventManager) {
+		EventUtil.initialize(eventManager);
 	}
 
 	@Inject
@@ -127,6 +181,11 @@ public class CommonConfiguration extends AbstractModule {
 		ConfigWriter writer = Config.getDefaultWriter().withFormat(format);
 		Config.setReader(reader);
 		Config.setWriter(writer);
+
+		Config.registerAdapter(Node.class, new NodeAdapter());
+		Config.registerAdapter(Duration.class, new DurationAdapter());
+		Config.registerAdapter(DateTimePattern.class, new DateTimePatternAdapter());
+		Config.registerAdapter(ProviderCapability.class, new ProviderCapabilityAdapter());
 	}
 
 	@Provides

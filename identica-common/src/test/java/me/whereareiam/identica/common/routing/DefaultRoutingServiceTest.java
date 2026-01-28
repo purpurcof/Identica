@@ -2,7 +2,7 @@ package me.whereareiam.identica.common.routing;
 
 import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.model.auth.ConnectionInfo;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.config.Settings;

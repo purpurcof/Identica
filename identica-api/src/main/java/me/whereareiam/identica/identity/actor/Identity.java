@@ -1,4 +1,4 @@
-package me.whereareiam.identica.actor;
+package me.whereareiam.identica.identity.actor;
 
 import me.whereareiam.identica.Key;
 import me.whereareiam.keystone.Actor;

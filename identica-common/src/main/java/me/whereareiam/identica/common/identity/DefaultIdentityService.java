@@ -1,43 +1,102 @@
-package me.whereareiam.identica.common.account;
+package me.whereareiam.identica.common.identity;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.common.uuid.UniqueIdResolutionSupport;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.ProviderProfilePersistenceService;
 import me.whereareiam.identica.database.UsernameHistoryPersistenceService;
 import me.whereareiam.identica.event.account.AccountPrepareEvent;
+import me.whereareiam.identica.event.identity.session.SessionClosedEvent;
+import me.whereareiam.identica.event.identity.session.SessionPrepareEvent;
+import me.whereareiam.identica.event.identity.session.SessionOpenedEvent;
 import me.whereareiam.identica.loader.ProviderManager;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.UsernameHistoryEntry;
 import me.whereareiam.identica.model.account.Account;
 import me.whereareiam.identica.model.account.AccountDecision;
 import me.whereareiam.identica.model.account.AccountPreparation;
+import me.whereareiam.identica.model.auth.request.ProfileRequest;
+import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.identity.IdentityState;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.registry.IdentityRegistry;
-import me.whereareiam.identica.service.AccountService;
+import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.identity.ReservationCache;
+import me.whereareiam.identica.session.SessionService;
 import me.whereareiam.identica.type.UsernameSource;
+import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.identica.util.UniqueIdGenerator;
+import me.whereareiam.identica.identity.actor.Identity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.time.Duration;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class DefaultAccountService implements AccountService {
+public class DefaultIdentityService implements IdentityService {
 	private final AccountPersistenceService accountPersistenceService;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final ProviderProfilePersistenceService providerProfilePersistenceService;
 	private final UsernameHistoryPersistenceService usernameHistoryPersistenceService;
 	private final IdentityRegistry identityRegistry;
 	private final ProviderManager providerManager;
+	private final SessionService sessionService;
+	private final ReservationCache reservationCache;
+	private final Provider<Settings> settingsProvider;
+
+	@Override
+	public @Nullable UUID reserveIdentity(@NotNull ProfileRequest request) {
+		String username = UniqueIdResolutionSupport.normalize(request.getUsername());
+		if (username == null) return null;
+
+		String providerId = UniqueIdResolutionSupport.normalize(request.getProviderId());
+		String providerSubject = UniqueIdResolutionSupport.normalize(request.getProviderSubject());
+		if (providerId == null || providerSubject == null) return null;
+
+		UUID resolved = resolveFromSession(providerId, providerSubject);
+		if (resolved == null)
+			resolved = resolveFromProviderLink(providerId, providerSubject);
+		if (resolved == null)
+			resolved = resolveFromReservation(providerId, providerSubject, username, request.getIp());
+		if (resolved == null)
+			resolved = reserveNewIdentity(providerId, providerSubject, username, request.getIp());
+
+		long ttlMs = pendingTtlMillis();
+		long expiresAt = ttlMs > 0 ? System.currentTimeMillis() + ttlMs : 0;
+		identityRegistry.registerPending(resolved, request, expiresAt);
+
+		return resolved;
+	}
+
+	@Override
+	public void clearReservation(@NotNull ProfileRequest request) {
+		String providerId = request.getProviderId();
+		String providerSubject = request.getProviderSubject();
+		String username = request.getUsername();
+		String ip = request.getIp();
+
+		String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(providerId, providerSubject);
+		if (subjectKey != null)
+			reservationCache.invalidate(subjectKey).join();
+
+		String bridgeKey = UniqueIdResolutionSupport.buildBridgeKey(username, ip);
+		if (bridgeKey != null)
+			reservationCache.invalidate(bridgeKey).join();
+
+	}
 
 	@Override
 	public @NotNull AccountPreparation prepareAccount(
@@ -126,34 +185,139 @@ public class DefaultAccountService implements AccountService {
 	}
 
 	@Override
-	public @Nullable Session startSession(@NotNull AccountPreparation preparation, @Nullable String ip) {
-		if (preparation.getDecision().isDenied()) return null;
+	public @NotNull CompletableFuture<@Nullable Session> openSession(@Nullable Session session) {
+		if (session == null) return CompletableFuture.completedFuture(null);
+		SessionPrepareEvent openEvent = new SessionPrepareEvent(session);
+		EventUtil.callEvent(openEvent);
+		if (openEvent.isCancelled())
+			return CompletableFuture.completedFuture(null);
 
-		Account account = preparation.getAccount();
-		AccountPreparation.Provider provider = preparation.getProvider();
-		AccountProviderLink link = provider.getLink();
-		AccountProviderProfile profile = provider.getProfile();
+		return sessionService.open(openEvent.getSession())
+				.thenApply(stored -> {
+					if (stored == null)
+						return null;
+					identityRegistry.attachSession(stored);
+					EventUtil.callEvent(new SessionOpenedEvent(stored));
+					return stored;
+				});
+	}
 
-		String providerUsername = profile.getProviderUsername();
-		String originalUsername = providerUsername.isBlank()
-				? account.getUsername()
-				: providerUsername;
+	@Override
+	public @NotNull CompletableFuture<Void> closeSession(@Nullable UUID uniqueId) {
+		IdentityState state = uniqueId != null ? identityRegistry.findState(uniqueId).orElse(null) : null;
+		Session current = state != null ? state.getSession() : null;
 
-		String effectiveUsername = preparation.getEffectiveUsername();
-		if (effectiveUsername == null || effectiveUsername.isBlank())
-			effectiveUsername = account.getUsername();
+		return sessionService.close(uniqueId)
+				.thenRun(() -> {
+					if (uniqueId != null) {
+						identityRegistry.detachSession(uniqueId);
+						EventUtil.callEvent(new SessionClosedEvent(uniqueId, current));
+					}
+				});
+	}
 
-		Session session = Session.builder()
-				.uniqueId(account.getUniqueId())
-				.providerId(link.getProviderId())
-				.providerSubject(link.getProviderSubject())
-				.originalUsername(originalUsername)
-				.effectiveUsername(effectiveUsername)
-				.ip(ip)
-				.createdAt(System.currentTimeMillis())
-				.build();
+	@Override
+	public @NotNull CompletableFuture<Optional<Session>> findSession(@Nullable UUID uniqueId) {
+		return sessionService.findByUniqueId(uniqueId);
+	}
 
-		return identityRegistry.openSession(session).join();
+	@Override
+	public @NotNull CompletableFuture<SessionService.Page> listSessions(int page, int pageSize) {
+		return sessionService.list(page, pageSize);
+	}
+
+	@Override
+	public @NotNull Optional<IdentityState> findState(@NotNull UUID uniqueId) {
+		return identityRegistry.findState(uniqueId);
+	}
+
+	@Override
+	public @NotNull Optional<IdentityState> findState(@NotNull String username) {
+		return identityRegistry.findState(username);
+	}
+
+	@Override
+	public @NotNull Collection<IdentityState> getStates() {
+		return identityRegistry.getStates();
+	}
+
+	@Override
+	public void attachOnline(@NotNull Identity identity) {
+		identityRegistry.attachOnline(identity);
+	}
+
+	@Override
+	public void detachOnline(@NotNull UUID uniqueId) {
+		identityRegistry.detachOnline(uniqueId);
+	}
+
+	@Override
+	public @NotNull Optional<Identity> findOnline(@NotNull UUID uniqueId) {
+		return identityRegistry.findOnline(uniqueId);
+	}
+
+	@Override
+	public @NotNull Optional<Identity> findOnline(@NotNull String username) {
+		return identityRegistry.findOnline(username);
+	}
+
+	@Override
+	public @NotNull Collection<Identity> getOnlineIdentities() {
+		return identityRegistry.getOnlineIdentities();
+	}
+
+	private UUID resolveFromSession(String providerId, String providerSubject) {
+		return sessionService.findByProviderSubject(providerId, providerSubject)
+				.thenApply(opt -> opt.map(Session::getUniqueId).orElse(null))
+				.join();
+	}
+
+	private UUID resolveFromProviderLink(String providerId, String providerSubject) {
+		return providerLinkPersistenceService.findBySubject(providerId, providerSubject)
+				.map(AccountProviderLink::getUniqueId)
+				.orElse(null);
+	}
+
+	private UUID resolveFromReservation(String providerId, String providerSubject, String username, String ip) {
+		String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(providerId, providerSubject);
+		if (subjectKey != null) {
+			UUID subjectMatch = reservationCache.get(subjectKey)
+					.thenApply(opt -> opt.orElse(null))
+					.join();
+			if (subjectMatch != null) return subjectMatch;
+		}
+
+		String bridgeKey = UniqueIdResolutionSupport.buildBridgeKey(username, ip);
+		if (bridgeKey == null) return null;
+
+		return reservationCache.get(bridgeKey)
+				.thenApply(opt -> opt.orElse(null))
+				.join();
+	}
+
+	private UUID reserveNewIdentity(String providerId, String providerSubject, String username, String ip) {
+		UUID generated = UniqueIdGenerator.newIdenticaUniqueId();
+		long ttlMs = pendingTtlMillis();
+
+		String bridgeKey = UniqueIdResolutionSupport.buildBridgeKey(username, ip);
+		if (bridgeKey != null)
+			reservationCache.put(bridgeKey, generated, ttlMs).join();
+
+		String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(providerId, providerSubject);
+		if (subjectKey != null)
+			reservationCache.put(subjectKey, generated, ttlMs).join();
+
+		return generated;
+	}
+
+	private long pendingTtlMillis() {
+		Settings.Authentication auth = settingsProvider.get().getAuthentication();
+
+		Duration configured = auth.getReservationTtl();
+		if (configured.isZero() || configured.isNegative())
+			throw new IllegalStateException("settings.authentication.reservationTtl must be positive");
+
+		return configured.toMillis();
 	}
 
 	private boolean applyReplication(

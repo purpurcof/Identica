@@ -1,31 +1,30 @@
 package me.whereareiam.identica.provider.premium.step;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.auth.step.type.SeamlessStep;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
-import me.whereareiam.identica.session.PendingUniqueIdStore;
-import me.whereareiam.identica.util.ProfileSubjectKey;
+import me.whereareiam.identica.model.identity.IdentityState;
+import me.whereareiam.identica.registry.IdentityRegistry;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.Optional;
-import java.util.UUID;
 
 @Singleton
 public class VerifyPremiumProfileStep extends SeamlessStep {
-	private final com.google.inject.Provider<PremiumMessages> messagesProvider;
-	private final PendingUniqueIdStore pendingUniqueIdStore;
+	private final Provider<PremiumMessages> messagesProvider;
+	private final IdentityRegistry identityRegistry;
 
 	@Inject
 	public VerifyPremiumProfileStep(
-			com.google.inject.Provider<PremiumMessages> messagesProvider,
-			PendingUniqueIdStore pendingUniqueIdStore
+			Provider<PremiumMessages> messagesProvider,
+			IdentityRegistry identityRegistry
 	) {
 		super("verify");
 		this.messagesProvider = messagesProvider;
-		this.pendingUniqueIdStore = pendingUniqueIdStore;
+		this.identityRegistry = identityRegistry;
 	}
 
 	@Override
@@ -43,27 +42,23 @@ public class VerifyPremiumProfileStep extends SeamlessStep {
 			return CompletableFuture.completedFuture(StepResult.failed(invalidSession));
 		}
 
-		String key = ProfileSubjectKey.of(username, ip);
-		if (key == null) {
+		IdentityState state = context.getIdenticaUniqueId() != null
+				? identityRegistry.findState(context.getIdenticaUniqueId()).orElse(null)
+				: null;
+		String profileUniqueId = state != null ? state.getProfileUniqueId() : null;
+		if (profileUniqueId == null || profileUniqueId.isBlank()) {
 			PremiumMessages.Verification verification = messagesProvider.get().getVerification();
 			String invalidSession = String.join("\n", verification.getInvalidSession());
 			return CompletableFuture.completedFuture(StepResult.failed(invalidSession));
 		}
 
-		return pendingUniqueIdStore.get(key)
-				.thenApply(optional -> completeWithProfile(context, optional, username));
+		return CompletableFuture.completedFuture(completeWithProfile(context, profileUniqueId, username));
 	}
 
-	private StepResult completeWithProfile(AuthContext context, Optional<UUID> profileId, String username) {
-		if (profileId.isEmpty()) {
-			PremiumMessages.Verification verification = messagesProvider.get().getVerification();
-			String invalidSession = String.join("\n", verification.getInvalidSession());
-			return StepResult.failed(invalidSession);
-		}
-
+	private StepResult completeWithProfile(AuthContext context, String profileUniqueId, String username) {
 		AuthContext.Provider provider = AuthContext.Provider.builder()
 				.providerId("premium")
-				.providerSubject(profileId.get().toString())
+				.providerSubject(profileUniqueId)
 				.providerUsername(username)
 				.build();
 

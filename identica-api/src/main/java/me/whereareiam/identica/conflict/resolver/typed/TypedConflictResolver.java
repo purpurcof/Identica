@@ -1,9 +1,9 @@
-package me.whereareiam.identica.conflict.resolver;
+package me.whereareiam.identica.conflict.resolver.typed;
 
 import me.whereareiam.configura.node.Node;
+import me.whereareiam.identica.conflict.resolver.ConflictResolver;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
-import me.whereareiam.identica.util.ConflictParameters;
 import org.jetbrains.annotations.NotNull;
 
 /**

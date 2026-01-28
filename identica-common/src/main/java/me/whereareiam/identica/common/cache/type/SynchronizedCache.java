@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.codec.CacheCodec;
 import me.whereareiam.identica.service.SynchronizationService;
+import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;
@@ -18,7 +19,7 @@ public final class SynchronizedCache<T> implements Cache<T> {
 	private final Supplier<SynchronizationService> serviceSupplier;
 
 	@Override
-	public CompletableFuture<Optional<T>> get(String key) {
+	public @NotNull CompletableFuture<Optional<T>> get(String key) {
 		return localCache.get(key)
 				.thenCompose(local -> {
 					if (local.isPresent()) {
@@ -66,7 +67,7 @@ public final class SynchronizedCache<T> implements Cache<T> {
 	}
 
 	@Override
-	public CompletableFuture<Void> put(String key, T value, long ttlMs) {
+	public @NotNull CompletableFuture<Void> put(String key, T value, long ttlMs) {
 		CompletableFuture<Void> local = localCache.put(key, value, ttlMs);
 		SynchronizationService service = serviceSupplier.get();
 		if (service == null || !service.isAvailable())
@@ -82,13 +83,22 @@ public final class SynchronizedCache<T> implements Cache<T> {
 	}
 
 	@Override
-	public CompletableFuture<Void> invalidate(String key) {
+	public @NotNull CompletableFuture<Void> invalidate(String key) {
 		CompletableFuture<Void> local = localCache.invalidate(key);
 		SynchronizationService service = serviceSupplier.get();
 		if (service == null || !service.isAvailable())
 			return local;
 
 		return local.thenCompose(ignored -> service.invalidate(name, key));
+	}
+
+	@Override
+	public @NotNull CompletableFuture<Page> listKeys(int page, int pageSize) {
+		SynchronizationService service = serviceSupplier.get();
+		if (service == null || !service.isAvailable())
+			return localCache.listKeys(page, pageSize);
+
+		return service.listKeys(name, page, pageSize);
 	}
 
 	private byte[] encodeEnvelope(byte[] payload, long expiresAt) {

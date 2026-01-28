@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
-import me.whereareiam.identica.conflict.resolver.TypedConflictResolver;
+import me.whereareiam.identica.conflict.resolver.typed.TypedConflictResolver;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;

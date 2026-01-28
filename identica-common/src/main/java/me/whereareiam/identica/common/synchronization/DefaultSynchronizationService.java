@@ -3,34 +3,34 @@ package me.whereareiam.identica.common.synchronization;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.service.SynchronizationService;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 @Singleton
 public class DefaultSynchronizationService implements SynchronizationService {
-	private final @NotNull Set<SynchronizationService> providers;
+	private final @NotNull SynchronizationService provider;
 
 	@Inject
 	public DefaultSynchronizationService(
-			@Named("synchronizationProviders") @NotNull Set<SynchronizationService> providers
+			@Named("synchronizationProvider") @NotNull SynchronizationService provider
 	) {
-		this.providers = providers;
+		this.provider = provider;
 	}
 
 	@Override
 	public boolean isAvailable() {
-		return selectProvider() != null;
+		return provider.isAvailable();
 	}
 
 	@Override
 	public @NotNull CompletableFuture<Optional<byte[]>> get(@NotNull String namespace, @NotNull String key) {
-		SynchronizationService provider = selectProvider();
-		if (provider == null) {
+		if (!provider.isAvailable()) {
 			return CompletableFuture.completedFuture(Optional.empty());
 		}
 
@@ -44,8 +44,7 @@ public class DefaultSynchronizationService implements SynchronizationService {
 			byte[] value,
 			long ttlMs
 	) {
-		SynchronizationService provider = selectProvider();
-		if (provider == null) {
+		if (!provider.isAvailable()) {
 			return CompletableFuture.completedFuture(null);
 		}
 
@@ -54,8 +53,7 @@ public class DefaultSynchronizationService implements SynchronizationService {
 
 	@Override
 	public @NotNull CompletableFuture<Void> invalidate(@NotNull String namespace, @NotNull String key) {
-		SynchronizationService provider = selectProvider();
-		if (provider == null) {
+		if (!provider.isAvailable()) {
 			return CompletableFuture.completedFuture(null);
 		}
 
@@ -63,9 +61,23 @@ public class DefaultSynchronizationService implements SynchronizationService {
 	}
 
 	@Override
+	public @NotNull CompletableFuture<Cache.Page> listKeys(
+			@NotNull String namespace,
+			int page,
+			int pageSize
+	) {
+		if (!provider.isAvailable()) {
+			int safePage = Math.max(1, page);
+			int safeSize = Math.max(1, pageSize);
+			return CompletableFuture.completedFuture(new Cache.Page(List.of(), safePage, safeSize, 0));
+		}
+
+		return provider.listKeys(namespace, page, pageSize);
+	}
+
+	@Override
 	public @NotNull CompletableFuture<Void> publish(@NotNull String channel, byte @NotNull [] payload) {
-		SynchronizationService provider = selectProvider();
-		if (provider == null) {
+		if (!provider.isAvailable()) {
 			return CompletableFuture.completedFuture(null);
 		}
 
@@ -74,17 +86,7 @@ public class DefaultSynchronizationService implements SynchronizationService {
 
 	@Override
 	public void subscribe(@NotNull String channel, @NotNull Consumer<byte[]> handler) {
-		SynchronizationService provider = selectProvider();
-		if (provider == null) return;
-
+		if (!provider.isAvailable()) return;
 		provider.subscribe(channel, handler);
-	}
-
-	private SynchronizationService selectProvider() {
-		for (SynchronizationService provider : providers)
-			if (provider != null && provider.isAvailable())
-				return provider;
-
-		return null;
 	}
 }

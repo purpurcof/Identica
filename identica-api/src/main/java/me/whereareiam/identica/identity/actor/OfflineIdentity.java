@@ -1,4 +1,4 @@
-package me.whereareiam.identica.actor;
+package me.whereareiam.identica.identity.actor;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

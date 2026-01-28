@@ -21,7 +21,6 @@ import java.util.Map;
 @ToString
 public class Settings {
 	private @NotNull Routing routing;
-	private @NotNull Synchronization synchronization;
 	private @NotNull Sessions sessions;
 	private @NotNull Authentication authentication;
 	private @NotNull Listeners listeners;
@@ -55,43 +54,9 @@ public class Settings {
 	@Getter
 	@Setter
 	@ToString
-	public static class Synchronization {
-		private boolean enabled;
-		private @NotNull String serverId;
-		private @NotNull Redis redis;
-
-		@Getter
-		@Setter
-		@ToString
-		public static class Redis {
-			private @NotNull String host;
-			private int port;
-
-			private @NotNull String password;
-
-			private boolean ssl;
-			private int timeout;
-
-			private @NotNull Channels channels;
-			private @NotNull String sessionsIndexKey;
-		}
-
-		@Getter
-		@Setter
-		@ToString
-		public static class Channels {
-			private @NotNull String accountUpdates;
-			private @NotNull String sessions;
-			private @NotNull String conflicts;
-		}
-	}
-
-	@Getter
-	@Setter
-	@ToString
 	public static class Sessions {
-		private @NotNull Duration defaultTtlMinutes;
-		private @NotNull Duration refreshMinutes;
+		private @NotNull Duration defaultTtl;
+		private @NotNull Duration refreshTtl;
 		private @NotNull Map<String, Duration> providers = new HashMap<>();
 	}
 
@@ -99,8 +64,8 @@ public class Settings {
 	@Setter
 	@ToString
 	public static class Authentication {
-		private @NotNull Duration handshakeInstructionTtlMinutes;
-		private @NotNull Duration pendingUuidTtlMinutes;
+		private @NotNull Duration handshakeInstructionTtl;
+		private @NotNull Duration reservationTtl;
 	}
 
 	@Getter

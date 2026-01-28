@@ -1,5 +1,6 @@
 package me.whereareiam.identica.service;
 
+import me.whereareiam.identica.cache.Cache;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -42,6 +43,25 @@ public interface SynchronizationService {
 	 * @return completion stage
 	 */
 	@NotNull CompletableFuture<Void> invalidate(@NotNull String namespace, @NotNull String key);
+
+	/**
+	 * Lists keys stored in the synchronization backend for a namespace.
+	 *
+	 * @param namespace logical namespace
+	 * @param page page number (1-based)
+	 * @param pageSize number of entries per page
+	 * @return page of keys
+	 */
+	@NotNull
+	default CompletableFuture<Cache.Page> listKeys(
+			@NotNull String namespace,
+			int page,
+			int pageSize
+	) {
+		int safePage = Math.max(1, page);
+		int safeSize = Math.max(1, pageSize);
+		return CompletableFuture.completedFuture(Cache.Page.empty(safePage, safeSize));
+	}
 
 	/**
 	 * Publishes a payload to the specified channel.

@@ -10,7 +10,6 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.routing.RoutingTargetMissingEvent;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.RoutingTarget;
-import me.whereareiam.identica.model.connection.ConnectionState;
 import me.whereareiam.identica.registry.ConnectionStateRegistry;
 import me.whereareiam.identica.type.RoutingTargetType;
 
@@ -27,13 +26,8 @@ public class RoutingPreConnectListener implements DynamicListener<ServerPreConne
 	@Override
 	public void onEvent(ServerPreConnectEvent event) {
 		UUID connectionId = event.getPlayer().getUniqueId();
-		ConnectionState state = connectionStateRegistry.find(connectionId).orElse(null);
-		if (state == null) return;
-
-		Optional<RoutingTarget> targetOptional = state.peekRoutingTarget();
-		if (targetOptional.isEmpty()) return;
-
-		RoutingTarget target = targetOptional.get();
+		RoutingTarget target = connectionStateRegistry.peekRoutingTarget(connectionId).orElse(null);
+		if (target == null) return;
 		if (target.getType() != RoutingTargetType.STEP) return;
 		if (target.getServer() == null || target.getServer().isBlank()) return;
 

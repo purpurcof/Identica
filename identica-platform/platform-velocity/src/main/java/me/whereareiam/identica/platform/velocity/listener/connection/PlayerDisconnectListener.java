@@ -5,7 +5,6 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.registry.ConnectionStateRegistry;
 import me.whereareiam.identica.registry.IdentityRegistry;
@@ -13,7 +12,6 @@ import me.whereareiam.identica.registry.IdentityRegistry;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PlayerDisconnectListener implements DynamicListener<DisconnectEvent> {
-	private final AuthenticationCoordinator authenticationCoordinator;
 	private final ConnectionStateRegistry connectionStateRegistry;
 	private final IdentityRegistry identityRegistry;
 
@@ -22,7 +20,6 @@ public class PlayerDisconnectListener implements DynamicListener<DisconnectEvent
 		Player player = event.getPlayer();
 		if (player == null) return;
 
-		authenticationCoordinator.clearPending(player.getUniqueId());
 		connectionStateRegistry.clear(player.getUniqueId());
 		identityRegistry.removePlayer(player.getUniqueId());
 	}

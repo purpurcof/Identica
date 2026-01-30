@@ -5,7 +5,6 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.IdenticaKeys;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.provider.eligibility.ProviderEligibilityService;
 import me.whereareiam.identica.auth.step.type.InteractiveStep;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.auth.enrollment.EnrollmentOptionsEvent;
@@ -15,8 +14,10 @@ import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
+import me.whereareiam.identica.provider.eligibility.ProviderEligibilityService;
 import me.whereareiam.identica.type.step.AuthFlowType;
 import me.whereareiam.keystone.model.SerializerOptions;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -82,12 +83,10 @@ public class EnrollmentStep extends InteractiveStep {
 				name = providerId;
 
 			List<String> descriptionLines = resolveDescription(enrollment, providerId);
-			String command = "/identica enroll " + providerId;
 			entries.add(EnrollmentEntry.builder()
 					.providerId(providerId)
 					.providerName(name)
 					.description(descriptionLines)
-					.command(command)
 					.build());
 		}
 		return entries;
@@ -162,8 +161,7 @@ public class EnrollmentStep extends InteractiveStep {
 			Map<String, String> placeholders = Map.of(
 					"providerId", entry.getProviderId(),
 					"providerName", entry.getProviderName(),
-					"description", description,
-					"command", entry.getCommand()
+					"description", description
 			);
 
 			String renderedLine = formatLine(template, placeholders, format);

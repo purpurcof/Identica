@@ -68,6 +68,10 @@ public class Settings {
 	@ToString
 	public static class Authentication {
 		private @NotNull Duration handshakeInstructionTtl;
+		/**
+		 * Time-to-live for pending authentication state.
+		 */
+		private @NotNull Duration pendingTtl;
 		private @NotNull Duration reservationTtl;
 		private @NotNull AuthFlowType flow;
 	}

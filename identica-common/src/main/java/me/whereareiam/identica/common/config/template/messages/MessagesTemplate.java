@@ -88,8 +88,8 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				" "
 		));
 		Messages.Authentication.Steps.Enrollment.EntryFormat enrollmentEntry = new Messages.Authentication.Steps.Enrollment.EntryFormat();
-		enrollmentEntry.setFormat("   <dark_gray><click:run_command:{command}>▪ <gray>[{providerName}]:</gray> <white>{description}</click>");
-		enrollmentEntry.setEmptyFormat("   <dark_gray><click:run_command:{command}>▪ <gray>[{providerName}]:</gray></click>");
+		enrollmentEntry.setFormat("   <dark_gray><click:run_command:/identica enroll {providerId}>▪ <gray>[{providerName}]:</gray> <white>{description}</click>");
+		enrollmentEntry.setEmptyFormat("   <dark_gray><click:run_command:/identica enroll {providerId}>▪ <gray>[{providerName}]:</gray></click>");
 		enrollment.setEntryFormat(enrollmentEntry);
 		enrollment.setEmpty(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",

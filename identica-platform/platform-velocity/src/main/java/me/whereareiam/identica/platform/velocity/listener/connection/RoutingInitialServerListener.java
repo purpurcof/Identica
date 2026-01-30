@@ -27,13 +27,8 @@ public class RoutingInitialServerListener implements DynamicListener<PlayerChoos
 	@Override
 	public void onEvent(PlayerChooseInitialServerEvent event) {
 		UUID connectionId = event.getPlayer().getUniqueId();
-		ConnectionState state = connectionStateRegistry.find(connectionId).orElse(null);
-		if (state == null) return;
-
-		Optional<RoutingTarget> targetOptional = state.peekRoutingTarget();
-		if (targetOptional.isEmpty()) return;
-
-		RoutingTarget target = targetOptional.get();
+		RoutingTarget target = connectionStateRegistry.peekRoutingTarget(connectionId).orElse(null);
+		if (target == null) return;
 		if (target.getServer() == null || target.getServer().isBlank()) return;
 
 		Optional<RegisteredServer> server = proxyServer.getServer(target.getServer());
@@ -51,7 +46,8 @@ public class RoutingInitialServerListener implements DynamicListener<PlayerChoos
 		}
 
 		if (target.getType() == RoutingTargetType.COMPLETED)
-			state.consumeRoutingTarget();
+			connectionStateRegistry.find(connectionId)
+					.ifPresent(ConnectionState::consumeRoutingTarget);
 		event.setInitialServer(server.get());
 	}
 }

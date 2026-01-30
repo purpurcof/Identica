@@ -42,6 +42,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 
 		Settings.Authentication authentication = new Settings.Authentication();
 		authentication.setHandshakeInstructionTtl(Duration.ofMinutes(10));
+		authentication.setPendingTtl(Duration.ofMinutes(5));
 		authentication.setReservationTtl(Duration.ofMinutes(15));
 		authentication.setFlow(AuthFlowType.SEAMLESS);
 		settings.setAuthentication(authentication);

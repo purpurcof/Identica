@@ -46,6 +46,10 @@ public class Replication {
 		private @NotNull String instructions;
 		private @NotNull Sessions sessions;
 		private @NotNull String premiumProfile;
+		/**
+		 * Cache namespace for pending connection/authentication state.
+		 */
+		private @NotNull String pendingConnections;
 	}
 
 	/**

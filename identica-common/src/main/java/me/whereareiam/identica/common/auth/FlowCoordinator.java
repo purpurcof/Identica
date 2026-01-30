@@ -54,6 +54,11 @@ public class FlowCoordinator {
 
 		storeContext(context);
 
+		UUID connectionId = context.getConnectionUniqueId();
+		if (connectionId != null && connectionStateRegistry.hasPending(connectionId)) {
+			return CompletableFuture.completedFuture(StepResult.waiting(""));
+		}
+
 		AuthFlowType flow = resolveFlow(context);
 		if (flow == null)
 			return CompletableFuture.completedFuture(providerStageRunner.noProvidersResult());
@@ -91,6 +96,8 @@ public class FlowCoordinator {
 				.flatMap(ConnectionState::consumeFlowState)
 				.orElse(null);
 		if (waiting == null)
+			waiting = connectionStateRegistry.consumePending(connectionUniqueId).orElse(null);
+		if (waiting == null)
 			return CompletableFuture.completedFuture(StepResult.noPending());
 
 		if (contextUpdater != null)
@@ -107,9 +114,7 @@ public class FlowCoordinator {
 
 	public boolean hasPending(@Nullable UUID connectionUniqueId) {
 		if (connectionUniqueId == null) return false;
-		return connectionStateRegistry.find(connectionUniqueId)
-				.flatMap(ConnectionState::peekFlowState)
-				.isPresent();
+		return connectionStateRegistry.hasPending(connectionUniqueId);
 	}
 
 	public boolean clearPending(@Nullable UUID connectionUniqueId) {
@@ -119,6 +124,7 @@ public class FlowCoordinator {
 		boolean removed = connectionStateRegistry.find(connectionUniqueId)
 				.map(ConnectionState::clearFlowState)
 				.orElse(false);
+		connectionStateRegistry.clearPending(connectionUniqueId);
 		eventManager.call(new me.whereareiam.identica.event.auth.AuthPendingClearedEvent(connectionUniqueId, removed));
 
 		return removed;
@@ -246,6 +252,7 @@ public class FlowCoordinator {
 		ConnectionState state = connectionStateRegistry.ensure(context.getConnectionUniqueId());
 		state.putFlowState(flowState);
 		state.putContext(context);
+		connectionStateRegistry.storePending(state);
 	}
 
 	private StepResult resolveCompletion(@Nullable StepResult completionResult) {

@@ -6,10 +6,9 @@ import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.model.config.Commands;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Singleton
 public class CommandsTemplate implements TemplateProvider<Commands> {
@@ -179,12 +178,21 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 				.hide(true)
 				.build();
 
-		commands.getCommands().putAll(Stream.of(
-				main, reload, help,
-				clear, clearCache, clearConfirm, clearCancel,
-				session, sessionList, sessionInfo, sessionEnd,
-				enroll
-		).collect(Collectors.toMap(cmd -> cmd.getAliases().getFirst(), cmd -> cmd)));
+		Map<String, CommandDefinition> definitions = new LinkedHashMap<>();
+		definitions.put("main", main);
+		definitions.put("reload", reload);
+		definitions.put("help", help);
+		definitions.put("clear", clear);
+		definitions.put("clear-cache", clearCache);
+		definitions.put("clear-confirm", clearConfirm);
+		definitions.put("clear-cancel", clearCancel);
+		definitions.put("session", session);
+		definitions.put("session-list", sessionList);
+		definitions.put("session-info", sessionInfo);
+		definitions.put("session-end", sessionEnd);
+		definitions.put("enroll", enroll);
+
+		commands.getCommands().putAll(definitions);
 
 		return commands;
 	}

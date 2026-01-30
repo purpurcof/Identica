@@ -19,5 +19,4 @@ public class EnrollmentEntry {
 	private final @NotNull String providerId;
 	private final @NotNull String providerName;
 	private final @NotNull List<String> description;
-	private final @NotNull String command;
 }

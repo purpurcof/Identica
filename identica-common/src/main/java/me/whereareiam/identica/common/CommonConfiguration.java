@@ -7,7 +7,6 @@ import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -45,6 +44,7 @@ import me.whereareiam.identica.common.conflict.ConflictPrepareLifecycle;
 import me.whereareiam.identica.common.identity.DefaultIdentityService;
 import me.whereareiam.identica.common.auth.handshake.HandshakePolicyRegistry;
 import me.whereareiam.identica.common.provider.eligibility.DefaultProviderEligibilityService;
+import me.whereareiam.identica.common.provider.eligibility.ProviderEligibilityRegistry;
 import me.whereareiam.identica.common.registry.DefaultConnectionStateRegistry;
 import me.whereareiam.identica.common.routing.PhaseRoutingService;
 import me.whereareiam.identica.common.routing.RoutingLifecycle;
@@ -123,6 +123,9 @@ public class CommonConfiguration extends AbstractModule {
 		bind(new TypeLiteral<Registry<HandshakePolicy>>() {})
 				.to(HandshakePolicyRegistry.class)
 				.asEagerSingleton();
+		bind(new TypeLiteral<Registry<ProviderEligibilityResolver>>() {})
+				.to(ProviderEligibilityRegistry.class)
+				.asEagerSingleton();
 
 		// Synchronization + cache
 		OptionalBinder.newOptionalBinder(binder(), Key.get(SynchronizationService.class, Names.named("synchronizationProvider")))
@@ -169,7 +172,6 @@ public class CommonConfiguration extends AbstractModule {
 		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
 		bind(StepRegistry.class).to(DefaultStepRegistry.class).asEagerSingleton();
 		bind(StepStageRegistry.class).to(DefaultStepStageRegistry.class).asEagerSingleton();
-		Multibinder.newSetBinder(binder(), ProviderEligibilityResolver.class);
 
 		// Core services
 		bind(EventManager.class).to(EventController.class);

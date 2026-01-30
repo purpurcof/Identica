@@ -17,6 +17,7 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.type.provider.ProviderState;
 import me.whereareiam.identica.type.step.AuthFlowType;
 import me.whereareiam.identica.type.step.StepPhase;
+import me.whereareiam.identica.registry.Registry;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class DefaultProviderEligibilityService implements ProviderEligibilitySer
 	private final ProviderManager providerManager;
 	private final StepRegistry stepRegistry;
 	private final EventManager eventManager;
-	private final Set<ProviderEligibilityResolver> resolvers;
+	private final Registry<ProviderEligibilityResolver> resolverRegistry;
 
 	@Override
 	public @NotNull List<InternalProvider> eligibleProviders(
@@ -90,11 +91,12 @@ public class DefaultProviderEligibilityService implements ProviderEligibilitySer
 			@NotNull InternalProvider provider,
 			@NotNull AuthFlowType flow
 	) {
-		if (resolvers == null || resolvers.isEmpty())
+		Set<ProviderEligibilityResolver> resolvers = resolverRegistry.values();
+		if (resolvers.isEmpty())
 			return true;
 
 		for (ProviderEligibilityResolver resolver : resolvers)
-			if (resolver != null && !resolver.isEligible(context, provider, flow))
+			if (!resolver.isEligible(context, provider, flow))
 				return false;
 
 		return true;

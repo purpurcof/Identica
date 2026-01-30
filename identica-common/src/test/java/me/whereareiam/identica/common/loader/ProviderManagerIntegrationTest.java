@@ -61,8 +61,8 @@ class ProviderManagerIntegrationTest {
 		String source = """
 				package testprovider;
 
-				import me.whereareiam.identica.model.eligibility.dependency.ProviderLibraries;
-				import me.whereareiam.identica.loader.IdenticaProvider;
+				import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
+				import me.whereareiam.identica.provider.IdenticaProvider;
 				import java.util.ArrayList;
 				import java.util.List;
 
@@ -249,7 +249,7 @@ class ProviderManagerIntegrationTest {
 
 		try (OutputStream outputStream = Files.newOutputStream(jarPath);
 		     JarOutputStream jarOutputStream = new JarOutputStream(outputStream)) {
-			JarEntry descriptor = new JarEntry("eligibility.json");
+			JarEntry descriptor = new JarEntry("provider.json");
 			jarOutputStream.putNextEntry(descriptor);
 			jarOutputStream.write(providerJson.getBytes(StandardCharsets.UTF_8));
 			jarOutputStream.closeEntry();

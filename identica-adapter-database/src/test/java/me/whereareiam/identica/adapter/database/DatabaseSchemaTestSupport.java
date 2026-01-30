@@ -1,9 +1,9 @@
 package me.whereareiam.identica.adapter.database;
 
 import com.zaxxer.hikari.HikariDataSource;
+import me.whereareiam.dialectica.DialectPlugin;
 import me.whereareiam.dialectica.Dialectica;
 import me.whereareiam.dialectica.SchemaManager;
-import me.whereareiam.dialectica.DialectPlugin;
 import me.whereareiam.identica.adapter.database.connection.DataSourceFactory;
 import me.whereareiam.identica.adapter.database.entity.AccountEntity;
 import me.whereareiam.identica.model.config.persistence.Persistence;
@@ -36,7 +36,7 @@ final class DatabaseSchemaTestSupport {
 			assertTableExists(jdbi, persistence.getType(), "identica_provider_profiles");
 			assertTableExists(jdbi, persistence.getType(), "identica_username_history");
 
-			insertRows(jdbi);
+			insertRows(jdbi, persistence.getType());
 			assertRowCounts(jdbi);
 		} finally {
 			if (dataSource instanceof HikariDataSource hikariDataSource)
@@ -62,8 +62,8 @@ final class DatabaseSchemaTestSupport {
 		assertTrue(exists, "Expected table " + tableName + " to exist");
 	}
 
-	private static void insertRows(Jdbi jdbi) {
-		String accountId = UUID.randomUUID().toString();
+	private static void insertRows(Jdbi jdbi, DatabaseType type) {
+		var accountId = type == DatabaseType.POSTGRES ? UUID.randomUUID() : UUID.randomUUID().toString();
 
 		jdbi.useHandle(handle -> {
 			handle.createUpdate(

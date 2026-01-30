@@ -44,6 +44,7 @@ subprojects {
         "testImplementation"(rootProject.libs.junit.jupiter)
         "testImplementation"(rootProject.libs.guice)
         "testImplementation"(rootProject.libs.configura)
+        "testImplementation"(rootProject.libs.annotations)
         "testImplementation"(rootProject.libs.mockito.core)
         "testImplementation"(rootProject.libs.mockito.junit)
     }

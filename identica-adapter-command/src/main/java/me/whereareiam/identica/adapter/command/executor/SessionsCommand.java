@@ -133,7 +133,7 @@ public class SessionsCommand {
 		Session resolvedSession = session.get();
 		identityService.closeSession(resolvedSession.getUniqueId()).join();
 
-		identityService.findOnline(resolvedSession.getUniqueId())
+		identityService.findPlayer(resolvedSession.getUniqueId())
 				.ifPresent(identity -> disconnect(identity, endMessages));
 
 		String username = resolveUsername(resolvedSession, unknown);
@@ -179,9 +179,9 @@ public class SessionsCommand {
 			return new ResolvedTarget(parsed);
 		}
 
-		Optional<Identity> online = identityService.findOnline(target);
-		if (online.isPresent()) {
-			return new ResolvedTarget(online.get().getUniqueId());
+		Optional<Identity> player = identityService.findPlayer(target);
+		if (player.isPresent()) {
+			return new ResolvedTarget(player.get().getUniqueId());
 		}
 
 		List<Account> matches = accountPersistenceService.findByUsername(target);
@@ -335,7 +335,7 @@ public class SessionsCommand {
 		Map<String, String> placeholders = new HashMap<>();
 		placeholders.put("username", username);
 		placeholders.put("uniqueId", session.getUniqueId().toString());
-		placeholders.put("provider", provider);
+		placeholders.put("eligibility", provider);
 		placeholders.put("session", sessionId);
 		placeholders.put("ip", ip);
 		boolean complete = isPresent(username) && isPresent(provider);
@@ -365,7 +365,7 @@ public class SessionsCommand {
 		placeholders.put("original", safe(session.getOriginalUsername(), unknown));
 		placeholders.put("effective", safe(session.getEffectiveUsername(), unknown));
 		placeholders.put("uniqueId", session.getUniqueId().toString());
-		placeholders.put("provider", safe(session.getProviderId(), unknown));
+		placeholders.put("eligibility", safe(session.getProviderId(), unknown));
 		placeholders.put("subject", safe(session.getProviderSubject(), unknown));
 		placeholders.put("session", safe(session.getSessionId(), unknown));
 		placeholders.put("ip", safe(session.getIp(), unknown));
@@ -381,7 +381,6 @@ public class SessionsCommand {
 			Map<String, String> placeholders,
 			SerializerOptions.PlaceholderFormat format
 	) {
-		if (lines == null || lines.isEmpty()) return "";
 		List<String> formatted = new ArrayList<>();
 		for (String line : lines) {
 			if (line == null) continue;
@@ -408,7 +407,6 @@ public class SessionsCommand {
 	}
 
 	private String joinLines(List<String> lines) {
-		if (lines == null || lines.isEmpty()) return "";
 		return String.join("\n", lines);
 	}
 
@@ -451,6 +449,4 @@ public class SessionsCommand {
 	private record EntryData(Map<String, String> placeholders, boolean complete) {
 	}
 }
-
-
 

@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * Runtime identity state that bridges pre-login, session, and online phases.
+ * Runtime identity state that bridges reserved, authenticated, and online phases.
  */
 @SuppressWarnings("unused")
 public class IdentityState {
@@ -17,8 +17,8 @@ public class IdentityState {
 	 * Phases of the runtime identity state.
 	 */
 	public enum Phase {
-		PENDING,
-		SESSION,
+		RESERVED,
+		AUTHENTICATED,
 		ONLINE
 	}
 
@@ -38,23 +38,21 @@ public class IdentityState {
 	 * @param providerSubject provider subject reported by the platform
 	 * @param expiresAt expiration timestamp in millis
 	 */
-	public record PendingSnapshot(
+	public record ReservedSnapshot(
 			@Nullable String username,
 			@Nullable String ip,
 			@Nullable String profileUniqueId,
 			@Nullable String providerId,
 			@Nullable String providerSubject,
 			long expiresAt
-	) implements Snapshot {
-	}
+	) implements Snapshot { }
 
 	/**
 	 * Snapshot captured after the session is stored.
 	 *
 	 * @param session stored session
 	 */
-	public record SessionSnapshot(@NotNull Session session) implements Snapshot {
-	}
+	public record AuthenticatedSnapshot(@NotNull Session session) implements Snapshot { }
 
 	/**
 	 * Snapshot captured for an online identity.
@@ -69,8 +67,7 @@ public class IdentityState {
 			@Nullable Session session,
 			@Nullable String providerId,
 			@Nullable String providerSubject
-	) implements Snapshot {
-	}
+	) implements Snapshot { }
 
 	private final @NotNull UUID uniqueId;
 	private volatile @NotNull Phase phase;
@@ -124,8 +121,8 @@ public class IdentityState {
 	public @Nullable String getUsername() {
 		return switch (snapshot) {
 			case OnlineSnapshot online -> online.identity().getUsername();
-			case SessionSnapshot(Session session) -> resolveSessionUsername(session);
-			case PendingSnapshot pending -> pending.username();
+			case AuthenticatedSnapshot(Session session) -> resolveSessionUsername(session);
+			case ReservedSnapshot reserved -> reserved.username();
 			default -> null;
 		};
 	}
@@ -138,8 +135,8 @@ public class IdentityState {
 	public @Nullable String getIp() {
 		return switch (snapshot) {
 			case OnlineSnapshot online -> online.identity().getIp();
-			case SessionSnapshot(Session session) -> session.getIp();
-			case PendingSnapshot pending -> pending.ip();
+			case AuthenticatedSnapshot(Session session) -> session.getIp();
+			case ReservedSnapshot reserved -> reserved.ip();
 			default -> null;
 		};
 	}
@@ -150,8 +147,9 @@ public class IdentityState {
 	 * @return session or {@code null}
 	 */
 	public @Nullable Session getSession() {
-		if (snapshot instanceof SessionSnapshot(Session session))
+		if (snapshot instanceof AuthenticatedSnapshot(Session session))
 			return session;
+
 		if (snapshot instanceof OnlineSnapshot online)
 			return online.session();
 
@@ -166,6 +164,7 @@ public class IdentityState {
 	public @Nullable Identity getOnlineIdentity() {
 		if (snapshot instanceof OnlineSnapshot online)
 			return online.identity();
+
 		return null;
 	}
 
@@ -176,10 +175,10 @@ public class IdentityState {
 	 */
 	public @Nullable String getProviderId() {
 		switch (snapshot) {
-			case PendingSnapshot pending -> {
-				return pending.providerId();
+			case ReservedSnapshot reserved -> {
+				return reserved.providerId();
 			}
-			case SessionSnapshot(Session session) -> {
+			case AuthenticatedSnapshot(Session session) -> {
 				return session.getProviderId();
 			}
 			case OnlineSnapshot online -> {
@@ -205,18 +204,21 @@ public class IdentityState {
 	 */
 	public @Nullable String getProviderSubject() {
 		switch (snapshot) {
-			case PendingSnapshot pending -> {
-				return pending.providerSubject();
+			case ReservedSnapshot reserved -> {
+				return reserved.providerSubject();
 			}
-			case SessionSnapshot(Session session) -> {
+			case AuthenticatedSnapshot(Session session) -> {
 				return session.getProviderSubject();
 			}
 			case OnlineSnapshot online -> {
 				String providerSubject = online.providerSubject();
 				if (providerSubject != null && !providerSubject.isBlank())
 					return providerSubject;
+
 				Session session = online.session();
-				return session != null ? session.getProviderSubject() : null;
+				return session != null
+						? session.getProviderSubject()
+						: null;
 			}
 			default -> {
 			}
@@ -230,8 +232,9 @@ public class IdentityState {
 	 * @return profile UUID or {@code null}
 	 */
 	public @Nullable String getProfileUniqueId() {
-		if (snapshot instanceof PendingSnapshot pending)
-			return pending.profileUniqueId();
+		if (snapshot instanceof ReservedSnapshot reserved)
+			return reserved.profileUniqueId();
+
 		return null;
 	}
 
@@ -251,24 +254,25 @@ public class IdentityState {
 	 * @return {@code true} when the state is expired
 	 */
 	public boolean isExpired(long nowMillis) {
-		if (phase != Phase.PENDING) return false;
-		PendingSnapshot pending = (PendingSnapshot) snapshot;
-		return pending.expiresAt() > 0 && nowMillis >= pending.expiresAt();
+		if (phase != Phase.RESERVED) return false;
+
+		ReservedSnapshot reserved = (ReservedSnapshot) snapshot;
+		return reserved.expiresAt() > 0 && nowMillis >= reserved.expiresAt();
 	}
 
 	/**
-	 * Transitions the state into the pending phase based on a profile request.
+	 * Transitions the state into the reserved phase based on a profile request.
 	 *
 	 * @param request profile request
 	 * @param expiresAt expiration timestamp in millis
 	 */
-	public synchronized void transitionToPending(@NotNull ProfileRequest request, long expiresAt) {
-		if (phase == Phase.ONLINE || phase == Phase.SESSION)
+	public synchronized void transitionToReserved(@NotNull ProfileRequest request, long expiresAt) {
+		if (phase == Phase.ONLINE || phase == Phase.AUTHENTICATED)
 			return;
 
 		String username = request.getUsername();
 		String ip = request.getIp();
-		this.snapshot = new PendingSnapshot(
+		this.snapshot = new ReservedSnapshot(
 				username,
 				ip,
 				request.getProfileUniqueId(),
@@ -276,7 +280,7 @@ public class IdentityState {
 				request.getProviderSubject(),
 				expiresAt
 		);
-		this.phase = Phase.PENDING;
+		this.phase = Phase.RESERVED;
 	}
 
 	/**
@@ -308,8 +312,8 @@ public class IdentityState {
 
 		OnlineSnapshot online = (OnlineSnapshot) snapshot;
 		if (online.session() != null) {
-			this.snapshot = new SessionSnapshot(online.session());
-			this.phase = Phase.SESSION;
+			this.snapshot = new AuthenticatedSnapshot(online.session());
+			this.phase = Phase.AUTHENTICATED;
 			return false;
 		}
 
@@ -330,11 +334,11 @@ public class IdentityState {
 	}
 
 	/**
-	 * Transitions the state into the session phase.
+	 * Transitions the state into the authenticated phase.
 	 *
 	 * @param session session to attach
 	 */
-	public synchronized void transitionToSession(@NotNull Session session) {
+	public synchronized void transitionToAuthenticated(@NotNull Session session) {
 		if (phase == Phase.ONLINE && snapshot instanceof OnlineSnapshot online) {
 			String providerId = session.getProviderId();
 			String providerSubject = session.getProviderSubject();
@@ -343,15 +347,17 @@ public class IdentityState {
 			return;
 		}
 
-		this.snapshot = new SessionSnapshot(session);
-		this.phase = Phase.SESSION;
+		this.snapshot = new AuthenticatedSnapshot(session);
+		this.phase = Phase.AUTHENTICATED;
 	}
 
 	private @Nullable String resolveSessionUsername(@Nullable Session session) {
 		if (session == null) return null;
 		String effective = session.getEffectiveUsername();
+
 		if (effective != null && !effective.isBlank())
 			return effective;
+
 		return session.getOriginalUsername();
 	}
 }

@@ -1,20 +1,18 @@
 package me.whereareiam.identica.routing;
 
-import me.whereareiam.identica.auth.step.AuthenticationStep;
-import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.RoutingTarget;
 
 import java.util.Optional;
 
 /**
- * Resolves routing targets for interactive steps and completed authentication.
+ * Resolves routing targets from routing decisions.
  */
 public interface RoutingService {
-	Optional<RoutingTarget> resolveStepTarget(
-			AuthContext context,
-			String providerId,
-			AuthenticationStep step
-	);
-
-	Optional<RoutingTarget> resolveCompletionTarget(AuthContext context);
+	/**
+	 * Resolves a routing target for the given decision.
+	 *
+	 * @param decision routing decision
+	 * @return resolved routing target if applicable
+	 */
+	Optional<RoutingTarget> resolve(RoutingDecision decision);
 }

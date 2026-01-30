@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Well-known provider capability identifiers.
  *
- * <p>Capabilities are advertised in {@code provider.json} as a list of ids:</p>
+ * <p>Capabilities are advertised in {@code eligibility.json} as a list of ids:</p>
  * <pre>{@code
  * "capabilities": ["online", "authoritative_username"]
  * }</pre>

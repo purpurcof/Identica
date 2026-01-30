@@ -169,10 +169,21 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 						.build())
 				.build();
 
+		CommandDefinition enroll = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("enroll"))
+				.permission("")
+				.description("Select authentication eligibility")
+				.usage("{command} {alias} <eligibility>")
+				.arguments(Map.of("eligibility", "Provider id"))
+				.hide(true)
+				.build();
+
 		commands.getCommands().putAll(Stream.of(
 				main, reload, help,
 				clear, clearCache, clearConfirm, clearCancel,
-				session, sessionList, sessionInfo, sessionEnd
+				session, sessionList, sessionInfo, sessionEnd,
+				enroll
 		).collect(Collectors.toMap(cmd -> cmd.getAliases().getFirst(), cmd -> cmd)));
 
 		return commands;

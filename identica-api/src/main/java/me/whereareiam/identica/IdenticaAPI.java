@@ -2,13 +2,13 @@ package me.whereareiam.identica;
 
 import com.google.inject.Injector;
 import lombok.Getter;
-import me.whereareiam.identica.auth.AuthenticationService;
+import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
-import me.whereareiam.identica.loader.ProviderManager;
+import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.session.SessionService;
 import me.whereareiam.identica.service.SynchronizationService;
@@ -30,7 +30,7 @@ import org.jetbrains.annotations.NotNull;
  * }
  *
  * // Get the authentication service
- * AuthenticationService authService = IdenticaAPI.getAuthenticationService();
+ * AuthenticationCoordinator authService = IdenticaAPI.getAuthService();
  *
  * // Or get any service by class
  * ProviderManager providerManager = IdenticaAPI.getService(ProviderManager.class);
@@ -108,14 +108,14 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the AuthenticationService for running authentication flows.
+	 * Gets the AuthenticationCoordinator for running authentication flows.
 	 *
-	 * @return the AuthenticationService instance
+	 * @return the AuthenticationCoordinator instance
 	 * @throws IllegalStateException if the API is not initialized
 	 */
 	@NotNull
-	public static AuthenticationService getAuthenticationService() {
-		return getService(AuthenticationService.class);
+	public static AuthenticationCoordinator getAuthService() {
+		return getService(AuthenticationCoordinator.class);
 	}
 
 	/**

@@ -59,7 +59,7 @@ public class PremiumProfileLookup {
 
 		String key = normalize(username);
 		PremiumSettings.Lookup lookup = settingsProvider.get().getLookup();
-		long ttlMs = lookup.getCacheTtlMs();
+		long ttlMs = resolveTtlMs(lookup.getCacheTtl());
 
 		if (ttlMs > 0) {
 			return cache.get(key)
@@ -69,7 +69,7 @@ public class PremiumProfileLookup {
 		}
 
 		String endpoint = lookup.getProfileEndpoint();
-		if (endpoint == null || endpoint.isBlank())
+		if (endpoint.isBlank())
 			return CompletableFuture.completedFuture(false);
 
 		String url = resolveUrl(endpoint, username.trim());
@@ -80,8 +80,8 @@ public class PremiumProfileLookup {
 				.uri(URI.create(url))
 				.GET();
 
-		long timeoutMs = lookup.getTimeoutMs();
-		if (timeoutMs > 0) builder.timeout(Duration.ofMillis(timeoutMs));
+		Duration timeout = lookup.getTimeout();
+		if (isUsable(timeout)) builder.timeout(timeout);
 
 		HttpRequest request = builder.build();
 
@@ -92,19 +92,17 @@ public class PremiumProfileLookup {
 
 	private CompletableFuture<Boolean> resolveProfile(String key, String username, PremiumSettings.Lookup lookup, long ttlMs) {
 		String endpoint = lookup.getProfileEndpoint();
-		if (endpoint == null || endpoint.isBlank())
-			return CompletableFuture.completedFuture(false);
+		if (endpoint.isBlank()) return CompletableFuture.completedFuture(false);
 
 		String url = resolveUrl(endpoint, username.trim());
-		if (url == null || url.isBlank())
-			return CompletableFuture.completedFuture(false);
+		if (url == null || url.isBlank()) return CompletableFuture.completedFuture(false);
 
 		HttpRequest.Builder builder = HttpRequest.newBuilder()
 				.uri(URI.create(url))
 				.GET();
 
-		long timeoutMs = lookup.getTimeoutMs();
-		if (timeoutMs > 0) builder.timeout(Duration.ofMillis(timeoutMs));
+		Duration timeout = lookup.getTimeout();
+		if (isUsable(timeout)) builder.timeout(timeout);
 		HttpRequest request = builder.build();
 
 		return httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding())
@@ -128,6 +126,17 @@ public class PremiumProfileLookup {
 
 	private String normalize(String username) {
 		return username.trim().toLowerCase(Locale.ROOT);
+	}
+
+	private boolean isUsable(@Nullable Duration duration) {
+		return duration != null
+				&& !duration.isZero()
+				&& !duration.isNegative();
+	}
+
+	private long resolveTtlMs(@Nullable Duration duration) {
+		if (!isUsable(duration)) return 0;
+		return duration.toMillis();
 	}
 
 	private static String resolveNamespace(Provider<Replication> replicationProvider) {

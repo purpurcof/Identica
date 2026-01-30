@@ -45,7 +45,7 @@ public class ConflictContext {
 	private @Nullable AccountProviderProfile existingProfile;
 
 	/**
-	 * Additional provider-specific attributes.
+	 * Additional eligibility-specific attributes.
 	 */
 	@Builder.Default
 	private @NotNull Map<String, Object> extras = new HashMap<>();

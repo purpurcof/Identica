@@ -118,40 +118,40 @@ public interface IdentityService {
 	@NotNull Collection<IdentityState> getStates();
 
 	/**
-	 * Transitions the state into the online phase for the provided identity.
+	 * Registers a player identity and transitions its state to the online phase.
 	 *
-	 * @param identity identity instance to attach
+	 * @param identity identity instance to register
 	 */
-	void attachOnline(@NotNull Identity identity);
+	void addPlayer(@NotNull Identity identity);
 
 	/**
-	 * Transitions the state out of the online phase for the provided identity id.
+	 * Removes a player identity and transitions its state out of the online phase.
 	 *
 	 * @param uniqueId identity unique id
 	 */
-	void detachOnline(@NotNull UUID uniqueId);
+	void removePlayer(@NotNull UUID uniqueId);
 
 	/**
-	 * Gets an online identity by unique id.
+	 * Gets a player identity by unique id.
 	 *
 	 * @param uniqueId identity unique id
 	 * @return optional identity
 	 */
-	@NotNull Optional<Identity> findOnline(@NotNull UUID uniqueId);
+	@NotNull Optional<Identity> findPlayer(@NotNull UUID uniqueId);
 
 	/**
-	 * Gets an online identity by username.
+	 * Gets a player identity by username.
 	 * Lookup is case-insensitive.
 	 *
 	 * @param username identity username
 	 * @return optional identity
 	 */
-	@NotNull Optional<Identity> findOnline(@NotNull String username);
+	@NotNull Optional<Identity> findPlayer(@NotNull String username);
 
 	/**
-	 * Returns all online identities.
+	 * Returns all player identities.
 	 *
-	 * @return collection of online identities
+	 * @return collection of player identities
 	 */
-	@NotNull Collection<Identity> getOnlineIdentities();
+	@NotNull Collection<Identity> getPlayers();
 }

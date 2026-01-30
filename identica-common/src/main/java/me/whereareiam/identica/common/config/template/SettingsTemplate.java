@@ -5,9 +5,9 @@ import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.event.EventPriority;
+import me.whereareiam.identica.type.step.AuthFlowType;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,21 +16,16 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 	@Override
 	public Settings supply(Settings settings) {
 		Settings.Routing routing = new Settings.Routing();
-		Settings.Routing.Defaults defaults = new Settings.Routing.Defaults();
-		defaults.setCompletedTarget("lobby");
-		defaults.setFallback("auth");
-		routing.setDefaults(defaults);
+		Settings.Routing.Targets targets = new Settings.Routing.Targets();
+		targets.setPre("auth");
+		targets.setProvider("auth");
+		targets.setEnd("lobby");
+		targets.setCompleted("lobby");
+		routing.setTargets(targets);
 
-		routing.setProviders(new HashMap<>());
-		routing.getProviders().put("cracked", Map.of(
-				"register", "register-1",
-				"login", "auth-1"
-		));
-
-		Settings.Routing.Intent intent = new Settings.Routing.Intent();
-		intent.setMode("allow");
-		intent.setAllowedServers(new ArrayList<>());
-		routing.setIntent(intent);
+		Settings.Routing.Overrides overrides = new Settings.Routing.Overrides();
+		overrides.setSteps(new HashMap<>());
+		routing.setOverrides(overrides);
 		settings.setRouting(routing);
 
 		Settings.Listeners listeners = new Settings.Listeners();
@@ -48,6 +43,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		Settings.Authentication authentication = new Settings.Authentication();
 		authentication.setHandshakeInstructionTtl(Duration.ofMinutes(10));
 		authentication.setReservationTtl(Duration.ofMinutes(15));
+		authentication.setFlow(AuthFlowType.SEAMLESS);
 		settings.setAuthentication(authentication);
 
 		return settings;

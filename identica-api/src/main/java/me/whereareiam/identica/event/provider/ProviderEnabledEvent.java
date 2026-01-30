@@ -1,0 +1,19 @@
+package me.whereareiam.identica.event.provider;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import me.whereareiam.identica.event.base.Event;
+import me.whereareiam.identica.event.base.SynchronousEvent;
+import me.whereareiam.identica.model.provider.InternalProvider;
+import org.jetbrains.annotations.NotNull;
+
+/**
+ * Event fired when a provider is enabled successfully.
+ */
+@Getter
+@ToString
+@RequiredArgsConstructor
+public class ProviderEnabledEvent implements Event, SynchronousEvent {
+	private final @NotNull InternalProvider provider;
+}

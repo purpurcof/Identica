@@ -1,0 +1,28 @@
+package me.whereareiam.identica.event.step;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import me.whereareiam.identica.auth.step.AuthenticationStep;
+import me.whereareiam.identica.event.base.Event;
+import me.whereareiam.identica.event.base.SynchronousEvent;
+import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.model.auth.AuthContext;
+import me.whereareiam.identica.model.auth.StepResult;
+import me.whereareiam.identica.type.step.StepPhase;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+/**
+ * Event fired after a step completes.
+ */
+@Getter
+@ToString
+@RequiredArgsConstructor
+public class StepFinishedEvent implements Event, SynchronousEvent {
+	private final @Nullable IdenticaProvider provider;
+	private final @NotNull AuthenticationStep step;
+	private final @NotNull AuthContext context;
+	private final @NotNull StepResult result;
+	private final @NotNull StepPhase phase;
+}

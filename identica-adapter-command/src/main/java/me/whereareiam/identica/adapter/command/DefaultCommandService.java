@@ -12,6 +12,7 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.adapter.command.annotation.IdenticaAnnotationParser;
 import me.whereareiam.identica.adapter.command.definition.CommandDefinitionAdapter;
 import me.whereareiam.identica.adapter.command.executor.HelpCommand;
+import me.whereareiam.identica.adapter.command.executor.EnrollCommand;
 import me.whereareiam.identica.adapter.command.executor.MainCommand;
 import me.whereareiam.identica.adapter.command.executor.ReloadCommand;
 import me.whereareiam.identica.adapter.command.executor.ClearCommand;
@@ -63,7 +64,8 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(HelpCommand.class),
 				injector.getInstance(ReloadCommand.class),
 				injector.getInstance(ClearCommand.class),
-				injector.getInstance(SessionsCommand.class)
+				injector.getInstance(SessionsCommand.class),
+				injector.getInstance(EnrollCommand.class)
 		);
 
 		registerExceptionHandlers(commandManagerProvider.get());

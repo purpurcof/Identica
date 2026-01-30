@@ -11,6 +11,7 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import me.whereareiam.identica.common.CommonListenerRegistrar;
 import me.whereareiam.identica.listener.DynamicListener;
@@ -21,6 +22,7 @@ import me.whereareiam.identica.platform.velocity.listener.connection.PreLoginLis
 import me.whereareiam.identica.platform.velocity.listener.connection.LoginListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.GameProfileRequestListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.PlayerDisconnectListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.PostConnectAuthListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.RoutingInitialServerListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.RoutingPreConnectListener;
 import me.whereareiam.identica.platform.velocity.util.VelocityUtil;
@@ -49,6 +51,7 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(PreLoginListener.class));
 		registerListener(GameProfileRequestEvent.class, injector.getInstance(GameProfileRequestListener.class));
 		registerListener(LoginEvent.class, injector.getInstance(LoginListener.class));
+		registerListener(ServerConnectedEvent.class, injector.getInstance(PostConnectAuthListener.class));
 		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(RoutingInitialServerListener.class));
 		registerListener(ServerPreConnectEvent.class, injector.getInstance(RoutingPreConnectListener.class));
 		registerListener(DisconnectEvent.class, injector.getInstance(PlayerDisconnectListener.class));

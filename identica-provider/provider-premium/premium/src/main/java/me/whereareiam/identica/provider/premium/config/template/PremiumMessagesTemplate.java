@@ -11,7 +11,6 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 	@Override
 	public PremiumMessages supply(PremiumMessages messages) {
 		PremiumMessages.Verification verification = new PremiumMessages.Verification();
-		verification.setPrompt("{prefix}<yellow>Join with premium? Use /premium to verify or /cracked to continue cracked.</yellow>");
 		verification.setInvalidSession(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",

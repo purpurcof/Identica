@@ -8,8 +8,8 @@ import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.identity.actor.OfflineIdentity;
-import me.whereareiam.identica.auth.AuthCoordinator;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
@@ -20,14 +20,14 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PreLoginListener implements AwaitingEventExecutor<PreLoginEvent> {
-	private final AuthCoordinator authCoordinator;
+	private final AuthenticationCoordinator authenticationCoordinator;
 	private final Provider<Messages> messagesProvider;
 
 	@Override
 	public EventTask executeAsync(PreLoginEvent event) {
 		if (!event.getResult().isAllowed()) return null;
 
-		CompletableFuture<?> future = authCoordinator
+		CompletableFuture<?> future = authenticationCoordinator
 				.handshake(new HandshakeRequest(new OfflineIdentity(event.getUsername(), null)))
 				.whenComplete((decision, error) -> {
 					if (error != null) {
@@ -58,11 +58,6 @@ public class PreLoginListener implements AwaitingEventExecutor<PreLoginEvent> {
 		if (message != null && !message.isBlank())
 			return message;
 
-		return joinMessage(messagesProvider.get().getAuthentication().getHandshakeDenied());
-	}
-
-	private String joinMessage(java.util.List<String> lines) {
-		if (lines == null || lines.isEmpty()) return "";
-		return String.join("\n", lines);
+		return String.join("\n", messagesProvider.get().getAuthentication().getHandshakeDenied());
 	}
 }

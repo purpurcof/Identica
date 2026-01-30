@@ -11,31 +11,31 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Runtime registry that tracks identity state across pending, session, and online phases.
+ * Runtime registry that tracks identity state across reserved, authenticated, and online phases.
  */
 public interface IdentityRegistry {
 	/**
-	 * Registers a pending snapshot for the given identity.
+	 * Registers a reserved snapshot for the given identity.
 	 *
 	 * @param uniqueId identity unique id
 	 * @param request profile request
 	 * @param expiresAt expiration timestamp in millis
 	 */
-	void registerPending(@NotNull UUID uniqueId, @NotNull ProfileRequest request, long expiresAt);
+	void registerReserved(@NotNull UUID uniqueId, @NotNull ProfileRequest request, long expiresAt);
 
 	/**
-	 * Attaches a session snapshot for the given identity.
+	 * Attaches an authenticated snapshot for the given identity.
 	 *
 	 * @param session session to attach
 	 */
-	void attachSession(@NotNull Session session);
+	void attachAuthenticated(@NotNull Session session);
 
 	/**
-	 * Detaches a session snapshot for the given identity.
+	 * Detaches an authenticated snapshot for the given identity.
 	 *
 	 * @param uniqueId identity unique id
 	 */
-	void detachSession(@NotNull UUID uniqueId);
+	void detachAuthenticated(@NotNull UUID uniqueId);
 
 	/**
 	 * Returns the identity state for the given unique id, if present.
@@ -62,43 +62,43 @@ public interface IdentityRegistry {
 	@NotNull Collection<IdentityState> getStates();
 
 	/**
-	 * Transitions the state into the online phase for the provided identity.
+	 * Registers a player identity and transitions its state to the online phase.
 	 *
-	 * @param identity identity instance to attach
+	 * @param identity identity instance to register
 	 */
-	void attachOnline(@NotNull Identity identity);
+	void addPlayer(@NotNull Identity identity);
 
 	/**
-	 * Transitions the state out of the online phase for the provided identity id.
+	 * Removes a player identity and transitions its state out of the online phase.
 	 *
 	 * @param uniqueId identity unique id
 	 */
-	void detachOnline(@NotNull UUID uniqueId);
+	void removePlayer(@NotNull UUID uniqueId);
 
 	/**
-	 * Gets an online identity by unique id.
+	 * Gets a player identity by unique id.
 	 *
 	 * @param uniqueId identity unique id
 	 * @return optional identity
 	 */
 	@NotNull
-	Optional<Identity> findOnline(@NotNull UUID uniqueId);
+	Optional<Identity> findPlayer(@NotNull UUID uniqueId);
 
 	/**
-	 * Gets an online identity by username.
+	 * Gets a player identity by username.
 	 * Lookup is case-insensitive.
 	 *
 	 * @param username identity username
 	 * @return optional identity
 	 */
 	@NotNull
-	Optional<Identity> findOnline(@NotNull String username);
+	Optional<Identity> findPlayer(@NotNull String username);
 
 	/**
-	 * Returns all online identities.
+	 * Returns all player identities.
 	 *
-	 * @return collection of online identities
+	 * @return collection of player identities
 	 */
 	@NotNull
-	Collection<Identity> getOnlineIdentities();
+	Collection<Identity> getPlayers();
 }

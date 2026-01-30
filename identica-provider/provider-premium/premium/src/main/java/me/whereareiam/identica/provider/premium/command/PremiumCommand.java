@@ -7,7 +7,7 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.auth.AuthCoordinator;
+import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.type.HandshakeMode;
 import me.whereareiam.keystone.Actor;
@@ -18,13 +18,13 @@ import java.util.List;
 
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumCommand {
-	private final AuthCoordinator authCoordinator;
+	private final AuthenticationCoordinator authenticationCoordinator;
 	private final Provider<PremiumMessages> messagesProvider;
 
 	@Command("premium")
 	@Definition("premium")
 	public void onCommand(@NotNull Actor sender) {
-		if (authCoordinator.hasPending(sender.getUniqueId())) {
+		if (authenticationCoordinator.hasPending(sender.getUniqueId())) {
 			confirmPremium(sender);
 			return;
 		}
@@ -33,8 +33,8 @@ public class PremiumCommand {
 	}
 
 	private void confirmPremium(@NotNull Actor sender) {
-		authCoordinator.requestHandshakeInstruction(sender.getUsername(), HandshakeMode.ONLINE);
-		authCoordinator.clearPending(sender.getUniqueId());
+		authenticationCoordinator.requestHandshakeInstruction(sender.getUsername(), HandshakeMode.ONLINE);
+		authenticationCoordinator.clearPending(sender.getUniqueId());
 
 		disconnectWithMessage(sender, joinMessage(messagesProvider.get().getCommands().getPremium().getConfirmed()));
 	}
@@ -50,7 +50,6 @@ public class PremiumCommand {
 	}
 
 	private String joinMessage(List<String> lines) {
-		if (lines == null || lines.isEmpty()) return "";
 		return String.join("\n", lines);
 	}
 }

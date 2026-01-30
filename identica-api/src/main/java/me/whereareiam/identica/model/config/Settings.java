@@ -3,14 +3,12 @@ package me.whereareiam.identica.model.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.configura.annotation.Field;
 import me.whereareiam.identica.model.Event;
+import me.whereareiam.identica.type.step.AuthFlowType;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,25 +27,30 @@ public class Settings {
 	@Setter
 	@ToString
 	public static class Routing {
-		@Field(name = "default")
-		private @NotNull Defaults defaults;
-		private @NotNull Map<String, Map<String, String>> providers = new HashMap<>();
-		private @NotNull Intent intent;
+		private @NotNull Targets targets;
+		private @NotNull Overrides overrides;
 
+		/**
+		 * Routing targets by phase.
+		 */
 		@Getter
 		@Setter
 		@ToString
-		public static class Defaults {
-			private @NotNull String completedTarget;
-			private @NotNull String fallback;
+		public static class Targets {
+			private @NotNull String pre;
+			private @NotNull String provider;
+			private @NotNull String end;
+			private @NotNull String completed;
 		}
 
+		/**
+		 * Routing overrides.
+		 */
 		@Getter
 		@Setter
 		@ToString
-		public static class Intent {
-			private @NotNull String mode;
-			private @NotNull List<String> allowedServers = new ArrayList<>();
+		public static class Overrides {
+			private @NotNull Map<String, String> steps = new HashMap<>();
 		}
 	}
 
@@ -66,6 +69,7 @@ public class Settings {
 	public static class Authentication {
 		private @NotNull Duration handshakeInstructionTtl;
 		private @NotNull Duration reservationTtl;
+		private @NotNull AuthFlowType flow;
 	}
 
 	@Getter

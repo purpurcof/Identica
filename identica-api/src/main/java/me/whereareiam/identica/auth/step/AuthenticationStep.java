@@ -2,25 +2,22 @@ package me.whereareiam.identica.auth.step;
 
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
-import me.whereareiam.identica.type.AuthStepType;
 
 import java.util.concurrent.CompletableFuture;
 
 /**
  * Base interface for authentication steps.
  * Steps are instantiated by providers and executed by core.
+ * Implementations should extend {@link me.whereareiam.identica.auth.step.type.SeamlessStep}
+ * or {@link me.whereareiam.identica.auth.step.type.InteractiveStep} so core can determine
+ * interaction requirements.
  */
 public interface AuthenticationStep {
 	/**
 	 * Step name used for routing configuration.
-	 * Must be unique within a provider.
+	 * Must be unique within a eligibility.
 	 */
 	String getName();
-
-	/**
-	 * Step type determines execution behavior.
-	 */
-	AuthStepType getType();
 
 	/**
 	 * Check if this step should execute based on context state.

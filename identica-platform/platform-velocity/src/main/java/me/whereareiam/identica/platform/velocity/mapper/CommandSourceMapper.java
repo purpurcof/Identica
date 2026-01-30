@@ -25,13 +25,13 @@ public class CommandSourceMapper implements SenderMapper<CommandSource, Actor> {
 			return new VelocityCommandConsole(console);
 
 		if (source instanceof Player player) {
-			Identity identity = identityRegistry.findOnline(player.getUniqueId())
+			Identity identity = identityRegistry.findPlayer(player.getUniqueId())
 					.orElse(null);
 
 			if (identity != null) return identity;
 
 			VelocityCommandPlayer created = new VelocityCommandPlayer(player);
-			identityRegistry.attachOnline(created);
+			identityRegistry.addPlayer(created);
 			return created;
 		}
 

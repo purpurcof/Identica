@@ -6,11 +6,13 @@ import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.routing.RoutingTargetMissingEvent;
 import me.whereareiam.identica.listener.DynamicListener;
-import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.RoutingTarget;
+import me.whereareiam.identica.model.connection.ConnectionState;
+import me.whereareiam.identica.registry.ConnectionStateRegistry;
 import me.whereareiam.identica.type.RoutingTargetType;
-import me.whereareiam.identica.routing.RoutingStateStore;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -19,12 +21,16 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class RoutingPreConnectListener implements DynamicListener<ServerPreConnectEvent> {
 	private final ProxyServer proxyServer;
-	private final RoutingStateStore routingStateStore;
+	private final ConnectionStateRegistry connectionStateRegistry;
+	private final EventManager eventManager;
 
 	@Override
 	public void onEvent(ServerPreConnectEvent event) {
 		UUID connectionId = event.getPlayer().getUniqueId();
-		Optional<RoutingTarget> targetOptional = routingStateStore.peek(connectionId);
+		ConnectionState state = connectionStateRegistry.find(connectionId).orElse(null);
+		if (state == null) return;
+
+		Optional<RoutingTarget> targetOptional = state.peekRoutingTarget();
 		if (targetOptional.isEmpty()) return;
 
 		RoutingTarget target = targetOptional.get();
@@ -33,7 +39,15 @@ public class RoutingPreConnectListener implements DynamicListener<ServerPreConne
 
 		Optional<RegisteredServer> server = proxyServer.getServer(target.getServer());
 		if (server.isEmpty()) {
-			Logger.warn("Routing target server %s not found for %s", target.getServer(), event.getPlayer().getUsername());
+			RoutingTargetMissingEvent missingEvent = new RoutingTargetMissingEvent(
+					connectionId,
+					event.getPlayer().getUsername(),
+					target
+			);
+			eventManager.call(missingEvent);
+			if (missingEvent.isDisconnect() && missingEvent.getMessage() != null)
+				event.getPlayer().disconnect(missingEvent.getMessage());
+
 			return;
 		}
 

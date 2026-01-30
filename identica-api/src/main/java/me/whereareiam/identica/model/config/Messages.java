@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import me.whereareiam.configura.annotation.Field;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Root message configuration model.
@@ -194,7 +195,7 @@ public class Messages {
 				 * Placeholders:
 				 * - {username}
 				 * - {uniqueId}
-				 * - {provider}
+				 * - {eligibility}
 				 * - {session}
 				 * - {ip}
 				 */
@@ -217,7 +218,7 @@ public class Messages {
 				 * - {original}
 				 * - {effective}
 				 * - {uniqueId}
-				 * - {provider}
+				 * - {eligibility}
 				 * - {subject}
 				 * - {session}
 				 * - {ip}
@@ -318,5 +319,55 @@ public class Messages {
 		private @NotNull List<String> authenticationFailed;
 		private @NotNull List<String> noCompletionStep;
 		private @NotNull List<String> stepNoStatus;
+		private @NotNull Routing routing;
+		private @NotNull Steps steps;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Steps {
+			private @NotNull Enrollment enrollment;
+
+			/**
+			 * Enrollment prompt messages.
+			 */
+			@Getter
+			@Setter
+			@ToString
+			public static class Enrollment {
+				private @NotNull List<String> title;
+				private @NotNull List<String> body;
+				private @NotNull EntryFormat entryFormat;
+				private @NotNull List<String> empty;
+				private @NotNull Map<String, String> descriptions;
+
+				/**
+				 * Format definitions for enrollment entry rendering.
+				 */
+				@Getter
+				@Setter
+				@ToString
+				public static class EntryFormat {
+					/**
+					 * Format used when all required placeholders are present.
+					 */
+					private @NotNull String format;
+					/**
+					 * Format used when one or more placeholders are missing.
+					 */
+					private @NotNull String emptyFormat;
+				}
+			}
+		}
+
+		/**
+		 * Routing messages.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Routing {
+			private @NotNull List<String> missingServer;
+		}
 	}
 }

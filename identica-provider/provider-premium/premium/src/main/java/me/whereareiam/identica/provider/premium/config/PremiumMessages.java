@@ -17,7 +17,6 @@ public class PremiumMessages {
 	@Setter
 	@ToString
 	public static class Verification {
-		private String prompt;
 		private List<String> invalidSession;
 	}
 

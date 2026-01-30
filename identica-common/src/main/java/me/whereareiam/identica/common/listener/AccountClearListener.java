@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.actor.OfflineIdentity;
-import me.whereareiam.identica.auth.AuthCoordinator;
+import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
@@ -29,7 +29,7 @@ public class AccountClearListener implements EventListener {
 	private final @NotNull AccountPersistenceService accountPersistenceService;
 	private final @NotNull ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final @NotNull HandshakeInstructionRegistry instructionStore;
-	private final @NotNull AuthCoordinator authCoordinator;
+	private final @NotNull AuthenticationCoordinator authenticationCoordinator;
 	private final @NotNull IdentityRegistry identityRegistry;
 	private final @NotNull Provider<Messages> messagesProvider;
 
@@ -38,7 +38,7 @@ public class AccountClearListener implements EventListener {
 			@NotNull AccountPersistenceService accountPersistenceService,
 			@NotNull ProviderLinkPersistenceService providerLinkPersistenceService,
 			@NotNull HandshakeInstructionRegistry instructionStore,
-			@NotNull AuthCoordinator authCoordinator,
+			@NotNull AuthenticationCoordinator authenticationCoordinator,
 			@NotNull IdentityRegistry identityRegistry,
 			@NotNull Provider<Messages> messagesProvider,
 			@NotNull EventManager eventManager
@@ -46,7 +46,7 @@ public class AccountClearListener implements EventListener {
 		this.accountPersistenceService = accountPersistenceService;
 		this.providerLinkPersistenceService = providerLinkPersistenceService;
 		this.instructionStore = instructionStore;
-		this.authCoordinator = authCoordinator;
+		this.authenticationCoordinator = authenticationCoordinator;
 		this.identityRegistry = identityRegistry;
 		this.messagesProvider = messagesProvider;
 		eventManager.register(this);
@@ -59,9 +59,9 @@ public class AccountClearListener implements EventListener {
 		instructionStore.invalidate(username);
 
 		UUID identicaUniqueId = offlineIdentity.getUniqueId();
-		Optional<Identity> online = findOnlineIdentity(identicaUniqueId, username);
-		online.ifPresent(identity -> {
-			authCoordinator.clearPending(identity.getUniqueId());
+		Optional<Identity> player = findPlayerIdentity(identicaUniqueId, username);
+		player.ifPresent(identity -> {
+			authenticationCoordinator.clearPending(identity.getUniqueId());
 			String disconnectMessage = joinLines(messagesProvider.get().getCommands().getClear().getDisconnect());
 			if (!disconnectMessage.isBlank()) {
 				identity.disconnect(Serializer.serialize(identity, disconnectMessage));
@@ -75,20 +75,17 @@ public class AccountClearListener implements EventListener {
 		}
 	}
 
-	private @NotNull Optional<Identity> findOnlineIdentity(@Nullable UUID uniqueId, @Nullable String username) {
+	private @NotNull Optional<Identity> findPlayerIdentity(@Nullable UUID uniqueId, @Nullable String username) {
 		if (uniqueId != null) {
-			Optional<Identity> byId = identityRegistry.findOnline(uniqueId);
+			Optional<Identity> byId = identityRegistry.findPlayer(uniqueId);
 			if (byId.isPresent()) return byId;
 		}
 
 		if (username == null || username.isBlank()) return Optional.empty();
-		return identityRegistry.findOnline(username);
+		return identityRegistry.findPlayer(username);
 	}
 
-	private @NotNull String joinLines(@Nullable List<String> lines) {
-		if (lines == null || lines.isEmpty()) return "";
+	private @NotNull String joinLines(@NotNull List<String> lines) {
 		return String.join("\n", lines);
 	}
 }
-
-

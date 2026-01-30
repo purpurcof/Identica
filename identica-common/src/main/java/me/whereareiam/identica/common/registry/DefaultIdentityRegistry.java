@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.event.identity.IdentityPendingEvent;
+import me.whereareiam.identica.event.identity.IdentityReservedEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
 import me.whereareiam.identica.event.identity.IdentityDetachedEvent;
@@ -12,9 +12,9 @@ import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.identity.IdentityState;
 import me.whereareiam.identica.model.identity.IdentityState.OnlineSnapshot;
-import me.whereareiam.identica.model.identity.IdentityState.PendingSnapshot;
+import me.whereareiam.identica.model.identity.IdentityState.ReservedSnapshot;
 import me.whereareiam.identica.model.identity.IdentityState.Phase;
-import me.whereareiam.identica.model.identity.IdentityState.SessionSnapshot;
+import me.whereareiam.identica.model.identity.IdentityState.AuthenticatedSnapshot;
 import me.whereareiam.identica.registry.IdentityRegistry;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
@@ -33,12 +33,12 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 	private final Map<UUID, IdentityState> states = new ConcurrentHashMap<>();
 
 	@Override
-	public void registerPending(@NotNull UUID uniqueId, @NotNull ProfileRequest request, long expiresAt) {
+	public void registerReserved(@NotNull UUID uniqueId, @NotNull ProfileRequest request, long expiresAt) {
 		cleanupExpired();
 
 		IdentityState state = states.compute(uniqueId, (id, existing) -> {
 			if (existing == null) {
-				PendingSnapshot snapshot = new PendingSnapshot(
+				ReservedSnapshot snapshot = new ReservedSnapshot(
 						request.getUsername(),
 						request.getIp(),
 						request.getProfileUniqueId(),
@@ -46,32 +46,32 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 						request.getProviderSubject(),
 						expiresAt
 				);
-				return new IdentityState(id, snapshot, Phase.PENDING);
+				return new IdentityState(id, snapshot, Phase.RESERVED);
 			}
 
-			existing.transitionToPending(request, expiresAt);
+			existing.transitionToReserved(request, expiresAt);
 			return existing;
 		});
 
-		if (state.getPhase() == Phase.PENDING)
-			EventUtil.callEvent(new IdentityPendingEvent(state));
+		if (state.getPhase() == Phase.RESERVED)
+			EventUtil.callEvent(new IdentityReservedEvent(state));
 	}
 
 	@Override
-	public void attachSession(@NotNull Session session) {
+	public void attachAuthenticated(@NotNull Session session) {
 		states.compute(session.getUniqueId(), (id, state) -> {
 			if (state == null)
-				return new IdentityState(id, new SessionSnapshot(session), Phase.SESSION);
+				return new IdentityState(id, new AuthenticatedSnapshot(session), Phase.AUTHENTICATED);
 
-			state.transitionToSession(session);
+			state.transitionToAuthenticated(session);
 			return state;
 		});
 	}
 
 	@Override
-	public void detachSession(@NotNull UUID uniqueId) {
+	public void detachAuthenticated(@NotNull UUID uniqueId) {
 		states.computeIfPresent(uniqueId, (ignored, state) -> {
-			if (state.getPhase() == Phase.SESSION)
+			if (state.getPhase() == Phase.AUTHENTICATED)
 				return null;
 
 			if (state.getPhase() == Phase.ONLINE)
@@ -117,7 +117,7 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 	}
 
 	@Override
-	public void attachOnline(@NotNull Identity identity) {
+	public void addPlayer(@NotNull Identity identity) {
 		IdentityAttachEvent attachEvent = new IdentityAttachEvent(identity);
 		EventUtil.callEvent(attachEvent);
 		if (attachEvent.isCancelled())
@@ -141,7 +141,7 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 	}
 
 	@Override
-	public void detachOnline(@NotNull UUID uniqueId) {
+	public void removePlayer(@NotNull UUID uniqueId) {
 		states.computeIfPresent(uniqueId, (_, state) -> {
 			boolean remove = state.transitionFromOnline();
 			if (remove) return null;
@@ -151,13 +151,13 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 	}
 
 	@Override
-	public @NotNull Optional<Identity> findOnline(@NotNull UUID uniqueId) {
+	public @NotNull Optional<Identity> findPlayer(@NotNull UUID uniqueId) {
 		return Optional.ofNullable(states.get(uniqueId))
 				.map(IdentityState::getOnlineIdentity);
 	}
 
 	@Override
-	public @NotNull Optional<Identity> findOnline(@NotNull String username) {
+	public @NotNull Optional<Identity> findPlayer(@NotNull String username) {
 		if (username.isBlank()) return Optional.empty();
 		return states.values()
 				.stream()
@@ -167,7 +167,7 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 	}
 
 	@Override
-	public @NotNull Collection<Identity> getOnlineIdentities() {
+	public @NotNull Collection<Identity> getPlayers() {
 		return states.values()
 				.stream()
 				.map(IdentityState::getOnlineIdentity)
@@ -182,7 +182,7 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 
 	private boolean shouldRemoveState(IdentityState state) {
 		if (state == null) return true;
-		if (state.getPhase() == Phase.ONLINE || state.getPhase() == Phase.SESSION) return false;
+		if (state.getPhase() == Phase.ONLINE || state.getPhase() == Phase.AUTHENTICATED) return false;
 
 		return state.isExpired(System.currentTimeMillis());
 	}

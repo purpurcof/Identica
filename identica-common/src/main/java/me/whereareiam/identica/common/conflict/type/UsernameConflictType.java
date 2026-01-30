@@ -181,7 +181,7 @@ public class UsernameConflictType implements ConflictType {
 					return sessionService.open(session)
 							.thenApply(stored -> {
 								identityRegistry.findState(uniqueId)
-										.ifPresent(state -> state.transitionToSession(stored));
+										.ifPresent(state -> state.transitionToAuthenticated(stored));
 								return null;
 							});
 				}).join();

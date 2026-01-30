@@ -25,7 +25,7 @@ public class SerializerEngineProvider implements Provider<SerializerEngine>, Rel
 	public SerializerEngine get() {
 		if (engine == null) {
 			Messages messages = messagesProvider.get();
-			String prefix = messages != null && messages.getPrefix() != null ? messages.getPrefix() : "";
+			String prefix = messages != null ? messages.getPrefix() : "";
 			SerializerOptions options = SerializerOptions.builder()
 					.defaultAdapter("MINIMESSAGE")
 					.prefixSupplier(() -> prefix)

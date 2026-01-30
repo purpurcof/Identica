@@ -7,6 +7,7 @@ import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -17,7 +18,9 @@ import me.whereareiam.configura.reader.ConfigReader;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.configura.writer.ConfigWriter;
 import me.whereareiam.identica.Reloadable;
+import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.auth.HandshakePolicy;
+import me.whereareiam.identica.common.auth.DefaultAuthenticationCoordinator;
 import me.whereareiam.identica.common.cache.DefaultCacheService;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
 import me.whereareiam.identica.common.listener.AccountClearListener;
@@ -32,23 +35,27 @@ import me.whereareiam.identica.common.config.adapter.NodeAdapter;
 import me.whereareiam.identica.common.config.adapter.ProviderCapabilityAdapter;
 import me.whereareiam.identica.common.config.provider.*;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
-import me.whereareiam.identica.auth.AuthCoordinator;
-import me.whereareiam.identica.auth.AuthenticationService;
-import me.whereareiam.identica.common.auth.AuthPipeline;
-import me.whereareiam.identica.common.auth.DefaultAuthCoordinator;
+import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
+import me.whereareiam.identica.provider.eligibility.ProviderEligibilityService;
+import me.whereareiam.identica.auth.step.registry.StepRegistry;
+import me.whereareiam.identica.common.auth.FlowCoordinator;
+import me.whereareiam.identica.common.auth.stage.DefaultStepStageRegistry;
+import me.whereareiam.identica.common.auth.step.registry.DefaultStepRegistry;
 import me.whereareiam.identica.common.conflict.ConflictPrepareLifecycle;
 import me.whereareiam.identica.common.identity.DefaultIdentityService;
 import me.whereareiam.identica.common.auth.handshake.HandshakePolicyRegistry;
-import me.whereareiam.identica.common.routing.DefaultRoutingService;
-import me.whereareiam.identica.common.routing.InMemoryRoutingStateStore;
+import me.whereareiam.identica.common.provider.eligibility.DefaultProviderEligibilityService;
+import me.whereareiam.identica.common.registry.DefaultConnectionStateRegistry;
+import me.whereareiam.identica.common.routing.PhaseRoutingService;
 import me.whereareiam.identica.common.routing.RoutingLifecycle;
+import me.whereareiam.identica.common.routing.RoutingTargetMissingListener;
 import me.whereareiam.identica.common.conflict.DefaultConflictService;
 import me.whereareiam.identica.common.conflict.type.UsernameConflictType;
 import me.whereareiam.identica.common.event.EventController;
-import me.whereareiam.identica.common.loader.reader.DefaultProviderDescriptorReader;
-import me.whereareiam.identica.loader.ProviderDescriptorReader;
-import me.whereareiam.identica.common.loader.DefaultProviderManager;
-import me.whereareiam.identica.loader.ProviderManager;
+import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
+import me.whereareiam.identica.provider.ProviderDescriptorReader;
+import me.whereareiam.identica.common.provider.DefaultProviderManager;
+import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.common.provider.SerializerEngineProvider;
 import me.whereareiam.identica.common.registry.DefaultIdentityRegistry;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
@@ -58,18 +65,19 @@ import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.service.SynchronizationService;
 import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.registry.ConnectionStateRegistry;
 import me.whereareiam.identica.registry.IdentityRegistry;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.util.EventUtil;
-import me.whereareiam.identica.routing.RoutingStateStore;
 import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.session.SessionService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.stage.StepStageRegistry;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -134,14 +142,18 @@ public class CommonConfiguration extends AbstractModule {
 		bind(SessionService.class).to(DefaultSessionService.class).asEagerSingleton();
 		bind(SessionRefreshCoordinator.class).asEagerSingleton();
 
+		// Connection state
+		bind(ConnectionStateRegistry.class).to(DefaultConnectionStateRegistry.class).asEagerSingleton();
+
 		// Authentication
-		bind(AuthenticationService.class).to(AuthPipeline.class).asEagerSingleton();
-		bind(AuthCoordinator.class).to(DefaultAuthCoordinator.class).asEagerSingleton();
+		bind(FlowCoordinator.class).asEagerSingleton();
+		bind(AuthenticationCoordinator.class).to(DefaultAuthenticationCoordinator.class).asEagerSingleton();
+		bind(ProviderEligibilityService.class).to(DefaultProviderEligibilityService.class).asEagerSingleton();
 
 		// Routing
-		bind(RoutingStateStore.class).to(InMemoryRoutingStateStore.class).asEagerSingleton();
-		bind(RoutingService.class).to(DefaultRoutingService.class).asEagerSingleton();
+		bind(RoutingService.class).to(PhaseRoutingService.class).asEagerSingleton();
 		bind(RoutingLifecycle.class).asEagerSingleton();
+		bind(RoutingTargetMissingListener.class).asEagerSingleton();
 
 		// Conflict resolution
 		bind(ConflictService.class).to(DefaultConflictService.class).asEagerSingleton();
@@ -155,6 +167,9 @@ public class CommonConfiguration extends AbstractModule {
 		// Provider system
 		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
 		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
+		bind(StepRegistry.class).to(DefaultStepRegistry.class).asEagerSingleton();
+		bind(StepStageRegistry.class).to(DefaultStepStageRegistry.class).asEagerSingleton();
+		Multibinder.newSetBinder(binder(), ProviderEligibilityResolver.class);
 
 		// Core services
 		bind(EventManager.class).to(EventController.class);

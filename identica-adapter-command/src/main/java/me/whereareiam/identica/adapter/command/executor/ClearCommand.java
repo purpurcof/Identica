@@ -167,7 +167,7 @@ public class ClearCommand {
 			@NotNull PendingClear pendingClear,
 			@NotNull Messages.Commands.Clear messages
 	) {
-		String text = joinLines(messages.getConfirm());
+		String text = String.join("\n", messages.getConfirm());
 		sendMessage(sender, text, Map.of(
 				"target", pendingClear.target(),
 				"scope", formatScope(pendingClear.scope()),
@@ -236,7 +236,7 @@ public class ClearCommand {
 			Map<String, String> placeholders,
 			SerializerOptions.PlaceholderFormat format
 	) {
-		List<String> formatted = new java.util.ArrayList<>();
+		List<String> formatted = new ArrayList<>();
 		if (body == null || body.isEmpty()) {
 			formatted.addAll(entries);
 			return formatted;
@@ -296,11 +296,6 @@ public class ClearCommand {
 		return messages.getCommands().getClear();
 	}
 
-	private String joinLines(List<String> lines) {
-		if (lines == null || lines.isEmpty()) return "";
-		return String.join("\n", lines);
-	}
-
 	private String formatLine(String line, Map<String, String> placeholders, SerializerOptions.PlaceholderFormat format) {
 		if (line == null || line.isBlank()) return "";
 		String result = line;
@@ -335,6 +330,3 @@ public class ClearCommand {
 	private record ResolvedTarget(UUID uniqueId, String username) {
 	}
 }
-
-
-

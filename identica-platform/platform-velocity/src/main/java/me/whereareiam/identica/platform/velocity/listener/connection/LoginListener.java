@@ -9,7 +9,7 @@ import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.identity.actor.OfflineIdentity;
-import me.whereareiam.identica.auth.AuthCoordinator;
+import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.auth.AuthDecision;
 import me.whereareiam.identica.model.auth.ConnectionInfo;
@@ -21,7 +21,7 @@ import me.whereareiam.identica.registry.IdentityRegistry;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class LoginListener implements DynamicListener<LoginEvent> {
-	private final AuthCoordinator authCoordinator;
+	private final AuthenticationCoordinator authenticationCoordinator;
 	private final Provider<Messages> messagesProvider;
 	private final IdentityRegistry identityRegistry;
 
@@ -42,13 +42,15 @@ public class LoginListener implements DynamicListener<LoginEvent> {
 				.intendedServer(intendedServer)
 				.build();
 
-		AuthDecision decision = authCoordinator.authenticate(request);
+		AuthDecision decision = authenticationCoordinator.authenticate(request)
+				.toCompletableFuture()
+				.join();
 
 		if (decision.getStatus() == null)
 			return;
 
 		VelocityCommandPlayer actor = new VelocityCommandPlayer(player);
-		identityRegistry.attachOnline(actor);
+		identityRegistry.addPlayer(actor);
 		switch (decision.getStatus()) {
 			case WAIT -> {
 				if (decision.getMessage() != null && !decision.getMessage().isBlank()) {
@@ -56,7 +58,7 @@ public class LoginListener implements DynamicListener<LoginEvent> {
 				}
 			}
 			case DENY, REQUIRE_RECONNECT -> {
-				identityRegistry.detachOnline(player.getUniqueId());
+				identityRegistry.removePlayer(player.getUniqueId());
 				event.setResult(ResultedEvent.ComponentResult.denied(
 						Serializer.serialize(actor, resolveAuthMessage(decision.getMessage()))
 				));
@@ -70,12 +72,6 @@ public class LoginListener implements DynamicListener<LoginEvent> {
 		if (message != null && !message.isBlank())
 			return message;
 
-		return joinMessage(messagesProvider.get().getAuthentication().getAuthenticationFailed());
+		return String.join("\n", messagesProvider.get().getAuthentication().getAuthenticationFailed());
 	}
-
-	private String joinMessage(java.util.List<String> lines) {
-		if (lines == null || lines.isEmpty()) return "";
-		return String.join("\n", lines);
-	}
-
 }

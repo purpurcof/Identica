@@ -73,7 +73,7 @@ final class DatabaseSchemaTestSupport {
 					)
 					.bind("uniqueId", accountId)
 					.bind("username", "Player01")
-					.bind("source", "provider")
+					.bind("source", "eligibility")
 					.bind("createdAt", 1L)
 					.bind("lastSeenAt", 1L)
 					.execute();
@@ -110,7 +110,7 @@ final class DatabaseSchemaTestSupport {
 					.bind("providerId", "premium")
 					.bind("oldUsername", "OldName")
 					.bind("newUsername", "Player01")
-					.bind("source", "provider")
+					.bind("source", "eligibility")
 					.bind("changedAt", 4L)
 					.execute();
 		});

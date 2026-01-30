@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.type.provider.ProviderCapability;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -16,14 +17,15 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@SuppressWarnings("unused")
 public class ProviderDescriptor {
-	private String id;
-	private String name;
-	private String version;
+	private @NotNull String id;
+	private @NotNull String name;
+	private @NotNull String version;
 
-	private String main;
-	private List<String> authors;
-	private List<String> supportedPlatforms;
+	private @NotNull String main;
+	private @Nullable List<String> authors;
+	private @NotNull List<String> supportedPlatforms;
 
 	/**
 	 * Provider capability ids.

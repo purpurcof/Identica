@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.type.AnsiColor;
 import me.whereareiam.identica.Constants;
-import me.whereareiam.identica.loader.ProviderManager;
+import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.type.PlatformType;

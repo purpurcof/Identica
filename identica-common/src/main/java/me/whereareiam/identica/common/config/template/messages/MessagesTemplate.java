@@ -6,6 +6,7 @@ import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
 
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class MessagesTemplate implements TemplateProvider<Messages> {
@@ -73,6 +74,46 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"",
 				"<gray>discord.arcadeya.com"
 		));
+		Messages.Authentication.Steps steps = new Messages.Authentication.Steps();
+		Messages.Authentication.Steps.Enrollment enrollment = new Messages.Authentication.Steps.Enrollment();
+		enrollment.setTitle(List.of());
+		enrollment.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				"  <white>Select an authentication method for account</white>",
+				"  <white>It can be changed later on.</white>",
+				" ",
+				"  <gray>Available providers:</gray>",
+				"{entries}",
+				" "
+		));
+		Messages.Authentication.Steps.Enrollment.EntryFormat enrollmentEntry = new Messages.Authentication.Steps.Enrollment.EntryFormat();
+		enrollmentEntry.setFormat("   <dark_gray><click:run_command:{command}>▪ <gray>[{providerName}]:</gray> <white>{description}</click>");
+		enrollmentEntry.setEmptyFormat("   <dark_gray><click:run_command:{command}>▪ <gray>[{providerName}]:</gray></click>");
+		enrollment.setEntryFormat(enrollmentEntry);
+		enrollment.setEmpty(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>No providers available for this account.</white>",
+				"",
+				"<gray>discord.arcadeya.com"
+		));
+		enrollment.setDescriptions(Map.of(
+				"premium", "Use Minecraft account for registration.",
+				"cracked", "Register using password."
+		));
+		steps.setEnrollment(enrollment);
+		authentication.setSteps(steps);
+		Messages.Authentication.Routing routingMessages = new Messages.Authentication.Routing();
+		routingMessages.setMissingServer(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>No target server available.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<gray>discord.arcadeya.com"
+		));
+		authentication.setRouting(routingMessages);
 		messages.setAuthentication(authentication);
 
 		return messages;

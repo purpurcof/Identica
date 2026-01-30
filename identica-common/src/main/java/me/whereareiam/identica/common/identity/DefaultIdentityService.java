@@ -13,7 +13,7 @@ import me.whereareiam.identica.event.account.AccountPrepareEvent;
 import me.whereareiam.identica.event.identity.session.SessionClosedEvent;
 import me.whereareiam.identica.event.identity.session.SessionPrepareEvent;
 import me.whereareiam.identica.event.identity.session.SessionOpenedEvent;
-import me.whereareiam.identica.loader.ProviderManager;
+import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.UsernameHistoryEntry;
 import me.whereareiam.identica.model.account.Account;
@@ -37,10 +37,7 @@ import me.whereareiam.identica.identity.actor.Identity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.time.Duration;
 
@@ -76,7 +73,7 @@ public class DefaultIdentityService implements IdentityService {
 
 		long ttlMs = pendingTtlMillis();
 		long expiresAt = ttlMs > 0 ? System.currentTimeMillis() + ttlMs : 0;
-		identityRegistry.registerPending(resolved, request, expiresAt);
+		identityRegistry.registerReserved(resolved, request, expiresAt);
 
 		return resolved;
 	}
@@ -196,7 +193,7 @@ public class DefaultIdentityService implements IdentityService {
 				.thenApply(stored -> {
 					if (stored == null)
 						return null;
-					identityRegistry.attachSession(stored);
+					identityRegistry.attachAuthenticated(stored);
 					EventUtil.callEvent(new SessionOpenedEvent(stored));
 					return stored;
 				});
@@ -210,7 +207,7 @@ public class DefaultIdentityService implements IdentityService {
 		return sessionService.close(uniqueId)
 				.thenRun(() -> {
 					if (uniqueId != null) {
-						identityRegistry.detachSession(uniqueId);
+						identityRegistry.detachAuthenticated(uniqueId);
 						EventUtil.callEvent(new SessionClosedEvent(uniqueId, current));
 					}
 				});
@@ -242,28 +239,28 @@ public class DefaultIdentityService implements IdentityService {
 	}
 
 	@Override
-	public void attachOnline(@NotNull Identity identity) {
-		identityRegistry.attachOnline(identity);
+	public void addPlayer(@NotNull Identity identity) {
+		identityRegistry.addPlayer(identity);
 	}
 
 	@Override
-	public void detachOnline(@NotNull UUID uniqueId) {
-		identityRegistry.detachOnline(uniqueId);
+	public void removePlayer(@NotNull UUID uniqueId) {
+		identityRegistry.removePlayer(uniqueId);
 	}
 
 	@Override
-	public @NotNull Optional<Identity> findOnline(@NotNull UUID uniqueId) {
-		return identityRegistry.findOnline(uniqueId);
+	public @NotNull Optional<Identity> findPlayer(@NotNull UUID uniqueId) {
+		return identityRegistry.findPlayer(uniqueId);
 	}
 
 	@Override
-	public @NotNull Optional<Identity> findOnline(@NotNull String username) {
-		return identityRegistry.findOnline(username);
+	public @NotNull Optional<Identity> findPlayer(@NotNull String username) {
+		return identityRegistry.findPlayer(username);
 	}
 
 	@Override
-	public @NotNull Collection<Identity> getOnlineIdentities() {
-		return identityRegistry.getOnlineIdentities();
+	public @NotNull Collection<Identity> getPlayers() {
+		return identityRegistry.getPlayers();
 	}
 
 	private UUID resolveFromSession(String providerId, String providerSubject) {
@@ -352,7 +349,7 @@ public class DefaultIdentityService implements IdentityService {
 		if (providerId == null || providerId.isBlank()) return false;
 		return providerManager.getProviders().stream()
 				.map(InternalProvider::getDescriptor)
-				.filter(descriptor -> descriptor != null && descriptor.getId() != null)
+				.filter(Objects::nonNull)
 				.anyMatch(descriptor -> descriptor.getId().equalsIgnoreCase(providerId)
 						&& descriptor.hasCapability(ProviderCapability.AUTHORITATIVE_USERNAME));
 	}

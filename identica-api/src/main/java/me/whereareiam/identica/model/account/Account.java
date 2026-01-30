@@ -31,7 +31,7 @@ public class Account {
 	private @NotNull String username;
 
 	/**
-	 * Source of the currently active username ("provider", "manual", "system").
+	 * Source of the currently active username ("eligibility", "manual", "system").
 	 */
 	private @NotNull UsernameSource source;
 

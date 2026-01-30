@@ -3,28 +3,37 @@ package me.whereareiam.identica.provider.premium.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.identica.provider.premium.type.VerificationFlow;
+import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+
+/**
+ * Configuration model for the premium eligibility.
+ */
 @Getter
 @Setter
 @ToString
 public class PremiumSettings {
-	private Verification verification = new Verification();
-	private Lookup lookup = new Lookup();
+	private @NotNull Lookup lookup = new Lookup();
 
-	@Getter
-	@Setter
-	@ToString
-	public static class Verification {
-		private VerificationFlow intent = VerificationFlow.SILENT;
-	}
-
+	/**
+	 * Lookup configuration for premium profile checks.
+	 */
 	@Getter
 	@Setter
 	@ToString
 	public static class Lookup {
-		private String profileEndpoint = "https://api.mojang.com/users/profiles/minecraft/%s";
-		private long timeoutMs = 3000;
-		private long cacheTtlMs = 300000;
+		/**
+		 * Profile lookup endpoint that accepts {@code {username}} or {@code %s}.
+		 */
+		private @NotNull String profileEndpoint = "https://api.mojang.com/users/profiles/minecraft/%s";
+		/**
+		 * Timeout for the profile lookup request.
+		 */
+		private @NotNull Duration timeout = Duration.ofSeconds(3);
+		/**
+		 * Cache time-to-live for profile lookup results.
+		 */
+		private @NotNull Duration cacheTtl = Duration.ofMinutes(5);
 	}
 }

@@ -4,6 +4,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.auth.HandshakePolicy;
+import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
+import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.provider.premium.config.PremiumCommands;
 import me.whereareiam.identica.provider.premium.command.PremiumCommand;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
@@ -11,6 +14,7 @@ import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumCommandsProvider;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumMessagesProvider;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumSettingsProvider;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileSubjectResolver;
 
 public class PremiumModule extends AbstractModule {
 	@Override
@@ -33,5 +37,15 @@ public class PremiumModule extends AbstractModule {
 		Multibinder.newSetBinder(binder(), Object.class, Names.named("premiumCommandInstances"))
 				.addBinding()
 				.to(PremiumCommand.class);
+
+		Multibinder.newSetBinder(binder(), HandshakePolicy.class)
+				.addBinding()
+				.to(PremiumHandshakePolicy.class);
+		Multibinder.newSetBinder(binder(), ProviderEligibilityResolver.class)
+				.addBinding()
+				.to(PremiumEligibilityResolver.class);
+		Multibinder.newSetBinder(binder(), ProfileSubjectResolver.class)
+				.addBinding()
+				.to(PremiumProfileSubjectResolver.class);
 	}
 }

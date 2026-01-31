@@ -2,10 +2,11 @@ package me.whereareiam.identica.common.loader;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import me.whereareiam.identica.auth.HandshakePolicy;
+import me.whereareiam.identica.common.auth.handshake.HandshakePolicyRegistry;
 import me.whereareiam.identica.common.provider.DefaultProviderManager;
 import me.whereareiam.identica.common.provider.ProviderDiscovery;
 import me.whereareiam.identica.common.provider.ProviderLifecycleController;
-import me.whereareiam.identica.common.provider.profile.DefaultProfileSubjectResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.model.conflict.ConflictContext;
@@ -31,6 +32,7 @@ import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.type.provider.ProviderState;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.common.event.EventController;
+import me.whereareiam.identica.registry.Registry;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -159,6 +161,7 @@ class ProviderManagerIntegrationTest {
 		ProviderDiscovery discovery = new ProviderDiscovery(providersPath, descriptorReader);
 		Injector injector = Guice.createInjector();
 		ProviderResolverRegistry resolverRegistry = new ProviderResolverRegistry();
+		Registry<HandshakePolicy> handshakePolicies = new HandshakePolicyRegistry();
 		ConflictService conflictService = new ConflictService() {
 			@Override
 			public void register(@NonNull ConflictResolver resolver) {
@@ -205,14 +208,14 @@ class ProviderManagerIntegrationTest {
 				new ProviderInstanceFactory(),
 				resolverRegistry,
 				conflictService,
-				eventManager
+				eventManager,
+				handshakePolicies
 		);
 		ProviderManager manager = new DefaultProviderManager(
 				discovery,
 				lifecycleController,
 				Providers::new,
 				resolverRegistry,
-				new DefaultProfileSubjectResolverRegistry(),
 				new ProviderPlatformResolver()
 		);
 

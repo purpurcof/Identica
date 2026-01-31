@@ -13,7 +13,6 @@ import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.provider.profile.ProfileResolveContext;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
-import me.whereareiam.identica.registry.ProfileSubjectResolverRegistry;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.type.provider.ProviderState;
 import me.whereareiam.identica.util.UniqueIdGenerator;
@@ -29,7 +28,6 @@ public class DefaultProviderManager implements ProviderManager {
 	private final ProviderLifecycleController lifecycleController;
 	private final Provider<Providers> providersConfig;
 	private final ProviderResolverRegistry resolverRegistry;
-	private final ProfileSubjectResolverRegistry profileResolverRegistry;
 
 	private final List<InternalProvider> providers = new ArrayList<>();
 
@@ -39,14 +37,12 @@ public class DefaultProviderManager implements ProviderManager {
 			ProviderLifecycleController lifecycleController,
 			Provider<Providers> providersConfig,
 			ProviderResolverRegistry resolverRegistry,
-			ProfileSubjectResolverRegistry profileResolverRegistry,
 			ProviderPlatformResolver platformResolver
 	) {
 		this.discovery = discovery;
 		this.lifecycleController = lifecycleController;
 		this.providersConfig = providersConfig;
 		this.resolverRegistry = resolverRegistry;
-		this.profileResolverRegistry = profileResolverRegistry;
 
 		registerResolver(platformResolver);
 	}
@@ -92,12 +88,10 @@ public class DefaultProviderManager implements ProviderManager {
 
 		for (InternalProvider provider : sorted) {
 			if (provider == null || provider.getState() != ProviderState.ENABLED) continue;
-			if (provider.getDescriptor() == null) continue;
+			Set<ProfileSubjectResolver> registered = provider.getProfileSubjectResolvers();
+			if (registered == null || registered.isEmpty()) continue;
 
-			List<ProfileSubjectResolver> resolvers = profileResolverRegistry.getResolvers(provider.getDescriptor().getId());
-			if (resolvers.isEmpty()) continue;
-
-			List<ProfileSubjectResolver> ordered = new ArrayList<>(resolvers);
+			List<ProfileSubjectResolver> ordered = new ArrayList<>(registered);
 			ordered.sort(Comparator.comparingInt(ProfileSubjectResolver::priority).reversed());
 
 			for (ProfileSubjectResolver resolver : ordered) {

@@ -1,33 +1,45 @@
 package me.whereareiam.identica.common.provider;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
 import me.whereareiam.identica.common.provider.injector.ProviderInjectorFactory;
-import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
+import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.provider.ProviderDisabledEvent;
 import me.whereareiam.identica.event.provider.ProviderEnabledEvent;
 import me.whereareiam.identica.event.provider.ProviderLoadedEvent;
 import me.whereareiam.identica.event.provider.ProviderUnloadedEvent;
-import me.whereareiam.identica.provider.IdenticaProvider;
-import me.whereareiam.identica.provider.resolver.ProviderResolver;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
+import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
+import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
+import me.whereareiam.identica.provider.resolver.ProviderResolver;
+import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class ProviderLifecycleController {
+	private static final TypeLiteral<Set<HandshakePolicy>> HANDSHAKE_POLICIES = new TypeLiteral<>() {};
+	private static final TypeLiteral<Set<ProviderEligibilityResolver>> ELIGIBILITY_RESOLVERS = new TypeLiteral<>() {};
+	private static final TypeLiteral<Set<ProfileSubjectResolver>> PROFILE_RESOLVERS = new TypeLiteral<>() {};
+
 	private final ProviderWorkingPathResolver workingPathResolver;
 	private final ProviderClassLoaderFactory classLoaderFactory;
 	private final ProviderDependencyResolver dependencyResolver;
@@ -36,6 +48,9 @@ public class ProviderLifecycleController {
 	private final ProviderResolverRegistry resolverRegistry;
 	private final ConflictService conflictService;
 	private final EventManager eventManager;
+	private final Registry<HandshakePolicy> handshakePolicies;
+
+	private final ConcurrentHashMap<InternalProvider, Set<HandshakePolicy>> providerHandshakePolicies = new ConcurrentHashMap<>();
 
 	public void loadProvider(InternalProvider internal) {
 		if (internal == null || internal.getState() != ProviderState.DISCOVERED) return;
@@ -64,8 +79,9 @@ public class ProviderLifecycleController {
 
 			dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
 
+			Injector providerInjector = injectorFactory.create(workingPath, descriptor, probeProvider);
 			IdenticaProvider provider = instanceFactory.createInjectedProvider(
-					injectorFactory.create(workingPath, descriptor, probeProvider),
+					providerInjector,
 					providerClass,
 					probeProvider
 			);
@@ -81,6 +97,7 @@ public class ProviderLifecycleController {
 			internal.setProvider(provider);
 			internal.setWorkingPath(workingPath);
 			internal.setClassLoader(classLoader);
+			storeBindings(internal, providerInjector);
 			internal.setState(ProviderState.LOADED);
 			if (checkRequirements(internal))
 				return;
@@ -101,6 +118,7 @@ public class ProviderLifecycleController {
 		try {
 			registerConflictResolvers(internal.getProvider());
 			internal.getProvider().onEnable();
+			registerProviderBindings(internal);
 			fireProviderEnabled(internal);
 		} catch (Exception e) {
 			internal.setState(ProviderState.FAILED);
@@ -121,6 +139,8 @@ public class ProviderLifecycleController {
 			internal.setState(ProviderState.FAILED);
 			Logger.warn("Failed to disable provider %s: %s", safeId(internal), e.getMessage());
 			fireProviderDisabled(internal);
+		} finally {
+			unregisterProviderBindings(internal);
 		}
 	}
 
@@ -169,6 +189,45 @@ public class ProviderLifecycleController {
 		for (var type : provider.getConflictTypes())
 			conflictService.unregister(type);
 
+	}
+
+	private void storeBindings(InternalProvider internal, Injector injector) {
+		if (internal == null || injector == null) return;
+		providerHandshakePolicies.put(internal, copySet(resolveSet(injector, HANDSHAKE_POLICIES)));
+		internal.setEligibilityResolvers(copySet(resolveSet(injector, ELIGIBILITY_RESOLVERS)));
+		internal.setProfileSubjectResolvers(copySet(resolveSet(injector, PROFILE_RESOLVERS)));
+	}
+
+	private void registerProviderBindings(InternalProvider internal) {
+		if (internal == null) return;
+		Set<HandshakePolicy> policies = providerHandshakePolicies.get(internal);
+		if (policies != null)
+			for (HandshakePolicy policy : policies)
+				handshakePolicies.register(policy);
+	}
+
+	private void unregisterProviderBindings(InternalProvider internal) {
+		if (internal == null) return;
+		Set<HandshakePolicy> policies = providerHandshakePolicies.remove(internal);
+		if (policies != null)
+			for (HandshakePolicy policy : policies)
+				handshakePolicies.unregister(policy);
+	}
+
+	private <T> Set<T> resolveSet(Injector injector, TypeLiteral<Set<T>> type) {
+		try {
+			Set<T> resolved = injector.getInstance(com.google.inject.Key.get(type));
+			return resolved != null ? resolved : Set.of();
+		} catch (com.google.inject.ConfigurationException ignored) {
+			return Set.of();
+		}
+	}
+
+	private <T> Set<T> copySet(Set<T> values) {
+		if (values == null || values.isEmpty())
+			return Set.of();
+
+		return Set.copyOf(values);
 	}
 
 	private void fireProviderDisabled(InternalProvider internal) {

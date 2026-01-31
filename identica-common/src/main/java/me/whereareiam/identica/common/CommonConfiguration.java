@@ -44,8 +44,6 @@ import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.provider.DefaultProviderManager;
 import me.whereareiam.identica.common.provider.SerializerEngineProvider;
 import me.whereareiam.identica.common.provider.eligibility.DefaultProviderEligibilityService;
-import me.whereareiam.identica.common.provider.eligibility.ProviderEligibilityRegistry;
-import me.whereareiam.identica.common.provider.profile.DefaultProfileSubjectResolverRegistry;
 import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.common.registry.DefaultIdentityRegistry;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
@@ -70,10 +68,8 @@ import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.provider.ProviderDescriptorReader;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityService;
 import me.whereareiam.identica.registry.PreLoginExtensions;
-import me.whereareiam.identica.registry.ProfileSubjectResolverRegistry;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.service.SynchronizationService;
@@ -127,9 +123,6 @@ public class CommonConfiguration extends AbstractModule {
 		bind(new TypeLiteral<Registry<HandshakePolicy>>() {})
 				.to(HandshakePolicyRegistry.class)
 				.asEagerSingleton();
-		bind(new TypeLiteral<Registry<ProviderEligibilityResolver>>() {})
-				.to(ProviderEligibilityRegistry.class)
-				.asEagerSingleton();
 
 		// Synchronization + cache
 		OptionalBinder.newOptionalBinder(binder(), Key.get(SynchronizationService.class, Names.named("synchronizationProvider")))
@@ -154,7 +147,6 @@ public class CommonConfiguration extends AbstractModule {
 		bind(ConnectionExtensions.class).to(DefaultConnectionExtensions.class).asEagerSingleton();
 		bind(IdentityExtensions.class).to(DefaultIdentityExtensions.class).asEagerSingleton();
 		bind(PreLoginExtensions.class).to(DefaultPreLoginExtensions.class).asEagerSingleton();
-		bind(ProfileSubjectResolverRegistry.class).to(DefaultProfileSubjectResolverRegistry.class).asEagerSingleton();
 
 		// Authentication
 		bind(FlowCoordinator.class).asEagerSingleton();

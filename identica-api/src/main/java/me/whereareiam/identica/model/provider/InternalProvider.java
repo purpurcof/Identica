@@ -4,9 +4,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
+import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.nio.file.Path;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -22,4 +25,7 @@ public class InternalProvider {
 
 	private int priority;
 	private ProviderState state;
+
+	private Set<ProviderEligibilityResolver> eligibilityResolvers;
+	private Set<ProfileSubjectResolver> profileSubjectResolvers;
 }

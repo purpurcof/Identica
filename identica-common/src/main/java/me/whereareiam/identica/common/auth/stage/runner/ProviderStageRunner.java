@@ -181,6 +181,12 @@ public class ProviderStageRunner {
 			return CompletableFuture.completedFuture(StageOutcome.result(stepResult, next, completionResult));
 		}
 
+		if (stepResult.getStatus() == StepResult.StepStatus.REQUIRE_RECONNECT) {
+			int resumeIndex = result.getStepIndex() - 1;
+			PendingStage pendingStage = new PendingStage(resolveProviderId(provider), steps, resumeIndex);
+			return CompletableFuture.completedFuture(StageOutcome.waiting(stepResult, next, completionResult, pendingStage));
+		}
+
 		if (stepResult.getStatus() == StepResult.StepStatus.CONTINUE && result.isStageComplete())
 			return CompletableFuture.completedFuture(StageOutcome.advance(stepResult, next, completionResult));
 

@@ -33,14 +33,19 @@ import me.whereareiam.identica.common.conflict.DefaultConflictService;
 import me.whereareiam.identica.common.conflict.type.UsernameConflictType;
 import me.whereareiam.identica.common.connection.DefaultConnectionStateRegistry;
 import me.whereareiam.identica.common.event.EventController;
+import me.whereareiam.identica.common.extension.DefaultConnectionExtensions;
+import me.whereareiam.identica.common.extension.DefaultIdentityExtensions;
+import me.whereareiam.identica.common.extension.DefaultPreLoginExtensions;
 import me.whereareiam.identica.common.identity.DefaultIdentityService;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
 import me.whereareiam.identica.common.listener.AccountClearListener;
 import me.whereareiam.identica.common.listener.AccountClearSynchronizationListener;
+import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.provider.DefaultProviderManager;
 import me.whereareiam.identica.common.provider.SerializerEngineProvider;
 import me.whereareiam.identica.common.provider.eligibility.DefaultProviderEligibilityService;
 import me.whereareiam.identica.common.provider.eligibility.ProviderEligibilityRegistry;
+import me.whereareiam.identica.common.provider.profile.DefaultProfileSubjectResolverRegistry;
 import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.common.registry.DefaultIdentityRegistry;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
@@ -53,17 +58,22 @@ import me.whereareiam.identica.common.synchronization.DefaultSynchronizationServ
 import me.whereareiam.identica.common.synchronization.NoopSynchronizationService;
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
 import me.whereareiam.identica.conflict.ConflictService;
+import me.whereareiam.identica.connection.ConnectionExtensions;
+import me.whereareiam.identica.connection.ConnectionStateRegistry;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.ReservationCache;
+import me.whereareiam.identica.identity.registry.IdentityExtensions;
+import me.whereareiam.identica.identity.registry.IdentityRegistry;
+import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.provider.ProviderDescriptorReader;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityService;
-import me.whereareiam.identica.registry.ConnectionStateRegistry;
-import me.whereareiam.identica.registry.IdentityRegistry;
+import me.whereareiam.identica.registry.PreLoginExtensions;
+import me.whereareiam.identica.registry.ProfileSubjectResolverRegistry;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.service.SynchronizationService;
@@ -141,6 +151,10 @@ public class CommonConfiguration extends AbstractModule {
 
 		// Connection state
 		bind(ConnectionStateRegistry.class).to(DefaultConnectionStateRegistry.class).asEagerSingleton();
+		bind(ConnectionExtensions.class).to(DefaultConnectionExtensions.class).asEagerSingleton();
+		bind(IdentityExtensions.class).to(DefaultIdentityExtensions.class).asEagerSingleton();
+		bind(PreLoginExtensions.class).to(DefaultPreLoginExtensions.class).asEagerSingleton();
+		bind(ProfileSubjectResolverRegistry.class).to(DefaultProfileSubjectResolverRegistry.class).asEagerSingleton();
 
 		// Authentication
 		bind(FlowCoordinator.class).asEagerSingleton();
@@ -160,6 +174,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(AccountClearListener.class).asEagerSingleton();
 		bind(AccountClearSynchronizationListener.class).asEagerSingleton();
 		bind(ConflictPrepareLifecycle.class).asEagerSingleton();
+		bind(DynamicListenerRegistry.class).to(DefaultDynamicListenerRegistry.class).asEagerSingleton();
 
 		// Provider system
 		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();

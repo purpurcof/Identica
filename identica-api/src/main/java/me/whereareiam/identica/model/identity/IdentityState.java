@@ -33,7 +33,6 @@ public class IdentityState {
 	 *
 	 * @param username username observed during profile rewriting
 	 * @param ip ip address observed during profile rewriting
-	 * @param profileUniqueId profile UUID reported by the platform
 	 * @param providerId provider id reported by the platform
 	 * @param providerSubject provider subject reported by the platform
 	 * @param expiresAt expiration timestamp in millis
@@ -41,7 +40,6 @@ public class IdentityState {
 	public record ReservedSnapshot(
 			@Nullable String username,
 			@Nullable String ip,
-			@Nullable String profileUniqueId,
 			@Nullable String providerId,
 			@Nullable String providerSubject,
 			long expiresAt
@@ -227,18 +225,6 @@ public class IdentityState {
 	}
 
 	/**
-	 * Returns the profile UUID captured during profile rewriting, if available.
-	 *
-	 * @return profile UUID or {@code null}
-	 */
-	public @Nullable String getProfileUniqueId() {
-		if (snapshot instanceof ReservedSnapshot reserved)
-			return reserved.profileUniqueId();
-
-		return null;
-	}
-
-	/**
 	 * Returns {@code true} when the state is in online phase.
 	 *
 	 * @return {@code true} when online identity is present
@@ -275,7 +261,6 @@ public class IdentityState {
 		this.snapshot = new ReservedSnapshot(
 				username,
 				ip,
-				request.getProfileUniqueId(),
 				request.getProviderId(),
 				request.getProviderSubject(),
 				expiresAt

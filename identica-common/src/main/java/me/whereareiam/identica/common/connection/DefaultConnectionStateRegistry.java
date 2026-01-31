@@ -7,18 +7,19 @@ import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.cache.codec.type.JsonCodec;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
+import me.whereareiam.identica.connection.ConnectionExtensions;
+import me.whereareiam.identica.connection.ConnectionStateRegistry;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.RoutingTarget;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.auth.ConnectionInfo;
 import me.whereareiam.identica.model.auth.StepResult;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.connection.ConnectionState;
 import me.whereareiam.identica.model.connection.FlowState;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.registry.ConnectionStateRegistry;
 import me.whereareiam.identica.stage.PendingStage;
 import me.whereareiam.identica.stage.StepStage;
 import me.whereareiam.identica.stage.StepStageRegistry;
@@ -37,6 +38,7 @@ public class DefaultConnectionStateRegistry implements ConnectionStateRegistry {
 	private final Provider<Settings> settingsProvider;
 	private final StepStageRegistry stageRegistry;
 	private final ProviderManager providerManager;
+	private final ConnectionExtensions connectionExtensions;
 
 	@Inject
 	public DefaultConnectionStateRegistry(
@@ -44,12 +46,14 @@ public class DefaultConnectionStateRegistry implements ConnectionStateRegistry {
 			Provider<Settings> settingsProvider,
 			Provider<Replication> replicationProvider,
 			StepStageRegistry stageRegistry,
-			ProviderManager providerManager
+			ProviderManager providerManager,
+			ConnectionExtensions connectionExtensions
 	) {
 		this.pendingCache = cacheService.synchronizedCache(resolveNamespace(replicationProvider), JsonCodec.of(ConnectionStateSnapshot.class));
 		this.settingsProvider = settingsProvider;
 		this.stageRegistry = stageRegistry;
 		this.providerManager = providerManager;
+		this.connectionExtensions = connectionExtensions;
 	}
 
 	@Override
@@ -63,13 +67,17 @@ public class DefaultConnectionStateRegistry implements ConnectionStateRegistry {
 	}
 
 	@Override
-	public @NotNull Optional<FlowState> consumePending(@NotNull UUID connectionUniqueId) {
-		String key = connectionUniqueId.toString();
-		ConnectionStateSnapshot snapshot = pendingCache.get(key).join().orElse(null);
-		if (snapshot == null) return Optional.empty();
+	public @NotNull Optional<FlowState> consumePending(@NotNull ResumeRequest request) {
+		UUID connectionUniqueId = request.getConnectionUniqueId();
+		if (connectionUniqueId != null) {
+			Optional<FlowState> byId = consumePendingByConnectionId(connectionUniqueId);
+			if (byId.isPresent()) return byId;
+		}
 
-		pendingCache.invalidate(key).join();
-		return Optional.ofNullable(toFlowState(snapshot));
+		String username = request.getUsername();
+		if (username == null || username.isBlank()) return Optional.empty();
+
+		return consumePendingByResumeKey(username);
 	}
 
 	@Override
@@ -90,22 +98,39 @@ public class DefaultConnectionStateRegistry implements ConnectionStateRegistry {
 
 	@Override
 	public boolean clear(@NotNull UUID connectionUniqueId) {
-		return states.remove(connectionUniqueId) != null;
+		boolean removed = states.remove(connectionUniqueId) != null;
+		if (removed)
+			connectionExtensions.clear(connectionUniqueId);
+		return removed;
 	}
 
 	@Override
-	public boolean hasPending(@NotNull UUID connectionUniqueId) {
-		boolean local = find(connectionUniqueId)
-				.flatMap(ConnectionState::peekFlowState)
-				.isPresent();
-		if (local) return true;
+	public boolean hasPending(@NotNull ResumeRequest request) {
+		UUID connectionUniqueId = request.getConnectionUniqueId();
+		if (connectionUniqueId != null) {
+			boolean local = find(connectionUniqueId)
+					.flatMap(ConnectionState::peekFlowState)
+					.isPresent();
+			if (local) return true;
 
-		return pendingCache.get(connectionUniqueId.toString()).join().isPresent();
+			if (pendingCache.get(connectionUniqueId.toString()).join().isPresent())
+				return true;
+		}
+
+		String username = request.getUsername();
+		if (username == null || username.isBlank()) return false;
+
+		return pendingCache.get(normalizeResumeKey(username)).join().isPresent();
 	}
 
 	@Override
 	public void clearPending(@NotNull UUID connectionUniqueId) {
 		pendingCache.invalidate(connectionUniqueId.toString()).join();
+		find(connectionUniqueId)
+				.flatMap(ConnectionState::peekContext)
+				.map(AuthContext::getUsername)
+				.map(this::normalizeResumeKey)
+				.ifPresent(key -> pendingCache.invalidate(key).join());
 	}
 
 	@Override
@@ -151,6 +176,9 @@ public class DefaultConnectionStateRegistry implements ConnectionStateRegistry {
 
 		long ttlMs = resolvePendingTtlMillis();
 		pendingCache.put(connectionId.toString(), snapshot, ttlMs).join();
+		String resumeKey = resolveResumeKey(context);
+		if (resumeKey != null)
+			pendingCache.put(resumeKey, snapshot, ttlMs).join();
 	}
 
 	private ConnectionStateSnapshot.@NotNull ContextData toContextData(@NotNull AuthContext context) {
@@ -158,7 +186,6 @@ public class DefaultConnectionStateRegistry implements ConnectionStateRegistry {
 		data.setIdenticaUniqueId(context.getIdenticaUniqueId());
 		data.setUsername(context.getUsername());
 		data.setIp(context.getIp());
-		data.setOnlineMode(context.isOnlineMode());
 		data.setIntendedServer(context.getIntendedServer());
 
 		AuthContext.Provider provider = context.getProvider();
@@ -222,18 +249,14 @@ public class DefaultConnectionStateRegistry implements ConnectionStateRegistry {
 		ConnectionStateSnapshot.PendingStageData pendingData = snapshot.getPendingStage();
 		if (contextData.getUsername() == null || contextData.getUsername().isBlank()) return null;
 
-		OfflineIdentity identity = new OfflineIdentity(
+		ConnectionIdentity identity = new ConnectionIdentity(
 				contextData.getIdenticaUniqueId(),
 				contextData.getUsername(),
 				contextData.getIp()
 		);
-		ConnectionInfo info = ConnectionInfo.builder()
-				.identity(identity)
-				.onlineMode(contextData.isOnlineMode())
-				.build();
 		AuthContext context = AuthContext.builder()
 				.connectionUniqueId(snapshot.getConnectionUniqueId())
-				.connectionInfo(info)
+				.identity(identity)
 				.intendedServer(contextData.getIntendedServer())
 				.build();
 
@@ -320,6 +343,49 @@ public class DefaultConnectionStateRegistry implements ConnectionStateRegistry {
 		}
 
 		return null;
+	}
+
+	private @NotNull Optional<FlowState> consumePendingByConnectionId(@NotNull UUID connectionUniqueId) {
+		String key = connectionUniqueId.toString();
+		ConnectionStateSnapshot snapshot = pendingCache.get(key).join().orElse(null);
+		if (snapshot == null) return Optional.empty();
+
+		pendingCache.invalidate(key).join();
+		String resumeKey = resolveResumeKey(snapshot.getContext());
+		if (resumeKey != null)
+			pendingCache.invalidate(resumeKey).join();
+
+		return Optional.ofNullable(toFlowState(snapshot));
+	}
+
+	private @NotNull Optional<FlowState> consumePendingByResumeKey(@NotNull String resumeKey) {
+		String key = normalizeResumeKey(resumeKey);
+		ConnectionStateSnapshot snapshot = pendingCache.get(key).join().orElse(null);
+		if (snapshot == null) return Optional.empty();
+
+		pendingCache.invalidate(key).join();
+		pendingCache.invalidate(snapshot.getConnectionUniqueId().toString()).join();
+
+		return Optional.ofNullable(toFlowState(snapshot));
+	}
+
+	private @Nullable String resolveResumeKey(@Nullable AuthContext context) {
+		if (context == null) return null;
+		return resolveResumeKey(context.getUsername());
+	}
+
+	private @Nullable String resolveResumeKey(@Nullable ConnectionStateSnapshot.ContextData context) {
+		if (context == null) return null;
+		return resolveResumeKey(context.getUsername());
+	}
+
+	private @Nullable String resolveResumeKey(@Nullable String username) {
+		if (username == null || username.isBlank()) return null;
+		return normalizeResumeKey(username);
+	}
+
+	private String normalizeResumeKey(@NotNull String value) {
+		return value.trim().toLowerCase(Locale.ROOT);
 	}
 
 	private long resolvePendingTtlMillis() {

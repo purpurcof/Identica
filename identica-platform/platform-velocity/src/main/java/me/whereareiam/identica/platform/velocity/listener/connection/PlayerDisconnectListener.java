@@ -5,9 +5,9 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.connection.ConnectionStateRegistry;
+import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.listener.DynamicListener;
-import me.whereareiam.identica.registry.ConnectionStateRegistry;
-import me.whereareiam.identica.registry.IdentityRegistry;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)

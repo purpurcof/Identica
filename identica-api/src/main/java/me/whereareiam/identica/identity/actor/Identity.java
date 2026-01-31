@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Platform-specific modules extend this with concrete implementations.
  */
 @SuppressWarnings("unused")
-public abstract class Identity extends OfflineIdentity implements Actor {
+public abstract class Identity extends ConnectionIdentity implements Actor {
 	@NotNull
 	protected final UUID uniqueId;
 	private final @NotNull Map<String, Object> metadata = new ConcurrentHashMap<>();

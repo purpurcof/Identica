@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.auth.handshake;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.cache.codec.type.JsonCodec;
@@ -47,7 +47,7 @@ public class HandshakeInstructionRegistry {
 	}
 
 	public void request(String username, HandshakeMode mode) {
-		put(HandshakeInstruction.create(new OfflineIdentity(username, null), mode, getDefaultTtlMillis()));
+		put(HandshakeInstruction.create(new ConnectionIdentity(username, null), mode, getDefaultTtlMillis()));
 	}
 
 	public Optional<HandshakeInstruction> peek(String username) {

@@ -3,6 +3,7 @@ package me.whereareiam.identica.common.routing;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.IdenticaKeys;
+import me.whereareiam.identica.connection.ConnectionStateRegistry;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.auth.AuthPendingClearedEvent;
@@ -14,7 +15,6 @@ import me.whereareiam.identica.model.RoutingTarget;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.connection.ConnectionState;
-import me.whereareiam.identica.registry.ConnectionStateRegistry;
 import me.whereareiam.identica.routing.RoutingDecision;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.routing.RoutingTargetApplier;
@@ -70,12 +70,10 @@ public class RoutingLifecycle implements EventListener {
 
 	@IdenticEvent
 	public void onStepFinished(StepFinishedEvent event) {
-		if (event == null || event.getContext() == null || event.getResult() == null)
-			return;
+		if (event == null) return;
 
 		StepResult result = event.getResult();
-		if (result.getStatus() == null)
-			return;
+		if (result.getStatus() == null) return;
 
 		if (result.getStatus() == StepResult.StepStatus.WAITING)
 			return;

@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.cache.codec.type.JsonCodec;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
@@ -46,7 +46,7 @@ public class AccountClearSynchronizationListener implements EventListener {
 		String channel = getAccountUpdatesChannel();
 		if (channel.isBlank()) return;
 
-		OfflineIdentity identity = event.getIdentity();
+		ConnectionIdentity identity = event.getIdentity();
 		String serverId = getServerId();
 		UUID uniqueId = identity.getUniqueId();
 		String username = identity.getUsername();
@@ -74,7 +74,7 @@ public class AccountClearSynchronizationListener implements EventListener {
 				return;
 
 		if (message.username == null || message.username.isBlank()) return;
-		OfflineIdentity identity = new OfflineIdentity(message.uniqueId, message.username, null);
+		ConnectionIdentity identity = new ConnectionIdentity(message.uniqueId, message.username, null);
 			eventManager.call(new AccountClearEvent(identity, message.scope, true));
 		});
 	}

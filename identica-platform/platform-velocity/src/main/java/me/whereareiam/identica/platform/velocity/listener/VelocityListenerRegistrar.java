@@ -15,6 +15,7 @@ import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import me.whereareiam.identica.common.CommonListenerRegistrar;
 import me.whereareiam.identica.listener.DynamicListener;
+import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.platform.velocity.VelocityIdentica;
@@ -32,22 +33,27 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 	private final Injector injector;
 	private final VelocityIdentica plugin;
 	private final EventManager eventManager;
+	private final DynamicListenerRegistry listenerRegistry;
 
 	@Inject
 	public VelocityListenerRegistrar(
 			Injector injector,
 			Provider<Settings> settingsProvider,
 			VelocityIdentica plugin,
-			EventManager eventManager
+			EventManager eventManager,
+			DynamicListenerRegistry listenerRegistry
 	) {
 		super(settingsProvider);
 		this.injector = injector;
 		this.plugin = plugin;
 		this.eventManager = eventManager;
+		this.listenerRegistry = listenerRegistry;
 	}
 
 	@Override
 	public void registerListeners() {
+		listenerRegistry.attachRegistrar(this);
+
 		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(PreLoginListener.class));
 		registerListener(GameProfileRequestEvent.class, injector.getInstance(GameProfileRequestListener.class));
 		registerListener(LoginEvent.class, injector.getInstance(LoginListener.class));

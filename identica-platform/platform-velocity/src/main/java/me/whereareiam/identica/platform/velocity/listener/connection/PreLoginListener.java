@@ -9,7 +9,7 @@ import com.velocitypowered.api.event.connection.PreLoginEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
@@ -28,7 +28,7 @@ public class PreLoginListener implements AwaitingEventExecutor<PreLoginEvent> {
 		if (!event.getResult().isAllowed()) return null;
 
 		CompletableFuture<?> future = authenticationCoordinator
-				.handshake(new HandshakeRequest(new OfflineIdentity(event.getUsername(), null)))
+				.handshake(new HandshakeRequest(new ConnectionIdentity(event.getUsername(), null)))
 				.whenComplete((decision, error) -> {
 					if (error != null) {
 						Logger.severe("Handshake failed", error);

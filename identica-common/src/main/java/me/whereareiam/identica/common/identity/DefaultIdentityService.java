@@ -11,9 +11,12 @@ import me.whereareiam.identica.database.ProviderProfilePersistenceService;
 import me.whereareiam.identica.database.UsernameHistoryPersistenceService;
 import me.whereareiam.identica.event.account.AccountPrepareEvent;
 import me.whereareiam.identica.event.identity.session.SessionClosedEvent;
-import me.whereareiam.identica.event.identity.session.SessionPrepareEvent;
 import me.whereareiam.identica.event.identity.session.SessionOpenedEvent;
-import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.event.identity.session.SessionPrepareEvent;
+import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.identity.ReservationCache;
+import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.UsernameHistoryEntry;
 import me.whereareiam.identica.model.account.Account;
@@ -25,21 +28,18 @@ import me.whereareiam.identica.model.identity.IdentityState;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.registry.IdentityRegistry;
-import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.identity.ReservationCache;
+import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.session.SessionService;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.identica.util.UniqueIdGenerator;
-import me.whereareiam.identica.identity.actor.Identity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.time.Duration;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)

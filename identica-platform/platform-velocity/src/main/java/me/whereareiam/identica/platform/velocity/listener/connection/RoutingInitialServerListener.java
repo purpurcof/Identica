@@ -6,12 +6,12 @@ import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.connection.ConnectionStateRegistry;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.routing.RoutingTargetMissingEvent;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.RoutingTarget;
 import me.whereareiam.identica.model.connection.ConnectionState;
-import me.whereareiam.identica.registry.ConnectionStateRegistry;
 import me.whereareiam.identica.type.RoutingTargetType;
 
 import java.util.Optional;

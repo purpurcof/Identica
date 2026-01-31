@@ -6,12 +6,12 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.connection.ConnectionStateRegistry;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.RoutingTarget;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.connection.ConnectionState;
-import me.whereareiam.identica.registry.ConnectionStateRegistry;
 import me.whereareiam.identica.routing.RoutingTargetApplier;
 import me.whereareiam.identica.type.RoutingTargetType;
 

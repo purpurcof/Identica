@@ -38,7 +38,6 @@ public class ConnectionStateSnapshot {
 		private @Nullable UUID identicaUniqueId;
 		private @Nullable String username;
 		private @Nullable String ip;
-		private boolean onlineMode;
 		private @Nullable String intendedServer;
 		private @Nullable ProviderData provider;
 	}

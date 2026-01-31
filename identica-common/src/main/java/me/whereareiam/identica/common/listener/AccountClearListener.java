@@ -4,8 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
 import me.whereareiam.identica.database.AccountPersistenceService;
@@ -14,8 +12,10 @@ import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.registry.IdentityRegistry;
 import me.whereareiam.identica.type.ClearScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,11 +54,11 @@ public class AccountClearListener implements EventListener {
 
 	@IdenticEvent
 	public void onClear(@NotNull AccountClearEvent event) {
-		OfflineIdentity offlineIdentity = event.getIdentity();
-		String username = offlineIdentity.getUsername();
+		ConnectionIdentity ConnectionIdentity = event.getIdentity();
+		String username = ConnectionIdentity.getUsername();
 		instructionStore.invalidate(username);
 
-		UUID identicaUniqueId = offlineIdentity.getUniqueId();
+		UUID identicaUniqueId = ConnectionIdentity.getUniqueId();
 		Optional<Identity> player = findPlayerIdentity(identicaUniqueId, username);
 		player.ifPresent(identity -> {
 			authenticationCoordinator.clearPending(identity.getUniqueId());

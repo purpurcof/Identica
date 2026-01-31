@@ -1,6 +1,5 @@
 package me.whereareiam.identica.common.auth;
 
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
 import me.whereareiam.identica.common.identity.DefaultIdentityService;
@@ -9,27 +8,27 @@ import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.ProviderProfilePersistenceService;
 import me.whereareiam.identica.database.UsernameHistoryPersistenceService;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.auth.ConnectionInfo;
-import me.whereareiam.identica.model.auth.AuthContext.Provider;
-import me.whereareiam.identica.model.auth.request.LoginRequest;
-import me.whereareiam.identica.model.auth.StepResult;
-import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.identity.ReservationCache;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.model.account.Account;
+import me.whereareiam.identica.model.auth.AuthContext;
+import me.whereareiam.identica.model.auth.AuthContext.Provider;
+import me.whereareiam.identica.model.auth.StepResult;
+import me.whereareiam.identica.model.auth.request.LoginRequest;
+import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
-import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.type.UsernameSource;
+import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.registry.Registry;
-import me.whereareiam.identica.registry.IdentityRegistry;
-import me.whereareiam.identica.util.EventUtil;
-import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.type.UsernameSource;
+import me.whereareiam.identica.util.EventUtil;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,12 +36,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultAuthenticationCoordinatorTest {
@@ -104,10 +99,7 @@ class DefaultAuthenticationCoordinatorTest {
 		);
 
 		LoginRequest request = LoginRequest.builder()
-				.connectionInfo(ConnectionInfo.builder()
-						.identity(new OfflineIdentity(identicaId, "Steve", "127.0.0.1"))
-						.onlineMode(true)
-						.build())
+				.identity(new ConnectionIdentity(identicaId, "Steve", "127.0.0.1"))
 				.connectionUniqueId(UUID.randomUUID())
 				.build();
 
@@ -179,10 +171,7 @@ class DefaultAuthenticationCoordinatorTest {
 		);
 
 		LoginRequest request = LoginRequest.builder()
-				.connectionInfo(ConnectionInfo.builder()
-						.identity(new OfflineIdentity(identicaId, "Steve", "127.0.0.1"))
-						.onlineMode(true)
-						.build())
+				.identity(new ConnectionIdentity(identicaId, "Steve", "127.0.0.1"))
 				.connectionUniqueId(UUID.randomUUID())
 				.build();
 

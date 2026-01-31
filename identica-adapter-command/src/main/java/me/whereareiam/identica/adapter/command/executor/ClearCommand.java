@@ -8,7 +8,7 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
@@ -102,7 +102,7 @@ public class ClearCommand {
 				sendMessage(sender, messages.getNotFound(), Map.of("target", pendingClear.target()));
 				return;
 			}
-			OfflineIdentity identity = new OfflineIdentity(
+			ConnectionIdentity identity = new ConnectionIdentity(
 					pendingClear.uniqueId(),
 					username,
 					null

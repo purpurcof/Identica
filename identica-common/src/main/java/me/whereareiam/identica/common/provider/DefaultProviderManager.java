@@ -9,10 +9,16 @@ import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.provider.profile.ProfileResolution;
+import me.whereareiam.identica.provider.profile.ProfileResolveContext;
+import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
+import me.whereareiam.identica.registry.ProfileSubjectResolverRegistry;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.type.provider.ProviderState;
+import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,6 +29,7 @@ public class DefaultProviderManager implements ProviderManager {
 	private final ProviderLifecycleController lifecycleController;
 	private final Provider<Providers> providersConfig;
 	private final ProviderResolverRegistry resolverRegistry;
+	private final ProfileSubjectResolverRegistry profileResolverRegistry;
 
 	private final List<InternalProvider> providers = new ArrayList<>();
 
@@ -32,12 +39,14 @@ public class DefaultProviderManager implements ProviderManager {
 			ProviderLifecycleController lifecycleController,
 			Provider<Providers> providersConfig,
 			ProviderResolverRegistry resolverRegistry,
+			ProfileSubjectResolverRegistry profileResolverRegistry,
 			ProviderPlatformResolver platformResolver
 	) {
 		this.discovery = discovery;
 		this.lifecycleController = lifecycleController;
 		this.providersConfig = providersConfig;
 		this.resolverRegistry = resolverRegistry;
+		this.profileResolverRegistry = profileResolverRegistry;
 
 		registerResolver(platformResolver);
 	}
@@ -70,6 +79,44 @@ public class DefaultProviderManager implements ProviderManager {
 	@Override
 	public List<InternalProvider> getProviders() {
 		return Collections.unmodifiableList(providers);
+	}
+
+	@Override
+	public @Nullable ProfileResolution resolveProfile(@NotNull ProfileResolveContext context) {
+		if (providers.isEmpty()) return null;
+
+		List<InternalProvider> sorted = new ArrayList<>(providers);
+		sorted.sort(Comparator.comparingInt(InternalProvider::getPriority)
+				.reversed()
+				.thenComparing(left -> left.getDescriptor().getId(), String.CASE_INSENSITIVE_ORDER));
+
+		for (InternalProvider provider : sorted) {
+			if (provider == null || provider.getState() != ProviderState.ENABLED) continue;
+			if (provider.getDescriptor() == null) continue;
+
+			List<ProfileSubjectResolver> resolvers = profileResolverRegistry.getResolvers(provider.getDescriptor().getId());
+			if (resolvers.isEmpty()) continue;
+
+			List<ProfileSubjectResolver> ordered = new ArrayList<>(resolvers);
+			ordered.sort(Comparator.comparingInt(ProfileSubjectResolver::priority).reversed());
+
+			for (ProfileSubjectResolver resolver : ordered) {
+				if (resolver == null || !resolver.supports(context))
+					continue;
+
+				ProfileResolution resolution = resolver.resolve(context);
+				if (resolution == null)
+					continue;
+
+				String providerId = resolution.getProviderId();
+				String providerSubject = resolution.getProviderSubject();
+				if (providerId.isBlank() || providerSubject.isBlank()) continue;
+
+				return resolution;
+			}
+		}
+
+		return resolveOfflineProfileFallback(context);
 	}
 
 	@Override
@@ -160,5 +207,24 @@ public class DefaultProviderManager implements ProviderManager {
 		}
 
 		return true;
+	}
+
+	private @Nullable ProfileResolution resolveOfflineProfileFallback(@NotNull ProfileResolveContext context) {
+		InternalProvider provider = findProvider(ProviderCapability.OFFLINE_MODE);
+		if (provider == null || provider.getDescriptor() == null)
+			return null;
+
+		String username = context.getUsername();
+		if (username == null || username.isBlank())
+			return null;
+
+		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
+		if (offlineUuid == null)
+			return null;
+
+		return ProfileResolution.builder()
+				.providerId(provider.getDescriptor().getId())
+				.providerSubject(offlineUuid.toString())
+				.build();
 	}
 }

@@ -1,18 +1,19 @@
-package me.whereareiam.identica.registry;
+package me.whereareiam.identica.connection;
 
-import me.whereareiam.identica.model.connection.ConnectionState;
-import me.whereareiam.identica.model.connection.FlowState;
+import me.whereareiam.identica.model.RoutingTarget;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
-import me.whereareiam.identica.model.RoutingTarget;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.connection.ConnectionState;
+import me.whereareiam.identica.model.connection.FlowState;
 import me.whereareiam.identica.stage.PendingStage;
 import me.whereareiam.identica.stage.StepStage;
 import me.whereareiam.identica.type.step.AuthFlowType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,12 +39,12 @@ public interface ConnectionStateRegistry {
 	@NotNull Optional<ConnectionState> find(@NotNull UUID connectionUniqueId);
 
 	/**
-	 * Restores a pending flow state and clears its snapshot.
+	 * Restores a pending flow state using the provided resume request and clears its snapshot.
 	 *
-	 * @param connectionUniqueId connection unique id
+	 * @param request resume request details
 	 * @return optional flow state
 	 */
-	@NotNull Optional<FlowState> consumePending(@NotNull UUID connectionUniqueId);
+	@NotNull Optional<FlowState> consumePending(@NotNull ResumeRequest request);
 
 	/**
 	 * Returns the routing target for this connection when available.
@@ -69,12 +70,12 @@ public interface ConnectionStateRegistry {
 	boolean clear(@NotNull UUID connectionUniqueId);
 
 	/**
-	 * Returns whether this connection has a pending authentication flow.
+	 * Returns whether the resume request matches a pending authentication flow.
 	 *
-	 * @param connectionUniqueId connection unique id
+	 * @param request resume request details
 	 * @return {@code true} when a pending flow is available
 	 */
-	boolean hasPending(@NotNull UUID connectionUniqueId);
+	boolean hasPending(@NotNull ResumeRequest request);
 
 	/**
 	 * Clears any stored pending flow for this connection.

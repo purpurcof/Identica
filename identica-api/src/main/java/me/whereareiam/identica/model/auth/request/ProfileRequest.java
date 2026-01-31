@@ -3,7 +3,7 @@ package me.whereareiam.identica.model.auth.request;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-import me.whereareiam.identica.model.auth.ConnectionInfo;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,10 +17,9 @@ import org.jetbrains.annotations.Nullable;
 @ToString
 @Builder
 public class ProfileRequest {
-	private final @NotNull ConnectionInfo connectionInfo;
+	private final @NotNull ConnectionIdentity identity;
 	private final @NotNull String providerId;
 	private final @NotNull String providerSubject;
-	private final @Nullable String profileUniqueId;
 
 	/**
 	 * Returns the provider id used for UUID rewriting.
@@ -46,7 +45,7 @@ public class ProfileRequest {
 	 * @return username or {@code null}
 	 */
 	public @Nullable String getUsername() {
-		return connectionInfo.getUsername();
+		return identity.getUsername();
 	}
 
 	/**
@@ -55,15 +54,7 @@ public class ProfileRequest {
 	 * @return IP address or {@code null}
 	 */
 	public @Nullable String getIp() {
-		return connectionInfo.getIp();
+		return identity.getIp();
 	}
 
-	/**
-	 * Returns whether the connection is in online mode.
-	 *
-	 * @return {@code true} when online mode is enabled
-	 */
-	public boolean isOnlineMode() {
-		return connectionInfo.isOnlineMode();
-	}
 }

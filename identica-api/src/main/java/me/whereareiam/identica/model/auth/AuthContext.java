@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.Key;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Authentication context containing connection info and mutable state.
+ * Authentication context containing connection identity and mutable state.
  */
 @Getter
 @AllArgsConstructor
@@ -25,7 +25,7 @@ import java.util.UUID;
 @SuppressWarnings("unused")
 public class AuthContext {
 	private final @Nullable UUID connectionUniqueId;
-	private final @NotNull ConnectionInfo connectionInfo;
+	private final @NotNull ConnectionIdentity identity;
 	private final @Nullable String intendedServer;
 
 	@Setter
@@ -35,21 +35,12 @@ public class AuthContext {
 	private final @NotNull Map<Key<?>, Object> data = new HashMap<>();
 
 	/**
-	 * Returns the offline identity attached to this connection, if any.
+	 * Returns the connection identity attached to this context.
 	 *
-	 * @return offline identity or {@code null}
+	 * @return connection identity
 	 */
-	public @Nullable OfflineIdentity getIdentity() {
-		return connectionInfo.getIdentity();
-	}
-
-	/**
-	 * Returns whether the connection is in online mode.
-	 *
-	 * @return {@code true} when online mode is enabled
-	 */
-	public boolean isOnlineMode() {
-		return connectionInfo.isOnlineMode();
+	public @NotNull ConnectionIdentity getIdentity() {
+		return identity;
 	}
 
 	/**
@@ -58,7 +49,7 @@ public class AuthContext {
 	 * @return unique id or {@code null}
 	 */
 	public @Nullable UUID getIdenticaUniqueId() {
-		return connectionInfo.getIdenticaUniqueId();
+		return identity.getUniqueId();
 	}
 
 	/**
@@ -67,7 +58,7 @@ public class AuthContext {
 	 * @param identicaUniqueId unique id to assign
 	 */
 	public void setIdenticaUniqueId(@Nullable UUID identicaUniqueId) {
-		connectionInfo.setIdenticaUniqueId(identicaUniqueId);
+		identity.setUniqueId(identicaUniqueId);
 	}
 
 	/**
@@ -76,7 +67,7 @@ public class AuthContext {
 	 * @return username or {@code null}
 	 */
 	public @Nullable String getUsername() {
-		return connectionInfo.getUsername();
+		return identity.getUsername();
 	}
 
 	/**
@@ -85,7 +76,7 @@ public class AuthContext {
 	 * @return IP address or {@code null}
 	 */
 	public @Nullable String getIp() {
-		return connectionInfo.getIp();
+		return identity.getIp();
 	}
 
 	/**

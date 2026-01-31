@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import me.whereareiam.identica.common.provider.DefaultProviderManager;
 import me.whereareiam.identica.common.provider.ProviderDiscovery;
 import me.whereareiam.identica.common.provider.ProviderLifecycleController;
+import me.whereareiam.identica.common.provider.profile.DefaultProfileSubjectResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.model.conflict.ConflictContext;
@@ -211,6 +212,7 @@ class ProviderManagerIntegrationTest {
 				lifecycleController,
 				Providers::new,
 				resolverRegistry,
+				new DefaultProfileSubjectResolverRegistry(),
 				new ProviderPlatformResolver()
 		);
 

@@ -12,13 +12,14 @@ import me.whereareiam.identica.common.auth.step.StepExecutor;
 import me.whereareiam.identica.common.cache.DefaultCacheService;
 import me.whereareiam.identica.common.connection.DefaultConnectionStateRegistry;
 import me.whereareiam.identica.common.event.EventController;
+import me.whereareiam.identica.common.extension.DefaultConnectionExtensions;
 import me.whereareiam.identica.common.session.DefaultSessionService;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.auth.ConnectionInfo;
 import me.whereareiam.identica.model.auth.StepResult;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Replication;
@@ -61,10 +62,10 @@ class SynchronizationIntegrationTest {
 		StepResult initial = nodeOne.coordinator().authenticate(context).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.WAITING, initial.getStatus());
 
-		StepResult waiting = nodeOne.coordinator().resume(connectionId, null).get(1, TimeUnit.SECONDS);
+		StepResult waiting = nodeOne.coordinator().resume(resumeRequest(connectionId), null).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.WAITING, waiting.getStatus());
 
-		StepResult completed = nodeTwo.coordinator().resume(connectionId, null).get(1, TimeUnit.SECONDS);
+		StepResult completed = nodeTwo.coordinator().resume(resumeRequest(connectionId), null).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.COMPLETE, completed.getStatus());
 	}
 
@@ -80,10 +81,10 @@ class SynchronizationIntegrationTest {
 		StepResult initial = nodeOne.coordinator().authenticate(context).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.WAITING, initial.getStatus());
 
-		StepResult waiting = nodeOne.coordinator().resume(connectionId, null).get(1, TimeUnit.SECONDS);
+		StepResult waiting = nodeOne.coordinator().resume(resumeRequest(connectionId), null).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.WAITING, waiting.getStatus());
 
-		StepResult resumed = nodeTwo.coordinator().resume(connectionId, null).get(1, TimeUnit.SECONDS);
+		StepResult resumed = nodeTwo.coordinator().resume(resumeRequest(connectionId), null).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.NO_PENDING, resumed.getStatus());
 	}
 
@@ -143,12 +144,12 @@ class SynchronizationIntegrationTest {
 		StepResult initial = nodeOne.coordinator().authenticate(context).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.WAITING, initial.getStatus());
 
-		StepResult waiting = nodeOne.coordinator().resume(connectionId, null).get(1, TimeUnit.SECONDS);
+		StepResult waiting = nodeOne.coordinator().resume(resumeRequest(connectionId), null).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.WAITING, waiting.getStatus());
 
 		Thread.sleep(200);
 
-		StepResult expired = nodeTwo.coordinator().resume(connectionId, null).get(1, TimeUnit.SECONDS);
+		StepResult expired = nodeTwo.coordinator().resume(resumeRequest(connectionId), null).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.NO_PENDING, expired.getStatus());
 	}
 
@@ -164,25 +165,27 @@ class SynchronizationIntegrationTest {
 		StepResult initial = nodeOne.coordinator().authenticate(context).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.WAITING, initial.getStatus());
 
-		StepResult waiting = nodeOne.coordinator().resume(connectionId, null).get(1, TimeUnit.SECONDS);
+		StepResult waiting = nodeOne.coordinator().resume(resumeRequest(connectionId), null).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.WAITING, waiting.getStatus());
 
 		assertTrue(nodeOne.coordinator().clearPending(connectionId));
 
-		StepResult cleared = nodeTwo.coordinator().resume(connectionId, null).get(1, TimeUnit.SECONDS);
+		StepResult cleared = nodeTwo.coordinator().resume(resumeRequest(connectionId), null).get(1, TimeUnit.SECONDS);
 		assertEquals(StepResult.StepStatus.NO_PENDING, cleared.getStatus());
 	}
 
 	private static AuthContext authContext(UUID connectionUniqueId, String username) {
-		OfflineIdentity identity = new OfflineIdentity(username, "127.0.0.1");
-		ConnectionInfo info = ConnectionInfo.builder()
-				.identity(identity)
-				.onlineMode(true)
-				.build();
+		ConnectionIdentity identity = new ConnectionIdentity(username, "127.0.0.1");
 		return AuthContext.builder()
 				.connectionUniqueId(connectionUniqueId)
-				.connectionInfo(info)
+				.identity(identity)
 				.intendedServer("lobby")
+				.build();
+	}
+
+	private static ResumeRequest resumeRequest(UUID connectionUniqueId) {
+		return ResumeRequest.builder()
+				.connectionUniqueId(connectionUniqueId)
 				.build();
 	}
 
@@ -225,7 +228,8 @@ class SynchronizationIntegrationTest {
 					settingsProvider,
 					replicationProvider,
 					stageRegistry,
-					providerManager
+					providerManager,
+					new DefaultConnectionExtensions()
 			);
 
 			FlowCoordinator coordinator = new FlowCoordinator(

@@ -17,6 +17,7 @@ public class PremiumMessages {
 	@Setter
 	@ToString
 	public static class Verification {
+		private List<String> rejoin;
 		private List<String> invalidSession;
 	}
 

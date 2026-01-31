@@ -27,3 +27,5 @@ include("identica-provider:provider-premium")
 
 include("identica-provider:provider-premium:premium")
 include("identica-provider:provider-premium:premium-api")
+include("identica-provider:provider-premium:premium-platform")
+include("identica-provider:provider-premium:premium-platform:platform-velocity")

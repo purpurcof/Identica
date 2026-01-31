@@ -3,27 +3,24 @@ package me.whereareiam.identica.common.registry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.event.identity.IdentityReservedEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
 import me.whereareiam.identica.event.identity.IdentityDetachedEvent;
+import me.whereareiam.identica.event.identity.IdentityReservedEvent;
+import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.identity.registry.IdentityExtensions;
+import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.identity.IdentityState;
-import me.whereareiam.identica.model.identity.IdentityState.OnlineSnapshot;
-import me.whereareiam.identica.model.identity.IdentityState.ReservedSnapshot;
-import me.whereareiam.identica.model.identity.IdentityState.Phase;
 import me.whereareiam.identica.model.identity.IdentityState.AuthenticatedSnapshot;
-import me.whereareiam.identica.registry.IdentityRegistry;
+import me.whereareiam.identica.model.identity.IdentityState.OnlineSnapshot;
+import me.whereareiam.identica.model.identity.IdentityState.Phase;
+import me.whereareiam.identica.model.identity.IdentityState.ReservedSnapshot;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -31,6 +28,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultIdentityRegistry implements IdentityRegistry {
 	private final Map<UUID, IdentityState> states = new ConcurrentHashMap<>();
+	private final IdentityExtensions identityExtensions;
 
 	@Override
 	public void registerReserved(@NotNull UUID uniqueId, @NotNull ProfileRequest request, long expiresAt) {
@@ -41,7 +39,6 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 				ReservedSnapshot snapshot = new ReservedSnapshot(
 						request.getUsername(),
 						request.getIp(),
-						request.getProfileUniqueId(),
 						request.getProviderId(),
 						request.getProviderSubject(),
 						expiresAt
@@ -71,13 +68,20 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 	@Override
 	public void detachAuthenticated(@NotNull UUID uniqueId) {
 		states.computeIfPresent(uniqueId, (ignored, state) -> {
-			if (state.getPhase() == Phase.AUTHENTICATED)
+			if (state.getPhase() == Phase.AUTHENTICATED) {
+				identityExtensions.clear(uniqueId);
 				return null;
+			}
 
 			if (state.getPhase() == Phase.ONLINE)
 				state.clearSession();
 
-			return shouldRemoveState(state) ? null : state;
+			if (shouldRemoveState(state)) {
+				identityExtensions.clear(uniqueId);
+				return null;
+			}
+
+			return state;
 		});
 	}
 
@@ -88,6 +92,7 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 		if (state == null) return Optional.empty();
 		if (state.isExpired(System.currentTimeMillis())) {
 			states.remove(uniqueId, state);
+			identityExtensions.clear(uniqueId);
 			return Optional.empty();
 		}
 
@@ -105,7 +110,8 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 
 		found.ifPresent(state -> {
 			if (state.isExpired(System.currentTimeMillis()))
-				states.remove(state.getUniqueId(), state);
+				if (states.remove(state.getUniqueId(), state))
+					identityExtensions.clear(state.getUniqueId());
 		});
 
 		return found.filter(state -> !state.isExpired(System.currentTimeMillis()));
@@ -144,8 +150,15 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 	public void removePlayer(@NotNull UUID uniqueId) {
 		states.computeIfPresent(uniqueId, (_, state) -> {
 			boolean remove = state.transitionFromOnline();
-			if (remove) return null;
-			return shouldRemoveState(state) ? null : state;
+			if (remove) {
+				identityExtensions.clear(uniqueId);
+				return null;
+			}
+			if (shouldRemoveState(state)) {
+				identityExtensions.clear(uniqueId);
+				return null;
+			}
+			return state;
 		});
 		EventUtil.callEvent(new IdentityDetachedEvent(uniqueId));
 	}
@@ -177,7 +190,12 @@ public class DefaultIdentityRegistry implements IdentityRegistry {
 
 	private void cleanupExpired() {
 		long now = System.currentTimeMillis();
-		states.entrySet().removeIf(entry -> entry.getValue().isExpired(now));
+		states.entrySet().removeIf(entry -> {
+			boolean expired = entry.getValue().isExpired(now);
+			if (expired)
+				identityExtensions.clear(entry.getKey());
+			return expired;
+		});
 	}
 
 	private boolean shouldRemoveState(IdentityState state) {

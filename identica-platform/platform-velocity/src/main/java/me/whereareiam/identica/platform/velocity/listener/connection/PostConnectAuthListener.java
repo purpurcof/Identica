@@ -8,11 +8,13 @@ import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.auth.AuthDecision;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
-import me.whereareiam.identica.registry.IdentityRegistry;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -30,7 +32,18 @@ public class PostConnectAuthListener implements DynamicListener<ServerConnectedE
 			return;
 
 		Player player = event.getPlayer();
-		AuthDecision decision = authenticationCoordinator.resume(player.getUniqueId())
+		String ip = player.getRemoteAddress().getHostString();
+		String intendedServer = player.getCurrentServer()
+				.map(server -> server.getServerInfo().getName())
+				.orElse(null);
+
+		ResumeRequest request = ResumeRequest.builder()
+				.connectionUniqueId(player.getUniqueId())
+				.identity(new ConnectionIdentity(player.getUniqueId(), player.getUsername(), ip))
+				.intendedServer(intendedServer)
+				.build();
+
+		AuthDecision decision = authenticationCoordinator.resume(request, null)
 				.toCompletableFuture()
 				.join();
 
@@ -62,4 +75,3 @@ public class PostConnectAuthListener implements DynamicListener<ServerConnectedE
 		return String.join("\n", messagesProvider.get().getAuthentication().getAuthenticationFailed());
 	}
 }
-

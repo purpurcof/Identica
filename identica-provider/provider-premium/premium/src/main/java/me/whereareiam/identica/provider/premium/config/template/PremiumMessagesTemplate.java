@@ -11,6 +11,16 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 	@Override
 	public PremiumMessages supply(PremiumMessages messages) {
 		PremiumMessages.Verification verification = new PremiumMessages.Verification();
+		verification.setRejoin(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Please rejoin to verify your premium account.",
+				"",
+				"<gray>If you don't have a premium account, you will be",
+				"<gray>forwarded to a fallback provider on your second attempt.",
+				"",
+				"<gray>discord.arcadeya.com"
+		));
 		verification.setInvalidSession(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",

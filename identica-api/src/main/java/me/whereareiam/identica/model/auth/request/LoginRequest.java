@@ -3,8 +3,7 @@ package me.whereareiam.identica.model.auth.request;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
-import me.whereareiam.identica.model.auth.ConnectionInfo;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,24 +18,33 @@ import java.util.UUID;
 @SuppressWarnings("unused")
 public class LoginRequest {
 	private final @Nullable UUID connectionUniqueId;
-	private final @NotNull ConnectionInfo connectionInfo;
+	private final @NotNull ConnectionIdentity identity;
 	private final @Nullable String intendedServer;
 
 	/**
-	 * Returns the offline identity for this login request.
+	 * Returns the connection identity for this login request.
 	 *
-	 * @return offline identity or {@code null}
+	 * @return connection identity
 	 */
-	public @Nullable OfflineIdentity getIdentity() {
-		return connectionInfo.getIdentity();
+	public @NotNull ConnectionIdentity getIdentity() {
+		return identity;
 	}
 
 	/**
-	 * Returns whether the connection is in online mode.
+	 * Returns the username from the connection identity.
 	 *
-	 * @return {@code true} when online mode is enabled
+	 * @return username or {@code null}
 	 */
-	public boolean isOnlineMode() {
-		return connectionInfo.isOnlineMode();
+	public @Nullable String getUsername() {
+		return identity.getUsername();
+	}
+
+	/**
+	 * Returns the IP address from the connection identity.
+	 *
+	 * @return IP address or {@code null}
+	 */
+	public @Nullable String getIp() {
+		return identity.getIp();
 	}
 }

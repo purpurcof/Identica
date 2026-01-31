@@ -1,4 +1,4 @@
-package me.whereareiam.identica.registry;
+package me.whereareiam.identica.identity.registry;
 
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;

@@ -10,6 +10,7 @@ import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.AuthDecision;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.keystone.Actor;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +25,11 @@ public class EnrollCommand {
 		if (providerId == null || providerId.isBlank())
 			return;
 
-		AuthDecision decision = authenticationCoordinator.resume(sender.getUniqueId(), context -> {
+		ResumeRequest request = ResumeRequest.builder()
+				.connectionUniqueId(sender.getUniqueId())
+				.build();
+
+		AuthDecision decision = authenticationCoordinator.resume(request, context -> {
 			if (context == null) return;
 
 			AuthContext.Provider provider = context.getProvider();

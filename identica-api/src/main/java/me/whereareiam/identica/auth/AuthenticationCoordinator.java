@@ -6,6 +6,7 @@ import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.request.LoginRequest;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.type.HandshakeMode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,24 +61,18 @@ public interface AuthenticationCoordinator {
 	CompletionStage<AuthDecision> authenticate(@Nullable LoginRequest request);
 
 	/**
-	 * Resumes a pending authentication flow for the provided connection ID.
-	 *
-	 * @param connectionUniqueId unique connection identifier
-	 * @return a completion stage that resolves to the authentication decision
-	 */
-	@NotNull
-	CompletionStage<AuthDecision> resume(@NotNull UUID connectionUniqueId);
-
-	/**
 	 * Resumes a pending authentication flow with an optional context updater.
 	 *
-	 * @param connectionUniqueId unique connection identifier
+	 * <p>The resume request should include the latest connection info to ensure
+	 * online/offline requirements are evaluated correctly.</p>
+	 *
+	 * @param request resume request details
 	 * @param contextUpdater optional callback to mutate the authentication context
 	 * @return a completion stage that resolves to the authentication decision
 	 */
 	@NotNull
 	CompletionStage<AuthDecision> resume(
-			@NotNull UUID connectionUniqueId,
+			@NotNull ResumeRequest request,
 			@Nullable Consumer<AuthContext> contextUpdater
 	);
 

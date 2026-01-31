@@ -5,7 +5,8 @@ plugins {
 }
 
 dependencies {
-    "implementation"(project(":identica-provider:provider-premium:premium-api"))
+	"implementation"(project(":identica-provider:provider-premium:premium-api"))
+	"implementation"(project(":identica-provider:provider-premium:premium-platform:platform-velocity"))
 }
 
 tasks.named<ShadowJar>("shadowJar") {

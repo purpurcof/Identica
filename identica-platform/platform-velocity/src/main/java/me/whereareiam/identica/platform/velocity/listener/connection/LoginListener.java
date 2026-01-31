@@ -8,15 +8,14 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.auth.AuthDecision;
-import me.whereareiam.identica.model.auth.ConnectionInfo;
 import me.whereareiam.identica.model.auth.request.LoginRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
-import me.whereareiam.identica.registry.IdentityRegistry;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -34,10 +33,7 @@ public class LoginListener implements DynamicListener<LoginEvent> {
 				.orElse(null);
 
 		LoginRequest request = LoginRequest.builder()
-				.connectionInfo(ConnectionInfo.builder()
-						.identity(new OfflineIdentity(player.getUniqueId(), player.getUsername(), ip))
-						.onlineMode(player.isOnlineMode())
-						.build())
+				.identity(new ConnectionIdentity(player.getUniqueId(), player.getUsername(), ip))
 				.connectionUniqueId(player.getUniqueId())
 				.intendedServer(intendedServer)
 				.build();

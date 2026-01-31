@@ -6,28 +6,29 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.auth.HandshakePolicy;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
 import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
-import me.whereareiam.identica.event.auth.attempt.AuthAttemptFinishedEvent;
-import me.whereareiam.identica.event.auth.attempt.AuthAttemptStartedEvent;
 import me.whereareiam.identica.event.auth.AuthContextBuildEvent;
 import me.whereareiam.identica.event.auth.AuthDecisionEvent;
-import me.whereareiam.identica.event.handshake.HandshakeInstructionEvent;
+import me.whereareiam.identica.event.auth.attempt.AuthAttemptFinishedEvent;
+import me.whereareiam.identica.event.auth.attempt.AuthAttemptStartedEvent;
 import me.whereareiam.identica.event.handshake.HandshakeDecisionEvent;
+import me.whereareiam.identica.event.handshake.HandshakeInstructionEvent;
+import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.account.AccountPreparation;
-import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.AuthDecision;
+import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.request.LoginRequest;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
-import me.whereareiam.identica.model.auth.StepResult;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.registry.Registry;
-import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.type.HandshakeMode;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
@@ -85,7 +86,7 @@ public class DefaultAuthenticationCoordinator implements AuthenticationCoordinat
 
 	@Override
 	public @NotNull CompletionStage<AuthDecision> authenticate(@Nullable LoginRequest request) {
-		if (request == null || request.getIdentity() == null || request.getIdentity().getUniqueId() == null) {
+		if (request == null || request.getIdentity().getUniqueId() == null) {
 			Logger.severe("Authentication request missing Identica UUID (profile rewrite not applied)");
 			return CompletableFuture.completedFuture(
 					AuthDecision.deny(joinMessage(messagesProvider.get().getAuthentication().getAuthenticationFailed()))
@@ -107,16 +108,11 @@ public class DefaultAuthenticationCoordinator implements AuthenticationCoordinat
 	}
 
 	@Override
-	public @NotNull CompletionStage<AuthDecision> resume(@NotNull UUID connectionUniqueId) {
-		return resume(connectionUniqueId, null);
-	}
-
-	@Override
 	public @NotNull CompletionStage<AuthDecision> resume(
-			@NotNull UUID connectionUniqueId,
+			@NotNull ResumeRequest request,
 			@Nullable Consumer<AuthContext> contextUpdater
 	) {
-		return flowCoordinator.resume(connectionUniqueId, contextUpdater)
+		return flowCoordinator.resume(request, contextUpdater)
 				.handle((result, error) -> {
 					if (error != null) {
 						Logger.severe("Authentication resume failed %s", error.fillInStackTrace());
@@ -142,7 +138,7 @@ public class DefaultAuthenticationCoordinator implements AuthenticationCoordinat
 		if (username == null || mode == null)
 			return;
 
-		OfflineIdentity identity = new OfflineIdentity(username, null);
+		ConnectionIdentity identity = new ConnectionIdentity(username, null);
 		HandshakeInstructionEvent event = new HandshakeInstructionEvent(HandshakeInstruction.create(
 				identity, mode, instructionStore.getDefaultTtlMillis()
 		));
@@ -157,7 +153,7 @@ public class DefaultAuthenticationCoordinator implements AuthenticationCoordinat
 	private AuthContext buildContext(LoginRequest request) {
 		AuthContext.AuthContextBuilder builder = AuthContext.builder()
 				.connectionUniqueId(request.getConnectionUniqueId())
-				.connectionInfo(request.getConnectionInfo())
+				.identity(request.getIdentity())
 				.intendedServer(request.getIntendedServer());
 
 		return builder.build();

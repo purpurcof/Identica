@@ -3,7 +3,7 @@ package me.whereareiam.identica.model.auth.handshake;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import me.whereareiam.identica.identity.actor.OfflineIdentity;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -13,5 +13,5 @@ import org.jetbrains.annotations.NotNull;
 @ToString
 @RequiredArgsConstructor
 public class HandshakeRequest {
-	private final @NotNull OfflineIdentity identity;
+	private final @NotNull ConnectionIdentity identity;
 }

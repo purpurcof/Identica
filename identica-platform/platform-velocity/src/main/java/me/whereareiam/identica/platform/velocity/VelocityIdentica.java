@@ -54,7 +54,7 @@ public class VelocityIdentica {
 	@Subscribe
 	public void onProxyInitialization(ProxyInitializeEvent event) {
 		PluginType.setPluginType(PluginType.VELOCITY);
-		me.whereareiam.identica.logging.Logger.init(new VelocityLoggingHelper(logger));
+		VelocityLoggingHelper.setLogger(logger);
 
 		VelocityDependencyResolver resolver = new VelocityDependencyResolver(proxyServer, pluginContainer, logger, dataPath);
 		resolver.loadLibraries();

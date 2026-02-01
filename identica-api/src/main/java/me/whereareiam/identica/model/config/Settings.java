@@ -18,6 +18,10 @@ import java.util.Map;
 @Setter
 @ToString
 public class Settings {
+	/**
+	 * Debug level for logging.
+	 */
+	private int level;
 	private @NotNull Routing routing;
 	private @NotNull Sessions sessions;
 	private @NotNull Authentication authentication;

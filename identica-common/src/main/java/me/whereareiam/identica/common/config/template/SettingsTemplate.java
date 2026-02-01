@@ -15,6 +15,8 @@ import java.util.Map;
 public class SettingsTemplate implements TemplateProvider<Settings> {
 	@Override
 	public Settings supply(Settings settings) {
+		settings.setLevel(2);
+
 		Settings.Routing routing = new Settings.Routing();
 		Settings.Routing.Targets targets = new Settings.Routing.Targets();
 		targets.setPre("auth");

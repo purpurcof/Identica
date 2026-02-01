@@ -11,6 +11,7 @@ import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.service.SynchronizationService;
 import me.whereareiam.identica.type.ClearScope;
@@ -73,8 +74,12 @@ public class AccountClearSynchronizationListener implements EventListener {
 			if (!localServerId.isBlank() && localServerId.equalsIgnoreCase(message.serverId))
 				return;
 
-		if (message.username == null || message.username.isBlank()) return;
-		ConnectionIdentity identity = new ConnectionIdentity(message.uniqueId, message.username, null);
+			Logger.debug("Received synchronized account clear (scope: %s, user: %s)",
+					message.scope,
+					message.username != null ? message.username : message.uniqueId);
+
+			if (message.username == null || message.username.isBlank()) return;
+			ConnectionIdentity identity = new ConnectionIdentity(message.uniqueId, message.username, null);
 			eventManager.call(new AccountClearEvent(identity, message.scope, true));
 		});
 	}

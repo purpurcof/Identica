@@ -54,6 +54,7 @@ public class ProviderLifecycleController {
 
 	public void loadProvider(InternalProvider internal) {
 		if (internal == null || internal.getState() != ProviderState.DISCOVERED) return;
+		Logger.debug("Loading provider %s", safeId(internal));
 
 		try {
 			ProviderDescriptor descriptor = internal.getDescriptor();
@@ -114,6 +115,7 @@ public class ProviderLifecycleController {
 		if (internal == null || internal.getState() != ProviderState.LOADED) return;
 		if (internal.getProvider() == null) return;
 
+		Logger.debug("Enabling provider %s", safeId(internal));
 		internal.setState(ProviderState.ENABLED);
 		try {
 			registerConflictResolvers(internal.getProvider());
@@ -130,6 +132,7 @@ public class ProviderLifecycleController {
 		if (internal == null || internal.getState() != ProviderState.ENABLED) return;
 		if (internal.getProvider() == null) return;
 
+		Logger.debug("Disabling provider %s", safeId(internal));
 		internal.setState(ProviderState.DISABLED);
 		try {
 			unregisterConflictResolvers(internal.getProvider());
@@ -148,6 +151,7 @@ public class ProviderLifecycleController {
 		if (internal == null || internal.getState() != ProviderState.DISABLED) return;
 		if (internal.getProvider() == null) return;
 
+		Logger.debug("Unloading provider %s", safeId(internal));
 		try {
 			internal.getProvider().onUnload();
 			internal.setState(ProviderState.UNLOADED);

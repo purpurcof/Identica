@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.common.provider.resolver.ProviderPlatformResolver;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
@@ -50,6 +51,7 @@ public class DefaultProviderManager implements ProviderManager {
 	@Override
 	public void loadProviders() {
 		providers.clear();
+		Logger.debug("Discovering providers...");
 		List<InternalProvider> discovered = discovery.discover(providers);
 		List<InternalProvider> enabledProviders = selectEnabled(discovered, providersConfig.get());
 

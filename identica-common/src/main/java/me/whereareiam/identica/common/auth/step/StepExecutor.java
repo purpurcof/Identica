@@ -11,6 +11,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
 import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.event.step.StepStartedEvent;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.config.Messages;
@@ -69,6 +70,9 @@ public class StepExecutor {
 			}
 
 			eventManager.call(new StepFinishedEvent(provider, step, context, result, phase));
+
+			if (result.getStatus() != StepResult.StepStatus.CONTINUE)
+				Logger.debug("Step %s returned %s", step.getName(), result.getStatus());
 
 			AuthContext next = result.getUpdatedContext() != null ? result.getUpdatedContext() : context;
 			return switch (result.getStatus()) {

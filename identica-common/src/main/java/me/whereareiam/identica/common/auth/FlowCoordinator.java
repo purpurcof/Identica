@@ -14,6 +14,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.auth.flow.AuthFlowFinishedEvent;
 import me.whereareiam.identica.event.auth.flow.AuthFlowStartedEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
@@ -95,6 +96,8 @@ public class FlowCoordinator {
 		FlowState waiting = resolveWaiting(request);
 		if (waiting == null)
 			return CompletableFuture.completedFuture(StepResult.noPending());
+
+		logResume(waiting, request.getConnectionUniqueId());
 
 		AuthContext merged = mergeContext(waiting.getContext(), request);
 		if (contextUpdater != null)
@@ -204,17 +207,22 @@ public class FlowCoordinator {
 	private AuthFlowType resolveFlow(@NotNull AuthContext context) {
 		AuthFlowType preferred = resolvePreferredFlow();
 		List<InternalProvider> preferredProviders = eligibilityService.eligibleProviders(context, preferred);
-		if (!preferredProviders.isEmpty())
+		if (!preferredProviders.isEmpty()) {
+			Logger.debug("Auth flow selected: %s", preferred);
 			return preferred;
+		}
 
 		AuthFlowType fallback = preferred == AuthFlowType.SEAMLESS
 				? AuthFlowType.INTERACTIVE
 				: AuthFlowType.SEAMLESS;
 
 		List<InternalProvider> fallbackProviders = eligibilityService.eligibleProviders(context, fallback);
-		if (!fallbackProviders.isEmpty())
+		if (!fallbackProviders.isEmpty()) {
+			Logger.debug("Auth flow fallback selected: %s", fallback);
 			return fallback;
+		}
 
+		Logger.debug("No eligible providers for auth flow");
 		return null;
 	}
 
@@ -254,6 +262,7 @@ public class FlowCoordinator {
 		state.putFlowState(flowState);
 		state.putContext(context);
 		connectionStateRegistry.storePending(state);
+		logPendingStored(flowState);
 	}
 
 	private StepResult resolveCompletion(@Nullable StepResult completionResult) {
@@ -355,5 +364,45 @@ public class FlowCoordinator {
 				.provider(base.getProvider())
 				.data(new HashMap<>(base.getData()))
 				.build();
+	}
+
+	private void logPendingStored(@NotNull FlowState flowState) {
+		UUID connectionId = flowState.getContext().getConnectionUniqueId();
+		String stageId = resolveStageId(flowState);
+		String stepName = resolvePendingStepName(flowState.getPendingStage());
+		Logger.debug("Stored pending auth state (connection: %s, flow: %s, stage: %s, step: %s)",
+				connectionId,
+				flowState.getFlow(),
+				stageId,
+				stepName != null ? stepName : "unknown");
+	}
+
+	private void logResume(@NotNull FlowState flowState, @Nullable UUID connectionId) {
+		String stageId = resolveStageId(flowState);
+		Logger.debug("Resuming auth flow %s (connection: %s, stage: %s)",
+				flowState.getFlow(),
+				connectionId,
+				stageId);
+	}
+
+	private @NotNull String resolveStageId(@NotNull FlowState flowState) {
+		int stageIndex = flowState.getStageIndex();
+		List<StepStage> stages = flowState.getStages();
+		if (stageIndex >= 0 && stageIndex < stages.size()) {
+			StepStage stage = stages.get(stageIndex);
+			if (stage != null && !stage.id().isBlank())
+				return stage.id();
+		}
+		return "unknown";
+	}
+
+	private @Nullable String resolvePendingStepName(@NotNull PendingStage pendingStage) {
+		int stepIndex = pendingStage.getStepIndex();
+		List<AuthenticationStep> steps = pendingStage.getSteps();
+		if (stepIndex < 0 || stepIndex >= steps.size())
+			return null;
+
+		AuthenticationStep step = steps.get(stepIndex);
+		return step != null ? step.getName() : null;
 	}
 }

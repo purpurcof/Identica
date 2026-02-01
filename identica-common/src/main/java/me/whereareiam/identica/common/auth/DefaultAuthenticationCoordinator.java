@@ -36,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -56,11 +57,13 @@ public class DefaultAuthenticationCoordinator implements AuthenticationCoordinat
 				? request.getIdentity().getUsername()
 				: null;
 
-		HandshakeDecision decision = instructionStore.consume(username)
-				.map(instruction -> instruction.getMode() == HandshakeMode.ONLINE
+		Optional<HandshakeInstruction> instruction = instructionStore.consume(username);
+		HandshakeDecision decision = instruction
+				.map(entry -> entry.getMode() == HandshakeMode.ONLINE
 						? HandshakeDecision.forceOnline()
 						: HandshakeDecision.forceOffline())
 				.orElse(HandshakeDecision.allow());
+		instruction.ifPresent(value -> Logger.debug("Handshake instruction applied: %s", value.getMode()));
 
 		if (decision.getStatus() != HandshakeDecision.Status.ALLOW || handshakePolicies.values().isEmpty())
 			return CompletableFuture.completedFuture(finalizeHandshakeDecision(request, decision));
@@ -215,9 +218,15 @@ public class DefaultAuthenticationCoordinator implements AuthenticationCoordinat
 					return HandshakeDecision.allow();
 				}
 
-				return decision != null
+				HandshakeDecision resolved = decision != null
 						? decision
 						: HandshakeDecision.allow();
+				if (resolved.getStatus() != HandshakeDecision.Status.ALLOW)
+					Logger.debug("Handshake policy %s returned %s",
+							policy.getClass().getSimpleName(),
+							resolved.getStatus());
+
+				return resolved;
 			});
 		} catch (Exception e) {
 			Logger.severe("Handshake policy failed %s", e.fillInStackTrace());

@@ -10,6 +10,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.provider.ProviderDisabledEvent;
 import me.whereareiam.identica.event.provider.ProviderUnloadedEvent;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.step.StepDefinition;
 import me.whereareiam.identica.type.step.AuthFlowType;
 import me.whereareiam.identica.type.step.StepPhase;
@@ -39,7 +40,9 @@ public class DefaultStepRegistry implements StepRegistry, EventListener {
 			int order,
 			@NotNull AuthenticationStep step
 	) {
-		definitions.add(new StepDefinition(providerId, phase, order, null, step));
+		StepDefinition definition = new StepDefinition(providerId, phase, order, null, step);
+		definitions.add(definition);
+		logRegistration(definition);
 	}
 
 	@Override
@@ -50,7 +53,9 @@ public class DefaultStepRegistry implements StepRegistry, EventListener {
 			@NotNull AuthFlowType flow,
 			@NotNull AuthenticationStep step
 	) {
-		definitions.add(new StepDefinition(providerId, phase, order, flow, step));
+		StepDefinition definition = new StepDefinition(providerId, phase, order, flow, step);
+		definitions.add(definition);
+		logRegistration(definition);
 	}
 
 	@Override
@@ -106,7 +111,11 @@ public class DefaultStepRegistry implements StepRegistry, EventListener {
 
 	private void removeProviderSteps(@Nullable String providerId) {
 		if (providerId == null || providerId.isBlank()) return;
+		int before = definitions.size();
 		definitions.removeIf(definition -> providerId.equalsIgnoreCase(definition.getProviderId()));
+
+		int removed = before - definitions.size();
+		if (removed > 0) Logger.debug("Removed %d step(s) for provider %s", removed, providerId);
 	}
 
 	private boolean matchesProvider(StepDefinition definition, @Nullable String providerId) {
@@ -115,5 +124,15 @@ public class DefaultStepRegistry implements StepRegistry, EventListener {
 
 		String entry = definition.getProviderId();
 		return entry != null && entry.equalsIgnoreCase(providerId);
+	}
+
+	private void logRegistration(@NotNull StepDefinition definition) {
+		String providerId = definition.getProviderId() != null ? definition.getProviderId() : "global";
+		String flow = definition.getFlow() != null ? definition.getFlow().name() : "any";
+		Logger.debug("Registered step %s (phase: %s, flow: %s, provider: %s)",
+				definition.getName(),
+				definition.getPhase(),
+				flow,
+				providerId);
 	}
 }

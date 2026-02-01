@@ -3,6 +3,7 @@ package me.whereareiam.identica.common.cache.type;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.codec.CacheCodec;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.service.SynchronizationService;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,7 +33,10 @@ public final class SynchronizedCache<T> implements Cache<T> {
 					return service.get(name, key)
 							.thenCompose(payload -> payload
 									.map(data -> handleRemoteHit(key, data))
-									.orElseGet(() -> CompletableFuture.completedFuture(Optional.empty())));
+									.orElseGet(() -> {
+										Logger.debug("Synchronized cache miss %s:%s", name, key);
+										return CompletableFuture.completedFuture(Optional.empty());
+									}));
 				});
 	}
 
@@ -58,11 +62,13 @@ public final class SynchronizedCache<T> implements Cache<T> {
 
 		long ttlMs = decoded.expiresAt > 0 ? decoded.expiresAt - now : 0;
 		if (ttlMs > 0) {
+			Logger.debug("Synchronized cache hit %s:%s", name, key);
 			return localCache
 					.put(key, value, ttlMs)
 					.thenApply(ignored -> Optional.ofNullable(value));
 		}
 
+		Logger.debug("Synchronized cache hit %s:%s", name, key);
 		return CompletableFuture.completedFuture(Optional.ofNullable(value));
 	}
 

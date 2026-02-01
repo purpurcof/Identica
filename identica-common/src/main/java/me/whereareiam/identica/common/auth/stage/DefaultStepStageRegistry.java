@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.common.auth.stage.type.EndStepStage;
 import me.whereareiam.identica.common.auth.stage.type.PreStepStage;
 import me.whereareiam.identica.common.auth.stage.type.ProviderStepStage;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.stage.StepStage;
 import me.whereareiam.identica.stage.StepStageRegistry;
@@ -39,6 +40,7 @@ public class DefaultStepStageRegistry implements StepStageRegistry {
 
 		unregister(id);
 		stages.add(stage);
+		Logger.debug("Registered step stage %s", id);
 	}
 
 	@Override
@@ -49,7 +51,11 @@ public class DefaultStepStageRegistry implements StepStageRegistry {
 	@Override
 	public boolean unregister(@NotNull String stageId) {
 		if (stageId.isBlank()) return false;
-		return stages.removeIf(stage -> stage != null && stageId.equalsIgnoreCase(stage.id()));
+
+		boolean removed = stages.removeIf(stage -> stage != null && stageId.equalsIgnoreCase(stage.id()));
+		if (removed) Logger.debug("Unregistered step stage %s", stageId);
+
+		return removed;
 	}
 
 	@Override

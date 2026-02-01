@@ -1,0 +1,13 @@
+package me.whereareiam.identica.provider.premium;
+
+import org.jetbrains.annotations.NotNull;
+
+/**
+ * Shared constants for the premium provider.
+ */
+public final class PremiumConstants {
+	/**
+	 * Provider id for the premium authentication provider.
+	 */
+	public static final @NotNull String PROVIDER_ID = "premium";
+}

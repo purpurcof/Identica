@@ -49,6 +49,6 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		if (offlineUuid != null && profileId.equalsIgnoreCase(offlineUuid.toString()))
 			return false;
 
-		return providerLinkPersistenceService.findBySubject("premium", profileId).isPresent();
+		return providerLinkPersistenceService.findBySubject(PremiumConstants.PROVIDER_ID, profileId).isPresent();
 	}
 }

@@ -23,8 +23,6 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumEligibilityResolver implements ProviderEligibilityResolver {
-	private static final String PREMIUM_ID = "premium";
-
 	private final @NotNull PremiumProfileLookup profileLookup;
 	private final @NotNull Provider<PremiumSettings> settingsProvider;
 	private final @NotNull ProviderLinkPersistenceService providerLinkPersistenceService;
@@ -39,7 +37,7 @@ public class PremiumEligibilityResolver implements ProviderEligibilityResolver {
 		if (descriptor == null) return true;
 
 		String providerId = descriptor.getId();
-		if (!providerId.equalsIgnoreCase(PREMIUM_ID))
+		if (!providerId.equalsIgnoreCase(PremiumConstants.PROVIDER_ID))
 			return true;
 
 		String username = context.getUsername();
@@ -74,7 +72,7 @@ public class PremiumEligibilityResolver implements ProviderEligibilityResolver {
 		for (AccountProviderLink link : links) {
 			if (link == null) continue;
 			String providerId = link.getProviderId();
-			if (providerId.equalsIgnoreCase(PREMIUM_ID))
+			if (providerId.equalsIgnoreCase(PremiumConstants.PROVIDER_ID))
 				return true;
 		}
 

@@ -3,6 +3,7 @@ package me.whereareiam.identica.provider.premium.profile;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.PremiumKeys;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.provider.profile.ProfileResolveContext;
@@ -17,7 +18,6 @@ import java.util.UUID;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
-	private static final String PROVIDER_ID = "premium";
 	private final PreLoginExtensions preLoginExtensions;
 
 	@Override
@@ -31,7 +31,7 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 		if (subject == null) return null;
 
 		return ProfileResolution.builder()
-				.providerId(PROVIDER_ID)
+				.providerId(PremiumConstants.PROVIDER_ID)
 				.providerSubject(subject)
 				.build();
 	}

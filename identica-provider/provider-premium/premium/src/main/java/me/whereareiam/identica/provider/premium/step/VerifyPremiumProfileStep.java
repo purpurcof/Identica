@@ -8,6 +8,7 @@ import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.identity.IdentityState;
+import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.type.HandshakeMode;
 import me.whereareiam.identica.util.UniqueIdGenerator;
@@ -56,7 +57,7 @@ public class VerifyPremiumProfileStep extends SeamlessStep {
 
 	private StepResult completeWithProfile(AuthContext context, String providerSubject, String username) {
 		AuthContext.Provider provider = AuthContext.Provider.builder()
-				.providerId("premium")
+				.providerId(PremiumConstants.PROVIDER_ID)
 				.providerSubject(providerSubject)
 				.providerUsername(username)
 				.build();

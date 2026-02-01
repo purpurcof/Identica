@@ -46,6 +46,7 @@ public class DefaultDynamicListenerRegistry implements DynamicListenerRegistry {
 	}
 
 	private Class<?> resolveEventClass(@NotNull DynamicListener<?> listener) {
+		Class<?> fallback = null;
 		for (Method method : listener.getClass().getMethods()) {
 			if (!method.getName().equals("onEvent"))
 				continue;
@@ -54,10 +55,17 @@ public class DefaultDynamicListenerRegistry implements DynamicListenerRegistry {
 			if (parameters.length != 1)
 				continue;
 
-			return parameters[0];
+			if (method.isBridge() || method.isSynthetic())
+				continue;
+
+			Class<?> candidate = parameters[0];
+			if (candidate != Object.class)
+				return candidate;
+
+			fallback = candidate;
 		}
 
-		return null;
+		return fallback;
 	}
 
 	private record Registration<T>(

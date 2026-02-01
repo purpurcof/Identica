@@ -22,12 +22,12 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 
 	@Override
 	public boolean supports(@NotNull ProfileResolveContext context) {
-		return resolveObservation(context) != null;
+		return readObservation(context, false) != null;
 	}
 
 	@Override
 	public @Nullable ProfileResolution resolve(@NotNull ProfileResolveContext context) {
-		String subject = resolveObservation(context);
+		String subject = readObservation(context, true);
 		if (subject == null) return null;
 
 		return ProfileResolution.builder()
@@ -41,14 +41,14 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 		return 50;
 	}
 
-	private @Nullable String resolveObservation(@NotNull ProfileResolveContext context) {
+	private @Nullable String readObservation(@NotNull ProfileResolveContext context, boolean consume) {
 		String username = context.getUsername();
 		if (username == null || username.isBlank())
 			return null;
 
-		String profileUniqueId = preLoginExtensions
-				.consume(username, PremiumKeys.PLATFORM_PROFILE_ID)
-				.orElse(null);
+		String profileUniqueId = consume
+				? preLoginExtensions.consume(username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null)
+				: preLoginExtensions.peek(username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null);
 		if (profileUniqueId == null || profileUniqueId.isBlank())
 			return null;
 

@@ -12,6 +12,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.auth.provider.ProviderSelectedEvent;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.config.Messages;
@@ -23,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -34,6 +36,7 @@ public class ProviderStageRunner {
 	private final StepExecutor stepExecutor;
 	private final Provider<Messages> messagesProvider;
 	private final EventManager eventManager;
+	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 
 	@NotNull
 	public CompletionStage<StageOutcome> run(
@@ -43,6 +46,7 @@ public class ProviderStageRunner {
 			@Nullable StepResult completionResult
 	) {
 		boolean fallbackAllowed = stage.allowFallback(context, flow);
+		boolean allowAutoSelect = hasProviderLinks(context);
 		String providerId = resolveSelectedProviderId(context);
 		if (providerId != null) {
 			InternalProvider provider = findProviderById(providerId);
@@ -50,12 +54,24 @@ public class ProviderStageRunner {
 				return executeProviderSteps(stage, provider, context, flow, completionResult, null, -1, null, 0, fallbackAllowed);
 			}
 
-			if (!fallbackAllowed)
+			if (!fallbackAllowed) {
+				if (allowAutoSelect) {
+					List<InternalProvider> providers = eligibilityService.eligibleProviders(context, flow);
+					if (!providers.isEmpty())
+						return executeProviderIndex(stage, providers, context, flow, 0, completionResult);
+				}
 				return CompletableFuture.completedFuture(StageOutcome.result(noProvidersResult(), context, completionResult));
+			}
 		}
 
-		if (!fallbackAllowed)
+		if (!fallbackAllowed) {
+			if (allowAutoSelect) {
+				List<InternalProvider> providers = eligibilityService.eligibleProviders(context, flow);
+				if (!providers.isEmpty())
+					return executeProviderIndex(stage, providers, context, flow, 0, completionResult);
+			}
 			return CompletableFuture.completedFuture(StageOutcome.result(noProvidersResult(), context, completionResult));
+		}
 
 		List<InternalProvider> providers = eligibilityService.eligibleProviders(context, flow);
 		if (providers.isEmpty())
@@ -73,10 +89,17 @@ public class ProviderStageRunner {
 			@NotNull PendingStage pendingStage
 	) {
 		boolean fallbackAllowed = stage.allowFallback(context, flow);
+		boolean allowAutoSelect = hasProviderLinks(context);
 		InternalProvider provider = findProviderById(pendingStage.getProviderId());
 		if (provider == null || !eligibilityService.isEligible(context, provider, flow)) {
-			if (!fallbackAllowed)
+			if (!fallbackAllowed) {
+				if (allowAutoSelect) {
+					List<InternalProvider> providers = eligibilityService.eligibleProviders(context, flow);
+					if (!providers.isEmpty())
+						return executeProviderIndex(stage, providers, context, flow, 0, completionResult);
+				}
 				return CompletableFuture.completedFuture(StageOutcome.result(noProvidersResult(), context, completionResult));
+			}
 
 			List<InternalProvider> providers = eligibilityService.eligibleProviders(context, flow);
 			if (providers.isEmpty())
@@ -282,6 +305,14 @@ public class ProviderStageRunner {
 		if (provider == null || provider.getDescriptor() == null) return null;
 		String id = provider.getDescriptor().getId();
 		return !id.isBlank() ? id : null;
+	}
+
+	private boolean hasProviderLinks(@NotNull AuthContext context) {
+		UUID uniqueId = context.getIdenticaUniqueId();
+		if (uniqueId == null)
+			return false;
+
+		return !providerLinkPersistenceService.findByUniqueId(uniqueId).isEmpty();
 	}
 
 	private @NotNull String joinMessage(@NotNull List<String> lines) {

@@ -6,19 +6,22 @@ import com.google.inject.Singleton;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.auth.step.AuthenticationStep;
+import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
 import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.event.step.StepStartedEvent;
-import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.type.step.StepAudience;
 import me.whereareiam.identica.type.step.StepPhase;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -27,6 +30,7 @@ import java.util.concurrent.CompletionStage;
 public class StepExecutor {
 	private final Provider<Messages> messagesProvider;
 	private final EventManager eventManager;
+	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 
 	@NotNull
 	public CompletionStage<StepExecution> execute(
@@ -47,6 +51,9 @@ public class StepExecutor {
 		}
 
 		AuthenticationStep step = steps.get(stepIndex);
+		if (!matchesAudience(step, context))
+			return execute(provider, phase, steps, context, stepIndex + 1, requireCompletion);
+
 		if (!step.shouldExecute(context))
 			return execute(provider, phase, steps, context, stepIndex + 1, requireCompletion);
 
@@ -77,6 +84,23 @@ public class StepExecutor {
 
 	private @NotNull String joinMessage(@NotNull List<String> lines) {
 		return String.join("\n", lines);
+	}
+
+	private boolean matchesAudience(@NotNull AuthenticationStep step, @NotNull AuthContext context) {
+		StepAudience audience = step.getAudience();
+		if (audience == StepAudience.ALL)
+			return true;
+
+		UUID uniqueId = context.getIdenticaUniqueId();
+		if (uniqueId == null)
+			return audience == StepAudience.NEW_PLAYERS;
+
+		boolean hasLinks = !providerLinkPersistenceService.findByUniqueId(uniqueId).isEmpty();
+		return switch (audience) {
+			case NEW_PLAYERS -> !hasLinks;
+			case EXISTING_PLAYERS -> hasLinks;
+			default -> true;
+		};
 	}
 
 	@Getter

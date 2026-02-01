@@ -90,7 +90,7 @@ public class DefaultStepRegistry implements StepRegistry, EventListener {
 
 	@IdenticEvent
 	public void onProviderDisabled(ProviderDisabledEvent event) {
-		if (event == null || event.getProvider() == null || event.getProvider().getDescriptor() == null)
+		if (event == null || event.getProvider().getDescriptor() == null)
 			return;
 
 		removeProviderSteps(event.getProvider().getDescriptor().getId());
@@ -98,7 +98,7 @@ public class DefaultStepRegistry implements StepRegistry, EventListener {
 
 	@IdenticEvent
 	public void onProviderUnloaded(ProviderUnloadedEvent event) {
-		if (event == null || event.getProvider() == null || event.getProvider().getDescriptor() == null)
+		if (event == null || event.getProvider().getDescriptor() == null)
 			return;
 
 		removeProviderSteps(event.getProvider().getDescriptor().getId());

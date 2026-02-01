@@ -11,6 +11,7 @@ import me.whereareiam.identica.model.identity.IdentityState;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.type.HandshakeMode;
 import me.whereareiam.identica.util.UniqueIdGenerator;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,7 +33,7 @@ public class VerifyPremiumProfileStep extends SeamlessStep {
 	}
 
 	@Override
-	public CompletableFuture<StepResult> execute(AuthContext context) {
+	public @NotNull CompletableFuture<StepResult> execute(@NotNull AuthContext context) {
 		PremiumMessages.Verification verification = messagesProvider.get().getVerification();
 		String username = context.getUsername();
 		String ip = context.getIp();

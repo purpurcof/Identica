@@ -16,7 +16,9 @@ import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityService;
 import me.whereareiam.identica.type.step.AuthFlowType;
+import me.whereareiam.identica.type.step.StepAudience;
 import me.whereareiam.keystone.model.SerializerOptions;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,10 +44,12 @@ public class EnrollmentStep extends InteractiveStep {
 	}
 
 	@Override
-	public CompletableFuture<StepResult> execute(AuthContext context) {
-		if (context == null)
-			return CompletableFuture.completedFuture(StepResult.failed(""));
+	public @NotNull StepAudience getAudience() {
+		return StepAudience.NEW_PLAYERS;
+	}
 
+	@Override
+	public @NotNull CompletableFuture<StepResult> execute(@NotNull AuthContext context) {
 		AuthFlowType flow = context.get(IdenticaKeys.CURRENT_FLOW).orElse(AuthFlowType.INTERACTIVE);
 		List<InternalProvider> providers = eligibilityService.eligibleProviders(context, flow);
 

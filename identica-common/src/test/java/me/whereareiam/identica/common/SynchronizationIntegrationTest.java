@@ -14,6 +14,7 @@ import me.whereareiam.identica.common.connection.DefaultConnectionStateRegistry;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.extension.DefaultConnectionExtensions;
 import me.whereareiam.identica.common.session.DefaultSessionService;
+import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.Session;
@@ -206,7 +207,8 @@ class SynchronizationIntegrationTest {
 			stageRegistry.register(new TestStage(interactiveSteps()));
 
 			EventManager eventManager = new EventController();
-			StepExecutor stepExecutor = new StepExecutor(messagesProvider, eventManager);
+			ProviderLinkPersistenceService providerLinkPersistenceService = mock(ProviderLinkPersistenceService.class);
+			StepExecutor stepExecutor = new StepExecutor(messagesProvider, eventManager, providerLinkPersistenceService);
 			GlobalStageRunner globalStageRunner = new GlobalStageRunner(stepExecutor, messagesProvider);
 
 			ProviderManager providerManager = mock(ProviderManager.class);
@@ -220,7 +222,8 @@ class SynchronizationIntegrationTest {
 					eligibilityService,
 					stepExecutor,
 					messagesProvider,
-					eventManager
+					eventManager,
+					providerLinkPersistenceService
 			);
 
 			DefaultConnectionStateRegistry connectionStateRegistry = new DefaultConnectionStateRegistry(
@@ -381,7 +384,7 @@ class SynchronizationIntegrationTest {
 		}
 
 		@Override
-		public CompletableFuture<StepResult> execute(AuthContext context) {
+		public @NotNull CompletableFuture<StepResult> execute(@NotNull AuthContext context) {
 			return CompletableFuture.completedFuture(StepResult.waiting("wait"));
 		}
 	}
@@ -392,7 +395,7 @@ class SynchronizationIntegrationTest {
 		}
 
 		@Override
-		public CompletableFuture<StepResult> execute(AuthContext context) {
+		public @NotNull CompletableFuture<StepResult> execute(@NotNull AuthContext context) {
 			return CompletableFuture.completedFuture(StepResult.complete(context));
 		}
 	}

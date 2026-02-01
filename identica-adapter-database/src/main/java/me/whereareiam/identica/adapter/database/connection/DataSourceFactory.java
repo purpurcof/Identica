@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.pool.HikariPool;
 import me.whereareiam.identica.logging.Logger;
+import me.whereareiam.identica.model.config.persistence.H2Persistence;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.model.config.persistence.SqlitePersistence;
 import me.whereareiam.identica.model.config.persistence.external.ExternalPersistence;
@@ -73,7 +74,8 @@ public final class DataSourceFactory {
 					cause instanceof SQLException ||
 					cause instanceof ConnectionException ||
 					cause.getClass().getName().startsWith("org.postgresql.") ||
-					cause.getClass().getName().startsWith("org.mariadb.")) {
+					cause.getClass().getName().startsWith("org.mariadb.") ||
+					cause.getClass().getName().startsWith("org.h2.")) {
 				isConnectionError = true;
 			}
 		}
@@ -82,6 +84,12 @@ public final class DataSourceFactory {
 			if (persistence instanceof SqlitePersistence sqlite) {
 				Logger.severe("Failed to open SQLite database file. Please ensure:");
 				Logger.severe("  - File path is correct (%s)", sqlite.getFile());
+				Logger.severe("  - Parent directory is writable");
+			}
+
+			if (persistence instanceof H2Persistence h2) {
+				Logger.severe("Failed to open H2 database file. Please ensure:");
+				Logger.severe("  - File path is correct (%s)", h2.getFile());
 				Logger.severe("  - Parent directory is writable");
 			}
 
@@ -112,6 +120,7 @@ public final class DataSourceFactory {
 			case POSTGRES -> "org.postgresql.Driver";
 			case MYSQL -> "org.mariadb.jdbc.Driver";
 			case SQLITE -> "org.sqlite.JDBC";
+			case H2 -> "org.h2.Driver";
 		};
 	}
 }

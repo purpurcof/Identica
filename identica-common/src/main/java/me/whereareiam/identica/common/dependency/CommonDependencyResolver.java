@@ -162,6 +162,12 @@ public abstract class CommonDependencyResolver implements DependencyResolver {
 				.build());
 
 		addDependency(LibraryRequest.builder()
+				.groupId("com{}h2database")
+				.artifactId("h2")
+				.version(Constants.Dependency.H2)
+				.build());
+
+		addDependency(LibraryRequest.builder()
 				.groupId("redis{}clients")
 				.artifactId("jedis")
 				.version(Constants.Dependency.JEDIS)

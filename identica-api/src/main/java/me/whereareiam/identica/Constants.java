@@ -1,9 +1,15 @@
 package me.whereareiam.identica;
 
+/**
+ * Shared Identica constants.
+ */
 public final class Constants {
 	public static final String NAME = BuildConfig.NAME;
 	public static final String VERSION = BuildConfig.VERSION;
 
+	/**
+	 * Version constants for runtime dependencies.
+	 */
 	public static final class Dependency {
 		public static final String GUICE = BuildConfig.GUICE;
 		public static final String CONFIGURA = BuildConfig.CONFIGURA;
@@ -22,6 +28,7 @@ public final class Constants {
 		public static final String POSTGRES = BuildConfig.POSTGRESQL;
 		public static final String MARIADB = BuildConfig.MARIADB;
 		public static final String SQLITE = BuildConfig.SQLITE;
+		public static final String H2 = BuildConfig.H2;
 
 		public static final String JEDIS = BuildConfig.JEDIS;
 	}

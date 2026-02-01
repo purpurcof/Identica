@@ -33,6 +33,7 @@ public class AccountProviderLinkEntity implements EntitySchemaProvider {
 		String type = databaseType == null ? "" : databaseType.toUpperCase();
 		String uuidType = switch (type) {
 			case "POSTGRES" -> "UUID";
+			case "H2" -> "UUID";
 			case "SQLITE" -> "TEXT";
 			default -> "CHAR(36)";
 		};

@@ -1,5 +1,6 @@
 package me.whereareiam.identica.adapter.database.connection;
 
+import me.whereareiam.identica.model.config.persistence.H2Persistence;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.model.config.persistence.SqlitePersistence;
 import me.whereareiam.identica.model.config.persistence.external.ExternalPersistence;
@@ -20,6 +21,7 @@ public final class JdbcUrlFactory {
 	public static String create(Persistence persistence, Path dataPath) {
 		return switch (persistence.getType()) {
 			case SQLITE -> createSqliteUrl(persistence, dataPath);
+			case H2 -> createH2Url(persistence, dataPath);
 			case POSTGRES -> createExternalUrl(persistence, "jdbc:postgresql://%s/%s");
 			case MYSQL -> createExternalUrl(persistence, "jdbc:mariadb://%s/%s");
 		};
@@ -44,5 +46,29 @@ public final class JdbcUrlFactory {
 			file = "identica.db";
 
 		return "jdbc:sqlite:" + dataPath.resolve(file);
+	}
+
+	private static String createH2Url(Persistence persistence, Path dataPath) {
+		if (!(persistence instanceof H2Persistence h2))
+			throw new IllegalArgumentException("Expected H2 persistence for " + persistence.getType());
+
+		String file = h2.getFile();
+		String baseUrl = file.startsWith("jdbc:h2:")
+				? file
+				: isDirectH2Target(file)
+				? "jdbc:h2:" + file
+				: "jdbc:h2:file:" + dataPath.resolve(file);
+
+		String options = h2.getOptions();
+		if (options.isBlank()) return baseUrl;
+
+		return baseUrl + (options.startsWith(";") ? "" : ";") + options;
+	}
+
+	private static boolean isDirectH2Target(String file) {
+		return file.startsWith("mem:") ||
+				file.startsWith("tcp:") ||
+				file.startsWith("ssl:") ||
+				file.startsWith("file:");
 	}
 }

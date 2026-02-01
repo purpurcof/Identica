@@ -54,6 +54,10 @@ final class DatabaseSchemaTestSupport {
 					"SELECT COUNT(*) FROM information_schema.tables " +
 							"WHERE table_schema = DATABASE() AND table_name = :table"
 			).bind("table", tableName).mapTo(Long.class).one() > 0;
+			case H2 -> handle.createQuery(
+					"SELECT COUNT(*) FROM information_schema.tables " +
+							"WHERE table_schema = 'PUBLIC' AND table_name = :table"
+			).bind("table", tableName.toUpperCase()).mapTo(Long.class).one() > 0;
 			case SQLITE -> handle.createQuery(
 					"SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = :table"
 			).bind("table", tableName).mapTo(Long.class).one() > 0;
@@ -63,7 +67,9 @@ final class DatabaseSchemaTestSupport {
 	}
 
 	private static void insertRows(Jdbi jdbi, DatabaseType type) {
-		var accountId = type == DatabaseType.POSTGRES ? UUID.randomUUID() : UUID.randomUUID().toString();
+		var accountId = (type == DatabaseType.POSTGRES || type == DatabaseType.H2)
+				? UUID.randomUUID()
+				: UUID.randomUUID().toString();
 
 		jdbi.useHandle(handle -> {
 			handle.createUpdate(

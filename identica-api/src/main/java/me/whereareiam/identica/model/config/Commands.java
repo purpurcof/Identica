@@ -27,8 +27,22 @@ public class Commands {
 	@Setter
 	@ToString
 	public static class Behavior {
+		private @NotNull Suggestions suggestions;
 		private @NotNull Clear clear;
 		private @NotNull Sessions sessions;
+
+		/**
+		 * Configuration for command suggestions.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Suggestions {
+			/**
+			 * Maximum number of player suggestions to return.
+			 */
+			private int playerLimit;
+		}
 
 		/**
 		 * Configuration for clear command behavior.

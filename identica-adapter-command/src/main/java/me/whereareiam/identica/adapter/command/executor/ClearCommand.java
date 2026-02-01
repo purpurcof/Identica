@@ -8,6 +8,8 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
+import me.whereareiam.identica.annotation.Suggestions;
+import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.event.EventManager;
@@ -36,13 +38,19 @@ public class ClearCommand {
 
 	@Definition("clear")
 	@Command("identica clear <target>")
-	public void clear(@NotNull Actor sender, @Argument("target") String target) { // TODO
+	public void clear(
+			@NotNull Actor sender,
+			@Argument("target") @Suggestions(CrossPlayerSuggestions.KEY) String target
+	) {
 		requestClear(sender, target, ClearScope.ALL);
 	}
 
 	@Definition("clear-cache")
 	@Command("identica clear cache <target>")
-	public void clearCache(@NotNull Actor sender, @Argument("target") String target) { // TODO
+	public void clearCache(
+			@NotNull Actor sender,
+			@Argument("target") @Suggestions(CrossPlayerSuggestions.KEY) String target
+	) {
 		requestClear(sender, target, ClearScope.CACHE);
 	}
 

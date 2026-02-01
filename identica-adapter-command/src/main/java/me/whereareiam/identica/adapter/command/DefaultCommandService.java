@@ -10,6 +10,7 @@ import me.whereareiam.commandant.ExceptionHandlerRegistrar;
 import me.whereareiam.commandant.model.message.ExceptionMessages;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.adapter.command.annotation.IdenticaAnnotationParser;
+import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
 import me.whereareiam.identica.adapter.command.definition.CommandDefinitionAdapter;
 import me.whereareiam.identica.adapter.command.executor.HelpCommand;
 import me.whereareiam.identica.adapter.command.executor.EnrollCommand;
@@ -37,6 +38,7 @@ public class DefaultCommandService implements CommandService {
 	private final Provider<CommandManager<Actor>> commandManagerProvider;
 	private final SerializerEngine serializer;
 	private final Injector injector;
+	private final CrossPlayerSuggestions crossPlayerSuggestions;
 
 	private final Map<String, CommandDefinition> registeredDefinitions = new HashMap<>();
 	private IdenticaAnnotationParser<Actor> annotationParser;
@@ -47,18 +49,21 @@ public class DefaultCommandService implements CommandService {
 			Provider<Messages> messagesProvider,
 			Provider<CommandManager<Actor>> commandManagerProvider,
 			SerializerEngine serializer,
-			Injector injector
+			Injector injector,
+			CrossPlayerSuggestions crossPlayerSuggestions
 	) {
 		this.commandsProvider = commandsProvider;
 		this.messagesProvider = messagesProvider;
 		this.commandManagerProvider = commandManagerProvider;
 		this.serializer = serializer;
 		this.injector = injector;
+		this.crossPlayerSuggestions = crossPlayerSuggestions;
 
 		initialize();
 	}
 
 	private void initialize() {
+		registerSuggestions(commandManagerProvider.get());
 		registerInternal(
 				injector.getInstance(MainCommand.class),
 				injector.getInstance(HelpCommand.class),
@@ -123,6 +128,11 @@ public class DefaultCommandService implements CommandService {
 
 		Collection<Command<Actor>> parsed = annotationParser.parse(commandInstances);
 		processParsedCommands(parsed, commandManager);
+	}
+
+	private void registerSuggestions(@NotNull CommandManager<Actor> commandManager) {
+		commandManager.parserRegistry()
+				.registerSuggestionProvider(CrossPlayerSuggestions.KEY, crossPlayerSuggestions);
 	}
 
 	private void processParsedCommands(

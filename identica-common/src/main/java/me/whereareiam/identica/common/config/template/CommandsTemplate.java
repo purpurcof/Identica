@@ -23,6 +23,10 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 		Commands.Behavior.Sessions sessions = new Commands.Behavior.Sessions();
 		sessions.setListPageSize(7);
 		behavior.setSessions(sessions);
+
+		Commands.Behavior.Suggestions suggestions = new Commands.Behavior.Suggestions();
+		suggestions.setPlayerLimit(25);
+		behavior.setSuggestions(suggestions);
 		commands.setBehavior(behavior);
 
 		CommandDefinition main = CommandDefinition.builder()

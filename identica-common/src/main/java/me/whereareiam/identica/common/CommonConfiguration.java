@@ -18,6 +18,7 @@ import me.whereareiam.identica.auth.step.registry.StepRegistry;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.common.auth.DefaultAuthenticationCoordinator;
 import me.whereareiam.identica.common.auth.FlowCoordinator;
+import me.whereareiam.identica.common.auth.LoginDecisionLifecycle;
 import me.whereareiam.identica.common.auth.handshake.HandshakePolicyRegistry;
 import me.whereareiam.identica.common.auth.stage.DefaultStepStageRegistry;
 import me.whereareiam.identica.common.auth.step.registry.DefaultStepRegistry;
@@ -150,6 +151,7 @@ public class CommonConfiguration extends AbstractModule {
 
 		// Authentication
 		bind(FlowCoordinator.class).asEagerSingleton();
+		bind(LoginDecisionLifecycle.class).asEagerSingleton();
 		bind(AuthenticationCoordinator.class).to(DefaultAuthenticationCoordinator.class).asEagerSingleton();
 		bind(ProviderEligibilityService.class).to(DefaultProviderEligibilityService.class).asEagerSingleton();
 

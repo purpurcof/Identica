@@ -26,13 +26,10 @@ public class VelocityRoutingTargetApplier implements RoutingTargetApplier {
 
 	@Override
 	public void apply(RoutingTarget target, AuthContext context) {
-		if (target == null) return;
-		if (target.getServer() == null || target.getServer().isBlank()) return;
-
-		UUID connectionId = context != null ? context.getConnectionUniqueId() : null;
+		UUID connectionId = context.getConnectionUniqueId();
 		if (connectionId == null) return;
-		ConnectionState state = connectionStateRegistry.ensure(connectionId);
 
+		ConnectionState state = connectionStateRegistry.ensure(connectionId);
 		proxyServer.getPlayer(connectionId).ifPresent(player -> {
 			if (player.getCurrentServer().isEmpty()) return;
 
@@ -40,9 +37,9 @@ public class VelocityRoutingTargetApplier implements RoutingTargetApplier {
 					.map(server -> server.getServerInfo().getName())
 					.orElse(null);
 			if (current != null && current.equalsIgnoreCase(target.getServer())) {
-				if (target.getType() == RoutingTargetType.COMPLETED) {
+				if (target.getType() == RoutingTargetType.COMPLETED)
 					state.consumeRoutingTarget();
-				}
+
 				return;
 			}
 
@@ -53,9 +50,9 @@ public class VelocityRoutingTargetApplier implements RoutingTargetApplier {
 				}
 			}, () -> {
 				Logger.warn("Routing target server %s not found for %s", target.getServer(), player.getUsername());
+
 				String message = String.join("\n", messagesProvider.get().getAuthentication().getRouting().getMissingServer());
-				if (!message.isBlank())
-					player.disconnect(Serializer.serialize(message));
+				if (!message.isBlank()) player.disconnect(Serializer.serialize(message));
 				state.clearRoutingTarget();
 			});
 		});

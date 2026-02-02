@@ -11,7 +11,7 @@ import me.whereareiam.identica.listener.DynamicListener;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class PlayerDisconnectListener implements DynamicListener<DisconnectEvent> {
+public class DisconnectListener implements DynamicListener<DisconnectEvent> {
 	private final ConnectionStateRegistry connectionStateRegistry;
 	private final IdentityRegistry identityRegistry;
 

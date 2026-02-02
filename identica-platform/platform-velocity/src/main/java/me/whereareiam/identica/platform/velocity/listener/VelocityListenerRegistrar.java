@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.AwaitingEventExecutor;
+import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
@@ -19,13 +19,13 @@ import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.platform.velocity.VelocityIdentica;
-import me.whereareiam.identica.platform.velocity.listener.connection.PreLoginListener;
-import me.whereareiam.identica.platform.velocity.listener.connection.LoginListener;
-import me.whereareiam.identica.platform.velocity.listener.connection.GameProfileRequestListener;
-import me.whereareiam.identica.platform.velocity.listener.connection.PlayerDisconnectListener;
-import me.whereareiam.identica.platform.velocity.listener.connection.PostConnectAuthListener;
-import me.whereareiam.identica.platform.velocity.listener.connection.RoutingInitialServerListener;
-import me.whereareiam.identica.platform.velocity.listener.connection.RoutingPreConnectListener;
+import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityHandshakeDecisionAdapter;
+import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityLoginDecisionAdapter;
+import me.whereareiam.identica.platform.velocity.adapter.profile.VelocityProfileRewriteAdapter;
+import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityResumeDecisionAdapter;
+import me.whereareiam.identica.platform.velocity.listener.connection.DisconnectListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.server.PlayerChooseInitialServerListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.server.ServerPreConnectListener;
 import me.whereareiam.identica.platform.velocity.util.VelocityUtil;
 
 @Singleton
@@ -54,13 +54,16 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 	public void registerListeners() {
 		listenerRegistry.attachRegistrar(this);
 
-		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(PreLoginListener.class));
-		registerListener(GameProfileRequestEvent.class, injector.getInstance(GameProfileRequestListener.class));
-		registerListener(LoginEvent.class, injector.getInstance(LoginListener.class));
-		registerListener(ServerConnectedEvent.class, injector.getInstance(PostConnectAuthListener.class));
-		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(RoutingInitialServerListener.class));
-		registerListener(ServerPreConnectEvent.class, injector.getInstance(RoutingPreConnectListener.class));
-		registerListener(DisconnectEvent.class, injector.getInstance(PlayerDisconnectListener.class));
+		DynamicListener<LoginEvent> loginListener = injector.getInstance(VelocityLoginDecisionAdapter.class);
+		DynamicListener<ServerConnectedEvent> connectedListener = injector.getInstance(VelocityResumeDecisionAdapter.class);
+
+		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(VelocityHandshakeDecisionAdapter.class));
+		registerListener(GameProfileRequestEvent.class, injector.getInstance(VelocityProfileRewriteAdapter.class));
+		registerListener(LoginEvent.class, loginListener);
+		registerListener(ServerConnectedEvent.class, connectedListener);
+		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(PlayerChooseInitialServerListener.class));
+		registerListener(ServerPreConnectEvent.class, injector.getInstance(ServerPreConnectListener.class));
+		registerListener(DisconnectEvent.class, injector.getInstance(DisconnectListener.class));
 	}
 
 	@Override

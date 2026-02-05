@@ -35,8 +35,14 @@ public class VelocityHandshakeDecisionAdapter extends HandshakeDecisionAdapter i
 		if (!event.getResult().isAllowed())
 			return null;
 
+		String ip = null;
+		if (event.getConnection().getRemoteAddress() != null
+				&& event.getConnection().getRemoteAddress().getAddress() != null) {
+			ip = event.getConnection().getRemoteAddress().getAddress().getHostAddress();
+		}
+
 		CompletableFuture<?> future = authenticationCoordinator
-				.handshake(new HandshakeRequest(new ConnectionIdentity(event.getUsername(), null)))
+				.handshake(new HandshakeRequest(new ConnectionIdentity(event.getUsername(), ip)))
 				.whenComplete((decision, error) -> {
 					if (error != null) {
 						Logger.severe("Handshake failed", error);

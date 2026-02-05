@@ -34,7 +34,7 @@ public class VelocityResumeDecisionAdapter extends AuthenticationDecisionAdapter
 		if (event.getPreviousServer().isPresent()) return;
 
 		Player player = event.getPlayer();
-		String ip = player.getRemoteAddress().getHostString();
+		String ip = resolveIp(player);
 		String intendedServer = player.getCurrentServer()
 				.map(server -> server.getServerInfo().getName())
 				.orElse(null);
@@ -53,6 +53,16 @@ public class VelocityResumeDecisionAdapter extends AuthenticationDecisionAdapter
 			return;
 
 		apply(decision, new VelocityCommandPlayer(player), resumeTarget(player));
+	}
+
+	private String resolveIp(@NotNull Player player) {
+		if (player.getRemoteAddress() == null)
+			return null;
+
+		if (player.getRemoteAddress().getAddress() != null)
+			return player.getRemoteAddress().getAddress().getHostAddress();
+
+		return player.getRemoteAddress().getHostString();
 	}
 
 	private @NotNull AuthenticationDecisionTarget resumeTarget(@NotNull Player player) {

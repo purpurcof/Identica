@@ -3,13 +3,13 @@ package me.whereareiam.identica;
 import com.google.inject.Injector;
 import lombok.Getter;
 import me.whereareiam.identica.identity.account.AccountService;
-import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
+import me.whereareiam.identica.flow.FlowTransit;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -187,14 +187,14 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the ScopedAttributes store for extension data.
+	 * Gets the FlowTransit service for short-lived cross-phase signal exchange.
 	 *
-	 * @return the ScopedAttributes instance
+	 * @return the FlowTransit instance
 	 * @throws IllegalStateException if the API is not initialized
 	 */
 	@NotNull
-	public static ScopedAttributes getAttributes() {
-		return getService(ScopedAttributes.class);
+	public static FlowTransit getFlowTransit() {
+		return getService(FlowTransit.class);
 	}
 
 	/**

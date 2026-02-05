@@ -3,8 +3,6 @@ package me.whereareiam.identica.common.presence;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.type.AttributeScope;
-import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.event.identity.IdentityAttachEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
 import me.whereareiam.identica.event.identity.IdentityDetachedEvent;
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultIdentityService implements IdentityService {
 	private final Map<UUID, Identity> identities = new ConcurrentHashMap<>();
-	private final ScopedAttributes scopedAttributes;
 
 	@Override
 	public void attach(@NotNull Identity identity) {
@@ -42,7 +39,6 @@ public class DefaultIdentityService implements IdentityService {
 	@Override
 	public void detach(@NotNull UUID uniqueId) {
 		identities.remove(uniqueId);
-		scopedAttributes.clear(AttributeScope.IDENTITY, uniqueId.toString());
 		EventUtil.callEvent(new IdentityDetachedEvent(uniqueId));
 	}
 

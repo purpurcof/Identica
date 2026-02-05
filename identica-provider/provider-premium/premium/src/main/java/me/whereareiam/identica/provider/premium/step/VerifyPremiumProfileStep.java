@@ -3,13 +3,13 @@ package me.whereareiam.identica.provider.premium.step;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.IdenticaKeys;
-import me.whereareiam.identica.type.AttributeScope;
-import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.step.type.SeamlessStep;
+import me.whereareiam.identica.flow.FlowRefeference;
+import me.whereareiam.identica.flow.FlowTransit;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
+import me.whereareiam.identica.provider.premium.PremiumFlowSignals;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.type.HandshakeMode;
 import me.whereareiam.identica.util.UniqueIdGenerator;
@@ -22,16 +22,16 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 public class VerifyPremiumProfileStep extends SeamlessStep {
 	private final Provider<PremiumMessages> messagesProvider;
-	private final ScopedAttributes scopedAttributes;
+	private final FlowTransit flowTransit;
 
 	@Inject
 	public VerifyPremiumProfileStep(
 			Provider<PremiumMessages> messagesProvider,
-			ScopedAttributes scopedAttributes
+			FlowTransit flowTransit
 	) {
 		super("verify");
 		this.messagesProvider = messagesProvider;
-		this.scopedAttributes = scopedAttributes;
+		this.flowTransit = flowTransit;
 	}
 
 	@Override
@@ -42,8 +42,12 @@ public class VerifyPremiumProfileStep extends SeamlessStep {
 		if (username == null || username.isBlank() || ip == null || ip.isBlank())
 			return CompletableFuture.completedFuture(failed(verification));
 
-		String providerSubject = scopedAttributes
-				.get(AttributeScope.PROFILE_HINT, username, IdenticaKeys.PROFILE_PROVIDER_SUBJECT)
+		String providerSubject = flowTransit
+				.scope(FlowRefeference.builder()
+						.username(username)
+						.ip(ip)
+						.build())
+				.consume(PremiumFlowSignals.PLATFORM_PROFILE_ID)
 				.orElse(null);
 		if (providerSubject == null || providerSubject.isBlank())
 			return CompletableFuture.completedFuture(failed(verification));

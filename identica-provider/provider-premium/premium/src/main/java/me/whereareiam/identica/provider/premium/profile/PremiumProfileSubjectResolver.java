@@ -3,10 +3,10 @@ package me.whereareiam.identica.provider.premium.profile;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.type.AttributeScope;
-import me.whereareiam.identica.attributes.ScopedAttributes;
+import me.whereareiam.identica.flow.FlowRefeference;
+import me.whereareiam.identica.flow.FlowTransit;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
-import me.whereareiam.identica.provider.premium.PremiumKeys;
+import me.whereareiam.identica.provider.premium.PremiumFlowSignals;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.provider.profile.ProfileResolveContext;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
@@ -19,16 +19,16 @@ import java.util.UUID;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
-	private final ScopedAttributes scopedAttributes;
+	private final FlowTransit flowTransit;
 
 	@Override
 	public boolean supports(@NotNull ProfileResolveContext context) {
-		return readObservation(context, false) != null;
+		return readObservation(context) != null;
 	}
 
 	@Override
 	public @Nullable ProfileResolution resolve(@NotNull ProfileResolveContext context) {
-		String subject = readObservation(context, true);
+		String subject = readObservation(context);
 		if (subject == null) return null;
 
 		return ProfileResolution.builder()
@@ -42,14 +42,18 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 		return 50;
 	}
 
-	private @Nullable String readObservation(@NotNull ProfileResolveContext context, boolean consume) {
+	private @Nullable String readObservation(@NotNull ProfileResolveContext context) {
 		String username = context.getUsername();
 		if (username == null || username.isBlank())
 			return null;
 
-		String profileUniqueId = consume
-				? scopedAttributes.remove(AttributeScope.PROFILE_HINT, username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null)
-				: scopedAttributes.get(AttributeScope.PROFILE_HINT, username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null);
+		String profileUniqueId = flowTransit
+				.scope(FlowRefeference.builder()
+						.username(username)
+						.ip(context.getIp())
+						.build())
+				.peek(PremiumFlowSignals.PLATFORM_PROFILE_ID)
+				.orElse(null);
 		if (profileUniqueId == null || profileUniqueId.isBlank())
 			return null;
 

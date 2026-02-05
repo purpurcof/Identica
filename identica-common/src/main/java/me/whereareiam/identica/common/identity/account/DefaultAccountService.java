@@ -5,9 +5,6 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.identity.account.AccountService;
-import me.whereareiam.identica.IdenticaKeys;
-import me.whereareiam.identica.type.AttributeScope;
-import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.common.uuid.UniqueIdResolutionSupport;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
@@ -49,7 +46,6 @@ public class DefaultAccountService implements AccountService {
 	private final SessionService sessionService;
 	private final ReservationCache reservationCache;
 	private final Provider<Settings> settingsProvider;
-	private final ScopedAttributes scopedAttributes;
 
 	@Override
 	public @Nullable UUID reserveAccountId(@NotNull ProfileRequest request) {
@@ -68,12 +64,6 @@ public class DefaultAccountService implements AccountService {
 		if (resolved == null)
 			resolved = reserveNewAccountId(providerId, providerSubject, username, request.getIp());
 
-		long ttlMs = pendingTtlMillis();
-		if (ttlMs > 0) {
-			scopedAttributes.put(AttributeScope.PROFILE_HINT, username, IdenticaKeys.PROFILE_PROVIDER_ID, providerId, ttlMs);
-			scopedAttributes.put(AttributeScope.PROFILE_HINT, username, IdenticaKeys.PROFILE_PROVIDER_SUBJECT, providerSubject, ttlMs);
-		}
-
 		return resolved;
 	}
 
@@ -83,9 +73,6 @@ public class DefaultAccountService implements AccountService {
 		String providerSubject = request.getProviderSubject();
 		String username = request.getUsername();
 		String ip = request.getIp();
-
-		if (username != null && !username.isBlank())
-			scopedAttributes.clear(AttributeScope.PROFILE_HINT, username);
 
 		String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(providerId, providerSubject);
 		if (subjectKey != null)

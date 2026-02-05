@@ -22,7 +22,6 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.identity.session.SessionService;
-import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.util.EventUtil;
 import org.junit.jupiter.api.Test;
@@ -68,7 +67,6 @@ class DefaultAuthenticationCoordinatorTest {
 		when(sessionService.open(any()))
 				.thenAnswer(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
 		ReservationCache reservationCache = mock(ReservationCache.class);
-		ScopedAttributes scopedAttributes = mock(ScopedAttributes.class);
 
 		DefaultAccountService accountService = new DefaultAccountService(
 				accountPersistenceService,
@@ -78,8 +76,7 @@ class DefaultAuthenticationCoordinatorTest {
 				providerManager,
 				sessionService,
 				reservationCache,
-				Settings::new,
-				scopedAttributes
+				Settings::new
 		);
 
 		when(accountPersistenceService.findByUniqueId(identicaId)).thenReturn(Optional.empty());
@@ -136,7 +133,6 @@ class DefaultAuthenticationCoordinatorTest {
 		when(sessionService.open(any()))
 				.thenAnswer(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
 		ReservationCache reservationCache = mock(ReservationCache.class);
-		ScopedAttributes scopedAttributes = mock(ScopedAttributes.class);
 
 		DefaultAccountService accountService = new DefaultAccountService(
 				accountPersistenceService,
@@ -146,8 +142,7 @@ class DefaultAuthenticationCoordinatorTest {
 				providerManager,
 				sessionService,
 				reservationCache,
-				Settings::new,
-				scopedAttributes
+				Settings::new
 		);
 
 		when(accountPersistenceService.findByUniqueId(identicaId)).thenReturn(Optional.of(Account.builder()

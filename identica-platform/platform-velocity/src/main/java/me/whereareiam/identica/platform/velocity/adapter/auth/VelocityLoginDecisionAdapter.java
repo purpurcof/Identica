@@ -37,7 +37,7 @@ public class VelocityLoginDecisionAdapter extends AuthenticationDecisionAdapter 
 	@Override
 	public void onEvent(LoginEvent event) {
 		Player player = event.getPlayer();
-		String ip = player.getRemoteAddress().getHostString();
+		String ip = resolveIp(player);
 		String intendedServer = player.getCurrentServer()
 				.map(server -> server.getServerInfo().getName())
 				.orElse(null);
@@ -54,6 +54,16 @@ public class VelocityLoginDecisionAdapter extends AuthenticationDecisionAdapter 
 
 		apply(decision, new VelocityCommandPlayer(player), loginTarget(event));
 		attachPresenceIfAllowed(decision, player);
+	}
+
+	private String resolveIp(@NotNull Player player) {
+		if (player.getRemoteAddress() == null)
+			return null;
+
+		if (player.getRemoteAddress().getAddress() != null)
+			return player.getRemoteAddress().getAddress().getHostAddress();
+
+		return player.getRemoteAddress().getHostString();
 	}
 
 	private void attachPresenceIfAllowed(@NotNull AuthDecision decision, @NotNull Player player) {

@@ -13,7 +13,6 @@ import me.whereareiam.configura.writer.ConfigWriter;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.identity.account.AccountService;
-import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.auth.step.registry.StepRegistry;
@@ -27,7 +26,6 @@ import me.whereareiam.identica.common.auth.handshake.HandshakePolicyRegistry;
 import me.whereareiam.identica.common.auth.stage.DefaultStepStageRegistry;
 import me.whereareiam.identica.common.auth.step.registry.DefaultStepRegistry;
 import me.whereareiam.identica.common.auth.attempt.DefaultAuthAttemptStore;
-import me.whereareiam.identica.common.attributes.DefaultScopedAttributes;
 import me.whereareiam.identica.common.cache.DefaultCacheService;
 import me.whereareiam.identica.common.config.adapter.DateTimePatternAdapter;
 import me.whereareiam.identica.common.config.adapter.DurationAdapter;
@@ -39,6 +37,7 @@ import me.whereareiam.identica.common.conflict.ConflictPrepareLifecycle;
 import me.whereareiam.identica.common.conflict.DefaultConflictService;
 import me.whereareiam.identica.common.conflict.type.UsernameConflictType;
 import me.whereareiam.identica.common.event.EventController;
+import me.whereareiam.identica.common.flow.DefaultFlowTransit;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
 import me.whereareiam.identica.common.listener.AccountClearListener;
 import me.whereareiam.identica.common.listener.AccountClearSynchronizationListener;
@@ -60,6 +59,7 @@ import me.whereareiam.identica.common.synchronization.NoopSynchronizationService
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.flow.FlowTransit;
 import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.model.config.*;
@@ -132,14 +132,14 @@ public class CommonConfiguration extends AbstractModule {
 		bind(SynchronizationService.class).to(DefaultSynchronizationService.class).asEagerSingleton();
 		bind(CacheService.class).to(DefaultCacheService.class).asEagerSingleton();
 		bind(ReservationCache.class).to(DefaultReservationCache.class).asEagerSingleton();
+		bind(FlowTransit.class).to(DefaultFlowTransit.class).asEagerSingleton();
 
 		// Account + presence
 		bind(AccountService.class).to(DefaultAccountService.class).asEagerSingleton();
 		bind(IdentityService.class).to(DefaultIdentityService.class).asEagerSingleton();
 
-		// Attempt store + attributes
+		// Attempt store
 		bind(AuthAttemptStore.class).to(DefaultAuthAttemptStore.class).asEagerSingleton();
-		bind(ScopedAttributes.class).to(DefaultScopedAttributes.class).asEagerSingleton();
 
 		// Session lifecycle
 		bind(SessionService.class).to(DefaultSessionService.class).asEagerSingleton();

@@ -3,10 +3,10 @@ package me.whereareiam.identica.provider.premium;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.type.AttributeScope;
-import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
+import me.whereareiam.identica.flow.FlowRefeference;
+import me.whereareiam.identica.flow.FlowTransit;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileLookup;
@@ -21,18 +21,21 @@ import java.util.concurrent.CompletionStage;
 public class PremiumHandshakePolicy implements HandshakePolicy {
 	private final PremiumProfileLookup profileLookup;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
-	private final ScopedAttributes scopedAttributes;
+	private final FlowTransit flowTransit;
 
 	@Override
 	public CompletionStage<HandshakeDecision> evaluate(HandshakeRequest request) {
 		String username = request != null
 				? request.getIdentity().getUsername()
 				: null;
+		String ip = request != null
+				? request.getIdentity().getIp()
+				: null;
 
 		if (username == null || username.isBlank())
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
-		if (hasPremiumLinkByProfileId(username))
+		if (hasPremiumLinkByProfileId(username, ip))
 			return CompletableFuture.completedFuture(HandshakeDecision.forceOnline());
 
 		return profileLookup.hasPremiumProfile(username)
@@ -41,8 +44,14 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 						: HandshakeDecision.allow());
 	}
 
-	private boolean hasPremiumLinkByProfileId(String username) {
-		String profileId = scopedAttributes.get(AttributeScope.PROFILE_HINT, username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null);
+	private boolean hasPremiumLinkByProfileId(String username, String ip) {
+		String profileId = flowTransit
+				.scope(FlowRefeference.builder()
+						.username(username)
+						.ip(ip)
+						.build())
+				.peek(PremiumFlowSignals.PLATFORM_PROFILE_ID)
+				.orElse(null);
 		if (profileId == null || profileId.isBlank())
 			return false;
 

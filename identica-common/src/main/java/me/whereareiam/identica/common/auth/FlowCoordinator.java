@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.IdenticaKeys;
 import me.whereareiam.identica.auth.attempt.AuthAttempt;
 import me.whereareiam.identica.auth.attempt.AuthAttemptStore;
 import me.whereareiam.identica.auth.step.AuthenticationStep;
@@ -30,7 +29,6 @@ import me.whereareiam.identica.type.step.AuthFlowType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -67,7 +65,6 @@ public class FlowCoordinator {
 		if (flow == null)
 			return CompletableFuture.completedFuture(providerStageRunner.noProvidersResult());
 
-		context.put(IdenticaKeys.CURRENT_FLOW, flow);
 		eventManager.call(new AuthFlowStartedEvent(context, flow));
 
 		List<StepStage> stages = stageRegistry.resolve(context, flow);
@@ -101,7 +98,6 @@ public class FlowCoordinator {
 			contextUpdater.accept(merged);
 
 		AuthFlowType flow = waiting.getFlow();
-		merged.put(IdenticaKeys.CURRENT_FLOW, flow);
 
 		AuthAttempt resumed = rebuildAttempt(waiting, merged);
 		CompletableFuture<StepResult> result = resumeFromAttempt(resumed);
@@ -347,7 +343,6 @@ private CompletableFuture<StepResult> resumeFromAttempt(@NotNull AuthAttempt wai
 				.identity(identity)
 				.intendedServer(intendedServer)
 				.provider(base.getProvider())
-				.data(new HashMap<>(base.getData()))
 				.build();
 	}
 

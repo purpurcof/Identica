@@ -167,7 +167,7 @@ public class ProviderStageRunner {
 				: stage.steps(context, flow, provider);
 
 		IdenticaProvider providerInstance = provider.getProvider();
-		return stepExecutor.execute(providerInstance, stage.phase(), steps, context, stepIndex, stage.requireCompletion())
+		return stepExecutor.execute(providerInstance, flow, stage.phase(), steps, context, stepIndex, stage.requireCompletion())
 				.thenCompose(result -> handleProviderResult(stage, provider, flow, completionResult, providers, providerIndex,
 						steps, fallbackAllowed, result));
 	}

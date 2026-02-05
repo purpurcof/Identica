@@ -58,7 +58,7 @@ public class GlobalStageRunner {
 				? stepsOverride
 				: stage.steps(context, flow, null);
 
-		return stepExecutor.execute(null, stage.phase(), steps, context, stepIndex, stage.requireCompletion())
+		return stepExecutor.execute(null, flow, stage.phase(), steps, context, stepIndex, stage.requireCompletion())
 				.thenApply(result -> handleStageResult(stage, flow, completionResult, result));
 	}
 

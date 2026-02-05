@@ -3,7 +3,6 @@ package me.whereareiam.identica.common.auth.step;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.IdenticaKeys;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.auth.step.type.InteractiveStep;
 import me.whereareiam.identica.event.EventManager;
@@ -50,8 +49,7 @@ public class EnrollmentStep extends InteractiveStep {
 
 	@Override
 	public @NotNull CompletableFuture<StepResult> execute(@NotNull AuthContext context) {
-		AuthFlowType flow = context.get(IdenticaKeys.CURRENT_FLOW).orElse(AuthFlowType.INTERACTIVE);
-		List<InternalProvider> providers = eligibilityService.eligibleProviders(context, flow);
+		List<InternalProvider> providers = eligibilityService.eligibleProviders(context, AuthFlowType.INTERACTIVE);
 
 		Messages.Authentication.Steps.Enrollment enrollment = messagesProvider.get().getAuthentication().getSteps().getEnrollment();
 		if (providers.isEmpty())

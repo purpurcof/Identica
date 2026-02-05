@@ -16,6 +16,7 @@ import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.type.step.AuthFlowType;
 import me.whereareiam.identica.type.step.StepAudience;
 import me.whereareiam.identica.type.step.StepPhase;
 import org.jetbrains.annotations.NotNull;
@@ -36,6 +37,7 @@ public class StepExecutor {
 	@NotNull
 	public CompletionStage<StepExecution> execute(
 			@Nullable IdenticaProvider provider,
+			@NotNull AuthFlowType flow,
 			@NotNull StepPhase phase,
 			@NotNull List<AuthenticationStep> steps,
 			@NotNull AuthContext context,
@@ -53,12 +55,12 @@ public class StepExecutor {
 
 		AuthenticationStep step = steps.get(stepIndex);
 		if (!matchesAudience(step, context))
-			return execute(provider, phase, steps, context, stepIndex + 1, requireCompletion);
+			return execute(provider, flow, phase, steps, context, stepIndex + 1, requireCompletion);
 
 		if (!step.shouldExecute(context))
-			return execute(provider, phase, steps, context, stepIndex + 1, requireCompletion);
+			return execute(provider, flow, phase, steps, context, stepIndex + 1, requireCompletion);
 
-		eventManager.call(new StepPrepareEvent(provider, step, context, phase));
+		eventManager.call(new StepPrepareEvent(provider, step, context, flow, phase));
 		CompletableFuture<StepResult> execution = step.execute(context);
 		eventManager.call(new StepStartedEvent(provider, step, context));
 
@@ -76,7 +78,7 @@ public class StepExecutor {
 
 			AuthContext next = result.getUpdatedContext() != null ? result.getUpdatedContext() : context;
 			return switch (result.getStatus()) {
-				case CONTINUE -> execute(provider, phase, steps, next, stepIndex + 1, requireCompletion);
+				case CONTINUE -> execute(provider, flow, phase, steps, next, stepIndex + 1, requireCompletion);
 				case WAITING -> CompletableFuture.completedFuture(new StepExecution(result, next, steps, stepIndex, false, false));
 				case COMPLETE, DENIED, REQUIRE_RECONNECT ->
 						CompletableFuture.completedFuture(new StepExecution(result, next, steps, stepIndex, false, false));

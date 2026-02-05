@@ -2,7 +2,6 @@ package me.whereareiam.identica.common.routing;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.IdenticaKeys;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.auth.AuthPendingClearedEvent;
@@ -47,7 +46,7 @@ public class RoutingLifecycle implements EventListener {
 		if (event == null)
 			return;
 
-		AuthFlowType flow = event.getContext().get(IdenticaKeys.CURRENT_FLOW).orElse(null);
+		AuthFlowType flow = event.getFlow();
 		if (flow == AuthFlowType.SEAMLESS)
 			return;
 

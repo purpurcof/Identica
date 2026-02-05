@@ -5,6 +5,7 @@ import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.event.EventPriority;
+import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import me.whereareiam.identica.type.step.AuthFlowType;
 
 import java.time.Duration;
@@ -40,6 +41,8 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		sessions.setProviders(Map.of(
 				"premium", Duration.ofHours(12)
 		));
+		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.KICK_EXISTING);
+		sessions.setConcurrencyOverrides(new HashMap<>());
 		settings.setSessions(sessions);
 
 		Settings.Authentication authentication = new Settings.Authentication();

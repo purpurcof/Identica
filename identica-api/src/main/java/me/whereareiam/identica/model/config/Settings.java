@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.type.step.AuthFlowType;
+import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -65,6 +66,14 @@ public class Settings {
 		private @NotNull Duration defaultTtl;
 		private @NotNull Duration refreshTtl;
 		private @NotNull Map<String, Duration> providers = new HashMap<>();
+		/**
+		 * Default policy for concurrent sessions.
+		 */
+		private @NotNull SessionConcurrencyPolicy concurrencyPolicy;
+		/**
+		 * Policy overrides keyed by provider id.
+		 */
+		private @NotNull Map<String, SessionConcurrencyPolicy> concurrencyOverrides = new HashMap<>();
 	}
 
 	@Getter

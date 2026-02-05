@@ -1,30 +1,26 @@
-package me.whereareiam.identica.common.identity;
+package me.whereareiam.identica.common.account;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.account.AccountService;
+import me.whereareiam.identica.IdenticaKeys;
+import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.common.uuid.UniqueIdResolutionSupport;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.ProviderProfilePersistenceService;
 import me.whereareiam.identica.database.UsernameHistoryPersistenceService;
 import me.whereareiam.identica.event.account.AccountPrepareEvent;
-import me.whereareiam.identica.event.identity.session.SessionClosedEvent;
-import me.whereareiam.identica.event.identity.session.SessionOpenedEvent;
-import me.whereareiam.identica.event.identity.session.SessionPrepareEvent;
-import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.ReservationCache;
-import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.identity.registry.IdentityRegistry;
-import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.UsernameHistoryEntry;
 import me.whereareiam.identica.model.account.Account;
 import me.whereareiam.identica.model.account.AccountDecision;
 import me.whereareiam.identica.model.account.AccountPreparation;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.identity.IdentityState;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.provider.InternalProvider;
@@ -38,24 +34,25 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class DefaultIdentityService implements IdentityService {
+public class DefaultAccountService implements AccountService {
 	private final AccountPersistenceService accountPersistenceService;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final ProviderProfilePersistenceService providerProfilePersistenceService;
 	private final UsernameHistoryPersistenceService usernameHistoryPersistenceService;
-	private final IdentityRegistry identityRegistry;
 	private final ProviderManager providerManager;
 	private final SessionService sessionService;
 	private final ReservationCache reservationCache;
 	private final Provider<Settings> settingsProvider;
+	private final ScopedAttributes scopedAttributes;
 
 	@Override
-	public @Nullable UUID reserveIdentity(@NotNull ProfileRequest request) {
+	public @Nullable UUID reserveAccountId(@NotNull ProfileRequest request) {
 		String username = UniqueIdResolutionSupport.normalize(request.getUsername());
 		if (username == null) return null;
 
@@ -69,11 +66,13 @@ public class DefaultIdentityService implements IdentityService {
 		if (resolved == null)
 			resolved = resolveFromReservation(providerId, providerSubject, username, request.getIp());
 		if (resolved == null)
-			resolved = reserveNewIdentity(providerId, providerSubject, username, request.getIp());
+			resolved = reserveNewAccountId(providerId, providerSubject, username, request.getIp());
 
 		long ttlMs = pendingTtlMillis();
-		long expiresAt = ttlMs > 0 ? System.currentTimeMillis() + ttlMs : 0;
-		identityRegistry.registerReserved(resolved, request, expiresAt);
+		if (ttlMs > 0) {
+			scopedAttributes.put(AttributeScope.PROFILE_HINT, username, IdenticaKeys.PROFILE_PROVIDER_ID, providerId, ttlMs);
+			scopedAttributes.put(AttributeScope.PROFILE_HINT, username, IdenticaKeys.PROFILE_PROVIDER_SUBJECT, providerSubject, ttlMs);
+		}
 
 		return resolved;
 	}
@@ -85,6 +84,9 @@ public class DefaultIdentityService implements IdentityService {
 		String username = request.getUsername();
 		String ip = request.getIp();
 
+		if (username != null && !username.isBlank())
+			scopedAttributes.clear(AttributeScope.PROFILE_HINT, username);
+
 		String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(providerId, providerSubject);
 		if (subjectKey != null)
 			reservationCache.invalidate(subjectKey).join();
@@ -92,7 +94,6 @@ public class DefaultIdentityService implements IdentityService {
 		String bridgeKey = UniqueIdResolutionSupport.buildBridgeKey(username, ip);
 		if (bridgeKey != null)
 			reservationCache.invalidate(bridgeKey).join();
-
 	}
 
 	@Override
@@ -181,91 +182,9 @@ public class DefaultIdentityService implements IdentityService {
 				.build();
 	}
 
-	@Override
-	public @NotNull CompletableFuture<@Nullable Session> openSession(@Nullable Session session) {
-		if (session == null) return CompletableFuture.completedFuture(null);
-		SessionPrepareEvent openEvent = new SessionPrepareEvent(session);
-		EventUtil.callEvent(openEvent);
-		if (openEvent.isCancelled())
-			return CompletableFuture.completedFuture(null);
-
-		return sessionService.open(openEvent.getSession())
-				.thenApply(stored -> {
-					if (stored == null)
-						return null;
-					identityRegistry.attachAuthenticated(stored);
-					EventUtil.callEvent(new SessionOpenedEvent(stored));
-					return stored;
-				});
-	}
-
-	@Override
-	public @NotNull CompletableFuture<Void> closeSession(@Nullable UUID uniqueId) {
-		IdentityState state = uniqueId != null ? identityRegistry.findState(uniqueId).orElse(null) : null;
-		Session current = state != null ? state.getSession() : null;
-
-		return sessionService.close(uniqueId)
-				.thenRun(() -> {
-					if (uniqueId != null) {
-						identityRegistry.detachAuthenticated(uniqueId);
-						EventUtil.callEvent(new SessionClosedEvent(uniqueId, current));
-					}
-				});
-	}
-
-	@Override
-	public @NotNull CompletableFuture<Optional<Session>> findSession(@Nullable UUID uniqueId) {
-		return sessionService.findByUniqueId(uniqueId);
-	}
-
-	@Override
-	public @NotNull CompletableFuture<SessionService.Page> listSessions(int page, int pageSize) {
-		return sessionService.list(page, pageSize);
-	}
-
-	@Override
-	public @NotNull Optional<IdentityState> findState(@NotNull UUID uniqueId) {
-		return identityRegistry.findState(uniqueId);
-	}
-
-	@Override
-	public @NotNull Optional<IdentityState> findState(@NotNull String username) {
-		return identityRegistry.findState(username);
-	}
-
-	@Override
-	public @NotNull Collection<IdentityState> getStates() {
-		return identityRegistry.getStates();
-	}
-
-	@Override
-	public void addPlayer(@NotNull Identity identity) {
-		identityRegistry.addPlayer(identity);
-	}
-
-	@Override
-	public void removePlayer(@NotNull UUID uniqueId) {
-		identityRegistry.removePlayer(uniqueId);
-	}
-
-	@Override
-	public @NotNull Optional<Identity> findPlayer(@NotNull UUID uniqueId) {
-		return identityRegistry.findPlayer(uniqueId);
-	}
-
-	@Override
-	public @NotNull Optional<Identity> findPlayer(@NotNull String username) {
-		return identityRegistry.findPlayer(username);
-	}
-
-	@Override
-	public @NotNull Collection<Identity> getPlayers() {
-		return identityRegistry.getPlayers();
-	}
-
 	private UUID resolveFromSession(String providerId, String providerSubject) {
 		return sessionService.findByProviderSubject(providerId, providerSubject)
-				.thenApply(opt -> opt.map(Session::getUniqueId).orElse(null))
+				.thenApply(opt -> opt.map(session -> session.getUniqueId()).orElse(null))
 				.join();
 	}
 
@@ -292,7 +211,7 @@ public class DefaultIdentityService implements IdentityService {
 				.join();
 	}
 
-	private UUID reserveNewIdentity(String providerId, String providerSubject, String username, String ip) {
+	private UUID reserveNewAccountId(String providerId, String providerSubject, String username, String ip) {
 		UUID generated = UniqueIdGenerator.newIdenticaUniqueId();
 		long ttlMs = pendingTtlMillis();
 

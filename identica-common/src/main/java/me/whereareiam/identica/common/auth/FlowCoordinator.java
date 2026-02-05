@@ -5,11 +5,12 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.IdenticaKeys;
+import me.whereareiam.identica.attempt.AuthAttempt;
+import me.whereareiam.identica.attempt.AuthAttemptStore;
 import me.whereareiam.identica.auth.step.AuthenticationStep;
 import me.whereareiam.identica.common.auth.stage.StageOutcome;
 import me.whereareiam.identica.common.auth.stage.runner.GlobalStageRunner;
 import me.whereareiam.identica.common.auth.stage.runner.ProviderStageRunner;
-import me.whereareiam.identica.connection.ConnectionStateRegistry;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.auth.flow.AuthFlowFinishedEvent;
 import me.whereareiam.identica.event.auth.flow.AuthFlowStartedEvent;
@@ -20,8 +21,6 @@ import me.whereareiam.identica.model.auth.StepResult;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.connection.ConnectionState;
-import me.whereareiam.identica.model.connection.FlowState;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityService;
 import me.whereareiam.identica.stage.PendingStage;
@@ -47,7 +46,7 @@ public class FlowCoordinator {
 	private final EventManager eventManager;
 	private final GlobalStageRunner globalStageRunner;
 	private final ProviderStageRunner providerStageRunner;
-	private final ConnectionStateRegistry connectionStateRegistry;
+	private final AuthAttemptStore attemptStore;
 
 	public CompletableFuture<StepResult> authenticate(@Nullable AuthContext context) {
 		if (context == null) {
@@ -56,13 +55,11 @@ public class FlowCoordinator {
 			));
 		}
 
-		storeContext(context);
-
 		ResumeRequest pendingRequest = ResumeRequest.builder()
 				.connectionUniqueId(context.getConnectionUniqueId())
 				.identity(context.getIdentity())
 				.build();
-		if (connectionStateRegistry.hasPending(pendingRequest)) {
+		if (attemptStore.hasPending(pendingRequest)) {
 			return CompletableFuture.completedFuture(StepResult.waiting(""));
 		}
 
@@ -93,7 +90,7 @@ public class FlowCoordinator {
 			@NotNull ResumeRequest request,
 			@Nullable Consumer<AuthContext> contextUpdater
 	) {
-		FlowState waiting = resolveWaiting(request);
+		AuthAttempt waiting = resolveWaiting(request);
 		if (waiting == null)
 			return CompletableFuture.completedFuture(StepResult.noPending());
 
@@ -106,9 +103,8 @@ public class FlowCoordinator {
 		AuthFlowType flow = waiting.getFlow();
 		merged.put(IdenticaKeys.CURRENT_FLOW, flow);
 
-		storeContext(merged);
-		FlowState resumed = rebuildFlowState(waiting, merged);
-		CompletableFuture<StepResult> result = resumeFromState(resumed);
+		AuthAttempt resumed = rebuildAttempt(waiting, merged);
+		CompletableFuture<StepResult> result = resumeFromAttempt(resumed);
 		return result.thenApply(stepResult -> finalizeFlow(merged, flow, attachContext(stepResult, merged)));
 	}
 
@@ -118,23 +114,23 @@ public class FlowCoordinator {
 				.connectionUniqueId(connectionUniqueId)
 				.build();
 
-		return connectionStateRegistry.hasPending(request);
+		return attemptStore.hasPending(request);
 	}
 
 	public boolean clearPending(@Nullable UUID connectionUniqueId) {
 		if (connectionUniqueId == null)
 			return false;
 
-		boolean removed = connectionStateRegistry.find(connectionUniqueId)
-				.map(ConnectionState::clearFlowState)
-				.orElse(false);
-		connectionStateRegistry.clearPending(connectionUniqueId);
+		ResumeRequest request = ResumeRequest.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.build();
+		boolean removed = attemptStore.consume(request).isPresent();
 		eventManager.call(new me.whereareiam.identica.event.auth.AuthPendingClearedEvent(connectionUniqueId, removed));
 
 		return removed;
 	}
 
-	private CompletableFuture<StepResult> resumeFromState(@NotNull FlowState waiting) {
+private CompletableFuture<StepResult> resumeFromAttempt(@NotNull AuthAttempt waiting) {
 		List<StepStage> stages = waiting.getStages();
 		int stageIndex = waiting.getStageIndex();
 		if (stageIndex < 0 || stageIndex >= stages.size())
@@ -189,8 +185,6 @@ public class FlowCoordinator {
 					joinMessage(messagesProvider.get().getAuthentication().getAuthenticationFailed())
 			));
 		}
-
-		storeContext(outcome.getContext());
 
 		PendingStage pendingStage = outcome.getPendingStage();
 		if (pendingStage != null) {
@@ -257,12 +251,18 @@ public class FlowCoordinator {
 			@Nullable StepResult completionResult
 	) {
 		if (context.getConnectionUniqueId() == null) return;
-		FlowState flowState = new FlowState(flow, stages, stageIndex, pendingStage, context, completionResult);
-		ConnectionState state = connectionStateRegistry.ensure(context.getConnectionUniqueId());
-		state.putFlowState(flowState);
-		state.putContext(context);
-		connectionStateRegistry.storePending(state);
-		logPendingStored(flowState);
+		AuthAttempt attempt = new AuthAttempt(
+				UUID.randomUUID(),
+				flow,
+				stages,
+				stageIndex,
+				pendingStage,
+				context,
+				completionResult,
+				System.currentTimeMillis()
+		);
+		attemptStore.store(attempt, resolvePendingTtlMillis());
+		logPendingStored(attempt);
 	}
 
 	private StepResult resolveCompletion(@Nullable StepResult completionResult) {
@@ -287,20 +287,13 @@ public class FlowCoordinator {
 		return String.join("\n", lines);
 	}
 
-	private void storeContext(@Nullable AuthContext context) {
-		if (context == null) return;
-		UUID connectionId = context.getConnectionUniqueId();
-		if (connectionId == null) return;
-		ConnectionState state = connectionStateRegistry.ensure(connectionId);
-		AuthContext.Provider currentProvider = context.getProvider();
-		if (currentProvider == null || currentProvider.getProviderId() == null || currentProvider.getProviderId().isBlank()) {
-			state.peekContext()
-					.map(AuthContext::getProvider)
-					.filter(provider -> provider.getProviderId() != null && !provider.getProviderId().isBlank())
-					.ifPresent(context::setProvider);
-		}
+	private long resolvePendingTtlMillis() {
+		Settings.Authentication authentication = settingsProvider.get().getAuthentication();
+		java.time.Duration configured = authentication.getPendingTtl();
+		if (configured.isZero() || configured.isNegative())
+			throw new IllegalStateException("settings.authentication.pendingTtl must be positive");
 
-		state.putContext(context);
+		return configured.toMillis();
 	}
 
 	private int findFirstStageIndex(
@@ -316,28 +309,20 @@ public class FlowCoordinator {
 		return -1;
 	}
 
-	private @Nullable FlowState resolveWaiting(@NotNull ResumeRequest request) {
-		UUID connectionUniqueId = request.getConnectionUniqueId();
-		if (connectionUniqueId != null) {
-			FlowState waiting = connectionStateRegistry.find(connectionUniqueId)
-					.flatMap(ConnectionState::consumeFlowState)
-					.orElse(null);
-
-			if (waiting != null)
-				return waiting;
-		}
-
-		return connectionStateRegistry.consumePending(request).orElse(null);
+	private @Nullable AuthAttempt resolveWaiting(@NotNull ResumeRequest request) {
+		return attemptStore.consume(request).orElse(null);
 	}
 
-	private @NotNull FlowState rebuildFlowState(@NotNull FlowState waiting, @NotNull AuthContext context) {
-		return new FlowState(
+	private @NotNull AuthAttempt rebuildAttempt(@NotNull AuthAttempt waiting, @NotNull AuthContext context) {
+		return new AuthAttempt(
+				waiting.getAttemptId(),
 				waiting.getFlow(),
 				waiting.getStages(),
 				waiting.getStageIndex(),
 				waiting.getPendingStage(),
 				context,
-				waiting.getCompletionResult()
+				waiting.getCompletionResult(),
+				waiting.getCreatedAt()
 		);
 	}
 
@@ -366,28 +351,28 @@ public class FlowCoordinator {
 				.build();
 	}
 
-	private void logPendingStored(@NotNull FlowState flowState) {
-		UUID connectionId = flowState.getContext().getConnectionUniqueId();
-		String stageId = resolveStageId(flowState);
-		String stepName = resolvePendingStepName(flowState.getPendingStage());
+	private void logPendingStored(@NotNull AuthAttempt attempt) {
+		UUID connectionId = attempt.getContext().getConnectionUniqueId();
+		String stageId = resolveStageId(attempt);
+		String stepName = resolvePendingStepName(attempt.getPendingStage());
 		Logger.debug("Stored pending auth state (connection: %s, flow: %s, stage: %s, step: %s)",
 				connectionId,
-				flowState.getFlow(),
+				attempt.getFlow(),
 				stageId,
 				stepName != null ? stepName : "unknown");
 	}
 
-	private void logResume(@NotNull FlowState flowState, @Nullable UUID connectionId) {
-		String stageId = resolveStageId(flowState);
+	private void logResume(@NotNull AuthAttempt attempt, @Nullable UUID connectionId) {
+		String stageId = resolveStageId(attempt);
 		Logger.debug("Resuming auth flow %s (connection: %s, stage: %s)",
-				flowState.getFlow(),
+				attempt.getFlow(),
 				connectionId,
 				stageId);
 	}
 
-	private @NotNull String resolveStageId(@NotNull FlowState flowState) {
-		int stageIndex = flowState.getStageIndex();
-		List<StepStage> stages = flowState.getStages();
+	private @NotNull String resolveStageId(@NotNull AuthAttempt attempt) {
+		int stageIndex = attempt.getStageIndex();
+		List<StepStage> stages = attempt.getStages();
 		if (stageIndex >= 0 && stageIndex < stages.size()) {
 			StepStage stage = stages.get(stageIndex);
 			if (stage != null && !stage.id().isBlank())

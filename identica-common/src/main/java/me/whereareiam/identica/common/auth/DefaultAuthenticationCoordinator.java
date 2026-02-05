@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.account.AccountService;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
@@ -13,7 +14,6 @@ import me.whereareiam.identica.event.auth.attempt.AuthAttemptFinishedEvent;
 import me.whereareiam.identica.event.auth.attempt.AuthAttemptStartedEvent;
 import me.whereareiam.identica.event.handshake.HandshakeDecisionEvent;
 import me.whereareiam.identica.event.handshake.HandshakeInstructionEvent;
-import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.account.AccountPreparation;
@@ -29,6 +29,7 @@ import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.session.SessionService;
 import me.whereareiam.identica.type.HandshakeMode;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +50,8 @@ public class DefaultAuthenticationCoordinator implements AuthenticationCoordinat
 	private final HandshakeInstructionRegistry instructionStore;
 	private final Registry<HandshakePolicy> handshakePolicies;
 	private final Provider<Messages> messagesProvider;
-	private final IdentityService identityService;
+	private final AccountService accountService;
+	private final SessionService sessionService;
 
 	@Override
 	public @NotNull CompletionStage<HandshakeDecision> handshake(@Nullable HandshakeRequest request) {
@@ -84,7 +86,7 @@ public class DefaultAuthenticationCoordinator implements AuthenticationCoordinat
 	@Override
 	public @Nullable UUID prepareProfile(@Nullable ProfileRequest request) {
 		if (request == null) return null;
-		return identityService.reserveIdentity(request);
+		return accountService.reserveAccountId(request);
 	}
 
 	@Override
@@ -302,12 +304,13 @@ public class DefaultAuthenticationCoordinator implements AuthenticationCoordinat
 				.providerUsername(providerUsername)
 				.build();
 
-		AccountPreparation preparation = identityService.prepareAccount(profile, context.getIdenticaUniqueId());
+		AccountPreparation preparation = accountService.prepareAccount(profile, context.getIdenticaUniqueId());
 		if (preparation.getDecision().isDenied())
 			return AuthDecision.deny(messageOrFallback(preparation.getDecision().getMessage()));
 
 		context.setIdenticaUniqueId(preparation.getAccount().getUniqueId());
-		identityService.openSession(preparation.toSession(context.getIp()));
+		if (sessionService.open(preparation.toSession(context.getIp())).join() == null)
+			return AuthDecision.deny(joinMessage(messagesProvider.get().getAuthentication().getAuthenticationFailed()));
 
 		return null;
 	}

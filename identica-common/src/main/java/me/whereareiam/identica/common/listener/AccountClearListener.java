@@ -14,8 +14,8 @@ import me.whereareiam.identica.event.account.AccountClearEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.presence.PresenceService;
 import me.whereareiam.identica.type.ClearScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,7 +30,7 @@ public class AccountClearListener implements EventListener {
 	private final @NotNull ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final @NotNull HandshakeInstructionRegistry instructionStore;
 	private final @NotNull AuthenticationCoordinator authenticationCoordinator;
-	private final @NotNull IdentityRegistry identityRegistry;
+	private final @NotNull PresenceService presenceService;
 	private final @NotNull Provider<Messages> messagesProvider;
 
 	@Inject
@@ -39,7 +39,7 @@ public class AccountClearListener implements EventListener {
 			@NotNull ProviderLinkPersistenceService providerLinkPersistenceService,
 			@NotNull HandshakeInstructionRegistry instructionStore,
 			@NotNull AuthenticationCoordinator authenticationCoordinator,
-			@NotNull IdentityRegistry identityRegistry,
+			@NotNull PresenceService presenceService,
 			@NotNull Provider<Messages> messagesProvider,
 			@NotNull EventManager eventManager
 	) {
@@ -47,7 +47,7 @@ public class AccountClearListener implements EventListener {
 		this.providerLinkPersistenceService = providerLinkPersistenceService;
 		this.instructionStore = instructionStore;
 		this.authenticationCoordinator = authenticationCoordinator;
-		this.identityRegistry = identityRegistry;
+		this.presenceService = presenceService;
 		this.messagesProvider = messagesProvider;
 		eventManager.register(this);
 	}
@@ -77,12 +77,12 @@ public class AccountClearListener implements EventListener {
 
 	private @NotNull Optional<Identity> findPlayerIdentity(@Nullable UUID uniqueId, @Nullable String username) {
 		if (uniqueId != null) {
-			Optional<Identity> byId = identityRegistry.findPlayer(uniqueId);
+			Optional<Identity> byId = presenceService.find(uniqueId);
 			if (byId.isPresent()) return byId;
 		}
 
 		if (username == null || username.isBlank()) return Optional.empty();
-		return identityRegistry.findPlayer(username);
+		return presenceService.find(username);
 	}
 
 	private @NotNull String joinLines(@NotNull List<String> lines) {

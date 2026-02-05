@@ -3,12 +3,13 @@ package me.whereareiam.identica.provider.premium.profile;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.PremiumKeys;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.provider.profile.ProfileResolveContext;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
-import me.whereareiam.identica.registry.PreLoginExtensions;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
-	private final PreLoginExtensions preLoginExtensions;
+	private final ScopedAttributes scopedAttributes;
 
 	@Override
 	public boolean supports(@NotNull ProfileResolveContext context) {
@@ -47,8 +48,8 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 			return null;
 
 		String profileUniqueId = consume
-				? preLoginExtensions.consume(username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null)
-				: preLoginExtensions.peek(username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null);
+				? scopedAttributes.remove(AttributeScope.PROFILE_HINT, username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null)
+				: scopedAttributes.get(AttributeScope.PROFILE_HINT, username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null);
 		if (profileUniqueId == null || profileUniqueId.isBlank())
 			return null;
 

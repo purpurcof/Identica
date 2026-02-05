@@ -12,4 +12,16 @@ public final class IdenticaKeys {
 	 */
 	public static final @NotNull Key<AuthFlowType> CURRENT_FLOW =
 			Key.create("identica:current_flow", AuthFlowType.class);
+
+	/**
+	 * Stores the profile provider id observed during profile rewrite.
+	 */
+	public static final @NotNull Key<String> PROFILE_PROVIDER_ID =
+			Key.create("identica:profile_provider_id", String.class);
+
+	/**
+	 * Stores the profile provider subject observed during profile rewrite.
+	 */
+	public static final @NotNull Key<String> PROFILE_PROVIDER_SUBJECT =
+			Key.create("identica:profile_provider_subject", String.class);
 }

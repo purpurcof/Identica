@@ -2,7 +2,7 @@ package me.whereareiam.identica.common.auth;
 
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
-import me.whereareiam.identica.common.identity.DefaultIdentityService;
+import me.whereareiam.identica.common.account.DefaultAccountService;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.ProviderProfilePersistenceService;
@@ -10,7 +10,6 @@ import me.whereareiam.identica.database.UsernameHistoryPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.model.account.Account;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.AuthContext.Provider;
@@ -23,6 +22,7 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.util.EventUtil;
 import org.junit.jupiter.api.Test;
@@ -64,22 +64,22 @@ class DefaultAuthenticationCoordinatorTest {
 		UsernameHistoryPersistenceService usernameHistoryPersistenceService = mock(UsernameHistoryPersistenceService.class);
 		ProviderManager providerManager = mock(ProviderManager.class);
 		when(providerManager.getProviders()).thenReturn(List.of());
-		IdentityRegistry identityRegistry = mock(IdentityRegistry.class);
 		SessionService sessionService = mock(SessionService.class);
 		when(sessionService.open(any()))
 				.thenAnswer(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
 		ReservationCache reservationCache = mock(ReservationCache.class);
+		ScopedAttributes scopedAttributes = mock(ScopedAttributes.class);
 
-		DefaultIdentityService identityService = new DefaultIdentityService(
+		DefaultAccountService accountService = new DefaultAccountService(
 				accountPersistenceService,
 				linkPersistence,
 				profilePersistence,
 				usernameHistoryPersistenceService,
-				identityRegistry,
 				providerManager,
 				sessionService,
 				reservationCache,
-				Settings::new
+				Settings::new,
+				scopedAttributes
 		);
 
 		when(accountPersistenceService.findByUniqueId(identicaId)).thenReturn(Optional.empty());
@@ -95,7 +95,8 @@ class DefaultAuthenticationCoordinatorTest {
 				instructionStore,
 				handshakePolicies,
 				Messages::new,
-				identityService
+				accountService,
+				sessionService
 		);
 
 		LoginRequest request = LoginRequest.builder()
@@ -131,22 +132,22 @@ class DefaultAuthenticationCoordinatorTest {
 		UsernameHistoryPersistenceService usernameHistoryPersistenceService = mock(UsernameHistoryPersistenceService.class);
 		ProviderManager providerManager = mock(ProviderManager.class);
 		when(providerManager.getProviders()).thenReturn(List.of());
-		IdentityRegistry identityRegistry = mock(IdentityRegistry.class);
 		SessionService sessionService = mock(SessionService.class);
 		when(sessionService.open(any()))
 				.thenAnswer(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
 		ReservationCache reservationCache = mock(ReservationCache.class);
+		ScopedAttributes scopedAttributes = mock(ScopedAttributes.class);
 
-		DefaultIdentityService identityService = new DefaultIdentityService(
+		DefaultAccountService accountService = new DefaultAccountService(
 				accountPersistenceService,
 				linkPersistence,
 				profilePersistence,
 				usernameHistoryPersistenceService,
-				identityRegistry,
 				providerManager,
 				sessionService,
 				reservationCache,
-				Settings::new
+				Settings::new,
+				scopedAttributes
 		);
 
 		when(accountPersistenceService.findByUniqueId(identicaId)).thenReturn(Optional.of(Account.builder()
@@ -167,7 +168,8 @@ class DefaultAuthenticationCoordinatorTest {
 				instructionStore,
 				handshakePolicies,
 				Messages::new,
-				identityService
+				accountService,
+				sessionService
 		);
 
 		LoginRequest request = LoginRequest.builder()

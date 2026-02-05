@@ -2,14 +2,16 @@ package me.whereareiam.identica;
 
 import com.google.inject.Injector;
 import lombok.Getter;
+import me.whereareiam.identica.account.AccountService;
+import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
+import me.whereareiam.identica.presence.PresenceService;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.session.SessionService;
 import me.whereareiam.identica.service.SynchronizationService;
 import org.jetbrains.annotations.NotNull;
@@ -163,14 +165,36 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the IdentityService for identity lifecycle operations.
+	 * Gets the AccountService for account preparation operations.
 	 *
-	 * @return the IdentityService instance
+	 * @return the AccountService instance
 	 * @throws IllegalStateException if the API is not initialized
 	 */
 	@NotNull
-	public static IdentityService getIdentityService() {
-		return getService(IdentityService.class);
+	public static AccountService getAccountService() {
+		return getService(AccountService.class);
+	}
+
+	/**
+	 * Gets the PresenceService for online identity tracking.
+	 *
+	 * @return the PresenceService instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
+	@NotNull
+	public static PresenceService getPresenceService() {
+		return getService(PresenceService.class);
+	}
+
+	/**
+	 * Gets the ScopedAttributes store for extension data.
+	 *
+	 * @return the ScopedAttributes instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
+	@NotNull
+	public static ScopedAttributes getAttributes() {
+		return getService(ScopedAttributes.class);
 	}
 
 	/**

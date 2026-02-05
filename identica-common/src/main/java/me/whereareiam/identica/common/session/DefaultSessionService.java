@@ -3,13 +3,18 @@ package me.whereareiam.identica.common.session;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.cache.codec.type.JsonCodec;
+import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Replication;
+import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.presence.PresenceService;
 import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,18 +33,24 @@ public class DefaultSessionService implements SessionService {
 	private final Cache<Session> sessionCache;
 	private final Cache<Session> subjectCache;
 	private final Provider<Settings> settingsProvider;
+	private final Provider<Messages> messagesProvider;
+	private final PresenceService presenceService;
 
 	@Inject
 	public DefaultSessionService(
 			CacheService cacheService,
 			Provider<Settings> settingsProvider,
-			Provider<Replication> replicationProvider
+			Provider<Replication> replicationProvider,
+			Provider<Messages> messagesProvider,
+			PresenceService presenceService
 	) {
 		Replication.Sessions sessions = resolveSessions(replicationProvider);
 		this.userCache = cacheService.synchronizedCache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user"), JsonCodec.of(Session.class));
 		this.sessionCache = cacheService.synchronizedCache(resolveNamespace(sessions.getSession(), "replication.cache.sessions.session"), JsonCodec.of(Session.class));
 		this.subjectCache = cacheService.synchronizedCache(resolveNamespace(sessions.getSubject(), "replication.cache.sessions.subject"), JsonCodec.of(Session.class));
 		this.settingsProvider = settingsProvider;
+		this.messagesProvider = messagesProvider;
+		this.presenceService = presenceService;
 	}
 
 	@Override
@@ -74,8 +85,13 @@ public class DefaultSessionService implements SessionService {
 
 		return findByUniqueId(session.getUniqueId())
 				.thenCompose(existing -> {
+					SessionConcurrencyPolicy policy = resolveConcurrencyPolicy(session.getProviderId());
 					CompletableFuture<Void> cleanup = CompletableFuture.completedFuture(null);
 					if (existing.isPresent() && !sameSession(existing.get(), session)) {
+						if (policy == SessionConcurrencyPolicy.DENY_NEW)
+							return CompletableFuture.completedFuture(null);
+						if (policy == SessionConcurrencyPolicy.KICK_EXISTING)
+							kickExisting(existing.get());
 						cleanup = invalidateKeys(existing.get());
 					}
 
@@ -166,6 +182,44 @@ public class DefaultSessionService implements SessionService {
 		String existingId = existing.getSessionId();
 		String incomingId = incoming.getSessionId();
 		return existingId != null && existingId.equals(incomingId);
+	}
+
+	private SessionConcurrencyPolicy resolveConcurrencyPolicy(@Nullable String providerId) {
+		Settings.Sessions sessions = settingsProvider.get().getSessions();
+		SessionConcurrencyPolicy policy = sessions.getConcurrencyPolicy();
+		if (policy == null)
+			policy = SessionConcurrencyPolicy.KICK_EXISTING;
+		if (providerId == null || providerId.isBlank())
+			return policy;
+
+		if (sessions.getConcurrencyOverrides() == null)
+			return policy;
+
+		SessionConcurrencyPolicy override = sessions.getConcurrencyOverrides().get(providerId);
+		if (override == null) {
+			override = sessions.getConcurrencyOverrides().get(providerId.trim());
+		}
+		if (override == null) {
+			override = sessions.getConcurrencyOverrides().get(providerId.trim().toLowerCase());
+		}
+
+		return override != null ? override : policy;
+	}
+
+	private void kickExisting(@NotNull Session existing) {
+		UUID uniqueId = existing.getUniqueId();
+		presenceService.find(uniqueId)
+				.ifPresent(identity -> identity.disconnect(buildKickMessage(identity)));
+	}
+
+	private net.kyori.adventure.text.Component buildKickMessage(@NotNull Identity identity) {
+		Messages.Authentication authentication = messagesProvider.get().getAuthentication();
+		java.util.List<String> lines = authentication != null ? authentication.getConcurrentLoginKick() : null;
+		String message = lines != null ? String.join("\n", lines) : "";
+		if (message.isBlank())
+			message = "{prefix}<red>You logged in from another location.</red>";
+
+		return Serializer.serialize(identity, message);
 	}
 
 	private Duration resolveTtl(String providerId) {

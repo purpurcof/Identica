@@ -3,11 +3,12 @@ package me.whereareiam.identica.provider.premium.step;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.IdenticaKeys;
+import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.step.type.SeamlessStep;
-import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
-import me.whereareiam.identica.model.identity.IdentityState;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.type.HandshakeMode;
@@ -21,16 +22,16 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 public class VerifyPremiumProfileStep extends SeamlessStep {
 	private final Provider<PremiumMessages> messagesProvider;
-	private final IdentityRegistry identityRegistry;
+	private final ScopedAttributes scopedAttributes;
 
 	@Inject
 	public VerifyPremiumProfileStep(
 			Provider<PremiumMessages> messagesProvider,
-			IdentityRegistry identityRegistry
+			ScopedAttributes scopedAttributes
 	) {
 		super("verify");
 		this.messagesProvider = messagesProvider;
-		this.identityRegistry = identityRegistry;
+		this.scopedAttributes = scopedAttributes;
 	}
 
 	@Override
@@ -41,10 +42,9 @@ public class VerifyPremiumProfileStep extends SeamlessStep {
 		if (username == null || username.isBlank() || ip == null || ip.isBlank())
 			return CompletableFuture.completedFuture(failed(verification));
 
-		IdentityState state = context.getIdenticaUniqueId() != null
-				? identityRegistry.findState(context.getIdenticaUniqueId()).orElse(null)
-				: null;
-		String providerSubject = state != null ? state.getProviderSubject() : null;
+		String providerSubject = scopedAttributes
+				.get(AttributeScope.PROFILE_HINT, username, IdenticaKeys.PROFILE_PROVIDER_SUBJECT)
+				.orElse(null);
 		if (providerSubject == null || providerSubject.isBlank())
 			return CompletableFuture.completedFuture(failed(verification));
 

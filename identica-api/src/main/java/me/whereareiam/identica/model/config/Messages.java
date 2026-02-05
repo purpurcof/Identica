@@ -317,6 +317,10 @@ public class Messages {
 	public static class Authentication {
 		private @NotNull List<String> handshakeDenied;
 		private @NotNull List<String> authenticationFailed;
+		/**
+		 * Message shown when an existing session is kicked due to a new login.
+		 */
+		private @NotNull List<String> concurrentLoginKick;
 		private @NotNull List<String> noCompletionStep;
 		private @NotNull List<String> stepNoStatus;
 		private @NotNull Routing routing;

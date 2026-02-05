@@ -60,6 +60,13 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"",
 				"<gray>discord.arcadeya.com"
 		));
+		authentication.setConcurrentLoginKick(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>You logged in from another location.</white>",
+				"",
+				"<gray>discord.arcadeya.com"
+		));
 		authentication.setNoCompletionStep(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",

@@ -3,12 +3,13 @@ package me.whereareiam.identica.provider.premium;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileLookup;
-import me.whereareiam.identica.registry.PreLoginExtensions;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 
 import java.util.UUID;
@@ -20,7 +21,7 @@ import java.util.concurrent.CompletionStage;
 public class PremiumHandshakePolicy implements HandshakePolicy {
 	private final PremiumProfileLookup profileLookup;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
-	private final PreLoginExtensions preLoginExtensions;
+	private final ScopedAttributes scopedAttributes;
 
 	@Override
 	public CompletionStage<HandshakeDecision> evaluate(HandshakeRequest request) {
@@ -41,7 +42,7 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 	}
 
 	private boolean hasPremiumLinkByProfileId(String username) {
-		String profileId = preLoginExtensions.peek(username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null);
+		String profileId = scopedAttributes.get(AttributeScope.PROFILE_HINT, username, PremiumKeys.PLATFORM_PROFILE_ID).orElse(null);
 		if (profileId == null || profileId.isBlank())
 			return false;
 

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.session;
+package me.whereareiam.identica.common.identity.session;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -7,13 +7,12 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.cache.codec.type.JsonCodec;
-import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.presence.PresenceService;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,28 +28,30 @@ import java.util.concurrent.CompletionStage;
 
 @Singleton
 public class DefaultSessionService implements SessionService {
+	private final Provider<Settings> settingsProvider;
+	private final Provider<Messages> messagesProvider;
+	private final IdentityService identityService;
+
 	private final Cache<Session> userCache;
 	private final Cache<Session> sessionCache;
 	private final Cache<Session> subjectCache;
-	private final Provider<Settings> settingsProvider;
-	private final Provider<Messages> messagesProvider;
-	private final PresenceService presenceService;
 
 	@Inject
 	public DefaultSessionService(
-			CacheService cacheService,
 			Provider<Settings> settingsProvider,
-			Provider<Replication> replicationProvider,
 			Provider<Messages> messagesProvider,
-			PresenceService presenceService
+			IdentityService identityService,
+			Provider<Replication> replicationProvider,
+			CacheService cacheService
 	) {
+		this.settingsProvider = settingsProvider;
+		this.messagesProvider = messagesProvider;
+		this.identityService = identityService;
+
 		Replication.Sessions sessions = resolveSessions(replicationProvider);
 		this.userCache = cacheService.synchronizedCache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user"), JsonCodec.of(Session.class));
 		this.sessionCache = cacheService.synchronizedCache(resolveNamespace(sessions.getSession(), "replication.cache.sessions.session"), JsonCodec.of(Session.class));
 		this.subjectCache = cacheService.synchronizedCache(resolveNamespace(sessions.getSubject(), "replication.cache.sessions.subject"), JsonCodec.of(Session.class));
-		this.settingsProvider = settingsProvider;
-		this.messagesProvider = messagesProvider;
-		this.presenceService = presenceService;
 	}
 
 	@Override
@@ -126,7 +127,7 @@ public class DefaultSessionService implements SessionService {
 				.thenApply(keys -> {
 					List<UUID> entries = new ArrayList<>();
 					for (String key : keys.entries()) {
-						UUID uniqueId = parseUuid(key);
+						UUID uniqueId = parseUniqueId(key);
 						if (uniqueId != null) entries.add(uniqueId);
 					}
 					return new Page(entries, keys.page(), keys.pageSize(), keys.total());
@@ -187,12 +188,7 @@ public class DefaultSessionService implements SessionService {
 	private SessionConcurrencyPolicy resolveConcurrencyPolicy(@Nullable String providerId) {
 		Settings.Sessions sessions = settingsProvider.get().getSessions();
 		SessionConcurrencyPolicy policy = sessions.getConcurrencyPolicy();
-		if (policy == null)
-			policy = SessionConcurrencyPolicy.KICK_EXISTING;
 		if (providerId == null || providerId.isBlank())
-			return policy;
-
-		if (sessions.getConcurrencyOverrides() == null)
 			return policy;
 
 		SessionConcurrencyPolicy override = sessions.getConcurrencyOverrides().get(providerId);
@@ -208,18 +204,12 @@ public class DefaultSessionService implements SessionService {
 
 	private void kickExisting(@NotNull Session existing) {
 		UUID uniqueId = existing.getUniqueId();
-		presenceService.find(uniqueId)
-				.ifPresent(identity -> identity.disconnect(buildKickMessage(identity)));
-	}
+		String message = String.join("\n", messagesProvider.get()
+				.getAuthentication()
+				.getConcurrentLoginKick());
 
-	private net.kyori.adventure.text.Component buildKickMessage(@NotNull Identity identity) {
-		Messages.Authentication authentication = messagesProvider.get().getAuthentication();
-		java.util.List<String> lines = authentication != null ? authentication.getConcurrentLoginKick() : null;
-		String message = lines != null ? String.join("\n", lines) : "";
-		if (message.isBlank())
-			message = "{prefix}<red>You logged in from another location.</red>";
-
-		return Serializer.serialize(identity, message);
+		identityService.find(uniqueId)
+				.ifPresent(identity -> identity.disconnect(Serializer.serialize(identity, message)));
 	}
 
 	private Duration resolveTtl(String providerId) {
@@ -227,19 +217,13 @@ public class DefaultSessionService implements SessionService {
 
 		Duration resolved = requireDuration(sessions.getDefaultTtl(), "settings.sessions.defaultTtl");
 		Map<String, Duration> overrides = sessions.getProviders();
-		if (providerId == null || providerId.isBlank())
-			return resolved;
+		if (providerId == null || providerId.isBlank()) return resolved;
 
 		Duration override = overrides.get(providerId);
-		if (override == null) {
-			override = overrides.get(providerId.trim());
-		}
-		if (override == null) {
-			override = overrides.get(providerId.trim().toLowerCase());
-		}
+		if (override == null) override = overrides.get(providerId.trim());
+		if (override == null) override = overrides.get(providerId.trim().toLowerCase());
 
-		if (override != null)
-			return requireDuration(override, "settings.sessions.providers." + providerId);
+		if (override != null) return requireDuration(override, "settings.sessions.providers." + providerId);
 
 		return resolved;
 	}
@@ -269,7 +253,7 @@ public class DefaultSessionService implements SessionService {
 		return normalize(providerId) + ":" + normalize(providerSubject);
 	}
 
-	private UUID parseUuid(String value) {
+	private UUID parseUniqueId(String value) {
 		if (value == null || value.isBlank()) return null;
 		try {
 			return UUID.fromString(value.trim());

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.session;
+package me.whereareiam.identica.common.identity.session;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -9,7 +9,7 @@ import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.session.SessionRefreshApplier;
+import me.whereareiam.identica.identity.session.SessionRefreshApplier;
 
 import java.time.Duration;
 @Singleton

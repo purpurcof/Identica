@@ -1,4 +1,4 @@
-package me.whereareiam.identica.profile.adapter;
+package me.whereareiam.identica.auth.adapter;
 
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.presence;
+package me.whereareiam.identica.identity;
 
 import me.whereareiam.identica.identity.actor.Identity;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +11,7 @@ import java.util.UUID;
  * Service for tracking online identity presence.
  */
 @SuppressWarnings("unused")
-public interface PresenceService {
+public interface IdentityService {
 	/**
 	 * Attaches an online identity to the presence store.
 	 *

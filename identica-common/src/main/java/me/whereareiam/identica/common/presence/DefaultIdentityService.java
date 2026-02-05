@@ -3,13 +3,13 @@ package me.whereareiam.identica.common.presence;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.type.AttributeScope;
 import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.event.identity.IdentityAttachEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
 import me.whereareiam.identica.event.identity.IdentityDetachedEvent;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.presence.PresenceService;
+import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class DefaultPresenceService implements PresenceService {
+public class DefaultIdentityService implements IdentityService {
 	private final Map<UUID, Identity> identities = new ConcurrentHashMap<>();
 	private final ScopedAttributes scopedAttributes;
 

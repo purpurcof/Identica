@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
-import me.whereareiam.identica.stage.PendingStage;
+import me.whereareiam.identica.auth.stage.PendingStage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

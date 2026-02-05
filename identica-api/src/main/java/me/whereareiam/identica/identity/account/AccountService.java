@@ -1,4 +1,4 @@
-package me.whereareiam.identica.account;
+package me.whereareiam.identica.identity.account;
 
 import me.whereareiam.identica.model.account.AccountPreparation;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;

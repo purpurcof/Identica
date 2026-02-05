@@ -7,8 +7,8 @@ import me.whereareiam.identica.common.auth.stage.type.PreStepStage;
 import me.whereareiam.identica.common.auth.stage.type.ProviderStepStage;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.stage.StepStage;
-import me.whereareiam.identica.stage.StepStageRegistry;
+import me.whereareiam.identica.auth.stage.StepStage;
+import me.whereareiam.identica.auth.stage.StepStageRegistry;
 import me.whereareiam.identica.type.step.AuthFlowType;
 import org.jetbrains.annotations.NotNull;
 

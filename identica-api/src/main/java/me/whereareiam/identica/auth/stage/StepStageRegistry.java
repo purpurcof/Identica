@@ -1,4 +1,4 @@
-package me.whereareiam.identica.stage;
+package me.whereareiam.identica.auth.stage;
 
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.type.step.AuthFlowType;

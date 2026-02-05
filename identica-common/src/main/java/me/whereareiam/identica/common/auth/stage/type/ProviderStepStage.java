@@ -9,7 +9,7 @@ import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.step.StepDefinition;
-import me.whereareiam.identica.stage.StepStage;
+import me.whereareiam.identica.auth.stage.StepStage;
 import me.whereareiam.identica.type.step.AuthFlowType;
 import me.whereareiam.identica.type.step.StepPhase;
 import org.jetbrains.annotations.NotNull;

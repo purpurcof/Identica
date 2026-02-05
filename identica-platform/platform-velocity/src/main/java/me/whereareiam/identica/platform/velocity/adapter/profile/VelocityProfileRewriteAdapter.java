@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.util.GameProfile;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
-import me.whereareiam.identica.profile.adapter.ProfileRewriteAdapter;
+import me.whereareiam.identica.auth.adapter.ProfileRewriteAdapter;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.provider.ProviderManager;

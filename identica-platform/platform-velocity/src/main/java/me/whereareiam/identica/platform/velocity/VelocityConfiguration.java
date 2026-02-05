@@ -14,7 +14,7 @@ import me.whereareiam.identica.platform.velocity.mapper.CommandSourceMapper;
 import me.whereareiam.identica.platform.velocity.adapter.VelocityRoutingTargetApplier;
 import me.whereareiam.identica.platform.velocity.adapter.VelocitySessionRefresher;
 import me.whereareiam.identica.routing.RoutingTargetApplier;
-import me.whereareiam.identica.session.SessionRefreshApplier;
+import me.whereareiam.identica.identity.session.SessionRefreshApplier;
 import me.whereareiam.keystone.Actor;
 import org.incendo.cloud.CommandManager;
 import org.slf4j.Logger;

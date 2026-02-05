@@ -1,4 +1,4 @@
-package me.whereareiam.identica.attempt;
+package me.whereareiam.identica.auth.attempt;
 
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import org.jetbrains.annotations.NotNull;

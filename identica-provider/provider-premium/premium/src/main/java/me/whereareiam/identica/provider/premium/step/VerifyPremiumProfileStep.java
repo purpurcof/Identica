@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.IdenticaKeys;
-import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.type.AttributeScope;
 import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.step.type.SeamlessStep;
 import me.whereareiam.identica.model.auth.AuthContext;

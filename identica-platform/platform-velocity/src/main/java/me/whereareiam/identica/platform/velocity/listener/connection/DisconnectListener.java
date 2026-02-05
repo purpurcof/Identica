@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.presence.PresenceService;
+import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.routing.RoutingStateStore;
 import me.whereareiam.identica.listener.DynamicListener;
 
@@ -13,7 +13,7 @@ import me.whereareiam.identica.listener.DynamicListener;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DisconnectListener implements DynamicListener<DisconnectEvent> {
 	private final RoutingStateStore routingStateStore;
-	private final PresenceService presenceService;
+	private final IdentityService identityService;
 
 	@Override
 	public void onEvent(DisconnectEvent event) {
@@ -21,6 +21,6 @@ public class DisconnectListener implements DynamicListener<DisconnectEvent> {
 		if (player == null) return;
 
 		routingStateStore.clear(player.getUniqueId());
-		presenceService.detach(player.getUniqueId());
+		identityService.detach(player.getUniqueId());
 	}
 }

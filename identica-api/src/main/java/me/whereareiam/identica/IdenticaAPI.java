@@ -2,7 +2,7 @@ package me.whereareiam.identica;
 
 import com.google.inject.Injector;
 import lombok.Getter;
-import me.whereareiam.identica.account.AccountService;
+import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.AuthenticationCoordinator;
 import me.whereareiam.identica.cache.CacheService;
@@ -10,9 +10,9 @@ import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
-import me.whereareiam.identica.presence.PresenceService;
+import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.service.SynchronizationService;
 import org.jetbrains.annotations.NotNull;
 
@@ -176,14 +176,14 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the PresenceService for online identity tracking.
+	 * Gets the IdentityService for online identity tracking.
 	 *
-	 * @return the PresenceService instance
+	 * @return the IdentityService instance
 	 * @throws IllegalStateException if the API is not initialized
 	 */
 	@NotNull
-	public static PresenceService getPresenceService() {
-		return getService(PresenceService.class);
+	public static IdentityService getPresenceService() {
+		return getService(IdentityService.class);
 	}
 
 	/**

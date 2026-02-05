@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.attributes;
 
 import me.whereareiam.identica.Key;
-import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.type.AttributeScope;
 import me.whereareiam.identica.attributes.ScopedAttributes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

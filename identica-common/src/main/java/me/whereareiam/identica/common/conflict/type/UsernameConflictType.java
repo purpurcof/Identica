@@ -17,7 +17,7 @@ import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.type.ConflictHook;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

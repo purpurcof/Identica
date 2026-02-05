@@ -6,8 +6,8 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.scheduler.ScheduledTask;
 import me.whereareiam.identica.platform.velocity.VelocityIdentica;
-import me.whereareiam.identica.session.SessionService;
-import me.whereareiam.identica.session.SessionRefreshApplier;
+import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.identity.session.SessionRefreshApplier;
 import org.jspecify.annotations.NonNull;
 
 import java.time.Duration;

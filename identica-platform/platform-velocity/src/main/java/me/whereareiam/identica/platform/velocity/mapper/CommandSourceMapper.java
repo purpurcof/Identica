@@ -7,7 +7,7 @@ import com.velocitypowered.api.proxy.ConsoleCommandSource;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.presence.PresenceService;
+import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandConsole;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import me.whereareiam.keystone.Actor;
@@ -17,7 +17,7 @@ import org.incendo.cloud.SenderMapper;
 @Singleton
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class CommandSourceMapper implements SenderMapper<CommandSource, Actor> {
-	private final PresenceService presenceService;
+	private final IdentityService identityService;
 
 	@Override
 	public @NonNull Actor map(@NonNull CommandSource source) {
@@ -25,13 +25,13 @@ public class CommandSourceMapper implements SenderMapper<CommandSource, Actor> {
 			return new VelocityCommandConsole(console);
 
 		if (source instanceof Player player) {
-			Identity identity = presenceService.find(player.getUniqueId())
+			Identity identity = identityService.find(player.getUniqueId())
 					.orElse(null);
 
 			if (identity != null) return identity;
 
 			VelocityCommandPlayer created = new VelocityCommandPlayer(player);
-			presenceService.attach(created);
+			identityService.attach(created);
 			return created;
 		}
 

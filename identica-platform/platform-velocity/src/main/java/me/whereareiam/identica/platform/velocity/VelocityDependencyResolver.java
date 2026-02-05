@@ -4,7 +4,7 @@ import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
 import me.whereareiam.attache.model.LibraryRequest;
 import me.whereareiam.attache.platform.velocity.VelocityLibraryManager;
-import me.whereareiam.identica.common.dependency.CommonDependencyResolver;
+import me.whereareiam.identica.common.CommonDependencyResolver;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;

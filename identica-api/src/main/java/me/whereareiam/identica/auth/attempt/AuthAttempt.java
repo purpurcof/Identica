@@ -1,9 +1,10 @@
-package me.whereareiam.identica.attempt;
+package me.whereareiam.identica.auth.attempt;
 
+import lombok.Getter;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.StepResult;
-import me.whereareiam.identica.stage.PendingStage;
-import me.whereareiam.identica.stage.StepStage;
+import me.whereareiam.identica.auth.stage.PendingStage;
+import me.whereareiam.identica.auth.stage.StepStage;
 import me.whereareiam.identica.type.step.AuthFlowType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,10 +20,12 @@ public class AuthAttempt {
 	private final @NotNull UUID attemptId;
 	private final @NotNull AuthFlowType flow;
 	private final @NotNull List<StepStage> stages;
+	@Getter
 	private final int stageIndex;
 	private final @NotNull PendingStage pendingStage;
 	private final @NotNull AuthContext context;
 	private final @Nullable StepResult completionResult;
+	@Getter
 	private final long createdAt;
 
 	/**
@@ -85,15 +88,6 @@ public class AuthAttempt {
 	}
 
 	/**
-	 * Returns the current stage index.
-	 *
-	 * @return stage index
-	 */
-	public int getStageIndex() {
-		return stageIndex;
-	}
-
-	/**
 	 * Returns the pending stage snapshot.
 	 *
 	 * @return pending stage
@@ -118,14 +112,5 @@ public class AuthAttempt {
 	 */
 	public @Nullable StepResult getCompletionResult() {
 		return completionResult;
-	}
-
-	/**
-	 * Returns the creation timestamp in millis.
-	 *
-	 * @return creation timestamp
-	 */
-	public long getCreatedAt() {
-		return createdAt;
 	}
 }

@@ -20,8 +20,8 @@ import me.whereareiam.identica.model.account.Account;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.presence.PresenceService;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
@@ -48,7 +48,7 @@ public class SessionsCommand {
 	private final Provider<Commands> commandsProvider;
 	private final AccountPersistenceService accountPersistenceService;
 	private final SessionService sessionService;
-	private final PresenceService presenceService;
+	private final IdentityService identityService;
 
 	@Definition("session")
 	@Command("identica session [page]")
@@ -134,7 +134,7 @@ public class SessionsCommand {
 		Session resolvedSession = session.get();
 		sessionService.close(resolvedSession.getUniqueId()).join();
 
-		presenceService.find(resolvedSession.getUniqueId())
+		identityService.find(resolvedSession.getUniqueId())
 				.ifPresent(identity -> disconnect(identity, endMessages));
 
 		String username = resolveUsername(resolvedSession, unknown);
@@ -180,7 +180,7 @@ public class SessionsCommand {
 			return new ResolvedTarget(parsed);
 		}
 
-		Optional<Identity> player = presenceService.find(target);
+		Optional<Identity> player = identityService.find(target);
 		if (player.isPresent()) {
 			return new ResolvedTarget(player.get().getUniqueId());
 		}

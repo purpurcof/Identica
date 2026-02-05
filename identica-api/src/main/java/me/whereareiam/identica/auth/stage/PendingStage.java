@@ -1,4 +1,4 @@
-package me.whereareiam.identica.stage;
+package me.whereareiam.identica.auth.stage;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.session;
+package me.whereareiam.identica.identity.session;
 
 import me.whereareiam.identica.model.Session;
 import org.jetbrains.annotations.NotNull;

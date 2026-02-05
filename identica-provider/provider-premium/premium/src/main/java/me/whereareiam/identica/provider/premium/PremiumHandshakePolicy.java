@@ -3,7 +3,7 @@ package me.whereareiam.identica.provider.premium;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.type.AttributeScope;
 import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;

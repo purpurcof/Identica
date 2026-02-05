@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.dependency;
+package me.whereareiam.identica.common;
 
 import me.whereareiam.attache.LibraryManager;
 import me.whereareiam.attache.model.LibraryRequest;

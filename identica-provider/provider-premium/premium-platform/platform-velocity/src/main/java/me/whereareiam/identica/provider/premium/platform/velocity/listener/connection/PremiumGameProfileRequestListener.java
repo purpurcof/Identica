@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.type.AttributeScope;
 import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.config.Settings;

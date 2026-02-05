@@ -1,13 +1,12 @@
-package me.whereareiam.identica.common.attempt;
+package me.whereareiam.identica.common.auth.attempt;
 
 import com.google.inject.Singleton;
-import me.whereareiam.identica.attempt.AuthAttempt;
-import me.whereareiam.identica.attempt.AuthAttemptStore;
+import me.whereareiam.identica.auth.attempt.AuthAttempt;
+import me.whereareiam.identica.auth.attempt.AuthAttemptStore;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -90,12 +89,7 @@ public class DefaultAuthAttemptStore implements AuthAttemptStore {
 
 	private void cleanupExpired() {
 		long now = System.currentTimeMillis();
-		Iterator<Map.Entry<UUID, Entry>> iterator = attempts.entrySet().iterator();
-		while (iterator.hasNext()) {
-			Map.Entry<UUID, Entry> entry = iterator.next();
-			if (entry.getValue().expiresAt > 0 && entry.getValue().expiresAt <= now)
-				iterator.remove();
-		}
+		attempts.entrySet().removeIf(entry -> entry.getValue().expiresAt > 0 && entry.getValue().expiresAt <= now);
 	}
 
 	private boolean isExpired(@NotNull Entry entry) {

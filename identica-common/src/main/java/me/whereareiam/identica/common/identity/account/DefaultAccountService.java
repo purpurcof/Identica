@@ -1,12 +1,12 @@
-package me.whereareiam.identica.common.account;
+package me.whereareiam.identica.common.identity.account;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.account.AccountService;
+import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.IdenticaKeys;
-import me.whereareiam.identica.attributes.AttributeScope;
+import me.whereareiam.identica.type.AttributeScope;
 import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.common.uuid.UniqueIdResolutionSupport;
 import me.whereareiam.identica.database.AccountPersistenceService;
@@ -25,7 +25,7 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.util.EventUtil;

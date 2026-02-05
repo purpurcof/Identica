@@ -2,12 +2,13 @@ package me.whereareiam.identica.common.session;
 
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.CacheService;
+import me.whereareiam.identica.common.identity.session.DefaultSessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.presence.PresenceService;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Test;
@@ -30,11 +31,11 @@ class DefaultSessionStoreTest {
 	void storesAndFindsByKeys() throws Exception {
 		FakeCacheService cacheService = new FakeCacheService();
 		SessionService service = new DefaultSessionService(
-				cacheService,
 				this::settings,
-				this::replication,
 				Messages::new,
-				mock(PresenceService.class)
+				mock(IdentityService.class),
+				this::replication,
+				cacheService
 		);
 
 		Session session = Session.builder()
@@ -61,11 +62,11 @@ class DefaultSessionStoreTest {
 	void overwritesExistingSessionForSameUser() throws Exception {
 		FakeCacheService cacheService = new FakeCacheService();
 		SessionService service = new DefaultSessionService(
-				cacheService,
 				this::settings,
-				this::replication,
 				Messages::new,
-				mock(PresenceService.class)
+				mock(IdentityService.class),
+				this::replication,
+				cacheService
 		);
 
 		UUID identicaId = UUID.randomUUID();
@@ -100,11 +101,11 @@ class DefaultSessionStoreTest {
 	void refreshKeepsSessionId() throws Exception {
 		FakeCacheService cacheService = new FakeCacheService();
 		SessionService service = new DefaultSessionService(
-				cacheService,
 				this::settings,
-				this::replication,
 				Messages::new,
-				mock(PresenceService.class)
+				mock(IdentityService.class),
+				this::replication,
+				cacheService
 		);
 
 		UUID identicaId = UUID.randomUUID();
@@ -128,11 +129,11 @@ class DefaultSessionStoreTest {
 	void providerOverrideTtlApplied() throws Exception {
 		FakeCacheService cacheService = new FakeCacheService();
 		SessionService service = new DefaultSessionService(
-				cacheService,
 				this::settings,
-				this::replication,
 				Messages::new,
-				mock(PresenceService.class)
+				mock(IdentityService.class),
+				this::replication,
+				cacheService
 		);
 
 		UUID identicaId = UUID.randomUUID();

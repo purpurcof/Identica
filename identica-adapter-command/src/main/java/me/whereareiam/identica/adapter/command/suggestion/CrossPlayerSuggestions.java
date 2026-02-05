@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Commands;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.keystone.Actor;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;

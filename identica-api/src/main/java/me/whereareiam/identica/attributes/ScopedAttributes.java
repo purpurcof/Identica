@@ -1,6 +1,7 @@
 package me.whereareiam.identica.attributes;
 
 import me.whereareiam.identica.Key;
+import me.whereareiam.identica.type.AttributeScope;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;

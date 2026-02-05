@@ -2,7 +2,7 @@ package me.whereareiam.identica.common.auth;
 
 import me.whereareiam.identica.auth.HandshakePolicy;
 import me.whereareiam.identica.common.auth.handshake.HandshakeInstructionRegistry;
-import me.whereareiam.identica.common.account.DefaultAccountService;
+import me.whereareiam.identica.common.identity.account.DefaultAccountService;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.ProviderProfilePersistenceService;
@@ -21,7 +21,7 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.registry.Registry;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.attributes.ScopedAttributes;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.util.EventUtil;

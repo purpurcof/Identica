@@ -1,4 +1,6 @@
-package me.whereareiam.identica.attributes;
+package me.whereareiam.identica.type;
+
+import me.whereareiam.identica.attributes.ScopedAttributes;
 
 /**
  * Scope identifiers for {@link ScopedAttributes} storage.

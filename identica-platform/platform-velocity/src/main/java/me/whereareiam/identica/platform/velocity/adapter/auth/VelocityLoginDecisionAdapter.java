@@ -14,24 +14,24 @@ import me.whereareiam.identica.model.auth.AuthDecision;
 import me.whereareiam.identica.model.auth.request.LoginRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
-import me.whereareiam.identica.presence.PresenceService;
+import me.whereareiam.identica.identity.IdentityService;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
 public class VelocityLoginDecisionAdapter extends AuthenticationDecisionAdapter implements DynamicListener<LoginEvent> {
 	private final @NotNull AuthenticationCoordinator authenticationCoordinator;
-	private final @NotNull PresenceService presenceService;
+	private final @NotNull IdentityService identityService;
 
 	@Inject
 	public VelocityLoginDecisionAdapter(
 			@NotNull AuthenticationCoordinator authenticationCoordinator,
 			@NotNull Provider<Messages> messagesProvider,
-			@NotNull PresenceService presenceService
+			@NotNull IdentityService identityService
 	) {
 		super(messagesProvider);
 		this.authenticationCoordinator = authenticationCoordinator;
-		this.presenceService = presenceService;
+		this.identityService = identityService;
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public class VelocityLoginDecisionAdapter extends AuthenticationDecisionAdapter 
 	private void attachPresenceIfAllowed(@NotNull AuthDecision decision, @NotNull Player player) {
 		if (decision.getStatus() == null) return;
 		switch (decision.getStatus()) {
-			case ALLOW, WAIT -> presenceService.attach(new VelocityCommandPlayer(player));
+			case ALLOW, WAIT -> identityService.attach(new VelocityCommandPlayer(player));
 			default -> {
 			}
 		}

@@ -10,13 +10,13 @@ import me.whereareiam.identica.event.routing.RoutingTargetUpdatedEvent;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
 import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.model.RoutingTarget;
-import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.auth.StepResult;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.routing.RoutingDecision;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.routing.RoutingStateStore;
 import me.whereareiam.identica.routing.RoutingTargetApplier;
-import me.whereareiam.identica.type.step.AuthFlowType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 
 import java.util.UUID;
 
@@ -46,8 +46,8 @@ public class RoutingLifecycle implements EventListener {
 		if (event == null)
 			return;
 
-		AuthFlowType flow = event.getFlow();
-		if (flow == AuthFlowType.SEAMLESS)
+		JourneyType flow = event.getFlow();
+		if (flow == JourneyType.SEAMLESS)
 			return;
 
 		RoutingDecision decision = new RoutingDecision(
@@ -71,8 +71,6 @@ public class RoutingLifecycle implements EventListener {
 		if (event == null) return;
 
 		StepResult result = event.getResult();
-		if (result.getStatus() == null) return;
-
 		if (result.getStatus() == StepResult.StepStatus.WAITING)
 			return;
 
@@ -102,7 +100,7 @@ public class RoutingLifecycle implements EventListener {
 		routingStateStore.clear(event.getConnectionUniqueId());
 	}
 
-	private void store(AuthContext context, RoutingTarget target) {
+	private void store(ScenarioContext context, RoutingTarget target) {
 		UUID connectionId = context != null ? context.getConnectionUniqueId() : null;
 		if (connectionId == null || target == null) return;
 
@@ -111,7 +109,7 @@ public class RoutingLifecycle implements EventListener {
 		eventManager.call(new RoutingTargetUpdatedEvent(connectionId, target, context));
 	}
 
-	private void clear(AuthContext context) {
+	private void clear(ScenarioContext context) {
 		UUID connectionId = context != null ? context.getConnectionUniqueId() : null;
 		if (connectionId == null) return;
 

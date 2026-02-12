@@ -29,9 +29,9 @@ public class DefaultProviderProfilePersistenceService implements ProviderProfile
 	@Override
 	public @NotNull AccountProviderProfile upsert(@NotNull AccountProviderProfile profile) {
 		if (profile.getProviderId().isBlank())
-			throw new IllegalArgumentException("Provider profile provider id is required");
+			throw new IllegalArgumentException("Provider resolver provider id is required");
 		if (profile.getProviderSubject().isBlank())
-			throw new IllegalArgumentException("Provider profile provider subject is required");
+			throw new IllegalArgumentException("Provider resolver provider subject is required");
 
 		AccountProviderProfileEntity entity = AccountProviderProfileMapper.toEntity(profile);
 		Optional<AccountProviderProfileEntity> existing = repository.findBySubject(

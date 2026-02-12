@@ -1,6 +1,7 @@
 package me.whereareiam.identica.identity.session;
 
 import me.whereareiam.identica.model.Session;
+import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,6 +16,7 @@ import java.util.concurrent.CompletableFuture;
  * <p>Sessions are ephemeral and stored in cache-backed storage with
  * cache-level key listings for global visibility.</p>
  */
+@SuppressWarnings("unused")
 public interface SessionService {
 	/**
 	 * Finds a session by session id.
@@ -57,10 +59,22 @@ public interface SessionService {
 	@NotNull CompletableFuture<@Nullable Session> open(@Nullable Session session);
 
 	/**
+	 * Opens a session with an explicit concurrency policy override.
+	 *
+	 * @param session session to open
+	 * @param policy concurrency policy override
+	 * @return stored session or {@code null} when rejected
+	 */
+	@NotNull CompletableFuture<@Nullable Session> open(
+			@Nullable Session session,
+			@NotNull SessionConcurrencyPolicy policy
+	);
+
+	/**
 	 * Closes a session by identity id.
 	 *
 	 * @param uniqueId identity id
-	 * @return completion stage
+	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> close(@Nullable UUID uniqueId);
 
@@ -68,7 +82,7 @@ public interface SessionService {
 	 * Refreshes a session for an identity id.
 	 *
 	 * @param uniqueId identity id
-	 * @return completion stage
+	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> refresh(@Nullable UUID uniqueId);
 

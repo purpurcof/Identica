@@ -19,7 +19,7 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 				"<gray>If you don't have a premium account, you will be",
 				"<gray>forwarded to a fallback provider on your second attempt.",
 				"",
-				"<gray>discord.arcadeya.com"
+				"<dark_gray>discord.arcadeya.com"
 		));
 		verification.setInvalidSession(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
@@ -27,7 +27,7 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 				"<white>Invalid Mojang session.",
 				"<white>Rejoin with your premium account",
 				"",
-				"<gray>discord.arcadeya.com"
+				"<dark_gray>discord.arcadeya.com"
 		));
 		messages.setVerification(verification);
 

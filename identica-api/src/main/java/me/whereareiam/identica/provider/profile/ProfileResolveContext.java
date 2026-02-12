@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Context passed to profile subject resolvers during profile rewrite.
+ * Context passed to resolver subject resolvers during resolver rewrite.
  */
 @Getter
 @Builder

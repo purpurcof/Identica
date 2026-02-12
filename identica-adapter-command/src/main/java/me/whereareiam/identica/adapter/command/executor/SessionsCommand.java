@@ -16,7 +16,7 @@ import me.whereareiam.identica.annotation.Range;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
-import me.whereareiam.identica.model.account.Account;
+import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;

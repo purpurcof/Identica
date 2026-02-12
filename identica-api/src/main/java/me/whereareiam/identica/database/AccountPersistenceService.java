@@ -1,6 +1,6 @@
 package me.whereareiam.identica.database;
 
-import me.whereareiam.identica.model.account.Account;
+import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.type.UsernameSource;
 import org.jetbrains.annotations.NotNull;
 

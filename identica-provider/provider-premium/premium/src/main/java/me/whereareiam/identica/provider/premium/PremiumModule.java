@@ -4,8 +4,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import me.whereareiam.identica.model.config.Commands;
-import me.whereareiam.identica.auth.HandshakePolicy;
+import me.whereareiam.identica.handshake.HandshakePolicy;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
+import me.whereareiam.identica.provider.premium.policy.PremiumHandshakePolicy;
+import me.whereareiam.identica.provider.premium.resolver.PremiumEligibilityResolver;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.provider.premium.config.PremiumCommands;
 import me.whereareiam.identica.provider.premium.command.PremiumCommand;
@@ -14,7 +16,7 @@ import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumCommandsProvider;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumMessagesProvider;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumSettingsProvider;
-import me.whereareiam.identica.provider.premium.profile.PremiumProfileSubjectResolver;
+import me.whereareiam.identica.provider.premium.resolver.PremiumProfileSubjectResolver;
 
 public class PremiumModule extends AbstractModule {
 	@Override

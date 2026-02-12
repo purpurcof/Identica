@@ -2,7 +2,7 @@ package me.whereareiam.identica.event.auth.enrollment;
 
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
-import me.whereareiam.identica.model.auth.AuthContext;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.auth.EnrollmentEntry;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,17 +13,17 @@ import java.util.Objects;
  * Event fired before enrollment options are rendered to the player.
  */
 public class EnrollmentOptionsEvent implements Event, SynchronousEvent {
-	private final @NotNull AuthContext context;
+	private final @NotNull ScenarioContext context;
 	private @NotNull List<EnrollmentEntry> entries;
 
 	/**
 	 * Creates a new enrollment options event.
 	 *
-	 * @param context authentication context
+	 * @param context scenario context
 	 * @param entries enrollment entries to render
 	 */
 	public EnrollmentOptionsEvent(
-			@NotNull AuthContext context,
+			@NotNull ScenarioContext context,
 			@NotNull List<EnrollmentEntry> entries
 	) {
 		this.context = Objects.requireNonNull(context, "context");
@@ -31,11 +31,11 @@ public class EnrollmentOptionsEvent implements Event, SynchronousEvent {
 	}
 
 	/**
-	 * Returns the authentication context.
+	 * Returns the scenario context.
 	 *
-	 * @return authentication context
+	 * @return scenario context
 	 */
-	public @NotNull AuthContext getContext() {
+	public @NotNull ScenarioContext getContext() {
 		return context;
 	}
 

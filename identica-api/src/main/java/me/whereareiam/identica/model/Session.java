@@ -60,4 +60,47 @@ public class Session {
 	 * Creation timestamp (epoch millis).
 	 */
 	private long createdAt;
+
+	/**
+	 * Returns whether this session represents the same provider subject as another session.
+	 *
+	 * @param other another session
+	 * @return {@code true} if provider id and provider subject match (case-insensitive)
+	 */
+	public boolean matchesProviderSubject(@Nullable Session other) {
+		if (other == null)
+			return false;
+		return equalsIgnoreCaseNonBlank(providerId, other.providerId)
+				&& equalsIgnoreCaseNonBlank(providerSubject, other.providerSubject);
+	}
+
+	/**
+	 * Tries to reuse the session id from another session when both describe the same provider subject.
+	 *
+	 * @param existing existing session candidate
+	 * @return {@code true} when the session id was adopted
+	 */
+	public boolean adoptSessionIdFrom(@Nullable Session existing) {
+		if (hasText(sessionId)) return false;
+		if (existing == null || !matchesProviderSubject(existing)) return false;
+		if (!hasText(existing.sessionId)) return false;
+
+		sessionId = existing.sessionId;
+		return true;
+	}
+
+	private static boolean equalsIgnoreCaseNonBlank(@Nullable String left, @Nullable String right) {
+		if (left == null || right == null) return false;
+
+		String normalizedLeft = left.trim();
+		String normalizedRight = right.trim();
+		if (normalizedLeft.isEmpty() || normalizedRight.isEmpty())
+			return false;
+
+		return normalizedLeft.equalsIgnoreCase(normalizedRight);
+	}
+
+	private static boolean hasText(@Nullable String value) {
+		return value != null && !value.trim().isEmpty();
+	}
 }

@@ -9,7 +9,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 /**
- * Abstract base class for Identica identity implementations.
+ * Abstract runner class for Identica identity implementations.
  * Platform-specific modules extend this with concrete implementations.
  */
 @SuppressWarnings("unused")

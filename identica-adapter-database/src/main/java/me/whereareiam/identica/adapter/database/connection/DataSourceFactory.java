@@ -24,7 +24,7 @@ public final class DataSourceFactory {
 	 * Creates a HikariCP DataSource with the given configuration.
 	 *
 	 * @param persistence the database configuration
-	 * @param dataPath    base path for relative database files
+	 * @param dataPath    runner path for relative database files
 	 * @return the initialized DataSource
 	 */
 	public static DataSource create(Persistence persistence, Path dataPath) {

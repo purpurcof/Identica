@@ -1,17 +1,18 @@
 package me.whereareiam.identica;
 
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import lombok.Getter;
-import me.whereareiam.identica.identity.account.AccountService;
-import me.whereareiam.identica.auth.AuthenticationCoordinator;
+import me.whereareiam.identica.identity.account.RegistrationAccountService;
+import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
-import me.whereareiam.identica.flow.FlowTransit;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.service.SynchronizationService;
 import org.jetbrains.annotations.NotNull;
@@ -31,8 +32,8 @@ import org.jetbrains.annotations.NotNull;
  *     return;
  * }
  *
- * // Get the authentication service
- * AuthenticationCoordinator authService = IdenticaAPI.getAuthService();
+ * // Get the connection coordinator
+ * ConnectionCoordinator connectionCoordinator = IdenticaAPI.getConnectionCoordinator();
  *
  * // Or get any service by class
  * ProviderManager providerManager = IdenticaAPI.getService(ProviderManager.class);
@@ -87,13 +88,18 @@ public final class IdenticaAPI {
 	 */
 	@NotNull
 	public static <T> T getService(@NotNull Class<T> serviceClass) {
+		return getService(Key.get(serviceClass));
+	}
+
+	@NotNull
+	public static <T> T getService(@NotNull Key<T> key) {
 		Injector currentInjector = injector;
 		if (currentInjector == null) {
 			throw new IllegalStateException(
 					"IdenticaAPI is not initialized. Make sure Identica is loaded and wait for IdenticaReadyEvent."
 			);
 		}
-		return currentInjector.getInstance(serviceClass);
+		return currentInjector.getInstance(key);
 	}
 
 	// ===== Convenience Methods for Common Services =====
@@ -110,14 +116,14 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the AuthenticationCoordinator for running authentication flows.
+	 * Gets the ConnectionCoordinator for processing connection flows.
 	 *
-	 * @return the AuthenticationCoordinator instance
+	 * @return the ConnectionCoordinator instance
 	 * @throws IllegalStateException if the API is not initialized
 	 */
 	@NotNull
-	public static AuthenticationCoordinator getAuthService() {
-		return getService(AuthenticationCoordinator.class);
+	public static ConnectionCoordinator getConnectionCoordinator() {
+		return getService(ConnectionCoordinator.class);
 	}
 
 	/**
@@ -129,6 +135,17 @@ public final class IdenticaAPI {
 	@NotNull
 	public static ProviderManager getProviderManager() {
 		return getService(ProviderManager.class);
+	}
+
+	/**
+	 * Gets runtime provider operations (eligibility, resolver resolution).
+	 *
+	 * @return the ProviderOperations instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
+	@NotNull
+	public static ProviderOperations getProviderOperations() {
+		return getService(ProviderOperations.class);
 	}
 
 	/**
@@ -165,14 +182,14 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the AccountService for account preparation operations.
+	 * Gets the RegistrationAccountService for account reservation operations.
 	 *
-	 * @return the AccountService instance
+	 * @return the RegistrationAccountService instance
 	 * @throws IllegalStateException if the API is not initialized
 	 */
 	@NotNull
-	public static AccountService getAccountService() {
-		return getService(AccountService.class);
+	public static RegistrationAccountService getRegistrationAccountService() {
+		return getService(RegistrationAccountService.class);
 	}
 
 	/**
@@ -184,17 +201,6 @@ public final class IdenticaAPI {
 	@NotNull
 	public static IdentityService getPresenceService() {
 		return getService(IdentityService.class);
-	}
-
-	/**
-	 * Gets the FlowTransit service for short-lived cross-phase signal exchange.
-	 *
-	 * @return the FlowTransit instance
-	 * @throws IllegalStateException if the API is not initialized
-	 */
-	@NotNull
-	public static FlowTransit getFlowTransit() {
-		return getService(FlowTransit.class);
 	}
 
 	/**
@@ -218,4 +224,10 @@ public final class IdenticaAPI {
 	public static SynchronizationService getSynchronizationService() {
 		return getService(SynchronizationService.class);
 	}
+
+	@NotNull
+	public static PipelineExtensionRegistry getPipelineExtensionRegistry() {
+		return getService(PipelineExtensionRegistry.class);
+	}
+
 }

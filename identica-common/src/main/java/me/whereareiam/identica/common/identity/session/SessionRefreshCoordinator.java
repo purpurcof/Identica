@@ -30,24 +30,16 @@ public class SessionRefreshCoordinator implements EventListener {
 
 	@IdenticEvent
 	public void onReady(IdenticaReadyEvent event) {
-		start();
-	}
+		onShutdown(null);
 
-	@IdenticEvent
-	public void onShutdown(IdenticaShutdownEvent event) {
-		stop();
-	}
-
-	private void start() {
-		stop();
-
-		Duration refreshInterval = settingsProvider.get().getSessions().getRefreshTtl();
+		Duration refreshInterval = settingsProvider.get().getConnection().getSessions().getRefreshTtl();
 		if (!isUsable(refreshInterval)) return;
 		if (applier == null) return;
 		applier.start(refreshInterval);
 	}
 
-	private void stop() {
+	@IdenticEvent
+	public void onShutdown(IdenticaShutdownEvent event) {
 		if (applier == null) return;
 		applier.stop();
 	}

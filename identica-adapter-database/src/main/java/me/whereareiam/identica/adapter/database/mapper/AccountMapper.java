@@ -1,7 +1,7 @@
 package me.whereareiam.identica.adapter.database.mapper;
 
 import me.whereareiam.identica.adapter.database.entity.AccountEntity;
-import me.whereareiam.identica.model.account.Account;
+import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.type.UsernameSource;
 
 public final class AccountMapper {

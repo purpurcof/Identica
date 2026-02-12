@@ -49,6 +49,18 @@ public final class LocalCache<T> implements Cache<T> {
 	}
 
 	@Override
+	public @NotNull CompletableFuture<Optional<T>> consume(String key) {
+		if (key == null) return CompletableFuture.completedFuture(Optional.empty());
+
+		Entry<T> entry = entries.remove(key);
+		if (entry == null) return CompletableFuture.completedFuture(Optional.empty());
+		if (entry.expiresAt > 0 && entry.expiresAt <= System.currentTimeMillis())
+			return CompletableFuture.completedFuture(Optional.empty());
+
+		return CompletableFuture.completedFuture(Optional.ofNullable(entry.value));
+	}
+
+	@Override
 	public @NotNull CompletableFuture<Page> listKeys(int page, int pageSize) {
 		int safePage = Math.max(1, page);
 		int safeSize = Math.max(1, pageSize);

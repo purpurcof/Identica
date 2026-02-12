@@ -3,10 +3,9 @@ package me.whereareiam.identica.provider.profile;
 import lombok.Builder;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
- * Resolution result for a profile subject lookup.
+ * Resolution result for a resolver subject lookup.
  */
 @Getter
 @Builder

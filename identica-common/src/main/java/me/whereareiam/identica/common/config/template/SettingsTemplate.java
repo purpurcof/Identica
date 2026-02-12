@@ -5,8 +5,9 @@ import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.event.EventPriority;
+import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
-import me.whereareiam.identica.type.step.AuthFlowType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -20,16 +21,16 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 
 		Settings.Routing routing = new Settings.Routing();
 		Settings.Routing.Targets targets = new Settings.Routing.Targets();
-		targets.setPre("auth");
-		targets.setProvider("auth");
-		targets.setEnd("lobby");
-		targets.setCompleted("lobby");
-		routing.setTargets(targets);
-
-		Settings.Routing.Overrides overrides = new Settings.Routing.Overrides();
+		targets.setStep("lobby");
+		Settings.Routing.Targets.Overrides overrides = new Settings.Routing.Targets.Overrides();
+		overrides.setStages(new HashMap<>(Map.of(
+				"pre", "auth",
+				"provider", "auth",
+				"end", "lobby"
+		)));
 		overrides.setSteps(new HashMap<>());
-		routing.setOverrides(overrides);
-		settings.setRouting(routing);
+		targets.setOverrides(overrides);
+		routing.setTargets(targets);
 
 		Settings.Listeners listeners = new Settings.Listeners();
 		listeners.setEvents(defaultListenerEvents());
@@ -41,18 +42,29 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		sessions.setProviders(Map.of(
 				"premium", Duration.ofHours(12)
 		));
-		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.KICK_EXISTING);
+		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		sessions.setConcurrencyOverrides(new HashMap<>());
-		settings.setSessions(sessions);
 
-		Settings.Authentication authentication = new Settings.Authentication();
-		authentication.setHandshakeInstructionTtl(Duration.ofMinutes(10));
-		authentication.setPendingTtl(Duration.ofMinutes(5));
-		authentication.setReservationTtl(Duration.ofMinutes(15));
-		authentication.setFlow(AuthFlowType.SEAMLESS);
-		settings.setAuthentication(authentication);
+		Settings.Connection connection = new Settings.Connection();
+		connection.setRouting(routing);
+		connection.setSessions(sessions);
+		connection.setHandshakeInstructionTtl(Duration.ofMinutes(10));
+		connection.setReservationTtl(Duration.ofMinutes(15));
+		connection.setAuthentication(defaultConnectionScenario());
+		connection.setRegistration(defaultConnectionScenario());
+		settings.setConnection(connection);
 
 		return settings;
+	}
+
+	private Settings.Scenario defaultConnectionScenario() {
+		Settings.Scenario scenario = new Settings.Scenario();
+		scenario.setPipelineTtl(Duration.ofMinutes(5));
+		scenario.setAllowResume(true);
+		scenario.setSessionConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
+		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
+		scenario.setFlow(JourneyType.SEAMLESS);
+		return scenario;
 	}
 
 	private Map<String, Event> defaultListenerEvents() {

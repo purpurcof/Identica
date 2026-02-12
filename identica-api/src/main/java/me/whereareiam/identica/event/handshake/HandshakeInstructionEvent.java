@@ -11,7 +11,7 @@ import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Event fired when a handshake instruction is requested.
+ * Event fired when a handshake instruction is stored.
  */
 @Getter
 @Setter

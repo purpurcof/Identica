@@ -3,15 +3,14 @@ package me.whereareiam.identica.common.identity.session;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.cache.Cache;
 import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.cache.codec.type.JsonCodec;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.identity.session.SessionReplacedEvent;
 import me.whereareiam.identica.model.Session;
-import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
@@ -29,8 +28,7 @@ import java.util.concurrent.CompletionStage;
 @Singleton
 public class DefaultSessionService implements SessionService {
 	private final Provider<Settings> settingsProvider;
-	private final Provider<Messages> messagesProvider;
-	private final IdentityService identityService;
+	private final EventManager eventManager;
 
 	private final Cache<Session> userCache;
 	private final Cache<Session> sessionCache;
@@ -39,14 +37,12 @@ public class DefaultSessionService implements SessionService {
 	@Inject
 	public DefaultSessionService(
 			Provider<Settings> settingsProvider,
-			Provider<Messages> messagesProvider,
-			IdentityService identityService,
+			EventManager eventManager,
 			Provider<Replication> replicationProvider,
 			CacheService cacheService
 	) {
 		this.settingsProvider = settingsProvider;
-		this.messagesProvider = messagesProvider;
-		this.identityService = identityService;
+		this.eventManager = eventManager;
 
 		Replication.Sessions sessions = resolveSessions(replicationProvider);
 		this.userCache = cacheService.synchronizedCache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user"), JsonCodec.of(Session.class));
@@ -56,16 +52,12 @@ public class DefaultSessionService implements SessionService {
 
 	@Override
 	public @NotNull CompletableFuture<Optional<Session>> findBySessionId(@Nullable String sessionId) {
-		String key = keySession(sessionId);
-		if (key == null) return CompletableFuture.completedFuture(Optional.empty());
-		return sessionCache.get(key);
+		return getByKey(sessionCache, keySession(sessionId));
 	}
 
 	@Override
 	public @NotNull CompletableFuture<Optional<Session>> findByUniqueId(@Nullable UUID uniqueId) {
-		String key = keyUser(uniqueId);
-		if (key == null) return CompletableFuture.completedFuture(Optional.empty());
-		return userCache.get(key);
+		return getByKey(userCache, keyUser(uniqueId));
 	}
 
 	@Override
@@ -73,36 +65,26 @@ public class DefaultSessionService implements SessionService {
 			@Nullable String providerId,
 			@Nullable String providerSubject
 	) {
-		String key = keySubject(providerId, providerSubject);
-		if (key == null) return CompletableFuture.completedFuture(Optional.empty());
-		return subjectCache.get(key);
+		return getByKey(subjectCache, keySubject(providerId, providerSubject));
 	}
 
 	@Override
 	public @NotNull CompletableFuture<@Nullable Session> open(@Nullable Session session) {
-		if (session == null) {
-			return CompletableFuture.completedFuture(session);
-		}
+		if (session == null)
+			return CompletableFuture.completedFuture(null);
+		SessionConcurrencyPolicy policy = resolveConcurrencyPolicy(session.getProviderId());
+		return open(session, policy);
+	}
 
+	@Override
+	public @NotNull CompletableFuture<@Nullable Session> open(
+			@Nullable Session session,
+			@NotNull SessionConcurrencyPolicy policy
+	) {
+		if (session == null)
+			return CompletableFuture.completedFuture(null);
 		return findByUniqueId(session.getUniqueId())
-				.thenCompose(existing -> {
-					SessionConcurrencyPolicy policy = resolveConcurrencyPolicy(session.getProviderId());
-					CompletableFuture<Void> cleanup = CompletableFuture.completedFuture(null);
-					if (existing.isPresent() && !sameSession(existing.get(), session)) {
-						if (policy == SessionConcurrencyPolicy.DENY_NEW)
-							return CompletableFuture.completedFuture(null);
-						if (policy == SessionConcurrencyPolicy.KICK_EXISTING)
-							kickExisting(existing.get());
-						cleanup = invalidateKeys(existing.get());
-					}
-
-					prepareSession(session);
-					Duration ttl = resolveTtl(session.getProviderId());
-					long ttlMs = ttl.toMillis();
-
-					return cleanup.thenCompose(ignored -> putAll(session, ttlMs))
-							.thenApply(ignored -> session);
-				});
+				.thenCompose(existingOptional -> openWithExisting(session, existingOptional.orElse(null), policy));
 	}
 
 	@Override
@@ -185,47 +167,78 @@ public class DefaultSessionService implements SessionService {
 		return existingId != null && existingId.equals(incomingId);
 	}
 
-	private SessionConcurrencyPolicy resolveConcurrencyPolicy(@Nullable String providerId) {
-		Settings.Sessions sessions = settingsProvider.get().getSessions();
-		SessionConcurrencyPolicy policy = sessions.getConcurrencyPolicy();
-		if (providerId == null || providerId.isBlank())
-			return policy;
+	private @NotNull CompletableFuture<@Nullable Session> openWithExisting(
+			@NotNull Session incoming,
+			@Nullable Session existing,
+			@NotNull SessionConcurrencyPolicy policy
+	) {
+		incoming.adoptSessionIdFrom(existing);
+		if (shouldRejectIncoming(existing, incoming, policy))
+			return CompletableFuture.completedFuture(null);
 
-		SessionConcurrencyPolicy override = sessions.getConcurrencyOverrides().get(providerId);
-		if (override == null) {
-			override = sessions.getConcurrencyOverrides().get(providerId.trim());
+		prepareSession(incoming);
+		long ttlMs = resolveTtl(incoming.getProviderId()).toMillis();
+		return cleanupForOpen(existing, incoming, policy)
+				.thenCompose(ignored -> putAll(incoming, ttlMs))
+				.thenApply(ignored -> incoming);
+	}
+
+	private boolean shouldRejectIncoming(
+			@Nullable Session existing,
+			@NotNull Session incoming,
+			@NotNull SessionConcurrencyPolicy policy
+	) {
+		return existing != null && !sameSession(existing, incoming) && policy.rejectsNew();
+	}
+
+	private @NotNull CompletableFuture<Void> cleanupForOpen(
+			@Nullable Session existing,
+			@NotNull Session incoming,
+			@NotNull SessionConcurrencyPolicy policy
+	) {
+		if (existing == null || sameSession(existing, incoming))
+			return CompletableFuture.completedFuture(null);
+
+		if (policy.replacesExisting()) {
+			eventManager.call(new SessionReplacedEvent(existing, incoming));
 		}
-		if (override == null) {
-			override = sessions.getConcurrencyOverrides().get(providerId.trim().toLowerCase());
-		}
+
+		return invalidateKeys(existing);
+	}
+
+	private SessionConcurrencyPolicy resolveConcurrencyPolicy(@Nullable String providerId) {
+		Settings.Sessions sessions = settingsProvider.get().getConnection().getSessions();
+		SessionConcurrencyPolicy policy = sessions.getConcurrencyPolicy();
+		SessionConcurrencyPolicy override = findOverride(sessions.getConcurrencyOverrides(), providerId);
 
 		return override != null ? override : policy;
 	}
 
-	private void kickExisting(@NotNull Session existing) {
-		UUID uniqueId = existing.getUniqueId();
-		String message = String.join("\n", messagesProvider.get()
-				.getAuthentication()
-				.getConcurrentLoginKick());
-
-		identityService.find(uniqueId)
-				.ifPresent(identity -> identity.disconnect(Serializer.serialize(identity, message)));
-	}
-
 	private Duration resolveTtl(String providerId) {
-		Settings.Sessions sessions = settingsProvider.get().getSessions();
+		Settings.Sessions sessions = settingsProvider.get().getConnection().getSessions();
 
-		Duration resolved = requireDuration(sessions.getDefaultTtl(), "settings.sessions.defaultTtl");
-		Map<String, Duration> overrides = sessions.getProviders();
-		if (providerId == null || providerId.isBlank()) return resolved;
+		Duration resolved = requireDuration(sessions.getDefaultTtl(), "settings.connection.sessions.defaultTtl");
+		Duration override = findOverride(sessions.getProviders(), providerId);
 
-		Duration override = overrides.get(providerId);
-		if (override == null) override = overrides.get(providerId.trim());
-		if (override == null) override = overrides.get(providerId.trim().toLowerCase());
-
-		if (override != null) return requireDuration(override, "settings.sessions.providers." + providerId);
+		if (override != null) return requireDuration(override, "settings.connection.sessions.providers." + providerId);
 
 		return resolved;
+	}
+
+	private <T> @Nullable T findOverride(@NotNull Map<String, T> overrides, @Nullable String rawKey) {
+		String key = trimToNull(rawKey);
+		if (key == null)
+			return null;
+
+		T exact = overrides.get(rawKey);
+		if (exact != null)
+			return exact;
+
+		T trimmed = overrides.get(key);
+		if (trimmed != null)
+			return trimmed;
+
+		return overrides.get(key.toLowerCase());
 	}
 
 	private Duration requireDuration(Duration duration, String key) {
@@ -238,8 +251,7 @@ public class DefaultSessionService implements SessionService {
 	}
 
 	private String keySession(String sessionId) {
-		if (sessionId == null || sessionId.isBlank()) return null;
-		return sessionId.trim();
+		return trimToNull(sessionId);
 	}
 
 	private String keyUser(UUID uniqueId) {
@@ -248,22 +260,45 @@ public class DefaultSessionService implements SessionService {
 	}
 
 	private String keySubject(String providerId, String providerSubject) {
-		if (providerId == null || providerId.isBlank()) return null;
-		if (providerSubject == null || providerSubject.isBlank()) return null;
-		return normalize(providerId) + ":" + normalize(providerSubject);
+		String normalizedProviderId = normalize(providerId);
+		String normalizedProviderSubject = normalize(providerSubject);
+		if (normalizedProviderId == null || normalizedProviderSubject == null)
+			return null;
+		return normalizedProviderId + ":" + normalizedProviderSubject;
 	}
 
 	private UUID parseUniqueId(String value) {
-		if (value == null || value.isBlank()) return null;
+		String trimmed = trimToNull(value);
+		if (trimmed == null) return null;
+
 		try {
-			return UUID.fromString(value.trim());
+			return UUID.fromString(trimmed);
 		} catch (IllegalArgumentException ignored) {
 			return null;
 		}
 	}
 
-	private String normalize(String value) {
-		return value.trim().toLowerCase();
+	private @Nullable String normalize(@Nullable String value) {
+		String trimmed = trimToNull(value);
+		return trimmed != null
+				? trimmed.toLowerCase()
+				: null;
+	}
+
+	private @Nullable String trimToNull(@Nullable String value) {
+		if (value == null)
+			return null;
+		String trimmed = value.trim();
+		return trimmed.isEmpty() ? null : trimmed;
+	}
+
+	private @NotNull CompletableFuture<Optional<Session>> getByKey(
+			@NotNull Cache<Session> cache,
+			@Nullable String key
+	) {
+		if (key == null)
+			return CompletableFuture.completedFuture(Optional.empty());
+		return cache.get(key);
 	}
 
 	private static Replication.Sessions resolveSessions(Provider<Replication> replicationProvider) {
@@ -277,6 +312,7 @@ public class DefaultSessionService implements SessionService {
 	private static String resolveNamespace(String namespace, String label) {
 		if (namespace == null || namespace.isBlank())
 			throw new IllegalStateException(label + " is missing");
+
 		return namespace;
 	}
 }

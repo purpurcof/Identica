@@ -25,13 +25,22 @@ public interface SynchronizationService {
 	@NotNull CompletableFuture<Optional<byte[]>> get(@NotNull String namespace, @NotNull String key);
 
 	/**
+	 * Atomically retrieves and removes a value from the synchronization backend.
+	 *
+	 * @param namespace logical namespace
+	 * @param key lookup key
+	 * @return optional payload
+	 */
+	@NotNull CompletableFuture<Optional<byte[]>> consume(@NotNull String namespace, @NotNull String key);
+
+	/**
 	 * Stores a value in the synchronization backend.
 	 *
 	 * @param namespace logical namespace
 	 * @param key lookup key
 	 * @param value payload to store
 	 * @param ttlMs time-to-live in milliseconds
-	 * @return completion stage
+	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> put(@NotNull String namespace, @NotNull String key, byte[] value, long ttlMs);
 
@@ -40,7 +49,7 @@ public interface SynchronizationService {
 	 *
 	 * @param namespace logical namespace
 	 * @param key lookup key
-	 * @return completion stage
+	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> invalidate(@NotNull String namespace, @NotNull String key);
 
@@ -68,7 +77,7 @@ public interface SynchronizationService {
 	 *
 	 * @param channel channel name
 	 * @param payload payload to publish
-	 * @return completion stage
+	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> publish(@NotNull String channel, byte[] payload);
 

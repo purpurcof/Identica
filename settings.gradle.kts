@@ -10,13 +10,15 @@ rootProject.name = "Identica"
 
 include("identica-api")
 include("identica-common")
+include("identica-engine")
 
 include("identica-adapter-command")
 include("identica-adapter-database")
 include("identica-adapter-synchronization")
 
 include("identica-platform")
-include("identica-platform:platform-velocity")
+include("identica-platform:platform-velocity:api")
+include("identica-platform:platform-velocity:bootstrap")
 
 include("identica-provider")
 

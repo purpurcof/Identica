@@ -1,6 +1,4 @@
 dependencies {
-    "api"(project(":identica-api"))
-
     "compileOnly"(rootProject.libs.bundles.database)
 
     "testImplementation"(rootProject.libs.bundles.database)

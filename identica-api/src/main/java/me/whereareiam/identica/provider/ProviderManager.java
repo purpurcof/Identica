@@ -1,8 +1,6 @@
 package me.whereareiam.identica.provider;
 
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.provider.profile.ProfileResolveContext;
-import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
@@ -31,14 +29,6 @@ public interface ProviderManager {
 	 * @return immutable view of managed providers
 	 */
 	List<InternalProvider> getProviders();
-
-	/**
-	 * Resolves profile subject data using registered provider resolvers.
-	 *
-	 * @param context profile resolve context
-	 * @return resolution or {@code null} when no resolver applies
-	 */
-	@Nullable ProfileResolution resolveProfile(@NotNull ProfileResolveContext context);
 
 	/**
 	 * Finds providers that advertise all requested capabilities.

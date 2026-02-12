@@ -100,7 +100,7 @@ public class MessagesCommandsTemplate {
 				"<white>Your session has been cleared.</white>",
 				"<white>Please rejoin to continue.</white>",
 				"",
-				"<gray>discord.arcadeya.com"
+				"<dark_gray>discord.arcadeya.com"
 		));
 		commands.setClear(clear);
 
@@ -173,10 +173,16 @@ public class MessagesCommandsTemplate {
 				"<white>Your session was ended.</white>",
 				"<white>Please rejoin to continue.</white>",
 				"",
-				"<gray>discord.arcadeya.com"
+				"<dark_gray>discord.arcadeya.com"
 		));
 		sessions.setEnd(sessionEnd);
 		commands.setSessions(sessions);
+
+		// Enroll
+		Messages.Commands.Enroll enroll = new Messages.Commands.Enroll();
+		enroll.setNoPending("{prefix}<white>No pending enrollment available.</white>");
+		enroll.setCompleted("{prefix}<white>Enrollment completed.</white>");
+		commands.setEnroll(enroll);
 
 		return commands;
 	}

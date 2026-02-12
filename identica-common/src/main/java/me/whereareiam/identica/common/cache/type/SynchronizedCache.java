@@ -26,18 +26,25 @@ public final class SynchronizedCache<T> implements Cache<T> {
 					if (local.isPresent()) {
 						return CompletableFuture.completedFuture(local);
 					}
-					SynchronizationService service = serviceSupplier.get();
-					if (service == null || !service.isAvailable()) {
-						return CompletableFuture.completedFuture(Optional.empty());
-					}
-					return service.get(name, key)
-							.thenCompose(payload -> payload
-									.map(data -> handleRemoteHit(key, data))
-									.orElseGet(() -> {
-										Logger.debug("Synchronized cache miss %s:%s", name, key);
-										return CompletableFuture.completedFuture(Optional.empty());
-									}));
+					return getFresh(key);
 				});
+	}
+
+	@Override
+	public @NotNull CompletableFuture<Optional<T>> getFresh(String key) {
+		if (key == null) return CompletableFuture.completedFuture(Optional.empty());
+
+		SynchronizationService service = serviceSupplier.get();
+		if (service == null || !service.isAvailable())
+			return localCache.get(key);
+
+		return service.get(name, key)
+				.thenCompose(payload -> payload
+						.map(data -> handleRemoteHit(key, data))
+						.orElseGet(() -> localCache.invalidate(key).thenApply(ignored -> {
+							Logger.debug("Synchronized cache miss %s:%s", name, key);
+							return Optional.empty();
+						})));
 	}
 
 	private CompletableFuture<Optional<T>> handleRemoteHit(String key, byte[] data) {
@@ -72,6 +79,25 @@ public final class SynchronizedCache<T> implements Cache<T> {
 		return CompletableFuture.completedFuture(Optional.ofNullable(value));
 	}
 
+	private CompletableFuture<Optional<T>> decodeConsumedValue(byte[] data) {
+		Decoded decoded;
+		try {
+			decoded = decodeEnvelope(data);
+		} catch (Exception ignored) {
+			return CompletableFuture.completedFuture(Optional.empty());
+		}
+
+		if (decoded == null) return CompletableFuture.completedFuture(Optional.empty());
+		if (decoded.expiresAt > 0 && decoded.expiresAt <= System.currentTimeMillis())
+			return CompletableFuture.completedFuture(Optional.empty());
+
+		try {
+			return CompletableFuture.completedFuture(Optional.ofNullable(codec.decode(decoded.payload)));
+		} catch (Exception ignored) {
+			return CompletableFuture.completedFuture(Optional.empty());
+		}
+	}
+
 	@Override
 	public @NotNull CompletableFuture<Void> put(String key, T value, long ttlMs) {
 		CompletableFuture<Void> local = localCache.put(key, value, ttlMs);
@@ -96,6 +122,20 @@ public final class SynchronizedCache<T> implements Cache<T> {
 			return local;
 
 		return local.thenCompose(ignored -> service.invalidate(name, key));
+	}
+
+	@Override
+	public @NotNull CompletableFuture<Optional<T>> consume(String key) {
+		if (key == null) return CompletableFuture.completedFuture(Optional.empty());
+
+		SynchronizationService service = serviceSupplier.get();
+		if (service == null || !service.isAvailable()) return localCache.consume(key);
+
+		return service.consume(name, key)
+				.thenCompose(payload -> localCache.invalidate(key)
+						.thenCompose(ignored -> payload
+								.map(this::decodeConsumedValue)
+								.orElseGet(() -> CompletableFuture.completedFuture(Optional.empty()))));
 	}
 
 	@Override

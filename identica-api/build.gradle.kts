@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.buildconfig)
 }
 
+group = "me.whereareiam.identica"
+
 buildConfig {
     packageName("me.whereareiam.identica")
 
@@ -29,9 +31,9 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
-            artifactId = "Identica"
+            artifactId = "api"
             pom {
-                name.set("Identica")
+                name.set("Identica API")
                 description.set("Public API for Identica - Modular authorization plugin")
             }
         }

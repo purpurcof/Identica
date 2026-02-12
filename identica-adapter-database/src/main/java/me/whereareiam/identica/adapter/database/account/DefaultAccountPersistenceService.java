@@ -7,8 +7,14 @@ import me.whereareiam.identica.adapter.database.entity.AccountEntity;
 import me.whereareiam.identica.adapter.database.mapper.AccountMapper;
 import me.whereareiam.identica.adapter.database.repository.account.AccountRepository;
 import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.account.AccountClearEvent;
+import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.account.Account;
+import me.whereareiam.identica.model.identity.Account;
+import me.whereareiam.identica.type.ClearScope;
+import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.type.UsernameSource;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,8 +24,14 @@ import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class DefaultAccountPersistenceService implements AccountPersistenceService {
+public class DefaultAccountPersistenceService implements AccountPersistenceService, EventListener {
 	private final AccountRepository accountRepository;
+	private final EventManager eventManager;
+
+	@Inject
+	void registerListeners() {
+		eventManager.register(this);
+	}
 
 	@Override
 	public @NotNull Optional<Account> findByUniqueId(@NotNull UUID uniqueId) {
@@ -101,5 +113,17 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 		} catch (Exception e) {
 			Logger.warn("Failed to delete account %s: %s", uniqueId, e.getMessage());
 		}
+	}
+
+	@IdenticEvent(EventOrder.HIGHEST)
+	public void onAccountClear(@NotNull AccountClearEvent event) {
+		if (event.getScope() != ClearScope.ALL)
+			return;
+
+		UUID uniqueId = event.getIdentity().getUniqueId();
+		if (uniqueId == null)
+			return;
+
+		delete(uniqueId);
 	}
 }

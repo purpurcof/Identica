@@ -1,8 +1,8 @@
 package me.whereareiam.identica.provider.eligibility;
 
-import me.whereareiam.identica.model.auth.AuthContext;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.type.step.AuthFlowType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -18,8 +18,8 @@ public interface ProviderEligibilityResolver {
 	 * @return {@code true} if the provider can handle the context
 	 */
 	boolean isEligible(
-			@NotNull AuthContext context,
+			@NotNull ScenarioContext context,
 			@NotNull InternalProvider provider,
-			@NotNull AuthFlowType flow
+			@NotNull JourneyType flow
 	);
 }

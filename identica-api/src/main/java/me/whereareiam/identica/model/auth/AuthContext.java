@@ -1,12 +1,10 @@
 package me.whereareiam.identica.model.auth;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.state.PipelineStateItem;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,16 +14,16 @@ import java.util.UUID;
  * Authentication context containing connection identity and mutable state.
  */
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@SuppressWarnings("unused")
-public class AuthContext {
-	private final @Nullable UUID connectionUniqueId;
-	private final @NotNull ConnectionIdentity identity;
-	private final @Nullable String intendedServer;
+public class AuthContext implements ScenarioContext, PipelineStateItem {
+	private @Nullable UUID connectionUniqueId;
+	private @NotNull ConnectionIdentity identity;
+	private @Nullable String intendedServer;
 
 	@Setter
-	private @Nullable AuthContext.Provider provider;
+	private @Nullable ProviderContext provider;
 
 	/**
 	 * Returns the connection identity attached to this context.
@@ -70,21 +68,6 @@ public class AuthContext {
 	 */
 	public @Nullable String getIp() {
 		return identity.getIp();
-	}
-
-	/**
-	 * Provider claim captured after authentication.
-	 */
-	@Getter
-	@Setter
-	@ToString
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder(toBuilder = true)
-	public static class Provider {
-		private @Nullable String providerId;
-		private @Nullable String providerSubject;
-		private @NotNull String providerUsername;
 	}
 
 }

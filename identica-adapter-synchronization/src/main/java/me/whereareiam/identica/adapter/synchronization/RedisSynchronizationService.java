@@ -52,6 +52,27 @@ public class RedisSynchronizationService implements SynchronizationService {
 	}
 
 	@Override
+	public @NotNull CompletableFuture<Optional<byte[]>> consume(@NotNull String namespace, @NotNull String key) {
+		if (!isAvailable()) {
+			return CompletableFuture.completedFuture(Optional.empty());
+		}
+		return CompletableFuture.supplyAsync(() -> {
+			JedisPool pool = poolProvider.getOptional().orElse(null);
+			if (pool == null) return Optional.empty();
+
+			byte[] rawKey = buildKey(namespace, key);
+			try (Jedis jedis = pool.getResource()) {
+				byte[] payload = jedis.getDel(rawKey);
+				if (payload != null) jedis.zrem(buildIndexKey(namespace), key);
+
+				return Optional.ofNullable(payload);
+			} catch (Exception ignored) {
+				return Optional.empty();
+			}
+		});
+	}
+
+	@Override
 	public @NotNull CompletableFuture<Void> put(@NotNull String namespace, @NotNull String key, byte[] value, long ttlMs) {
 		if (!isAvailable()) return CompletableFuture.completedFuture(null);
 

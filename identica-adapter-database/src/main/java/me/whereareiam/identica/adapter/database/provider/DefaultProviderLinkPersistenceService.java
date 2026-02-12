@@ -7,7 +7,13 @@ import me.whereareiam.identica.adapter.database.entity.AccountProviderLinkEntity
 import me.whereareiam.identica.adapter.database.mapper.AccountProviderLinkMapper;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderLinkRepository;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.account.AccountClearEvent;
+import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
+import me.whereareiam.identica.type.ClearScope;
+import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -16,8 +22,14 @@ import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor = @__(@Inject))
-public class DefaultProviderLinkPersistenceService implements ProviderLinkPersistenceService {
+public class DefaultProviderLinkPersistenceService implements ProviderLinkPersistenceService, EventListener {
 	private final ProviderLinkRepository repository;
+	private final EventManager eventManager;
+
+	@Inject
+	void registerListeners() {
+		eventManager.register(this);
+	}
 
 	@Override
 	public @NotNull Optional<AccountProviderLink> findBySubject(
@@ -80,5 +92,16 @@ public class DefaultProviderLinkPersistenceService implements ProviderLinkPersis
 	public void deleteAll(@NotNull UUID uniqueId) {
 		repository.deleteAll(uniqueId);
 	}
-}
 
+	@IdenticEvent(EventOrder.HIGH)
+	public void onAccountClear(@NotNull AccountClearEvent event) {
+		if (event.getScope() != ClearScope.ALL)
+			return;
+
+		UUID uniqueId = event.getIdentity().getUniqueId();
+		if (uniqueId == null)
+			return;
+
+		deleteAll(uniqueId);
+	}
+}

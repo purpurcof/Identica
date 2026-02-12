@@ -5,7 +5,8 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.auth.HandshakePolicy;
+import me.whereareiam.identica.handshake.HandshakePolicy;
+import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
@@ -25,7 +26,6 @@ import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
-import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.net.URLClassLoader;
@@ -48,7 +48,7 @@ public class ProviderLifecycleController {
 	private final ProviderResolverRegistry resolverRegistry;
 	private final ConflictService conflictService;
 	private final EventManager eventManager;
-	private final Registry<HandshakePolicy> handshakePolicies;
+	private final HandshakeStore handshakeStore;
 
 	private final ConcurrentHashMap<InternalProvider, Set<HandshakePolicy>> providerHandshakePolicies = new ConcurrentHashMap<>();
 
@@ -207,7 +207,7 @@ public class ProviderLifecycleController {
 		Set<HandshakePolicy> policies = providerHandshakePolicies.get(internal);
 		if (policies != null)
 			for (HandshakePolicy policy : policies)
-				handshakePolicies.register(policy);
+				handshakeStore.registerPolicy(policy);
 	}
 
 	private void unregisterProviderBindings(InternalProvider internal) {
@@ -215,7 +215,7 @@ public class ProviderLifecycleController {
 		Set<HandshakePolicy> policies = providerHandshakePolicies.remove(internal);
 		if (policies != null)
 			for (HandshakePolicy policy : policies)
-				handshakePolicies.unregister(policy);
+				handshakeStore.unregisterPolicy(policy);
 	}
 
 	private <T> Set<T> resolveSet(Injector injector, TypeLiteral<Set<T>> type) {

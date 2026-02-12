@@ -1,5 +1,4 @@
 dependencies {
-    "api"(project(":identica-api"))
     "compileOnly"(rootProject.libs.jedis)
 
     "testImplementation"(rootProject.libs.jedis)

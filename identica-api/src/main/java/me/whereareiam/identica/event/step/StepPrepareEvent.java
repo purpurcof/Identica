@@ -3,13 +3,13 @@ package me.whereareiam.identica.event.step;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import me.whereareiam.identica.auth.step.AuthenticationStep;
+import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
 import me.whereareiam.identica.provider.IdenticaProvider;
-import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.type.step.AuthFlowType;
-import me.whereareiam.identica.type.step.StepPhase;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -21,8 +21,8 @@ import org.jetbrains.annotations.Nullable;
 @RequiredArgsConstructor
 public class StepPrepareEvent implements Event, SynchronousEvent {
 	private final @Nullable IdenticaProvider provider;
-	private final @NotNull AuthenticationStep step;
-	private final @NotNull AuthContext context;
-	private final @NotNull AuthFlowType flow;
-	private final @NotNull StepPhase phase;
+	private final @NotNull Step step;
+	private final @NotNull ScenarioContext context;
+	private final @NotNull JourneyType flow;
+	private final @NotNull StageType phase;
 }

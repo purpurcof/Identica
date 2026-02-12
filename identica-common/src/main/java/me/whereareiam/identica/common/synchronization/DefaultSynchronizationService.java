@@ -38,6 +38,15 @@ public class DefaultSynchronizationService implements SynchronizationService {
 	}
 
 	@Override
+	public @NotNull CompletableFuture<Optional<byte[]>> consume(@NotNull String namespace, @NotNull String key) {
+		if (!provider.isAvailable()) {
+			return CompletableFuture.completedFuture(Optional.empty());
+		}
+
+		return provider.consume(namespace, key);
+	}
+
+	@Override
 	public @NotNull CompletableFuture<Void> put(
 			@NotNull String namespace,
 			@NotNull String key,

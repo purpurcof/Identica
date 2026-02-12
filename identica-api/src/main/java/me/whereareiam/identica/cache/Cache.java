@@ -22,12 +22,25 @@ public interface Cache<T> {
 	@NotNull CompletableFuture<Optional<T>> get(@Nullable String key);
 
 	/**
+	 * Retrieves a cached entry while bypassing stale local replicas when supported.
+	 *
+	 * <p>The default implementation delegates to {@link #get(Object)}.</p>
+	 *
+	 * @param key cache key
+	 * @return optional cached value
+	 */
+	@NotNull
+	default CompletableFuture<Optional<T>> getFresh(@Nullable String key) {
+		return get(key);
+	}
+
+	/**
 	 * Stores a cached entry.
 	 *
 	 * @param key cache key
 	 * @param value cached value
 	 * @param ttlMs time-to-live in milliseconds
-	 * @return completion stage
+	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> put(@Nullable String key, @Nullable T value, long ttlMs);
 
@@ -35,9 +48,25 @@ public interface Cache<T> {
 	 * Invalidates a cached entry.
 	 *
 	 * @param key cache key
-	 * @return completion stage
+	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> invalidate(@Nullable String key);
+
+	/**
+	 * Atomically retrieves and invalidates a cached entry when supported by the implementation.
+	 *
+	 * <p>The default implementation falls back to {@link #get(Object)} followed by
+	 * {@link #invalidate(Object)}.</p>
+	 *
+	 * @param key cache key
+	 * @return optional consumed value
+	 */
+	@NotNull
+	default CompletableFuture<Optional<T>> consume(@Nullable String key) {
+		return get(key).thenCompose(value ->
+				invalidate(key).thenApply(ignored -> value)
+		);
+	}
 
 	/**
 	 * Lists keys in this cache namespace.

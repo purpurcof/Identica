@@ -24,6 +24,11 @@ public class NoopSynchronizationService implements SynchronizationService {
 	}
 
 	@Override
+	public @NotNull CompletableFuture<Optional<byte[]>> consume(@NotNull String namespace, @NotNull String key) {
+		return CompletableFuture.completedFuture(Optional.empty());
+	}
+
+	@Override
 	public @NotNull CompletableFuture<Void> put(@NotNull String namespace, @NotNull String key, byte[] value, long ttlMs) {
 		return CompletableFuture.completedFuture(null);
 	}

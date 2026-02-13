@@ -13,8 +13,8 @@ import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Default;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.annotation.Range;
+import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.model.CommandDefinition;
-import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.keystone.Actor;
@@ -29,22 +29,22 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class HelpCommand implements Reloadable {
-	private final Provider<Commands> commandsProvider;
 	private final Provider<Messages> messagesProvider;
 	private final Provider<CommandManager<Actor>> commandManagerProvider;
+	private final Provider<CommandService> commandServiceProvider;
 
 	private HelpBuilder<Actor> helpBuilder;
 
 	@Inject
 	public HelpCommand(
-			@NotNull Provider<Commands> commandsProvider,
 			@NotNull Provider<Messages> messagesProvider,
 			@NotNull Provider<CommandManager<Actor>> commandManagerProvider,
+			@NotNull Provider<CommandService> commandServiceProvider,
 			@NotNull Registry<Reloadable> reloadableRegistry
 	) {
-		this.commandsProvider = commandsProvider;
 		this.messagesProvider = messagesProvider;
 		this.commandManagerProvider = commandManagerProvider;
+		this.commandServiceProvider = commandServiceProvider;
 		reloadableRegistry.register(this);
 	}
 
@@ -75,7 +75,7 @@ public class HelpCommand implements Reloadable {
 
 	@NotNull
 	private Map<String, String> collectArgumentDescriptions() {
-		return commandsProvider.get().getCommands().values().stream()
+		return commandServiceProvider.get().getRegisteredDefinitions().values().stream()
 				.map(CommandDefinition::getArguments)
 				.filter(map -> map != null && !map.isEmpty())
 				.flatMap(map -> map.entrySet().stream())
@@ -89,7 +89,7 @@ public class HelpCommand implements Reloadable {
 	@NotNull
 	private Collection<org.incendo.cloud.Command<Actor>> getFilteredCommands(@NotNull Actor sender) {
 		CommandManager<Actor> commandManager = commandManagerProvider.get();
-		Map<String, CommandDefinition> definitions = commandsProvider.get().getCommands();
+		Map<String, CommandDefinition> definitions = commandServiceProvider.get().getRegisteredDefinitions();
 
 		return commandManager.commands()
 				.stream()

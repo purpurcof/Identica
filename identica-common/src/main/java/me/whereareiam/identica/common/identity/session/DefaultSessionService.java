@@ -3,9 +3,9 @@ package me.whereareiam.identica.common.identity.session;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.cache.Cache;
-import me.whereareiam.identica.cache.CacheService;
-import me.whereareiam.identica.cache.codec.type.JsonCodec;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.identity.session.SessionReplacedEvent;
 import me.whereareiam.identica.model.Session;
@@ -30,24 +30,25 @@ public class DefaultSessionService implements SessionService {
 	private final Provider<Settings> settingsProvider;
 	private final EventManager eventManager;
 
-	private final Cache<Session> userCache;
-	private final Cache<Session> sessionCache;
-	private final Cache<Session> subjectCache;
+	private final ReplicatedCache<Session> userCache;
+	private final ReplicatedCache<Session> sessionCache;
+	private final ReplicatedCache<Session> subjectCache;
 
 	@Inject
 	public DefaultSessionService(
 			Provider<Settings> settingsProvider,
 			EventManager eventManager,
 			Provider<Replication> replicationProvider,
-			CacheService cacheService
+			ReplicationSystem replicationSystem
 	) {
 		this.settingsProvider = settingsProvider;
 		this.eventManager = eventManager;
 
 		Replication.Sessions sessions = resolveSessions(replicationProvider);
-		this.userCache = cacheService.synchronizedCache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user"), JsonCodec.of(Session.class));
-		this.sessionCache = cacheService.synchronizedCache(resolveNamespace(sessions.getSession(), "replication.cache.sessions.session"), JsonCodec.of(Session.class));
-		this.subjectCache = cacheService.synchronizedCache(resolveNamespace(sessions.getSubject(), "replication.cache.sessions.subject"), JsonCodec.of(Session.class));
+		ReplicationType<Session, Session> type = ReplicationType.identity(Session.class);
+		this.userCache = replicationSystem.cache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user")).replicated(type);
+		this.sessionCache = replicationSystem.cache(resolveNamespace(sessions.getSession(), "replication.cache.sessions.session")).replicated(type);
+		this.subjectCache = replicationSystem.cache(resolveNamespace(sessions.getSubject(), "replication.cache.sessions.subject")).replicated(type);
 	}
 
 	@Override
@@ -108,11 +109,11 @@ public class DefaultSessionService implements SessionService {
 		return userCache.listKeys(page, pageSize)
 				.thenApply(keys -> {
 					List<UUID> entries = new ArrayList<>();
-					for (String key : keys.entries()) {
+					for (String key : keys.getEntries()) {
 						UUID uniqueId = parseUniqueId(key);
 						if (uniqueId != null) entries.add(uniqueId);
 					}
-					return new Page(entries, keys.page(), keys.pageSize(), keys.total());
+					return new Page(entries, keys.getPage(), keys.getPageSize(), keys.getTotal());
 				});
 	}
 
@@ -293,7 +294,7 @@ public class DefaultSessionService implements SessionService {
 	}
 
 	private @NotNull CompletableFuture<Optional<Session>> getByKey(
-			@NotNull Cache<Session> cache,
+			@NotNull ReplicatedCache<Session> cache,
 			@Nullable String key
 	) {
 		if (key == null)

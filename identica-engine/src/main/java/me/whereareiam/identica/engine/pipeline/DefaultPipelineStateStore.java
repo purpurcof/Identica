@@ -5,9 +5,9 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import me.whereareiam.identica.cache.Cache;
-import me.whereareiam.identica.cache.CacheService;
-import me.whereareiam.identica.cache.codec.type.JsonCodec;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -27,17 +27,15 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 	private static final String KEY_USERNAME_PREFIX = "u:";
 	private static final String KEY_USERNAME_IP_PREFIX = "uip:";
 
-	private final Cache<PipelineStateSnapshot> stateCache;
+	private final ReplicatedCache<PipelineStateSnapshot> stateCache;
 
 	@Inject
 	public DefaultPipelineStateStore(
-			@NotNull CacheService cacheService,
+			@NotNull ReplicationSystem replicationSystem,
 			@NotNull Provider<Replication> replicationProvider
 	) {
-		this.stateCache = cacheService.synchronizedCache(
-				resolveNamespace(replicationProvider),
-				JsonCodec.of(PipelineStateSnapshot.class)
-		);
+		ReplicationType<PipelineStateSnapshot, PipelineStateSnapshot> type = ReplicationType.identity(PipelineStateSnapshot.class);
+		this.stateCache = replicationSystem.cache(resolveNamespace(replicationProvider)).replicated(type);
 	}
 
 	@Override

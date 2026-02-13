@@ -3,7 +3,7 @@ package me.whereareiam.identica.model.pipeline;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import me.whereareiam.identica.cache.codec.type.JsonCodec;
+import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateItem;
 import me.whereareiam.identica.pipeline.ScenarioContext;
@@ -134,7 +134,7 @@ public final class PipelineState {
 
 	@SuppressWarnings("unchecked")
 	private static <T> String encode(@NotNull T value) {
-		JsonCodec<T> codec = JsonCodec.of((Class<T>) value.getClass());
+		SnapshotCodec<T> codec = SnapshotCodec.json((Class<T>) value.getClass());
 		return new String(codec.encode(value), StandardCharsets.UTF_8);
 	}
 
@@ -142,7 +142,7 @@ public final class PipelineState {
 		if (payload == null) return null;
 
 		try {
-			JsonCodec<T> codec = JsonCodec.of(type);
+			SnapshotCodec<T> codec = SnapshotCodec.json(type);
 			return codec.decode(payload.getBytes(StandardCharsets.UTF_8));
 		} catch (Exception ignored) {
 			return null;

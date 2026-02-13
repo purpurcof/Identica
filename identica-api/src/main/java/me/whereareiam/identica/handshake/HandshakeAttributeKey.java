@@ -1,6 +1,6 @@
 package me.whereareiam.identica.handshake;
 
-import me.whereareiam.identica.cache.codec.type.JsonCodec;
+import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.StandardCharsets;
@@ -50,7 +50,7 @@ public final class HandshakeAttributeKey<T> {
 			@NotNull String id,
 			@NotNull Class<T> type
 	) {
-		JsonCodec<T> codec = JsonCodec.of(type);
+		SnapshotCodec<T> codec = SnapshotCodec.json(type);
 		return of(id,
 				value -> new String(codec.encode(value), StandardCharsets.UTF_8),
 				payload -> codec.decode(payload.getBytes(StandardCharsets.UTF_8))

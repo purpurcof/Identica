@@ -3,9 +3,9 @@ package me.whereareiam.identica.provider.premium.resolver;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.cache.Cache;
-import me.whereareiam.identica.cache.CacheService;
-import me.whereareiam.identica.cache.codec.type.JsonCodec;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import org.jetbrains.annotations.NotNull;
@@ -28,12 +28,12 @@ import java.util.concurrent.CompletableFuture;
 public class PremiumProfileLookup {
 	private final @NotNull HttpClient httpClient;
 	private final @NotNull Provider<PremiumSettings> settingsProvider;
-	private final @NotNull Cache<Boolean> cache;
+	private final @NotNull ReplicatedCache<Boolean> cache;
 
 	@Inject
 	public PremiumProfileLookup(
 			@NotNull Provider<PremiumSettings> settingsProvider,
-			@NotNull CacheService cacheService,
+			@NotNull ReplicationSystem replicationSystem,
 			@NotNull Provider<Replication> replicationProvider
 	) {
 		this.httpClient = HttpClient.newBuilder()
@@ -41,10 +41,8 @@ public class PremiumProfileLookup {
 				.build();
 
 		this.settingsProvider = settingsProvider;
-		this.cache = cacheService.synchronizedCache(
-				resolveNamespace(replicationProvider),
-				new JsonCodec<>(Boolean.class)
-		);
+		ReplicationType<Boolean, Boolean> type = ReplicationType.identity(Boolean.class);
+		this.cache = replicationSystem.cache(resolveNamespace(replicationProvider)).replicated(type);
 	}
 
 	/**

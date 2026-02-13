@@ -13,7 +13,7 @@ import jakarta.inject.Inject;
 import me.whereareiam.identica.Constants;
 import me.whereareiam.identica.adapter.command.CommandConfiguration;
 import me.whereareiam.identica.adapter.database.DatabaseConfiguration;
-import me.whereareiam.identica.adapter.synchronization.SynchronizationConfiguration;
+import me.whereareiam.identica.adapter.replication.ReplicationConfiguration;
 import me.whereareiam.identica.common.CommonConfiguration;
 import me.whereareiam.identica.engine.EngineConfiguration;
 import me.whereareiam.identica.event.EventManager;
@@ -67,7 +67,7 @@ public class VelocityIdentica {
 				new VelocityConfiguration(proxyServer, this, pluginContainer, logger),
 				new CommandConfiguration(),
 				new DatabaseConfiguration(),
-				new SynchronizationConfiguration()
+				new ReplicationConfiguration()
 		);
 		this.injector = injector;
 

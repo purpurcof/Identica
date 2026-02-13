@@ -5,7 +5,6 @@ import com.google.inject.Key;
 import lombok.Getter;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
-import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
@@ -14,7 +13,7 @@ import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.identity.session.SessionService;
-import me.whereareiam.identica.service.SynchronizationService;
+import me.whereareiam.identica.replication.ReplicationSystem;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -170,16 +169,6 @@ public final class IdenticaAPI {
 		return getService(DatabaseService.class);
 	}
 
-	/**
-	 * Gets the CacheService for provider caches.
-	 *
-	 * @return the CacheService instance
-	 * @throws IllegalStateException if the API is not initialized
-	 */
-	@NotNull
-	public static CacheService getCacheService() {
-		return getService(CacheService.class);
-	}
 
 	/**
 	 * Gets the RegistrationAccountService for account reservation operations.
@@ -215,14 +204,14 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the SynchronizationService for cross-proxy synchronization.
+	 * Gets the ReplicationSystem for replicated caches and channels.
 	 *
-	 * @return the SynchronizationService instance
+	 * @return the ReplicationSystem instance
 	 * @throws IllegalStateException if the API is not initialized
 	 */
 	@NotNull
-	public static SynchronizationService getSynchronizationService() {
-		return getService(SynchronizationService.class);
+	public static ReplicationSystem getReplicationSystem() {
+		return getService(ReplicationSystem.class);
 	}
 
 	@NotNull

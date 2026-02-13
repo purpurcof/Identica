@@ -13,10 +13,11 @@ import me.whereareiam.configura.writer.ConfigWriter;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
-import me.whereareiam.identica.cache.CacheService;
 import me.whereareiam.identica.common.handshake.DefaultHandshakeStore;
 import me.whereareiam.identica.common.identity.account.DefaultRegistrationAccountService;
-import me.whereareiam.identica.common.cache.DefaultCacheService;
+import me.whereareiam.identica.common.replication.DefaultReplicationAdapter;
+import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
+import me.whereareiam.identica.common.replication.NoopReplicationAdapter;
 import me.whereareiam.identica.common.config.adapter.DateTimePatternAdapter;
 import me.whereareiam.identica.common.config.adapter.DurationAdapter;
 import me.whereareiam.identica.common.config.adapter.NodeAdapter;
@@ -28,7 +29,7 @@ import me.whereareiam.identica.common.conflict.DefaultConflictService;
 import me.whereareiam.identica.common.conflict.type.UsernameConflictType;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
-import me.whereareiam.identica.common.listener.AccountClearSynchronizationListener;
+import me.whereareiam.identica.common.listener.AccountClearReplicationListener;
 import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.listener.SessionReplacedListener;
 import me.whereareiam.identica.common.identity.DefaultIdentityService;
@@ -43,8 +44,8 @@ import me.whereareiam.identica.common.routing.RoutingLifecycle;
 import me.whereareiam.identica.common.routing.RoutingTargetMissingListener;
 import me.whereareiam.identica.common.identity.session.DefaultSessionService;
 import me.whereareiam.identica.common.identity.session.SessionRefreshCoordinator;
-import me.whereareiam.identica.common.synchronization.DefaultSynchronizationService;
-import me.whereareiam.identica.common.synchronization.NoopSynchronizationService;
+import me.whereareiam.identica.replication.ReplicationAdapter;
+import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.event.EventManager;
@@ -59,7 +60,6 @@ import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.routing.RoutingStateStore;
-import me.whereareiam.identica.service.SynchronizationService;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.util.EventUtil;
@@ -109,14 +109,14 @@ public class CommonConfiguration extends AbstractModule {
 				.asEagerSingleton();
 		bind(HandshakeStore.class).to(DefaultHandshakeStore.class).asEagerSingleton();
 
-		// Synchronization + cache
-		OptionalBinder.newOptionalBinder(binder(), Key.get(SynchronizationService.class, Names.named("synchronizationProvider")))
+		// Replication
+		OptionalBinder.newOptionalBinder(binder(), Key.get(ReplicationAdapter.class, Names.named("replicationAdapter")))
 				.setDefault()
-				.to(NoopSynchronizationService.class)
+				.to(NoopReplicationAdapter.class)
 				.asEagerSingleton();
 
-		bind(SynchronizationService.class).to(DefaultSynchronizationService.class).asEagerSingleton();
-		bind(CacheService.class).to(DefaultCacheService.class).asEagerSingleton();
+		bind(ReplicationAdapter.class).to(DefaultReplicationAdapter.class).asEagerSingleton();
+		bind(ReplicationSystem.class).to(DefaultReplicationSystem.class).asEagerSingleton();
 		bind(ReservationCache.class).to(DefaultReservationCache.class).asEagerSingleton();
 
 		// Account + presence
@@ -140,7 +140,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(UsernameConflictType.class).asEagerSingleton();
 
 		// Event listeners
-		bind(AccountClearSynchronizationListener.class).asEagerSingleton();
+		bind(AccountClearReplicationListener.class).asEagerSingleton();
 		bind(SessionReplacedListener.class).asEagerSingleton();
 		bind(ConflictPrepareLifecycle.class).asEagerSingleton();
 		bind(DynamicListenerRegistry.class).to(DefaultDynamicListenerRegistry.class).asEagerSingleton();

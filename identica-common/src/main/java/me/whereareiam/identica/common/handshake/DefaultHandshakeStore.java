@@ -3,9 +3,9 @@ package me.whereareiam.identica.common.handshake;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.cache.Cache;
-import me.whereareiam.identica.cache.CacheService;
-import me.whereareiam.identica.cache.codec.type.JsonCodec;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
@@ -27,17 +27,17 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Singleton
 public final class DefaultHandshakeStore implements HandshakeStore, EventListener {
 	private final Set<HandshakePolicy> policies = new CopyOnWriteArraySet<>();
-	private final Cache<HandshakeInstruction> cache;
+	private final ReplicatedCache<HandshakeInstruction> cache;
 	private final EventManager eventManager;
 
 	@Inject
 	public DefaultHandshakeStore(
-			CacheService cacheService,
+			ReplicationSystem replicationSystem,
 			Provider<Replication> replicationProvider,
 			EventManager eventManager
 	) {
-		this.cache = cacheService.synchronizedCache(resolveNamespace(replicationProvider),
-				JsonCodec.of(HandshakeInstruction.class));
+		ReplicationType<HandshakeInstruction, HandshakeInstruction> type = ReplicationType.identity(HandshakeInstruction.class);
+		this.cache = replicationSystem.cache(resolveNamespace(replicationProvider)).replicated(type);
 		this.eventManager = eventManager;
 		eventManager.register(this);
 	}

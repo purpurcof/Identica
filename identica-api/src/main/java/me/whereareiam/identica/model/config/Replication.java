@@ -6,7 +6,7 @@ import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Replication configuration used for cross-instance synchronization.
+ * Replication configuration used for cross-instance replication.
  */
 @Getter
 @Setter

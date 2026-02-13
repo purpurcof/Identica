@@ -14,7 +14,7 @@ include("identica-engine")
 
 include("identica-adapter-command")
 include("identica-adapter-database")
-include("identica-adapter-synchronization")
+include("identica-adapter-replication")
 
 include("identica-platform")
 include("identica-platform:platform-velocity:api")

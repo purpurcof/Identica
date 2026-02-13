@@ -10,16 +10,14 @@ import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.ProviderProfilePersistenceService;
 import me.whereareiam.identica.event.account.AccountPrepareEvent;
-import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.identity.registry.IdentityRegistry;
 import me.whereareiam.identica.model.Session;
-import me.whereareiam.identica.model.account.Account;
-import me.whereareiam.identica.model.account.AccountDecision;
+import me.whereareiam.identica.model.identity.Account;
+import me.whereareiam.identica.model.identity.AccountDecision;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.type.ConflictHook;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,9 +34,7 @@ public class UsernameConflictType implements ConflictType {
 	private final AccountPersistenceService accountPersistenceService;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final ProviderProfilePersistenceService providerProfilePersistenceService;
-	private final IdentityRegistry identityRegistry;
 	private final SessionService sessionService;
-	private final IdentityService identityService;
 	private final FormatUsernameConflictResolver formatResolver;
 
 	@Inject
@@ -46,18 +42,14 @@ public class UsernameConflictType implements ConflictType {
 			AccountPersistenceService accountPersistenceService,
 			ProviderLinkPersistenceService providerLinkPersistenceService,
 			ProviderProfilePersistenceService providerProfilePersistenceService,
-			IdentityRegistry identityRegistry,
 			SessionService sessionService,
-			IdentityService identityService,
 			FormatUsernameConflictResolver formatResolver,
 			ConflictService conflictService
 	) {
 		this.accountPersistenceService = accountPersistenceService;
 		this.providerLinkPersistenceService = providerLinkPersistenceService;
 		this.providerProfilePersistenceService = providerProfilePersistenceService;
-		this.identityRegistry = identityRegistry;
 		this.sessionService = sessionService;
-		this.identityService = identityService;
 		this.formatResolver = formatResolver;
 
 		conflictService.register(this);
@@ -133,10 +125,10 @@ public class UsernameConflictType implements ConflictType {
 
 		Account existing = context.getExistingAccount();
 		if (existing != null && resolution.getAction() == ConflictResolution.Action.KICK_EXISTING)
-			identityService.closeSession(existing.getUniqueId()).join();
+			sessionService.close(existing.getUniqueId()).join();
 
 		if (existing != null && resolution.getAction() == ConflictResolution.Action.KICK_BOTH) {
-			identityService.closeSession(existing.getUniqueId()).join();
+			sessionService.close(existing.getUniqueId()).join();
 			event.setDecision(AccountDecision.deny(resolution.getMessage()));
 			return;
 		}
@@ -178,12 +170,8 @@ public class UsernameConflictType implements ConflictType {
 
 					Session session = found.get();
 					session.setEffectiveUsername(overrideValue);
-					return sessionService.open(session)
-							.thenApply(stored -> {
-								identityRegistry.findState(uniqueId)
-										.ifPresent(state -> state.transitionToAuthenticated(stored));
-								return null;
-							});
+
+					return sessionService.open(session).thenApply(_ -> null);
 				}).join();
 	}
 

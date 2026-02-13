@@ -47,7 +47,7 @@ public class RoutingTargetMissingListener implements EventListener {
 	}
 
 	private Component buildMissingServerMessage() {
-		Messages.Authentication.Routing routing = messagesProvider.get().getAuthentication().getRouting();
+		Messages.Connection.Routing routing = messagesProvider.get().getConnection().getAuthentication().getRouting();
 		String message = joinMessage(routing.getMissingServer());
 		if (message.isBlank())
 			return Component.empty();

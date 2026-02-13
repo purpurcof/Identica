@@ -1,23 +1,39 @@
 package me.whereareiam.identica.adapter.command.executor;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.auth.AuthenticationCoordinator;
+import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.auth.AuthDecision;
+import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.keystone.Actor;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class EnrollCommand {
-	private final AuthenticationCoordinator authenticationCoordinator;
+	private final ConnectionCoordinator connectionCoordinator;
+	private final PipelineStateStore pipelineStateStore;
+	private final Provider<Settings> settingsProvider;
+	private final Provider<Messages> messagesProvider;
 
 	@Definition("enroll")
 	@Command("identica enroll <eligibility>")
@@ -25,34 +41,95 @@ public class EnrollCommand {
 		if (providerId == null || providerId.isBlank())
 			return;
 
-		ResumeRequest request = ResumeRequest.builder()
-				.connectionUniqueId(sender.getUniqueId())
-				.build();
+		updatePendingSelection(sender, providerId);
 
-		AuthDecision decision = authenticationCoordinator.resume(request, context -> {
-			if (context == null) return;
+		ResumeRequest request = buildResumeRequest(sender);
+		if (request == null)
+			return;
 
-			AuthContext.Provider provider = context.getProvider();
-			if (provider == null) {
-				String username = context.getUsername() != null ? context.getUsername() : "";
-				context.setProvider(AuthContext.Provider.builder()
-						.providerId(providerId)
-						.providerUsername(username)
-						.build());
-				return;
-			}
-
-			provider.setProviderId(providerId);
-		}).toCompletableFuture().join();
+		ConnectionDecision decision = connectionCoordinator.resume(request)
+				.toCompletableFuture()
+				.join();
 
 		if (decision == null || decision.getStatus() == null)
 			return;
 
+		Messages.Commands.Enroll enrollMessages = messagesProvider.get().getCommands().getEnroll();
+
 		switch (decision.getStatus()) {
 			case WAIT -> sendMessage(sender, decision.getMessage());
 			case DENY, REQUIRE_RECONNECT -> disconnect(sender, decision.getMessage());
+			case NO_PENDING -> sendMessage(sender, enrollMessages.getNoPending());
+			case ALLOW -> sendMessage(sender, enrollMessages.getCompleted());
 			default -> {
 			}
+		}
+	}
+
+	private @Nullable ResumeRequest buildResumeRequest(@NotNull Actor sender) {
+		UUID connectionUniqueId = sender.getUniqueId();
+
+		return ResumeRequest.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.identity(sender instanceof Identity identity ? identity : null)
+				.build();
+	}
+
+	private void updatePendingSelection(@NotNull Actor sender, @NotNull String providerId) {
+		UUID connectionUniqueId = sender.getUniqueId();
+
+		String username = null;
+		String ip = null;
+		UUID identityUniqueId = null;
+		if (sender instanceof Identity identity) {
+			username = identity.getUsername();
+			ip = identity.getIp();
+			identityUniqueId = identity.getUniqueId();
+		}
+
+		PipelineStateReference reference = PipelineStateReference.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.identityUniqueId(identityUniqueId)
+				.username(username)
+				.ip(ip)
+				.build();
+
+		PipelineState stored = pipelineStateStore.find(reference).orElse(null);
+		if (stored == null) return;
+
+		JourneyPendingState pending = stored.item(JourneyPendingState.class).orElse(null);
+		if (pending == null) return;
+
+		ScenarioContext context = stored.getScenario(PipelineType.REGISTRATION);
+		if (context == null) return;
+
+		username = context.getUsername() != null ? context.getUsername() : "";
+		ProviderContext provider = context.getProvider();
+		if (provider == null) {
+			context.setProvider(ProviderContext.builder()
+					.providerId(providerId)
+					.providerUsername(username)
+					.build());
+		} else {
+			provider.setProviderId(providerId);
+			String providerUsername = provider.getProviderUsername();
+			if (providerUsername.isBlank())
+				provider.setProviderUsername(username);
+		}
+
+		stored.setScenario(context);
+		if (stored.getPipelineType() == null) {
+			stored.setPipelineType(PipelineType.REGISTRATION);
+		}
+
+		long ttlMs = settingsProvider.get().getConnection().getRegistration().pipelineTtlMillis();
+		if (ttlMs > 0) {
+			stored.putItem(new JourneyPendingState(
+					pending.getFlow(),
+					StageType.PROVIDER.id(),
+					0
+			), ttlMs);
+			pipelineStateStore.save(reference, stored, ttlMs);
 		}
 	}
 

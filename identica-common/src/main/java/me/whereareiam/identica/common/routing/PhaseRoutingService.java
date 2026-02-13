@@ -5,12 +5,11 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.RoutingTarget;
-import me.whereareiam.identica.model.auth.StepResult;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.routing.RoutingDecision;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.type.RoutingTargetType;
-import me.whereareiam.identica.type.step.StepPhase;
 
 import java.util.Map;
 import java.util.Optional;
@@ -25,17 +24,11 @@ public class PhaseRoutingService implements RoutingService {
 		if (decision == null || decision.getResult() == null)
 			return Optional.empty();
 
-		Settings.Routing routing = routing();
-		if (routing == null)
-			return Optional.empty();
 
 		StepResult result = decision.getResult();
-		if (result.getStatus() == null)
-			return Optional.empty();
-
+		Settings.Routing routing = settingsProvider.get().getConnection().getRouting();
 		String target = switch (result.getStatus()) {
-			case COMPLETE -> routing.getTargets().getCompleted();
-			case WAITING -> resolveStepTarget(routing, decision);
+			case COMPLETE, WAITING -> resolveStepTarget(routing, decision);
 			default -> null;
 		};
 
@@ -55,20 +48,21 @@ public class PhaseRoutingService implements RoutingService {
 	}
 
 	private String resolveStepTarget(Settings.Routing routing, RoutingDecision decision) {
-		String override = resolveOverride(routing.getOverrides(), decision.getStep() != null ? decision.getStep().getName() : null);
+		String target = routing.getTargets().getStep();
+
+		Settings.Routing.Targets.Overrides overrides = routing.getTargets().getOverrides();
+		String stageOverride = resolveStageOverride(overrides, decision.getPhase().id());
+		if (!isBlank(stageOverride))
+			target = stageOverride;
+
+		String override = resolveOverride(overrides, decision.getStep() != null ? decision.getStep().getName() : null);
 		if (!isBlank(override))
-			return override;
+			target = override;
 
-		StepPhase phase = decision.getPhase();
-
-		return switch (phase) {
-			case PRE -> routing.getTargets().getPre();
-			case PROVIDER -> routing.getTargets().getProvider();
-			case END -> routing.getTargets().getEnd();
-		};
+		return target;
 	}
 
-	private String resolveOverride(Settings.Routing.Overrides overrides, String stepName) {
+	private String resolveOverride(Settings.Routing.Targets.Overrides overrides, String stepName) {
 		if (overrides == null || stepName == null)
 			return null;
 
@@ -80,9 +74,16 @@ public class PhaseRoutingService implements RoutingService {
 		return null;
 	}
 
-	private Settings.Routing routing() {
-		Settings settings = settingsProvider.get();
-		return settings != null ? settings.getRouting() : null;
+	private String resolveStageOverride(Settings.Routing.Targets.Overrides overrides, String stageId) {
+		if (overrides == null || stageId == null)
+			return null;
+
+		for (Map.Entry<String, String> entry : overrides.getStages().entrySet()) {
+			if (entry.getKey() != null && entry.getKey().equalsIgnoreCase(stageId))
+				return entry.getValue();
+		}
+
+		return null;
 	}
 
 	private boolean isBlank(String value) {

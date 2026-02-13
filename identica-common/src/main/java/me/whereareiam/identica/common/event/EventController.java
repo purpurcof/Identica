@@ -7,6 +7,9 @@ import me.whereareiam.identica.event.base.*;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.type.event.EventOrder;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +24,12 @@ public class EventController implements EventManager {
 	public void register(EventListener listener) {
 		for (Method method : listener.getClass().getDeclaredMethods()) {
 			if (!method.isAnnotationPresent(IdenticEvent.class)) continue;
+			if (method.getParameterCount() != 1 || !Event.class.isAssignableFrom(method.getParameterTypes()[0])) {
+				Logger.warn("Skipping listener method %s#%s: expected exactly one Event parameter",
+						listener.getClass().getSimpleName(),
+						method.getName());
+				continue;
+			}
 
 			Class<?> eventType = method.getParameterTypes()[0];
 			EventOrder order = method.getAnnotation(IdenticEvent.class).value();
@@ -108,9 +117,27 @@ public class EventController implements EventManager {
 	}
 
 	private void logExecutionError(Event event, RegisteredListener listener, Exception e) {
-		Logger.severe("Failed to call event %s for listener %s %s",
+		Throwable rootCause = unwrap(e);
+		Logger.severe("Failed to call event %s for listener %s: %s%n%s",
 				event.getClass().getSimpleName(),
 				listener.getListener().getClass().getSimpleName(),
-				e.fillInStackTrace());
+				rootCause.toString(),
+				stackTrace(rootCause));
+	}
+
+	private Throwable unwrap(Throwable throwable) {
+		if (!(throwable instanceof InvocationTargetException invocationTargetException))
+			return throwable;
+
+		Throwable cause = invocationTargetException.getCause();
+		return cause != null ? cause : invocationTargetException;
+	}
+
+	private String stackTrace(Throwable throwable) {
+		StringWriter writer = new StringWriter();
+		try (PrintWriter printWriter = new PrintWriter(writer)) {
+			throwable.printStackTrace(printWriter);
+		}
+		return writer.toString();
 	}
 }

@@ -3,9 +3,10 @@ package me.whereareiam.identica.common.identity;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.cache.Cache;
-import me.whereareiam.identica.cache.CacheService;
-import me.whereareiam.identica.cache.codec.type.StringCodec;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.model.config.Replication;
 import org.jetbrains.annotations.NotNull;
@@ -16,14 +17,16 @@ import java.util.concurrent.CompletableFuture;
 
 @Singleton
 public class DefaultReservationCache implements ReservationCache {
-	private final Cache<String> cache;
+	private final ReplicatedCache<String> cache;
 
 	@Inject
 	public DefaultReservationCache(
-			CacheService cacheService,
+			ReplicationSystem replicationSystem,
 			Provider<Replication> replicationProvider
 	) {
-		this.cache = cacheService.synchronizedCache(resolveNamespace(replicationProvider), new StringCodec());
+		ReplicationType<String, String> type = ReplicationType.identity(String.class)
+				.withCodec(SnapshotCodec.string());
+		this.cache = replicationSystem.cache(resolveNamespace(replicationProvider)).replicated(type);
 	}
 
 	@Override

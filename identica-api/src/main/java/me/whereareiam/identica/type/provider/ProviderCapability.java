@@ -27,7 +27,12 @@ public enum ProviderCapability {
 	/**
 	 * Publishes authoritative usernames that should be replicated.
 	 */
-	AUTHORITATIVE_USERNAME("authoritative_username");
+	AUTHORITATIVE_USERNAME("authoritative_username"),
+
+	/**
+	 * Supports account migration to this provider.
+	 */
+	MIGRATION("migration");
 
 	@Getter
 	private final String id;

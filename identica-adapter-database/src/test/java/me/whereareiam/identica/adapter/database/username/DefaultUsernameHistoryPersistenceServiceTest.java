@@ -1,0 +1,59 @@
+package me.whereareiam.identica.adapter.database.username;
+
+import me.whereareiam.identica.adapter.database.repository.username.UsernameHistoryRepository;
+import me.whereareiam.identica.adapter.database.testing.TestDataFactory;
+import me.whereareiam.identica.model.UsernameHistoryEntry;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+
+@ExtendWith(MockitoExtension.class)
+class DefaultUsernameHistoryPersistenceServiceTest {
+	@Mock
+	private UsernameHistoryRepository repository;
+
+	private DefaultUsernameHistoryPersistenceService service;
+
+	@BeforeEach
+	void setUp() {
+		service = new DefaultUsernameHistoryPersistenceService(repository);
+	}
+
+	@Test
+	void recordRejectsBlankOldUsername() {
+		UsernameHistoryEntry entry = TestDataFactory.usernameHistoryEntry(UUID.randomUUID(), "provider", " ", "new", "source");
+
+		assertThrows(IllegalArgumentException.class, () -> service.record(entry));
+	}
+
+	@Test
+	void recordRejectsBlankNewUsername() {
+		UsernameHistoryEntry entry = TestDataFactory.usernameHistoryEntry(UUID.randomUUID(), "provider", "old", " ", "source");
+
+		assertThrows(IllegalArgumentException.class, () -> service.record(entry));
+	}
+
+	@Test
+	void recordRejectsBlankSource() {
+		UsernameHistoryEntry entry = TestDataFactory.usernameHistoryEntry(UUID.randomUUID(), "provider", "old", "new", " ");
+
+		assertThrows(IllegalArgumentException.class, () -> service.record(entry));
+	}
+
+	@Test
+	void recordInsertsEntry() {
+		UUID uniqueId = UUID.randomUUID();
+		UsernameHistoryEntry entry = TestDataFactory.usernameHistoryEntry(uniqueId, "provider", "old", "new", "source");
+
+		service.record(entry);
+
+		verify(repository).insert(uniqueId, "provider", "old", "new", "source", TestDataFactory.CHANGED_AT);
+	}
+}

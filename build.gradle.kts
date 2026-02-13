@@ -47,6 +47,11 @@ subprojects {
         "testImplementation"(rootProject.libs.annotations)
         "testImplementation"(rootProject.libs.mockito.core)
         "testImplementation"(rootProject.libs.mockito.junit)
+
+        if (path != ":identica-api") {
+            "compileOnly"(project(":identica-api"))
+            "testImplementation"(project(":identica-api"))
+        }
     }
 
     tasks.withType<Test> {

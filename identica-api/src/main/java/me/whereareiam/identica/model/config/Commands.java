@@ -30,6 +30,7 @@ public class Commands {
 		private @NotNull Suggestions suggestions;
 		private @NotNull Clear clear;
 		private @NotNull Sessions sessions;
+		private @NotNull Migration migration;
 
 		/**
 		 * Configuration for command suggestions.
@@ -68,6 +69,19 @@ public class Commands {
 			 * Page size for session listings.
 			 */
 			private int listPageSize;
+		}
+
+		/**
+		 * Configuration for migration command behavior.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Migration {
+			/**
+			 * Time window for confirming a migration request.
+			 */
+			private @NotNull Duration confirmTtl;
 		}
 	}
 }

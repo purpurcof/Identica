@@ -25,7 +25,7 @@ public interface ReservationCache {
 	 * @param key lookup key
 	 * @param uuid UUID to store
 	 * @param ttlMs time to live in milliseconds
-	 * @return completion stage
+	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> put(@Nullable String key, @Nullable UUID uuid, long ttlMs);
 
@@ -33,7 +33,7 @@ public interface ReservationCache {
 	 * Invalidates a reservation entry.
 	 *
 	 * @param key lookup key
-	 * @return completion stage
+	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> invalidate(@Nullable String key);
 }

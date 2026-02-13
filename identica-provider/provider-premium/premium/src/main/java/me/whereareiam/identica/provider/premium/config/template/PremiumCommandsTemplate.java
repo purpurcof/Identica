@@ -24,7 +24,27 @@ public class PremiumCommandsTemplate implements TemplateProvider<PremiumCommands
 						.build())
 				.build();
 
+		CommandDefinition premiumConfirm = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("premium confirm"))
+				.permission("")
+				.description("Confirm premium migration")
+				.usage("{alias}")
+				.hide(true)
+				.build();
+
+		CommandDefinition premiumCancel = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("premium cancel"))
+				.permission("")
+				.description("Cancel premium migration")
+				.usage("{alias}")
+				.hide(true)
+				.build();
+
 		commands.getCommands().put("premium", premium);
+		commands.getCommands().put("premium-confirm", premiumConfirm);
+		commands.getCommands().put("premium-cancel", premiumCancel);
 		return commands;
 	}
 }

@@ -24,7 +24,7 @@ public class Messages {
 	private @NotNull Format format;
 	private @NotNull Commands commands;
 	private @NotNull Providers providers;
-	private @NotNull Authentication authentication;
+	private @NotNull Connection connection;
 
 	@Getter
 	@Setter
@@ -61,6 +61,8 @@ public class Messages {
 		private @NotNull Reload reload;
 		private @NotNull Clear clear;
 		private @NotNull Sessions sessions;
+		private @NotNull Enroll enroll;
+		private @NotNull Migration migration;
 
 		/**
 		 * Configuration for reload command messages.
@@ -286,6 +288,103 @@ public class Messages {
 		}
 
 		/**
+		 * Configuration for enroll command messages.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Enroll {
+			/**
+			 * Message shown when no pending enrollment is found.
+			 */
+			private @NotNull String noPending;
+
+			/**
+			 * Message shown when enrollment completes successfully.
+			 */
+			private @NotNull String completed;
+		}
+
+		/**
+		 * Configuration for migration command messages.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Migration {
+			private @NotNull Listing list;
+			private @NotNull Links links;
+			private @NotNull Start start;
+			private @NotNull Cancel cancel;
+			private @NotNull Primary primary;
+			private @NotNull Drop drop;
+			private @NotNull String targetNotFound;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Listing {
+				/**
+				 * Lines shown in migration list output.
+				 * Placeholders:
+				 * - {entries}
+				 */
+				private @NotNull List<String> body;
+
+				/**
+				 * Entry format for a single provider link in list output.
+				 * Placeholders:
+				 * - {providerId}
+				 * - {providerName}
+				 * - {primary}
+				 */
+				private @NotNull EntryFormat entry;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Links {
+				private @NotNull String noLinks;
+				private @NotNull String notLinked;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Start {
+				private @NotNull String pendingExists;
+				private @NotNull String started;
+				private @NotNull String providerUnsupported;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Cancel {
+				private @NotNull String cancelled;
+				private @NotNull String noPending;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Primary {
+				private @NotNull String set;
+				private @NotNull String alreadyPrimary;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Drop {
+				private @NotNull String dropped;
+				private @NotNull String primaryDenied;
+				private @NotNull String lastLinkDenied;
+			}
+		}
+
+		/**
 		 * Format definitions for command entry rendering.
 		 */
 		@Getter
@@ -314,48 +413,128 @@ public class Messages {
 	@Getter
 	@Setter
 	@ToString
-	public static class Authentication {
-		private @NotNull List<String> handshakeDenied;
-		private @NotNull List<String> authenticationFailed;
-		private @NotNull List<String> noCompletionStep;
-		private @NotNull List<String> stepNoStatus;
-		private @NotNull Routing routing;
-		private @NotNull Steps steps;
+	public static class Connection {
+		/**
+		 * Message shown when an existing session is kicked due to a new login.
+		 */
+		private @NotNull List<String> concurrentLoginKick;
+		private @NotNull Journey journey;
+		private @NotNull Authentication authentication;
+		private @NotNull Registration registration;
+		private @NotNull Migration migration;
 
 		@Getter
 		@Setter
 		@ToString
-		public static class Steps {
-			private @NotNull Enrollment enrollment;
-
+		public static class Scenario {
+			private @NotNull List<String> handshakeDenied;
 			/**
-			 * Enrollment prompt messages.
+			 * Message shown when a pipeline attempt is rejected due to concurrency.
 			 */
+			private @NotNull List<String> pipelineKick;
+			/**
+			 * Message shown when the pipeline finishes without a completion result.
+			 */
+			private @NotNull List<String> noCompletionPipeline;
+			private @NotNull Routing routing;
+			private @NotNull Errors errors;
+
 			@Getter
 			@Setter
 			@ToString
-			public static class Enrollment {
-				private @NotNull List<String> title;
-				private @NotNull List<String> body;
-				private @NotNull EntryFormat entryFormat;
-				private @NotNull List<String> empty;
-				private @NotNull Map<String, String> descriptions;
+			public static class Errors {
+				private @NotNull List<String> preparationMissingContext;
+				private @NotNull List<String> identityGroupMissingResult;
+				private @NotNull List<String> policyGroupMissingResult;
+				private @NotNull List<String> sessionGroupMissingResult;
+				private @NotNull List<String> journeyMissingResult;
+				private @NotNull List<String> journeyMissingContext;
+				private @NotNull List<String> journeyMissingPlan;
+				private @NotNull List<String> finalizeMissingResult;
+				private @NotNull List<String> identityProfileMissing;
+				private @NotNull List<String> accountReviewMissing;
+				private @NotNull List<String> identityReplicationMissing;
+				private @NotNull List<String> providerValidationMissing;
+				private @NotNull List<String> ensureNewAccountMissing;
+				private @NotNull List<String> accountCreationMissing;
+				private @NotNull List<String> providerLinkMissing;
+				private @NotNull List<String> sessionBuildMissing;
+				private @NotNull List<String> accountMissing;
+			}
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Authentication extends Scenario {
+			private @NotNull List<String> authenticationFailed;
+			private @NotNull List<String> sessionBuildFailed;
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Registration extends Scenario {
+			private @NotNull List<String> registrationFailed;
+			private @NotNull List<String> accountAlreadyExists;
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Migration extends Scenario {
+			private @NotNull List<String> migrationFailed;
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Journey {
+			private @NotNull Stage stage;
+			private @NotNull Step step;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Stage {
+				private @NotNull List<String> noCompletion;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Step {
+				private @NotNull List<String> noStatus;
+				private @NotNull Enrollment enrollment;
 
 				/**
-				 * Format definitions for enrollment entry rendering.
+				 * Enrollment prompt messages.
 				 */
 				@Getter
 				@Setter
 				@ToString
-				public static class EntryFormat {
+				public static class Enrollment {
+					private @NotNull List<String> body;
+					private @NotNull EntryFormat entryFormat;
+					private @NotNull List<String> empty;
+					private @NotNull Map<String, String> descriptions;
+
 					/**
-					 * Format used when all required placeholders are present.
+					 * Format definitions for enrollment entry rendering.
 					 */
-					private @NotNull String format;
-					/**
-					 * Format used when one or more placeholders are missing.
-					 */
-					private @NotNull String emptyFormat;
+					@Getter
+					@Setter
+					@ToString
+					public static class EntryFormat {
+						/**
+						 * Format used when all required placeholders are present.
+						 */
+						private @NotNull String format;
+						/**
+						 * Format used when one or more placeholders are missing.
+						 */
+						private @NotNull String emptyFormat;
+					}
 				}
 			}
 		}

@@ -5,7 +5,8 @@ plugins {
 }
 
 dependencies {
-    "implementation"(project(":identica-provider:provider-cracked:cracked-api"))
+    "compileOnly"(project(":identica-provider:provider-cracked:cracked-api"))
+    "testImplementation"(project(":identica-provider:provider-cracked:cracked-api"))
 
     "compileOnly"(rootProject.libs.argon2)
     "compileOnly"(rootProject.libs.bcrypt)

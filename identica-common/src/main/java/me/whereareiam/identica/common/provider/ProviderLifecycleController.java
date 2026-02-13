@@ -5,7 +5,8 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.auth.HandshakePolicy;
+import me.whereareiam.identica.handshake.HandshakePolicy;
+import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
@@ -23,9 +24,9 @@ import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
+import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
-import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.net.URLClassLoader;
@@ -39,6 +40,7 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<HandshakePolicy>> HANDSHAKE_POLICIES = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderEligibilityResolver>> ELIGIBILITY_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProfileSubjectResolver>> PROFILE_RESOLVERS = new TypeLiteral<>() {};
+	private static final TypeLiteral<Set<ProviderMigrationPrecheck>> MIGRATION_PRECHECKS = new TypeLiteral<>() {};
 
 	private final ProviderWorkingPathResolver workingPathResolver;
 	private final ProviderClassLoaderFactory classLoaderFactory;
@@ -48,7 +50,7 @@ public class ProviderLifecycleController {
 	private final ProviderResolverRegistry resolverRegistry;
 	private final ConflictService conflictService;
 	private final EventManager eventManager;
-	private final Registry<HandshakePolicy> handshakePolicies;
+	private final HandshakeStore handshakeStore;
 
 	private final ConcurrentHashMap<InternalProvider, Set<HandshakePolicy>> providerHandshakePolicies = new ConcurrentHashMap<>();
 
@@ -200,6 +202,7 @@ public class ProviderLifecycleController {
 		providerHandshakePolicies.put(internal, copySet(resolveSet(injector, HANDSHAKE_POLICIES)));
 		internal.setEligibilityResolvers(copySet(resolveSet(injector, ELIGIBILITY_RESOLVERS)));
 		internal.setProfileSubjectResolvers(copySet(resolveSet(injector, PROFILE_RESOLVERS)));
+		internal.setMigrationPrechecks(copySet(resolveSet(injector, MIGRATION_PRECHECKS)));
 	}
 
 	private void registerProviderBindings(InternalProvider internal) {
@@ -207,7 +210,7 @@ public class ProviderLifecycleController {
 		Set<HandshakePolicy> policies = providerHandshakePolicies.get(internal);
 		if (policies != null)
 			for (HandshakePolicy policy : policies)
-				handshakePolicies.register(policy);
+				handshakeStore.registerPolicy(policy);
 	}
 
 	private void unregisterProviderBindings(InternalProvider internal) {
@@ -215,7 +218,7 @@ public class ProviderLifecycleController {
 		Set<HandshakePolicy> policies = providerHandshakePolicies.remove(internal);
 		if (policies != null)
 			for (HandshakePolicy policy : policies)
-				handshakePolicies.unregister(policy);
+				handshakeStore.unregisterPolicy(policy);
 	}
 
 	private <T> Set<T> resolveSet(Injector injector, TypeLiteral<Set<T>> type) {

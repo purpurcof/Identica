@@ -34,6 +34,15 @@ public class ResumeRequest {
 	}
 
 	/**
+	 * Returns the stable identity unique id for this resume request.
+	 *
+	 * @return identity unique id or {@code null}
+	 */
+	public @Nullable UUID getIdentityUniqueId() {
+		return identity != null ? identity.getUniqueId() : null;
+	}
+
+	/**
 	 * Returns the username for this resume request.
 	 *
 	 * @return username or {@code null}

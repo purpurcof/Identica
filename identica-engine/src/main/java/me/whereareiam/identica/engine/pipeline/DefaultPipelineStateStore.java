@@ -1,0 +1,166 @@
+package me.whereareiam.identica.engine.pipeline;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.model.config.Replication;
+import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+
+@Singleton
+public class DefaultPipelineStateStore implements PipelineStateStore {
+	private static final String KEY_CONNECTION_PREFIX = "c:";
+	private static final String KEY_IDENTITY_PREFIX = "i:";
+	private static final String KEY_USERNAME_PREFIX = "u:";
+	private static final String KEY_USERNAME_IP_PREFIX = "uip:";
+
+	private final ReplicatedCache<PipelineStateSnapshot> stateCache;
+
+	@Inject
+	public DefaultPipelineStateStore(
+			@NotNull ReplicationSystem replicationSystem,
+			@NotNull Provider<Replication> replicationProvider
+	) {
+		ReplicationType<PipelineStateSnapshot, PipelineStateSnapshot> type = ReplicationType.identity(PipelineStateSnapshot.class);
+		this.stateCache = replicationSystem.cache(resolveNamespace(replicationProvider)).replicated(type);
+	}
+
+	@Override
+	public @NotNull Optional<PipelineState> find(@NotNull PipelineStateReference reference) {
+		return read(reference, false);
+	}
+
+	@Override
+	public @NotNull PipelineState load(@NotNull PipelineStateReference reference) {
+		return find(reference).orElseGet(PipelineState::initial);
+	}
+
+	@Override
+	public void save(@NotNull PipelineStateReference reference, @NotNull PipelineState state, long ttlMs) {
+		if (ttlMs <= 0 || reference.isEmpty())
+			return;
+
+		long expiresAt = System.currentTimeMillis() + ttlMs;
+		List<String> keys = resolveKeys(reference);
+		if (keys.isEmpty())
+			return;
+
+		PipelineStateSnapshot stored = new PipelineStateSnapshot(state, keys, expiresAt);
+		for (String key : keys)
+			stateCache.put(key, stored, ttlMs).join();
+	}
+
+	@Override
+	public @NotNull Optional<PipelineState> consume(@NotNull PipelineStateReference reference) {
+		return read(reference, true);
+	}
+
+	@Override
+	public void clear(@NotNull PipelineStateReference reference) {
+		read(reference, true);
+	}
+
+	private @NotNull Optional<PipelineState> read(
+			@NotNull PipelineStateReference reference,
+			boolean consume
+	) {
+		if (reference.isEmpty())
+			return Optional.empty();
+
+		List<String> keys = resolveKeys(reference);
+		if (keys.isEmpty())
+			return Optional.empty();
+
+		long now = System.currentTimeMillis();
+		for (String key : keys) {
+			PipelineStateSnapshot stored = readStored(key, consume);
+			if (stored == null)
+				continue;
+
+			if (stored.expiresAt > 0 && stored.expiresAt <= now) {
+				clearByKeys(stored.keys);
+				continue;
+			}
+
+			PipelineState resolved = stored.state != null
+					? stored.state.pruneExpired(now)
+					: null;
+
+			if (consume)
+				clearByKeys(stored.keys);
+
+			return Optional.ofNullable(resolved);
+		}
+
+		return Optional.empty();
+	}
+
+	private @Nullable DefaultPipelineStateStore.PipelineStateSnapshot readStored(@NotNull String key, boolean consume) {
+		return consume
+				? stateCache.consume(key).join().orElse(null)
+				: stateCache.getFresh(key).join().orElse(null);
+	}
+
+	private void clearByKeys(@Nullable List<String> keys) {
+		if (keys == null || keys.isEmpty())
+			return;
+		for (String key : keys)
+			stateCache.invalidate(key).join();
+	}
+
+	private @NotNull List<String> resolveKeys(@NotNull PipelineStateReference reference) {
+		List<String> keys = new ArrayList<>(4);
+
+		if (reference.getConnectionUniqueId() != null)
+			keys.add(KEY_CONNECTION_PREFIX + reference.getConnectionUniqueId());
+
+		if (reference.getIdentityUniqueId() != null)
+			keys.add(KEY_IDENTITY_PREFIX + reference.getIdentityUniqueId());
+
+		String username = normalize(reference.getUsername());
+		String ip = normalize(reference.getIp());
+		if (username != null && ip != null)
+			keys.add(KEY_USERNAME_IP_PREFIX + username + "|" + ip);
+		if (username != null)
+			keys.add(KEY_USERNAME_PREFIX + username);
+
+		return keys;
+	}
+
+	private @Nullable String normalize(@Nullable String value) {
+		if (value == null || value.isBlank())
+			return null;
+		return value.trim().toLowerCase(Locale.ROOT);
+	}
+
+	private static @NotNull String resolveNamespace(@NotNull Provider<Replication> replicationProvider) {
+		Replication replication = replicationProvider.get();
+		if (replication == null) throw new IllegalStateException("replication is missing");
+
+		String resolved = replication.getCache().getPipelineState();
+		if (resolved.isBlank()) throw new IllegalStateException("replication.cache.pipelineState is missing");
+
+		return resolved;
+	}
+
+	@NoArgsConstructor
+	@AllArgsConstructor
+	public static final class PipelineStateSnapshot {
+		public @Nullable PipelineState state;
+		public @Nullable List<String> keys;
+		public long expiresAt;
+	}
+}

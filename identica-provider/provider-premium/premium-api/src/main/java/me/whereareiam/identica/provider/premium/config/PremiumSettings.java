@@ -17,7 +17,7 @@ public class PremiumSettings {
 	private @NotNull Lookup lookup = new Lookup();
 
 	/**
-	 * Lookup configuration for premium profile checks.
+	 * Lookup configuration for premium resolver checks.
 	 */
 	@Getter
 	@Setter
@@ -28,11 +28,11 @@ public class PremiumSettings {
 		 */
 		private @NotNull String profileEndpoint = "https://api.mojang.com/users/profiles/minecraft/%s";
 		/**
-		 * Timeout for the profile lookup request.
+		 * Timeout for the resolver lookup request.
 		 */
 		private @NotNull Duration timeout = Duration.ofSeconds(3);
 		/**
-		 * Cache time-to-live for profile lookup results.
+		 * Cache time-to-live for resolver lookup results.
 		 */
 		private @NotNull Duration cacheTtl = Duration.ofMinutes(5);
 	}

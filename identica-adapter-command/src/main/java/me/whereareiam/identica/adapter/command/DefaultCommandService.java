@@ -15,6 +15,7 @@ import me.whereareiam.identica.adapter.command.definition.CommandDefinitionAdapt
 import me.whereareiam.identica.adapter.command.executor.HelpCommand;
 import me.whereareiam.identica.adapter.command.executor.EnrollCommand;
 import me.whereareiam.identica.adapter.command.executor.MainCommand;
+import me.whereareiam.identica.adapter.command.executor.MigrationCommand;
 import me.whereareiam.identica.adapter.command.executor.ReloadCommand;
 import me.whereareiam.identica.adapter.command.executor.ClearCommand;
 import me.whereareiam.identica.adapter.command.executor.SessionsCommand;
@@ -70,7 +71,8 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(ReloadCommand.class),
 				injector.getInstance(ClearCommand.class),
 				injector.getInstance(SessionsCommand.class),
-				injector.getInstance(EnrollCommand.class)
+				injector.getInstance(EnrollCommand.class),
+				injector.getInstance(MigrationCommand.class)
 		);
 
 		registerExceptionHandlers(commandManagerProvider.get());

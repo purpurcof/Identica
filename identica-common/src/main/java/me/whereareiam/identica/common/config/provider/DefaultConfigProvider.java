@@ -8,8 +8,8 @@ import me.whereareiam.identica.registry.Registry;
 import java.nio.file.Path;
 
 /**
- * Adapter-layer base that wires ConfigProvider into our reload registry
- * and exposes the resolved base path for subclasses.
+ * Adapter-layer runner that wires ConfigProvider into our reload registry
+ * and exposes the resolved runner path for subclasses.
  */
 public abstract class DefaultConfigProvider<T> extends ConfigProvider<T> implements Provider<T> {
 	private final Path basePath;

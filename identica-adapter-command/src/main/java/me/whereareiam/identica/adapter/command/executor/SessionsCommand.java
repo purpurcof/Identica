@@ -16,12 +16,12 @@ import me.whereareiam.identica.annotation.Range;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
-import me.whereareiam.identica.model.account.Account;
+import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
@@ -47,6 +47,7 @@ public class SessionsCommand {
 	private final Provider<Messages> messagesProvider;
 	private final Provider<Commands> commandsProvider;
 	private final AccountPersistenceService accountPersistenceService;
+	private final SessionService sessionService;
 	private final IdentityService identityService;
 
 	@Definition("session")
@@ -69,7 +70,7 @@ public class SessionsCommand {
 		int pageSize = commandsProvider.get().getBehavior().getSessions().getListPageSize();
 		SerializerOptions.PlaceholderFormat format = placeholderFormat();
 
-		SessionService.Page pageData = identityService.listSessions(page, pageSize).join();
+		SessionService.Page pageData = sessionService.list(page, pageSize).join();
 		int total = pageData.total();
 		if (total <= 0) {
 			sendMessage(sender, listMessages.getEmpty(), Map.of());
@@ -79,7 +80,7 @@ public class SessionsCommand {
 		int maxPage = (int) Math.ceil(total / (double) pageSize);
 		if (page > maxPage) {
 			page = maxPage;
-			pageData = identityService.listSessions(page, pageSize).join();
+			pageData = sessionService.list(page, pageSize).join();
 		}
 
 		List<Session> sessions = resolveSessions(pageData.entries());
@@ -104,7 +105,7 @@ public class SessionsCommand {
 		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica session info", infoMessages.getNotFound());
 		if (resolved == null) return;
 
-		Optional<Session> session = identityService.findSession(resolved.uniqueId()).join();
+		Optional<Session> session = sessionService.findByUniqueId(resolved.uniqueId()).join();
 		if (session.isEmpty()) {
 			sendMessage(sender, infoMessages.getNotFound(), Map.of("target", target));
 			return;
@@ -124,16 +125,16 @@ public class SessionsCommand {
 		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica session end", endMessages.getNotFound());
 		if (resolved == null) return;
 
-		Optional<Session> session = identityService.findSession(resolved.uniqueId()).join();
+		Optional<Session> session = sessionService.findByUniqueId(resolved.uniqueId()).join();
 		if (session.isEmpty()) {
 			sendMessage(sender, endMessages.getNotFound(), Map.of("target", target));
 			return;
 		}
 
 		Session resolvedSession = session.get();
-		identityService.closeSession(resolvedSession.getUniqueId()).join();
+		sessionService.close(resolvedSession.getUniqueId()).join();
 
-		identityService.findPlayer(resolvedSession.getUniqueId())
+		identityService.find(resolvedSession.getUniqueId())
 				.ifPresent(identity -> disconnect(identity, endMessages));
 
 		String username = resolveUsername(resolvedSession, unknown);
@@ -146,9 +147,9 @@ public class SessionsCommand {
 	private List<Session> resolveSessions(List<UUID> ids) {
 		List<Session> sessions = new ArrayList<>();
 		for (UUID id : ids) {
-			Optional<Session> session = identityService.findSession(id).join();
+			Optional<Session> session = sessionService.findByUniqueId(id).join();
 			if (session.isEmpty()) {
-				identityService.closeSession(id).join();
+				sessionService.close(id).join();
 				continue;
 			}
 			sessions.add(session.get());
@@ -179,7 +180,7 @@ public class SessionsCommand {
 			return new ResolvedTarget(parsed);
 		}
 
-		Optional<Identity> player = identityService.findPlayer(target);
+		Optional<Identity> player = identityService.find(target);
 		if (player.isPresent()) {
 			return new ResolvedTarget(player.get().getUniqueId());
 		}

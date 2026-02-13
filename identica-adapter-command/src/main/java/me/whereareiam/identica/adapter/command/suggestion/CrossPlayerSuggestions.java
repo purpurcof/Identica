@@ -4,10 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Commands;
-import me.whereareiam.identica.session.SessionService;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.keystone.Actor;
 import org.incendo.cloud.context.CommandContext;
 import org.incendo.cloud.context.CommandInput;
@@ -24,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 public class CrossPlayerSuggestions implements SuggestionProvider<Actor> {
 	public static final @NotNull String KEY = "crossPlayer";
 
-	private final @NotNull IdentityService identityService;
+	private final @NotNull SessionService sessionService;
 	private final @NotNull Provider<Commands> commandsProvider;
 
 	@Override
@@ -43,7 +42,7 @@ public class CrossPlayerSuggestions implements SuggestionProvider<Actor> {
 	}
 
 	private CompletableFuture<List<String>> resolveSessionCandidates(int limit) {
-		return identityService.listSessions(1, limit)
+		return sessionService.list(1, limit)
 				.thenCompose(page -> loadSessionCandidates(page, limit));
 	}
 
@@ -56,7 +55,7 @@ public class CrossPlayerSuggestions implements SuggestionProvider<Actor> {
 
 		List<CompletableFuture<Optional<Session>>> lookups = new ArrayList<>();
 		for (UUID uniqueId : page.entries()) {
-			CompletableFuture<Optional<Session>> future = identityService.findSession(uniqueId)
+			CompletableFuture<Optional<Session>> future = sessionService.findByUniqueId(uniqueId)
 					.exceptionally(ignored -> Optional.empty());
 			lookups.add(future);
 		}

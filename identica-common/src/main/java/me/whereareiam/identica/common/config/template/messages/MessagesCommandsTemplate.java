@@ -100,7 +100,7 @@ public class MessagesCommandsTemplate {
 				"<white>Your session has been cleared.</white>",
 				"<white>Please rejoin to continue.</white>",
 				"",
-				"<gray>discord.arcadeya.com"
+				"<dark_gray>discord.arcadeya.com"
 		));
 		commands.setClear(clear);
 
@@ -173,10 +173,63 @@ public class MessagesCommandsTemplate {
 				"<white>Your session was ended.</white>",
 				"<white>Please rejoin to continue.</white>",
 				"",
-				"<gray>discord.arcadeya.com"
+				"<dark_gray>discord.arcadeya.com"
 		));
 		sessions.setEnd(sessionEnd);
 		commands.setSessions(sessions);
+
+		// Enroll
+		Messages.Commands.Enroll enroll = new Messages.Commands.Enroll();
+		enroll.setNoPending("{prefix}<white>No pending enrollment available.</white>");
+		enroll.setCompleted("{prefix}<white>Enrollment completed.</white>");
+		commands.setEnroll(enroll);
+
+		// Migration
+		Messages.Commands.Migration migration = new Messages.Commands.Migration();
+		Messages.Commands.Migration.Listing migrationList = new Messages.Commands.Migration.Listing();
+		migrationList.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Provider links for <aqua>{target}</aqua>:</white>",
+				"{entries}",
+				" "
+		));
+		Messages.Commands.EntryFormat migrationEntry = new Messages.Commands.EntryFormat();
+		migrationEntry.setFormat("  <dark_gray>▪</dark_gray> <white>{providerName}</white> <gray>({providerId})</gray> <green>{primary}</green>");
+		migrationEntry.setEmptyFormat("  <dark_gray>▪</dark_gray> <white>{providerId}</white>");
+		migrationList.setEntry(migrationEntry);
+		migration.setList(migrationList);
+
+		Messages.Commands.Migration.Links migrationLinks = new Messages.Commands.Migration.Links();
+		migrationLinks.setNoLinks("{prefix}<white>No provider links found for <gray>{target}</gray>.</white>");
+		migrationLinks.setNotLinked("{prefix}<white><gold>{provider}</gold> is not linked for <gray>{target}</gray>.</white>");
+		migration.setLinks(migrationLinks);
+
+		Messages.Commands.Migration.Start migrationStart = new Messages.Commands.Migration.Start();
+		migrationStart.setPendingExists("{prefix}<white>Migration already pending for <gray>{target}</gray>.</white>");
+		migrationStart.setStarted("{prefix}<white>Migration started for <gray>{target}</gray> to <gold>{provider}</gold>.</white>");
+		migrationStart.setProviderUnsupported("{prefix}<white><gold>{provider}</gold> does not support migration.</white>");
+		migration.setStart(migrationStart);
+
+		Messages.Commands.Migration.Cancel migrationCancel = new Messages.Commands.Migration.Cancel();
+		migrationCancel.setCancelled("{prefix}<white>Migration cancelled for <gray>{target}</gray>.</white>");
+		migrationCancel.setNoPending("{prefix}<white>No pending migration for <gray>{target}</gray>.</white>");
+		migration.setCancel(migrationCancel);
+
+		Messages.Commands.Migration.Primary migrationPrimary = new Messages.Commands.Migration.Primary();
+		migrationPrimary.setSet("{prefix}<white>Primary provider set to <gold>{provider}</gold> for <gray>{target}</gray>.</white>");
+		migrationPrimary.setAlreadyPrimary("{prefix}<white><gold>{provider}</gold> is already primary for <gray>{target}</gray>.</white>");
+		migration.setPrimary(migrationPrimary);
+
+		Messages.Commands.Migration.Drop migrationDrop = new Messages.Commands.Migration.Drop();
+		migrationDrop.setDropped("{prefix}<white>Dropped <gold>{provider}</gold> for <gray>{target}</gray>.</white>");
+		migrationDrop.setPrimaryDenied("{prefix}<white>Cannot drop primary provider. Change primary first.</white>");
+		migrationDrop.setLastLinkDenied("{prefix}<white>Cannot drop the only provider link.</white>");
+		migration.setDrop(migrationDrop);
+
+		migration.setTargetNotFound("{prefix}<white>No account found for <gray>{target}</gray>.</white>");
+		commands.setMigration(migration);
 
 		return commands;
 	}

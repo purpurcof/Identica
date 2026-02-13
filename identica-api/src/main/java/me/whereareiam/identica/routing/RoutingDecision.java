@@ -3,11 +3,11 @@ package me.whereareiam.identica.routing;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.identica.auth.step.AuthenticationStep;
+import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.model.RoutingTarget;
-import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.auth.StepResult;
-import me.whereareiam.identica.type.step.StepPhase;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,24 +18,24 @@ import org.jetbrains.annotations.Nullable;
 @Setter
 @ToString
 public class RoutingDecision {
-	private final @NotNull AuthContext context;
-	private final @NotNull StepPhase phase;
-	private final @Nullable AuthenticationStep step;
+	private final @NotNull ScenarioContext context;
+	private final @NotNull StageType phase;
+	private final @Nullable Step step;
 	private final @Nullable StepResult result;
 	private @Nullable RoutingTarget target;
 
 	/**
 	 * Creates a routing decision.
 	 *
-	 * @param context authentication context
+	 * @param context scenario context
 	 * @param phase step phase
 	 * @param step step instance
 	 * @param result step result
 	 */
 	public RoutingDecision(
-			@NotNull AuthContext context,
-			@NotNull StepPhase phase,
-			@Nullable AuthenticationStep step,
+			@NotNull ScenarioContext context,
+			@NotNull StageType phase,
+			@Nullable Step step,
 			@Nullable StepResult result
 	) {
 		this.context = context;

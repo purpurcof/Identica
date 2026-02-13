@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
+import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.type.provider.ProviderState;
 
@@ -28,4 +29,5 @@ public class InternalProvider {
 
 	private Set<ProviderEligibilityResolver> eligibilityResolvers;
 	private Set<ProfileSubjectResolver> profileSubjectResolvers;
+	private Set<ProviderMigrationPrecheck> migrationPrechecks;
 }

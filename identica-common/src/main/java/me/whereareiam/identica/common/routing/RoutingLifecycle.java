@@ -2,8 +2,6 @@ package me.whereareiam.identica.common.routing;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.IdenticaKeys;
-import me.whereareiam.identica.connection.ConnectionStateRegistry;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.auth.AuthPendingClearedEvent;
@@ -12,32 +10,32 @@ import me.whereareiam.identica.event.routing.RoutingTargetUpdatedEvent;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
 import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.model.RoutingTarget;
-import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.auth.StepResult;
-import me.whereareiam.identica.model.connection.ConnectionState;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.routing.RoutingDecision;
 import me.whereareiam.identica.routing.RoutingService;
+import me.whereareiam.identica.routing.RoutingStateStore;
 import me.whereareiam.identica.routing.RoutingTargetApplier;
-import me.whereareiam.identica.type.step.AuthFlowType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 
 import java.util.UUID;
 
 @Singleton
 public class RoutingLifecycle implements EventListener {
 	private final RoutingService routingService;
-	private final ConnectionStateRegistry connectionStateRegistry;
+	private final RoutingStateStore routingStateStore;
 	private final EventManager eventManager;
 	private final RoutingTargetApplier routingTargetApplier;
 
 	@Inject
 	public RoutingLifecycle(
 			RoutingService routingService,
-			ConnectionStateRegistry connectionStateRegistry,
+			RoutingStateStore routingStateStore,
 			EventManager eventManager,
 			RoutingTargetApplier routingTargetApplier
 	) {
 		this.routingService = routingService;
-		this.connectionStateRegistry = connectionStateRegistry;
+		this.routingStateStore = routingStateStore;
 		this.eventManager = eventManager;
 		this.routingTargetApplier = routingTargetApplier;
 		eventManager.register(this);
@@ -48,8 +46,8 @@ public class RoutingLifecycle implements EventListener {
 		if (event == null)
 			return;
 
-		AuthFlowType flow = event.getContext().get(IdenticaKeys.CURRENT_FLOW).orElse(null);
-		if (flow == AuthFlowType.SEAMLESS)
+		JourneyType flow = event.getFlow();
+		if (flow == JourneyType.SEAMLESS)
 			return;
 
 		RoutingDecision decision = new RoutingDecision(
@@ -73,8 +71,6 @@ public class RoutingLifecycle implements EventListener {
 		if (event == null) return;
 
 		StepResult result = event.getResult();
-		if (result.getStatus() == null) return;
-
 		if (result.getStatus() == StepResult.StepStatus.WAITING)
 			return;
 
@@ -101,27 +97,23 @@ public class RoutingLifecycle implements EventListener {
 	@IdenticEvent
 	public void onPendingCleared(AuthPendingClearedEvent event) {
 		if (event == null || event.getConnectionUniqueId() == null) return;
-		connectionStateRegistry.find(event.getConnectionUniqueId())
-				.ifPresent(ConnectionState::clearRoutingTarget);
+		routingStateStore.clear(event.getConnectionUniqueId());
 	}
 
-	private void store(AuthContext context, RoutingTarget target) {
+	private void store(ScenarioContext context, RoutingTarget target) {
 		UUID connectionId = context != null ? context.getConnectionUniqueId() : null;
 		if (connectionId == null || target == null) return;
 
-		ConnectionState state = connectionStateRegistry.ensure(connectionId);
-		state.putRoutingTarget(target);
-		state.putContext(context);
+		routingStateStore.put(connectionId, target);
 		routingTargetApplier.apply(target, context);
 		eventManager.call(new RoutingTargetUpdatedEvent(connectionId, target, context));
 	}
 
-	private void clear(AuthContext context) {
+	private void clear(ScenarioContext context) {
 		UUID connectionId = context != null ? context.getConnectionUniqueId() : null;
 		if (connectionId == null) return;
 
-		connectionStateRegistry.find(connectionId)
-				.ifPresent(ConnectionState::clearRoutingTarget);
+		routingStateStore.clear(connectionId);
 	}
 
 }

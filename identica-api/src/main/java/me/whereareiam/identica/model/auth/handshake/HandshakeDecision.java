@@ -20,18 +20,8 @@ public class HandshakeDecision {
 		return new HandshakeDecision(Status.DENY, message, null);
 	}
 
-	public static HandshakeDecision forceOnline() {
-		return new HandshakeDecision(Status.FORCE_ONLINE, null, null);
-	}
-
-	public static HandshakeDecision forceOffline() {
-		return new HandshakeDecision(Status.FORCE_OFFLINE, null, null);
-	}
-
 	public enum Status {
 		ALLOW,
-		DENY,
-		FORCE_ONLINE,
-		FORCE_OFFLINE
+		DENY
 	}
 }

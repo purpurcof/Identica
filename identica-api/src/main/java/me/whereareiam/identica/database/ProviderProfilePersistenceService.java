@@ -10,24 +10,24 @@ import java.util.Optional;
  */
 public interface ProviderProfilePersistenceService {
 	/**
-	 * Find a provider profile by provider id and subject.
+	 * Find a provider resolver by provider id and subject.
 	 *
 	 * @param providerId provider id
 	 * @param providerSubject provider subject
-	 * @return profile or empty if not found
+	 * @return resolver or empty if not found
 	 */
 	@NotNull Optional<AccountProviderProfile> findBySubject(@NotNull String providerId, @NotNull String providerSubject);
 
 	/**
-	 * Create or update a provider profile.
+	 * Create or update a provider resolver.
 	 *
-	 * @param profile profile to upsert
-	 * @return stored profile
+	 * @param profile resolver to upsert
+	 * @return stored resolver
 	 */
 	@NotNull AccountProviderProfile upsert(@NotNull AccountProviderProfile profile);
 
 	/**
-	 * Delete a provider profile by provider id and subject.
+	 * Delete a provider resolver by provider id and subject.
 	 *
 	 * @param providerId provider id
 	 * @param providerSubject provider subject

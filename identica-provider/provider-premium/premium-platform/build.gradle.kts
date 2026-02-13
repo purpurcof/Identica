@@ -1,5 +1,6 @@
 subprojects {
     dependencies {
-        "implementation"(project(":identica-provider:provider-premium:premium-api"))
+        "compileOnly"(project(":identica-provider:provider-premium:premium-api"))
+        "testImplementation"(project(":identica-provider:provider-premium:premium-api"))
     }
 }

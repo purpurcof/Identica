@@ -6,7 +6,7 @@ import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Replication configuration used for cross-instance synchronization.
+ * Replication configuration used for cross-instance replication.
  */
 @Getter
 @Setter
@@ -47,9 +47,9 @@ public class Replication {
 		private @NotNull Sessions sessions;
 		private @NotNull String premiumProfile;
 		/**
-		 * Cache namespace for pending connection/authentication state.
+		 * Cache namespace for pipeline state.
 		 */
-		private @NotNull String pendingConnections;
+		private @NotNull String pipelineState;
 	}
 
 	/**

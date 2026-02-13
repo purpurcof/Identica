@@ -99,8 +99,28 @@ public interface ProviderLinkRepository {
 	);
 
 	@SqlUpdate("""
+			UPDATE identica_provider_links
+			   SET is_primary = :primary
+			 WHERE unique_id = :uniqueId
+			""")
+	void clearPrimary(
+			@Bind("uniqueId") UUID uniqueId,
+			@Bind("primary") boolean primary
+	);
+
+	@SqlUpdate("""
 			DELETE FROM identica_provider_links
 			 WHERE unique_id = :uniqueId
 			""")
 	void deleteAll(@Bind("uniqueId") UUID uniqueId);
+
+	@SqlUpdate("""
+			DELETE FROM identica_provider_links
+			 WHERE unique_id = :uniqueId
+			   AND provider_id = :providerId
+			""")
+	void delete(
+			@Bind("uniqueId") UUID uniqueId,
+			@Bind("providerId") String providerId
+	);
 }

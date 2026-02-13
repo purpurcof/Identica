@@ -7,16 +7,16 @@ import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.provider.premium.PremiumKeys;
-import me.whereareiam.identica.registry.PreLoginExtensions;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.provider.premium.PremiumProfileIdItem;
 
-import java.time.Duration;
 import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumGameProfileRequestListener implements DynamicListener<GameProfileRequestEvent> {
-	private final PreLoginExtensions preLoginExtensions;
+	private final PipelineStateStore pipelineStateStore;
 	private final Provider<Settings> settingsProvider;
 
 	@Override
@@ -26,21 +26,27 @@ public class PremiumGameProfileRequestListener implements DynamicListener<GamePr
 
 		String username = event.getUsername();
 		if (username == null || username.isBlank()) return;
+		String ip = resolveIp(event);
 
-		long ttlMs = resolveTtlMillis();
-		if (ttlMs <= 0) return;
+		long ttlMs = settingsProvider.get()
+				.getConnection()
+				.handshakeInstructionTtlMillis();
 
-		preLoginExtensions.put(username, PremiumKeys.PLATFORM_PROFILE_ID, profileId.toString(), ttlMs);
+		PipelineStateReference reference = PipelineStateReference.builder()
+				.username(username)
+				.ip(ip)
+				.build();
+		pipelineStateStore.update(reference, ttlMs,
+				state -> state.withItem(new PremiumProfileIdItem(profileId.toString()), ttlMs));
 	}
 
-	private long resolveTtlMillis() {
-		Duration ttl = settingsProvider.get()
-				.getAuthentication()
-				.getHandshakeInstructionTtl();
+	private String resolveIp(GameProfileRequestEvent event) {
+		if (event.getConnection().getRemoteAddress() == null)
+			return null;
 
-		if (ttl.isZero() || ttl.isNegative())
-			return 0;
+		if (event.getConnection().getRemoteAddress().getAddress() == null)
+			return null;
 
-		return ttl.toMillis();
+		return event.getConnection().getRemoteAddress().getAddress().getHostAddress();
 	}
 }

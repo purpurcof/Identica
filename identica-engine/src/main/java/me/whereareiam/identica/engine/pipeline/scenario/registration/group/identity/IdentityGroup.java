@@ -1,0 +1,60 @@
+package me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
+import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.pipeline.group.GroupOutcome;
+import me.whereareiam.identica.pipeline.group.PipelineGroup;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+@Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public class IdentityGroup implements PipelineGroup<IdentityState> {
+	private final Provider<Messages> messagesProvider;
+	@Override
+	public @NotNull String id() {
+		return "identity";
+	}
+
+	@Override
+	public int order() {
+		return 500;
+	}
+
+	@Override
+	public @NotNull Class<IdentityState> stateType() {
+		return IdentityState.class;
+	}
+
+	@Override
+	public @NotNull IdentityState initializeState(
+			@NotNull PipelineState pipelineState,
+			@Nullable PipelineResult currentResult
+	) {
+		IdentityState state = new IdentityState();
+		if (currentResult != null)
+			state.setResult(currentResult);
+		return state;
+	}
+
+	@Override
+	public @NotNull GroupOutcome complete(@NotNull PipelineState pipelineState, @NotNull IdentityState state) {
+		PipelineResult result = state.getResult();
+		if (result == null)
+			return GroupOutcome.result(PipelineResult.failed(identityGroupMissingResultMessage()));
+		return GroupOutcome.result(result);
+	}
+
+	private @NotNull String identityGroupMissingResultMessage() {
+		return String.join("\n", messagesProvider.get()
+				.getConnection()
+				.getRegistration()
+				.getErrors()
+				.getIdentityGroupMissingResult());
+	}
+}

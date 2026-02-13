@@ -33,8 +33,8 @@ public class ReplicationTemplate implements TemplateProvider<Replication> {
 		sessions.setSession("identica:sessions:session");
 		sessions.setSubject("identica:sessions:subject");
 		cache.setSessions(sessions);
-		cache.setPremiumProfile("premium-profile");
-		cache.setPendingConnections("identica:pending-connections");
+		cache.setPremiumProfile("premium-resolver");
+		cache.setPipelineState("identica:pipeline-state");
 
 		replication.setRedis(redis);
 		replication.setCache(cache);

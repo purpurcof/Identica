@@ -3,7 +3,7 @@ package me.whereareiam.identica.config;
 import me.whereareiam.identica.Reloadable;
 
 /**
- * Reusable base for configuration providers.
+ * Reusable runner for configuration providers.
  */
 public abstract class ConfigProvider<T> implements Reloadable {
 	private T value;

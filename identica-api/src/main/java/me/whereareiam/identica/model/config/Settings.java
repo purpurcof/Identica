@@ -41,8 +41,9 @@ public class Settings {
 		private @NotNull Duration reservationTtl;
 		private @NotNull Routing routing;
 		private @NotNull Sessions sessions;
-		private @NotNull Scenario authentication;
-		private @NotNull Scenario registration;
+		private @NotNull AuthenticationScenario authentication;
+		private @NotNull RegistrationScenario registration;
+		private @NotNull MigrationScenario migration;
 
 		/**
 		 * Returns handshake instruction TTL in milliseconds with validation.
@@ -117,14 +118,6 @@ public class Settings {
 		 */
 		private boolean allowResume;
 		/**
-		 * Policy for concurrent sessions when a player is already online.
-		 */
-		private @NotNull SessionConcurrencyPolicy sessionConcurrencyPolicy;
-		/**
-		 * Policy for concurrent in-flight pipelines for the same identity.
-		 */
-		private @NotNull PipelineConcurrencyPolicy pipelineConcurrencyPolicy;
-		/**
 		 * Preferred flow type for this scenario.
 		 */
 		private @NotNull JourneyType flow;
@@ -141,6 +134,36 @@ public class Settings {
 
 			return pipelineTtl.toMillis();
 		}
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class AuthenticationScenario extends Scenario {
+		/**
+		 * Policy for concurrent sessions when a player is already online.
+		 */
+		private @NotNull SessionConcurrencyPolicy sessionConcurrencyPolicy;
+		/**
+		 * Policy for concurrent in-flight pipelines for the same identity.
+		 */
+		private @NotNull PipelineConcurrencyPolicy pipelineConcurrencyPolicy;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class RegistrationScenario extends Scenario {
+		/**
+		 * Policy for concurrent in-flight pipelines for the same identity.
+		 */
+		private @NotNull PipelineConcurrencyPolicy pipelineConcurrencyPolicy;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class MigrationScenario extends Scenario {
 	}
 
 	@Getter

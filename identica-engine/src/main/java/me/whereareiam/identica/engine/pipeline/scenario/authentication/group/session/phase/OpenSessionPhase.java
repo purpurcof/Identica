@@ -67,7 +67,9 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		Settings.Scenario scenario = resolveScenario(settingsProvider.get(), pipelineType);
+		Settings.AuthenticationScenario scenario = settingsProvider.get()
+				.getConnection()
+				.getAuthentication();
 		return sessionService.open(session, scenario.getSessionConcurrencyPolicy())
 				.thenApply(openedSession -> {
 					if (openedSession == null) {
@@ -91,13 +93,4 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 		return String.join("\n", lines);
 	}
 
-	private @NotNull Settings.Scenario resolveScenario(
-			@NotNull Settings settings,
-			@NotNull PipelineType type
-	) {
-		Settings.Connection connection = settings.getConnection();
-		return type == PipelineType.REGISTRATION
-				? connection.getRegistration()
-				: connection.getAuthentication();
-	}
 }

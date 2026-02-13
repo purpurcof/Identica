@@ -24,6 +24,10 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 		sessions.setListPageSize(7);
 		behavior.setSessions(sessions);
 
+		Commands.Behavior.Migration migrationBehavior = new Commands.Behavior.Migration();
+		migrationBehavior.setConfirmTtl(Duration.ofSeconds(60));
+		behavior.setMigration(migrationBehavior);
+
 		Commands.Behavior.Suggestions suggestions = new Commands.Behavior.Suggestions();
 		suggestions.setPlayerLimit(25);
 		behavior.setSuggestions(suggestions);
@@ -182,19 +186,98 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 				.hide(true)
 				.build();
 
+		CommandDefinition migrationList = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("migration list"))
+				.permission("identica.admin.migration.list")
+				.description("List provider links for a player")
+				.usage("{command} {alias} <target>")
+				.arguments(Map.of("target", "Player/UUID"))
+				.cooldown(CommandDefinition.Cooldown.builder()
+						.enabled(true)
+						.duration(2)
+						.group("global")
+						.build())
+				.build();
+
+		CommandDefinition migrationStart = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("migration start"))
+				.permission("identica.admin.migration.start")
+				.description("Start provider migration for a player")
+				.usage("{command} {alias} <target> <provider>")
+				.arguments(Map.of("target", "Player/UUID", "provider", "Provider id"))
+				.cooldown(CommandDefinition.Cooldown.builder()
+						.enabled(true)
+						.duration(2)
+						.group("global")
+						.build())
+				.build();
+
+		CommandDefinition migrationCancel = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("migration cancel"))
+				.permission("identica.admin.migration.cancel")
+				.description("Cancel provider migration for a player")
+				.usage("{command} {alias} <target>")
+				.arguments(Map.of("target", "Player/UUID"))
+				.cooldown(CommandDefinition.Cooldown.builder()
+						.enabled(true)
+						.duration(2)
+						.group("global")
+						.build())
+				.build();
+
+		CommandDefinition migrationPrimary = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("migration primary"))
+				.permission("identica.admin.migration.primary")
+				.description("Set primary provider for a player")
+				.usage("{command} {alias} <target> <provider>")
+				.arguments(Map.of("target", "Player/UUID", "provider", "Provider id"))
+				.cooldown(CommandDefinition.Cooldown.builder()
+						.enabled(true)
+						.duration(2)
+						.group("global")
+						.build())
+				.build();
+
+		CommandDefinition migrationDrop = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("migration drop"))
+				.permission("identica.admin.migration.drop")
+				.description("Drop provider link for a player")
+				.usage("{command} {alias} <target> <provider>")
+				.arguments(Map.of("target", "Player/UUID", "provider", "Provider id"))
+				.cooldown(CommandDefinition.Cooldown.builder()
+						.enabled(true)
+						.duration(2)
+						.group("global")
+						.build())
+				.build();
+
 		Map<String, CommandDefinition> definitions = new LinkedHashMap<>();
 		definitions.put("main", main);
 		definitions.put("reload", reload);
 		definitions.put("help", help);
+
 		definitions.put("clear", clear);
 		definitions.put("clear-cache", clearCache);
 		definitions.put("clear-confirm", clearConfirm);
 		definitions.put("clear-cancel", clearCancel);
+
 		definitions.put("session", session);
 		definitions.put("session-list", sessionList);
 		definitions.put("session-info", sessionInfo);
 		definitions.put("session-end", sessionEnd);
+
 		definitions.put("enroll", enroll);
+
+		definitions.put("migration-list", migrationList);
+		definitions.put("migration-start", migrationStart);
+		definitions.put("migration-cancel", migrationCancel);
+		definitions.put("migration-primary", migrationPrimary);
+		definitions.put("migration-drop", migrationDrop);
 
 		commands.getCommands().putAll(definitions);
 

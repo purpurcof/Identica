@@ -86,8 +86,18 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		Messages.Connection.Migration migration = new Messages.Connection.Migration();
+		applyScenario(migration, "Migration");
+		migration.setMigrationFailed(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Migration failed.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
 		connection.setAuthentication(authentication);
 		connection.setRegistration(registration);
+		connection.setMigration(migration);
 		messages.setConnection(connection);
 
 		return messages;
@@ -258,6 +268,14 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"",
 				"<white>Unable to build session.</white>",
 				"<white>Required context is missing.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		errors.setAccountMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Account data is missing.</white>",
+				"<white>Please rejoin and try again.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));

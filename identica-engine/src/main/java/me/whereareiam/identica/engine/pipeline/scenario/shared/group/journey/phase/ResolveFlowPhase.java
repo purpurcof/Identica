@@ -16,6 +16,7 @@ import me.whereareiam.identica.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.pipeline.journey.registry.AuthenticationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.RegistrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.MigrationJourneyRegistry;
 import me.whereareiam.identica.pipeline.phase.PipelinePhase;
 import me.whereareiam.identica.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.provider.ProviderOperations;
@@ -36,6 +37,7 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 	private final ProviderOperations providerOperations;
 	private final AuthenticationJourneyRegistry authenticationJourneyRegistry;
 	private final RegistrationJourneyRegistry registrationJourneyRegistry;
+	private final MigrationJourneyRegistry migrationJourneyRegistry;
 	private final Provider<Settings> settingsProvider;
 
 	@Override
@@ -100,6 +102,12 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 		if (pipelineType == PipelineType.REGISTRATION) {
 			me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityMetaItem identity =
 					pipelineState.item(me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityMetaItem.class)
+							.orElse(null);
+			return identity != null && identity.isResumed();
+		}
+		if (pipelineType == PipelineType.MIGRATION) {
+			me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem identity =
+					pipelineState.item(me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem.class)
 							.orElse(null);
 			return identity != null && identity.isResumed();
 		}
@@ -176,16 +184,20 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private @NotNull JourneyRegistry resolveRegistry(@NotNull PipelineType pipelineType) {
-		return pipelineType == PipelineType.REGISTRATION
-				? registrationJourneyRegistry
-				: authenticationJourneyRegistry;
+		if (pipelineType == PipelineType.REGISTRATION)
+			return registrationJourneyRegistry;
+		if (pipelineType == PipelineType.MIGRATION)
+			return migrationJourneyRegistry;
+		return authenticationJourneyRegistry;
 	}
 
 	private @NotNull JourneyType preferredFlow(@NotNull PipelineType pipelineType) {
 		Settings.Connection connection = settingsProvider.get().getConnection();
 		Settings.Scenario scenario = pipelineType == PipelineType.REGISTRATION
 				? connection.getRegistration()
-				: connection.getAuthentication();
+				: pipelineType == PipelineType.MIGRATION
+						? connection.getMigration()
+						: connection.getAuthentication();
 		return scenario.getFlow();
 	}
 

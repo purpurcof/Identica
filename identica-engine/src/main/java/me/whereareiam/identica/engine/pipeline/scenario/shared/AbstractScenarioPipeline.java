@@ -12,6 +12,7 @@ import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
@@ -299,13 +300,20 @@ public abstract class AbstractScenarioPipeline {
 
 	private @NotNull Messages.Connection.Scenario resolveScenarioMessages(@NotNull PipelineType type) {
 		Messages.Connection connection = messagesProvider.get().getConnection();
-		return type == PipelineType.REGISTRATION ? connection.getRegistration() : connection.getAuthentication();
+		if (type == PipelineType.REGISTRATION)
+			return connection.getRegistration();
+		if (type == PipelineType.MIGRATION)
+			return connection.getMigration();
+		return connection.getAuthentication();
 	}
 
 	private @NotNull List<String> resolveFailureMessage(@NotNull PipelineType type) {
 		Messages.Connection connection = messagesProvider.get().getConnection();
 		if (type == PipelineType.REGISTRATION) {
 			return connection.getRegistration().getRegistrationFailed();
+		}
+		if (type == PipelineType.MIGRATION) {
+			return connection.getMigration().getMigrationFailed();
 		}
 
 		return connection.getAuthentication().getAuthenticationFailed();
@@ -316,9 +324,11 @@ public abstract class AbstractScenarioPipeline {
 			@NotNull PipelineType type
 	) {
 		Settings.Connection connection = settings.getConnection();
-		return type == PipelineType.REGISTRATION
-				? connection.getRegistration()
-				: connection.getAuthentication();
+		if (type == PipelineType.REGISTRATION)
+			return connection.getRegistration();
+		if (type == PipelineType.MIGRATION)
+			return connection.getMigration();
+		return connection.getAuthentication();
 	}
 
 	private @Nullable PipelineResult ensureScenario(
@@ -356,17 +366,24 @@ public abstract class AbstractScenarioPipeline {
 			request.getIdentity().setUniqueId(fallbackUniqueId);
 		}
 
-		ScenarioContext context = pipelineType == PipelineType.REGISTRATION
-				? RegistrationContext.builder()
-						.connectionUniqueId(request.getConnectionUniqueId())
-						.identity(request.getIdentity())
-						.intendedServer(request.getIntendedServer())
-						.build()
-				: AuthContext.builder()
-						.connectionUniqueId(request.getConnectionUniqueId())
-						.identity(request.getIdentity())
-						.intendedServer(request.getIntendedServer())
-						.build();
+		ScenarioContext context = switch (pipelineType) {
+			case REGISTRATION -> RegistrationContext.builder()
+					.connectionUniqueId(request.getConnectionUniqueId())
+					.identity(request.getIdentity())
+					.intendedServer(request.getIntendedServer())
+					.build();
+			case MIGRATION -> me.whereareiam.identica.model.migration.MigrationContext.builder()
+					.connectionUniqueId(request.getConnectionUniqueId())
+					.identity(request.getIdentity())
+					.intendedServer(request.getIntendedServer())
+					.accountUniqueId(request.getIdentity().getUniqueId())
+					.build();
+			case AUTHENTICATION -> AuthContext.builder()
+					.connectionUniqueId(request.getConnectionUniqueId())
+					.identity(request.getIdentity())
+					.intendedServer(request.getIntendedServer())
+					.build();
+		};
 
 		if (context instanceof AuthContext authContext)
 			EventUtil.callEvent(new AuthContextBuildEvent(authContext));
@@ -441,6 +458,18 @@ public abstract class AbstractScenarioPipeline {
 			}
 			identity.setResumed(resumed);
 			pipelineState.putItem(identity, 0L);
+			return;
+		}
+
+		if (pipelineType == PipelineType.MIGRATION) {
+			me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem identity =
+					pipelineState.item(me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem.class)
+							.orElse(null);
+			if (identity == null) {
+				identity = new me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem();
+			}
+			identity.setResumed(resumed);
+			pipelineState.putItem(identity, 0L);
 		}
 	}
 
@@ -463,24 +492,38 @@ public abstract class AbstractScenarioPipeline {
 				? request.getIntendedServer()
 				: base.getIntendedServer();
 
-		if (base instanceof RegistrationContext registration) {
-			RegistrationContext merged = RegistrationContext.builder()
-					.connectionUniqueId(connectionId)
-					.identity(identity)
-					.intendedServer(intendedServer)
-					.build();
-			merged.setProvider(registration.getProvider());
-			return merged;
-		}
-
-		if (base instanceof AuthContext authContext) {
-			AuthContext merged = AuthContext.builder()
-					.connectionUniqueId(connectionId)
-					.identity(identity)
-					.intendedServer(intendedServer)
-					.build();
-			merged.setProvider(authContext.getProvider());
-			return merged;
+		switch (base) {
+			case RegistrationContext registration -> {
+				RegistrationContext merged = RegistrationContext.builder()
+						.connectionUniqueId(connectionId)
+						.identity(identity)
+						.intendedServer(intendedServer)
+						.build();
+				merged.setProvider(registration.getProvider());
+				return merged;
+			}
+			case MigrationContext migration -> {
+				MigrationContext merged = MigrationContext.builder()
+						.connectionUniqueId(connectionId)
+						.identity(identity)
+						.intendedServer(intendedServer)
+						.targetProviderId(migration.getTargetProviderId())
+						.accountUniqueId(migration.getAccountUniqueId())
+						.build();
+				merged.setProvider(migration.getProvider());
+				return merged;
+			}
+			case AuthContext authContext -> {
+				AuthContext merged = AuthContext.builder()
+						.connectionUniqueId(connectionId)
+						.identity(identity)
+						.intendedServer(intendedServer)
+						.build();
+				merged.setProvider(authContext.getProvider());
+				return merged;
+			}
+			default -> {
+			}
 		}
 
 		return base;

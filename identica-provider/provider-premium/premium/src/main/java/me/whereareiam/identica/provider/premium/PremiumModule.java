@@ -9,6 +9,7 @@ import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.premium.policy.PremiumHandshakePolicy;
 import me.whereareiam.identica.provider.premium.resolver.PremiumEligibilityResolver;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
+import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.premium.config.PremiumCommands;
 import me.whereareiam.identica.provider.premium.command.PremiumCommand;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
@@ -17,6 +18,7 @@ import me.whereareiam.identica.provider.premium.config.provider.PremiumCommandsP
 import me.whereareiam.identica.provider.premium.config.provider.PremiumMessagesProvider;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumSettingsProvider;
 import me.whereareiam.identica.provider.premium.resolver.PremiumProfileSubjectResolver;
+import me.whereareiam.identica.provider.premium.migration.PremiumMigrationPrecheck;
 
 public class PremiumModule extends AbstractModule {
 	@Override
@@ -49,5 +51,8 @@ public class PremiumModule extends AbstractModule {
 		Multibinder.newSetBinder(binder(), ProfileSubjectResolver.class)
 				.addBinding()
 				.to(PremiumProfileSubjectResolver.class);
+		Multibinder.newSetBinder(binder(), ProviderMigrationPrecheck.class)
+				.addBinding()
+				.to(PremiumMigrationPrecheck.class);
 	}
 }

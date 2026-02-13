@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.model.auth.AuthContext;
+import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateItem;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.registration.RegistrationContext;
@@ -93,7 +94,9 @@ public final class PipelineState {
 	public @Nullable ScenarioContext getScenario() {
 		ScenarioContext context = item(AuthContext.class).orElse(null);
 		if (context != null) return context;
-		return item(RegistrationContext.class).orElse(null);
+		context = item(RegistrationContext.class).orElse(null);
+		if (context != null) return context;
+		return item(MigrationContext.class).orElse(null);
 	}
 
 	public @Nullable ScenarioContext getScenario(@Nullable PipelineType pipelineType) {
@@ -101,6 +104,8 @@ public final class PipelineState {
 			return item(AuthContext.class).orElse(null);
 		if (pipelineType == PipelineType.REGISTRATION)
 			return item(RegistrationContext.class).orElse(null);
+		if (pipelineType == PipelineType.MIGRATION)
+			return item(MigrationContext.class).orElse(null);
 
 		return getScenario();
 	}
@@ -108,10 +113,13 @@ public final class PipelineState {
 	public void setScenario(@Nullable ScenarioContext context) {
 		removeItem(AuthContext.class);
 		removeItem(RegistrationContext.class);
+		removeItem(MigrationContext.class);
 		if (context instanceof AuthContext authContext)
 			putItem(authContext, 0L);
 		if (context instanceof RegistrationContext registrationContext)
 			putItem(registrationContext, 0L);
+		if (context instanceof MigrationContext migrationContext)
+			putItem(migrationContext, 0L);
 
 		this.updatedAt = System.currentTimeMillis();
 	}

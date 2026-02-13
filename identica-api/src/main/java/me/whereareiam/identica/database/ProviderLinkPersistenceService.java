@@ -47,6 +47,22 @@ public interface ProviderLinkPersistenceService {
 	@NotNull AccountProviderLink upsert(@NotNull AccountProviderLink link);
 
 	/**
+	 * Sets the primary provider for an identity and clears existing primary flags.
+	 *
+	 * @param uniqueId identity id
+	 * @param providerId provider id
+	 */
+	void setPrimaryExclusive(@NotNull UUID uniqueId, @NotNull String providerId);
+
+	/**
+	 * Delete a provider link for an identity.
+	 *
+	 * @param uniqueId identity id
+	 * @param providerId provider id
+	 */
+	void delete(@NotNull UUID uniqueId, @NotNull String providerId);
+
+	/**
 	 * Delete all links for an identity.
 	 *
 	 * @param uniqueId identity id

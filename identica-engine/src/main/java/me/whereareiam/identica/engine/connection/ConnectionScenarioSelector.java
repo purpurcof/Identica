@@ -26,15 +26,17 @@ public class ConnectionScenarioSelector {
 			PipelineState pending = pipelineStateStore.find(PipelineStateReference.from(resumeRequest)).orElse(null);
 			if (pending != null && pending.item(JourneyPendingState.class).isPresent()) {
 				PipelineType pendingType = pending.getPipelineType();
-				boolean registration = pendingType != null
-						? pendingType == PipelineType.REGISTRATION
-						: isRegistration(request);
+				PipelineType resolved = pendingType != null
+						? pendingType
+						: isRegistration(request) ? PipelineType.REGISTRATION : PipelineType.AUTHENTICATION;
 
-				return ScenarioSelection.resume(registration, resumeRequest);
+				return ScenarioSelection.resume(resolved, resumeRequest);
 			}
 		}
 
-		return ScenarioSelection.newFlow(isRegistration(request));
+		return ScenarioSelection.newFlow(isRegistration(request)
+				? PipelineType.REGISTRATION
+				: PipelineType.AUTHENTICATION);
 	}
 
 	public boolean isRegistration(@Nullable ConnectionRequest request) {
@@ -65,16 +67,19 @@ public class ConnectionScenarioSelector {
 	}
 
 	public record ScenarioSelection(
-			boolean registration,
+			@NotNull PipelineType pipelineType,
 			@Nullable ResumeRequest resumeRequest,
 			boolean resume
 	) {
-		public static @NotNull ScenarioSelection resume(boolean registration, @NotNull ResumeRequest resumeRequest) {
-			return new ScenarioSelection(registration, resumeRequest, true);
+		public static @NotNull ScenarioSelection resume(
+				@NotNull PipelineType pipelineType,
+				@NotNull ResumeRequest resumeRequest
+		) {
+			return new ScenarioSelection(pipelineType, resumeRequest, true);
 		}
 
-		public static @NotNull ScenarioSelection newFlow(boolean registration) {
-			return new ScenarioSelection(registration, null, false);
+		public static @NotNull ScenarioSelection newFlow(@NotNull PipelineType pipelineType) {
+			return new ScenarioSelection(pipelineType, null, false);
 		}
 	}
 }

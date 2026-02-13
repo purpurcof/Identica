@@ -13,6 +13,7 @@ import me.whereareiam.identica.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.pipeline.journey.registry.RegistrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.MigrationJourneyRegistry;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
@@ -39,6 +40,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 	private final ProviderManager providerManager;
 	private final AuthenticationJourneyRegistry authenticationJourneyRegistry;
 	private final RegistrationJourneyRegistry registrationJourneyRegistry;
+	private final MigrationJourneyRegistry migrationJourneyRegistry;
 	private final EventManager eventManager;
 
 	@Override
@@ -126,7 +128,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 		if (descriptor == null || isBlank(descriptor.getId()))
 			return false;
 
-		if (!supportsFlow(context, provider, pipelineType, flow))
+		if (!supportsJourney(context, provider, pipelineType, flow))
 			return false;
 		if (!resolversAllow(context, provider, flow))
 			return false;
@@ -136,7 +138,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 		return !event.isCancelled();
 	}
 
-	private boolean supportsFlow(
+	private boolean supportsJourney(
 			@NotNull ScenarioContext context,
 			@NotNull InternalProvider provider,
 			@NotNull PipelineType pipelineType,
@@ -144,15 +146,17 @@ public class DefaultProviderOperations implements ProviderOperations {
 	) {
 		JourneyRegistry journeyRegistry = pipelineType == PipelineType.REGISTRATION
 				? registrationJourneyRegistry
-				: authenticationJourneyRegistry;
-		if (journeyRegistry == null)
-			return false;
+				: pipelineType == PipelineType.MIGRATION
+						? migrationJourneyRegistry
+						: authenticationJourneyRegistry;
+		if (journeyRegistry == null) return false;
 
 		JourneyPlan plan = journeyRegistry.resolvePlan(context, pipelineType, flow, provider.getDescriptor().getId());
 		boolean hasProviderSteps = false;
 		for (JourneyPlan.StageEntry stageEntry : plan.stages()) {
 			if (stageEntry == null || !stageEntry.stage().providerStage())
 				continue;
+
 			if (stageEntry.steps().isEmpty())
 				continue;
 

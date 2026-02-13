@@ -11,6 +11,7 @@ import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
+import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
 import me.whereareiam.identica.engine.pipeline.handshake.HandshakePipeline;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
@@ -27,6 +28,7 @@ import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,6 +43,7 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 	// Pipelines
 	private final RegistrationPipeline registrationPipeline;
 	private final AuthenticationPipeline authenticationPipeline;
+	private final MigrationPipeline migrationPipeline;
 
 	// Identity/account lifecycle
 	private final RegistrationAccountService registrationAccountService;
@@ -78,31 +81,29 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 	public @NotNull CompletionStage<ConnectionDecision> process(@Nullable ConnectionRequest request) {
 		ConnectionScenarioSelector.ScenarioSelection selection = scenarioSelector.select(request);
 		if (selection.resume()) {
-			CompletionStage<PipelineResult> execution = selection.registration()
-					? registrationPipeline.execute(null, selection.resumeRequest())
-					: authenticationPipeline.execute(null, selection.resumeRequest());
+			CompletionStage<PipelineResult> execution = executePipeline(selection.pipelineType(), null, selection.resumeRequest());
 
-			return execution.handle((result, error) -> resolveDecision(result, error, selection.registration()))
+			return execution.handle((result, error) -> resolveDecision(result, error, selection.pipelineType()))
 					.thenCompose(decision -> {
 						if (decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
-							return executeNewPipeline(request, selection.registration());
+							return executeNewPipeline(request, selection.pipelineType());
 						return CompletableFuture.completedFuture(decision);
 					});
 		}
 
-		return executeNewPipeline(request, selection.registration());
+		return executeNewPipeline(request, selection.pipelineType());
 	}
 
 	@Override
 	public @NotNull CompletionStage<ConnectionDecision> resume(
 			@NotNull ResumeRequest request
 	) {
-		boolean registration = scenarioSelector.isRegistration(request);
-		CompletionStage<PipelineResult> execution = registration
-				? registrationPipeline.execute(null, request)
-				: authenticationPipeline.execute(null, request);
+		PipelineType pipelineType = scenarioSelector.isRegistration(request)
+				? PipelineType.REGISTRATION
+				: PipelineType.AUTHENTICATION;
+		CompletionStage<PipelineResult> execution = executePipeline(pipelineType, null, request);
 
-		return execution.handle((result, error) -> resolveDecision(result, error, registration));
+		return execution.handle((result, error) -> resolveDecision(result, error, pipelineType));
 	}
 
 	@Override
@@ -148,18 +149,28 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 	private @NotNull ConnectionDecision resolveDecision(
 			@Nullable PipelineResult result,
 			@Nullable Throwable error,
-			boolean registration
+			@NotNull PipelineType pipelineType
 	) {
-		return decisionResolver.resolveDecision(result, error, registration);
+		return decisionResolver.resolveDecision(result, error, pipelineType);
 	}
 
 	private @NotNull CompletionStage<ConnectionDecision> executeNewPipeline(
 			@Nullable ConnectionRequest request,
-			boolean registration
+			@NotNull PipelineType pipelineType
 	) {
-		CompletionStage<PipelineResult> execution = registration
-				? registrationPipeline.execute(request)
-				: authenticationPipeline.execute(request);
-		return execution.handle((result, error) -> resolveDecision(result, error, registration));
+		CompletionStage<PipelineResult> execution = executePipeline(pipelineType, request, null);
+		return execution.handle((result, error) -> resolveDecision(result, error, pipelineType));
+	}
+
+	private @NotNull CompletionStage<PipelineResult> executePipeline(
+			@NotNull PipelineType pipelineType,
+			@Nullable ConnectionRequest request,
+			@Nullable ResumeRequest resumeRequest
+	) {
+		return switch (pipelineType) {
+			case REGISTRATION -> registrationPipeline.execute(request, resumeRequest);
+			case MIGRATION -> migrationPipeline.execute(request, resumeRequest);
+			case AUTHENTICATION -> authenticationPipeline.execute(request, resumeRequest);
+		};
 	}
 }

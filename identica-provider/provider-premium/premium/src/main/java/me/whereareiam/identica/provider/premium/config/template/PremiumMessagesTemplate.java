@@ -33,9 +33,28 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 
 		PremiumMessages.Commands commands = new PremiumMessages.Commands();
 		PremiumMessages.Commands.Premium premium = new PremiumMessages.Commands.Premium();
-		premium.setConfirmed(List.of(
-				"{prefix}<green>Premium verification started.</green>"
+		premium.setConfirm(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Confirm premium migration</white>",
+				"  <white>Use <gold>/premium confirm</gold> to continue</white>",
+				"  <gray>Cancel with <red>/premium cancel</red></gray>",
+				" "
 		));
+		premium.setConfirmed(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Please rejoin the server to proceed with</white>",
+				"<white>migration to the premium provider.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		premium.setCancelled("{prefix}<white>Premium migration cancelled.</white>");
+		premium.setExpired("{prefix}<white>Premium migration request expired.</white>");
+		premium.setNoPending("{prefix}<white>No pending premium migration.</white>");
+		premium.setPendingExists("{prefix}<white>Premium migration already pending.</white>");
+		premium.setAlreadyPrimary("{prefix}<white>Premium is already your primary provider.</white>");
 		commands.setPremium(premium);
 		messages.setCommands(commands);
 

@@ -24,6 +24,7 @@ import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
+import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
 import me.whereareiam.identica.type.provider.ProviderState;
@@ -39,6 +40,7 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<HandshakePolicy>> HANDSHAKE_POLICIES = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderEligibilityResolver>> ELIGIBILITY_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProfileSubjectResolver>> PROFILE_RESOLVERS = new TypeLiteral<>() {};
+	private static final TypeLiteral<Set<ProviderMigrationPrecheck>> MIGRATION_PRECHECKS = new TypeLiteral<>() {};
 
 	private final ProviderWorkingPathResolver workingPathResolver;
 	private final ProviderClassLoaderFactory classLoaderFactory;
@@ -200,6 +202,7 @@ public class ProviderLifecycleController {
 		providerHandshakePolicies.put(internal, copySet(resolveSet(injector, HANDSHAKE_POLICIES)));
 		internal.setEligibilityResolvers(copySet(resolveSet(injector, ELIGIBILITY_RESOLVERS)));
 		internal.setProfileSubjectResolvers(copySet(resolveSet(injector, PROFILE_RESOLVERS)));
+		internal.setMigrationPrechecks(copySet(resolveSet(injector, MIGRATION_PRECHECKS)));
 	}
 
 	private void registerProviderBindings(InternalProvider internal) {

@@ -15,6 +15,7 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.common.handshake.DefaultHandshakeStore;
 import me.whereareiam.identica.common.identity.account.DefaultRegistrationAccountService;
+import me.whereareiam.identica.common.migration.DefaultMigrationService;
 import me.whereareiam.identica.common.replication.DefaultReplicationAdapter;
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.common.replication.NoopReplicationAdapter;
@@ -50,6 +51,7 @@ import me.whereareiam.identica.config.ConfigurationTypeResolver;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.ReservationCache;
+import me.whereareiam.identica.migration.MigrationService;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
@@ -121,6 +123,7 @@ public class CommonConfiguration extends AbstractModule {
 
 		// Account + presence
 		bind(RegistrationAccountService.class).to(DefaultRegistrationAccountService.class).asEagerSingleton();
+		bind(MigrationService.class).to(DefaultMigrationService.class).asEagerSingleton();
 		bind(IdentityService.class).to(DefaultIdentityService.class).asEagerSingleton();
 
 		// Session lifecycle

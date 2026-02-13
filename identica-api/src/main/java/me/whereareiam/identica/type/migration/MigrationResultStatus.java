@@ -1,0 +1,14 @@
+package me.whereareiam.identica.type.migration;
+
+public enum MigrationResultStatus {
+	PENDING_CONFIRMATION,
+	PENDING_EXISTS,
+	NO_PENDING,
+	EXPIRED,
+	CANCELLED,
+	STARTED,
+	ALREADY_PRIMARY,
+	PRIMARY_SET,
+	PRECHECK_DENIED,
+	FAILED
+}

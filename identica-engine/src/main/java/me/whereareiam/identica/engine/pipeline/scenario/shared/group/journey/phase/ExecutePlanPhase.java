@@ -15,6 +15,7 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
 import me.whereareiam.identica.model.pipeline.PipelineState;
@@ -70,23 +71,25 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			@NotNull PipelineState pipelineState,
 			@NotNull JourneyState state
 	) {
-		if (state.getResult() != null)
+		if (state.getResult() != null) {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
+		}
 
 		ScenarioContext context = state.getContext();
 		PipelineType pipelineType = pipelineState.getPipelineType();
 		JourneyType flow = state.getFlow();
-		JourneyPendingState pending = state.getPending();
 		JourneyExecutionPlan plan = state.getExecutionPlan();
 		if (context == null || pipelineType == null || flow == null) {
 			state.setResult(PipelineResult.failed(journeyMissingContextMessage(pipelineState)));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
+
 		if (plan == null) {
 			state.setResult(PipelineResult.failed(journeyMissingPlanMessage(pipelineState)));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
+		JourneyPendingState pending = state.getPending();
 		PipelineResult result = executePlan(pipelineState, context, pipelineType, flow, pending, plan);
 		state.setResult(result != null ? result : PipelineResult.complete());
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
@@ -106,8 +109,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 		for (int index = startIndex; index < blocks.size(); index++) {
 			JourneyExecutionBlock block = blocks.get(index);
-			if (block == null)
-				continue;
+			if (block == null) continue;
 
 			if (block.policy() == JourneyExecutionPolicy.FALLBACK) {
 				BlockRegion region = collectFallbackRegion(blocks, index);
@@ -158,8 +160,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		boolean anySuccess = false;
 
 		for (JourneyExecutionBlock block : blocks) {
-			if (block == null)
-				continue;
+			if (block == null) continue;
 			context = currentScenario(pipelineState, pipelineType, context);
 
 			PipelineResult blockResult = executeBlock(
@@ -233,10 +234,8 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 	private boolean allowFallback(@NotNull List<JourneyExecutionStage> stages) {
 		for (JourneyExecutionStage entry : stages) {
-			if (entry == null)
-				continue;
-			if (!entry.stage().isAllowFallback())
-				return false;
+			if (entry == null) continue;
+			if (!entry.stage().isAllowFallback()) return false;
 		}
 		return true;
 	}
@@ -259,8 +258,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				&& (providerId == null || providerId.isBlank() || matchesProvider(pendingProviderId, providerId))) {
 			for (int index = 0; index < stages.size(); index++) {
 				JourneyExecutionStage candidate = stages.get(index);
-				if (candidate == null)
-					continue;
+				if (candidate == null) continue;
 				if (candidate.stage().getId().equalsIgnoreCase(pending.getStageId())) {
 					startStageIndex = index;
 					break;
@@ -270,8 +268,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 		for (int stageIndex = startStageIndex; stageIndex < stages.size(); stageIndex++) {
 			JourneyExecutionStage entry = stages.get(stageIndex);
-			if (entry == null)
-				continue;
+			if (entry == null) continue;
 
 			JourneyStage stage = entry.stage();
 			int startIndex = 0;
@@ -379,19 +376,20 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	) {
 		if (pending == null || pending.getStageId() == null || pending.getStageId().isBlank())
 			return 0;
+
 		String stageId = pending.getStageId();
 		for (int index = 0; index < blocks.size(); index++) {
 			JourneyExecutionBlock block = blocks.get(index);
-			if (block == null)
-				continue;
+			if (block == null) continue;
+
 			String effectiveProviderId = resolveEffectiveProviderId(block, context);
 			if (effectiveProviderId != null && !effectiveProviderId.isBlank()) {
 				if (!matchesProvider(pendingProviderId, effectiveProviderId))
 					continue;
 			}
+
 			for (JourneyExecutionStage entry : block.stages()) {
-				if (entry == null)
-					continue;
+				if (entry == null) continue;
 				if (entry.stage().getId().equalsIgnoreCase(stageId))
 					return index;
 			}
@@ -404,15 +402,14 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			int startIndex
 	) {
 		JourneyExecutionBlock seed = blocks.get(startIndex);
-		if (seed == null)
-			return new BlockRegion(List.of(), startIndex);
+		if (seed == null) return new BlockRegion(List.of(), startIndex);
+
 		String groupId = seed.groupId();
 		int endIndex = startIndex;
 		List<JourneyExecutionBlock> grouped = new ArrayList<>();
 		for (int index = startIndex; index < blocks.size(); index++) {
 			JourneyExecutionBlock block = blocks.get(index);
-			if (block == null)
-				break;
+			if (block == null) break;
 			if (block.policy() != JourneyExecutionPolicy.FALLBACK)
 				break;
 			if (!block.groupId().equalsIgnoreCase(groupId))
@@ -437,16 +434,18 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		UUID connectionId = context.getConnectionUniqueId();
 		if (connectionId != null && identityService.find(connectionId).isPresent())
 			return true;
+
 		String username = context.getUsername();
 		if (username != null && !username.isBlank())
 			return identityService.find(username).isPresent();
+
 		return false;
 	}
 
 	private boolean requiresOnlinePresence(@NotNull JourneyStep step) {
 		Set<JourneyType> flows = step.getFlows();
-		if (flows.isEmpty())
-			return true;
+		if (flows.isEmpty()) return true;
+
 		return flows.contains(JourneyType.INTERACTIVE);
 	}
 
@@ -454,6 +453,9 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		Settings.Connection connection = settingsProvider.get().getConnection();
 		if (pipelineType == PipelineType.REGISTRATION)
 			return connection.getRegistration();
+		if (pipelineType == PipelineType.MIGRATION)
+			return connection.getMigration();
+
 		return connection.getAuthentication();
 	}
 
@@ -476,8 +478,8 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	private boolean matchesProvider(@Nullable String expected, @Nullable String actual) {
 		if (expected == null || expected.isBlank())
 			return actual == null || actual.isBlank();
-		if (actual == null || actual.isBlank())
-			return false;
+
+		if (actual == null || actual.isBlank()) return false;
 		return expected.equalsIgnoreCase(actual);
 	}
 
@@ -488,9 +490,10 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		String providerId = block.providerId();
 		if (providerId != null && !providerId.isBlank())
 			return providerId;
-		me.whereareiam.identica.model.provider.ProviderContext provider = context.getProvider();
-		if (provider == null)
-			return null;
+
+		ProviderContext provider = context.getProvider();
+		if (provider == null) return null;
+
 		String contextProviderId = provider.getProviderId();
 		return contextProviderId != null && !contextProviderId.isBlank()
 				? contextProviderId
@@ -501,14 +504,14 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			@NotNull ScenarioContext context,
 			@Nullable JourneyPendingState pending
 	) {
-		if (pending == null)
-			return null;
-		me.whereareiam.identica.model.provider.ProviderContext provider = context.getProvider();
-		if (provider == null)
-			return null;
+		if (pending == null) return null;
+
+		ProviderContext provider = context.getProvider();
+		if (provider == null) return null;
+
 		String providerId = provider.getProviderId();
-		if (providerId == null || providerId.isBlank())
-			return null;
+		if (providerId == null || providerId.isBlank()) return null;
+
 		return providerId;
 	}
 
@@ -552,6 +555,9 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		Messages.Connection connection = messagesProvider.get().getConnection();
 		if (pipelineType == PipelineType.REGISTRATION)
 			return connection.getRegistration().getErrors();
+		if (pipelineType == PipelineType.MIGRATION)
+			return connection.getMigration().getErrors();
+
 		return connection.getAuthentication().getErrors();
 	}
 
@@ -559,18 +565,22 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		Messages.Connection connection = messagesProvider.get().getConnection();
 		if (pipelineType == PipelineType.REGISTRATION)
 			return String.join("\n", connection.getRegistration().getRegistrationFailed());
+		if (pipelineType == PipelineType.MIGRATION)
+			return String.join("\n", connection.getMigration().getMigrationFailed());
+
 		return String.join("\n", connection.getAuthentication().getAuthenticationFailed());
 	}
 
 	private @Nullable InternalProvider resolveProvider(@Nullable String providerId) {
-		if (providerId == null || providerId.isBlank())
-			return null;
+		if (providerId == null || providerId.isBlank()) return null;
+
 		List<InternalProvider> providers = providerManager.getProviders();
-		if (providers == null)
-			return null;
+		if (providers == null) return null;
+
 		for (InternalProvider provider : providers) {
 			if (provider == null || provider.getDescriptor() == null)
 				continue;
+
 			String id = provider.getDescriptor().getId();
 			if (id.equalsIgnoreCase(providerId))
 				return provider;

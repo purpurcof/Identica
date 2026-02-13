@@ -62,6 +62,7 @@ public class Messages {
 		private @NotNull Clear clear;
 		private @NotNull Sessions sessions;
 		private @NotNull Enroll enroll;
+		private @NotNull Migration migration;
 
 		/**
 		 * Configuration for reload command messages.
@@ -305,6 +306,85 @@ public class Messages {
 		}
 
 		/**
+		 * Configuration for migration command messages.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Migration {
+			private @NotNull Listing list;
+			private @NotNull Links links;
+			private @NotNull Start start;
+			private @NotNull Cancel cancel;
+			private @NotNull Primary primary;
+			private @NotNull Drop drop;
+			private @NotNull String targetNotFound;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Listing {
+				/**
+				 * Lines shown in migration list output.
+				 * Placeholders:
+				 * - {entries}
+				 */
+				private @NotNull List<String> body;
+
+				/**
+				 * Entry format for a single provider link in list output.
+				 * Placeholders:
+				 * - {providerId}
+				 * - {providerName}
+				 * - {primary}
+				 */
+				private @NotNull EntryFormat entry;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Links {
+				private @NotNull String noLinks;
+				private @NotNull String notLinked;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Start {
+				private @NotNull String pendingExists;
+				private @NotNull String started;
+				private @NotNull String providerUnsupported;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Cancel {
+				private @NotNull String cancelled;
+				private @NotNull String noPending;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Primary {
+				private @NotNull String set;
+				private @NotNull String alreadyPrimary;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Drop {
+				private @NotNull String dropped;
+				private @NotNull String primaryDenied;
+				private @NotNull String lastLinkDenied;
+			}
+		}
+
+		/**
 		 * Format definitions for command entry rendering.
 		 */
 		@Getter
@@ -341,6 +421,7 @@ public class Messages {
 		private @NotNull Journey journey;
 		private @NotNull Authentication authentication;
 		private @NotNull Registration registration;
+		private @NotNull Migration migration;
 
 		@Getter
 		@Setter
@@ -378,16 +459,17 @@ public class Messages {
 				private @NotNull List<String> accountCreationMissing;
 				private @NotNull List<String> providerLinkMissing;
 				private @NotNull List<String> sessionBuildMissing;
+				private @NotNull List<String> accountMissing;
 			}
 		}
 
 		@Getter
 		@Setter
 		@ToString
-	public static class Authentication extends Scenario {
-		private @NotNull List<String> authenticationFailed;
-		private @NotNull List<String> sessionBuildFailed;
-	}
+		public static class Authentication extends Scenario {
+			private @NotNull List<String> authenticationFailed;
+			private @NotNull List<String> sessionBuildFailed;
+		}
 
 		@Getter
 		@Setter
@@ -395,6 +477,13 @@ public class Messages {
 		public static class Registration extends Scenario {
 			private @NotNull List<String> registrationFailed;
 			private @NotNull List<String> accountAlreadyExists;
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Migration extends Scenario {
+			private @NotNull List<String> migrationFailed;
 		}
 
 		@Getter

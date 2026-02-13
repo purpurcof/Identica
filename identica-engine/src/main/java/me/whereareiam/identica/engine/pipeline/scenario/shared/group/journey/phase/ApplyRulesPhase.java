@@ -190,6 +190,9 @@ public class ApplyRulesPhase implements PipelinePhase<JourneyState> {
 		Messages.Connection connection = messagesProvider.get().getConnection();
 		if (pipelineType == PipelineType.REGISTRATION)
 			return connection.getRegistration().getErrors();
+		if (pipelineType == PipelineType.MIGRATION)
+			return connection.getMigration().getErrors();
+
 		return connection.getAuthentication().getErrors();
 	}
 }

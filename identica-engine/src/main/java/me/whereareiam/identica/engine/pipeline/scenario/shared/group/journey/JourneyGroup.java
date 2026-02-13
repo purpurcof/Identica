@@ -41,17 +41,20 @@ public class JourneyGroup implements PipelineGroup<JourneyState> {
 	) {
 		JourneyState state = new JourneyState();
 		state.setResult(currentResult);
+
 		return state;
 	}
 
 	@Override
 	public @NotNull GroupOutcome complete(@NotNull PipelineState pipelineState, @NotNull JourneyState state) {
 		PipelineResult result = state.getResult();
-		if (result == null)
+		if (result == null) {
 			return GroupOutcome.result(PipelineResult.failed(journeyMissingResultMessage(pipelineState)));
+		}
 
 		if (result.getStatus() == PipelineStatus.COMPLETE)
 			pipelineState.removeItem(JourneyPendingState.class);
+
 		return result.getStatus() == PipelineStatus.COMPLETE
 				? GroupOutcome.result(result)
 				: GroupOutcome.forceStop(result);
@@ -67,6 +70,9 @@ public class JourneyGroup implements PipelineGroup<JourneyState> {
 		Messages.Connection connection = messagesProvider.get().getConnection();
 		if (pipelineType == PipelineType.REGISTRATION)
 			return connection.getRegistration().getErrors();
+		if (pipelineType == PipelineType.MIGRATION)
+			return connection.getMigration().getErrors();
+
 		return connection.getAuthentication().getErrors();
 	}
 }

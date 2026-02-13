@@ -16,6 +16,7 @@ import me.whereareiam.identica.pipeline.journey.registry.AuthenticationJourneyRe
 import me.whereareiam.identica.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.RegistrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.MigrationJourneyRegistry;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +29,7 @@ import java.util.concurrent.CompletionStage;
 public class BuildExecutionPlanPhase implements PipelinePhase<JourneyState> {
 	private final AuthenticationJourneyRegistry authenticationJourneyRegistry;
 	private final RegistrationJourneyRegistry registrationJourneyRegistry;
+	private final MigrationJourneyRegistry migrationJourneyRegistry;
 	private final Provider<Messages> messagesProvider;
 
 	@Override
@@ -68,9 +70,12 @@ public class BuildExecutionPlanPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private @NotNull JourneyRegistry resolveRegistry(@NotNull PipelineType pipelineType) {
-		return pipelineType == PipelineType.REGISTRATION
-				? registrationJourneyRegistry
-				: authenticationJourneyRegistry;
+		if (pipelineType == PipelineType.REGISTRATION)
+			return registrationJourneyRegistry;
+		if (pipelineType == PipelineType.MIGRATION)
+			return migrationJourneyRegistry;
+
+		return authenticationJourneyRegistry;
 	}
 
 	private @NotNull String journeyMissingContextMessage(@NotNull PipelineState pipelineState) {
@@ -83,6 +88,9 @@ public class BuildExecutionPlanPhase implements PipelinePhase<JourneyState> {
 		Messages.Connection connection = messagesProvider.get().getConnection();
 		if (pipelineType == PipelineType.REGISTRATION)
 			return connection.getRegistration().getErrors();
+		if (pipelineType == PipelineType.MIGRATION)
+			return connection.getMigration().getErrors();
+
 		return connection.getAuthentication().getErrors();
 	}
 }

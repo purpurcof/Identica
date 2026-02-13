@@ -3,6 +3,7 @@ package me.whereareiam.identica.provider.premium.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -10,28 +11,34 @@ import java.util.List;
 @Setter
 @ToString
 public class PremiumMessages {
-	private Verification verification;
-	private Commands commands;
+	private @NotNull Verification verification;
+	private @NotNull Commands commands;
 
 	@Getter
 	@Setter
 	@ToString
 	public static class Verification {
-		private List<String> rejoin;
-		private List<String> invalidSession;
+		private @NotNull List<String> rejoin;
+		private @NotNull List<String> invalidSession;
 	}
 
 	@Getter
 	@Setter
 	@ToString
 	public static class Commands {
-		private Premium premium;
+		private @NotNull Premium premium;
 
 		@Getter
 		@Setter
 		@ToString
 		public static class Premium {
-			private List<String> confirmed;
+			private @NotNull List<String> confirm;
+			private @NotNull List<String> confirmed;
+			private @NotNull String cancelled;
+			private @NotNull String expired;
+			private @NotNull String noPending;
+			private @NotNull String pendingExists;
+			private @NotNull String alreadyPrimary;
 		}
 	}
 }

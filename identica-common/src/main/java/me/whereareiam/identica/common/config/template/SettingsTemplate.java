@@ -50,20 +50,38 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		connection.setSessions(sessions);
 		connection.setHandshakeInstructionTtl(Duration.ofMinutes(10));
 		connection.setReservationTtl(Duration.ofMinutes(15));
-		connection.setAuthentication(defaultConnectionScenario());
-		connection.setRegistration(defaultConnectionScenario());
+		connection.setAuthentication(defaultAuthenticationScenario());
+		connection.setRegistration(defaultRegistrationScenario());
+		connection.setMigration(defaultMigrationScenario());
 		settings.setConnection(connection);
 
 		return settings;
 	}
 
-	private Settings.Scenario defaultConnectionScenario() {
-		Settings.Scenario scenario = new Settings.Scenario();
+	private Settings.AuthenticationScenario defaultAuthenticationScenario() {
+		Settings.AuthenticationScenario scenario = new Settings.AuthenticationScenario();
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
 		scenario.setAllowResume(true);
 		scenario.setSessionConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
 		scenario.setFlow(JourneyType.SEAMLESS);
+		return scenario;
+	}
+
+	private Settings.RegistrationScenario defaultRegistrationScenario() {
+		Settings.RegistrationScenario scenario = new Settings.RegistrationScenario();
+		scenario.setPipelineTtl(Duration.ofMinutes(5));
+		scenario.setAllowResume(true);
+		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
+		scenario.setFlow(JourneyType.SEAMLESS);
+		return scenario;
+	}
+
+	private Settings.MigrationScenario defaultMigrationScenario() {
+		Settings.MigrationScenario scenario = new Settings.MigrationScenario();
+		scenario.setPipelineTtl(Duration.ofMinutes(5));
+		scenario.setAllowResume(true);
+		scenario.setFlow(JourneyType.INTERACTIVE);
 		return scenario;
 	}
 

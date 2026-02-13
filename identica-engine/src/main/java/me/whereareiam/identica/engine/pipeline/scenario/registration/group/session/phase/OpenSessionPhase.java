@@ -9,14 +9,12 @@ import me.whereareiam.identica.engine.pipeline.scenario.registration.group.sessi
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.phase.PipelinePhase;
 import me.whereareiam.identica.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
-import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -28,7 +26,6 @@ import java.util.concurrent.CompletionStage;
 public class OpenSessionPhase implements PipelinePhase<SessionState> {
 	private final SessionService sessionService;
 	private final Provider<Messages> messagesProvider;
-	private final Provider<Settings> settingsProvider;
 
 	@Override
 	public @NotNull String id() {
@@ -61,14 +58,7 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		PipelineType pipelineType = pipelineState.getPipelineType();
-		if (pipelineType == null) {
-			state.setResult(PipelineResult.failed(registrationFailedMessage()));
-			return CompletableFuture.completedFuture(PhaseResult.pass(state));
-		}
-
-		Settings.Scenario scenario = resolveScenario(settingsProvider.get(), pipelineType);
-		return sessionService.open(session, scenario.getSessionConcurrencyPolicy())
+		return sessionService.open(session)
 				.thenApply(openedSession -> {
 					if (openedSession == null) {
 						state.setResult(PipelineResult.denied(registrationFailedMessage()));
@@ -91,13 +81,4 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 		return String.join("\n", lines);
 	}
 
-	private @NotNull Settings.Scenario resolveScenario(
-			@NotNull Settings settings,
-			@NotNull PipelineType type
-	) {
-		Settings.Connection connection = settings.getConnection();
-		return type == PipelineType.REGISTRATION
-				? connection.getRegistration()
-				: connection.getAuthentication();
-	}
 }

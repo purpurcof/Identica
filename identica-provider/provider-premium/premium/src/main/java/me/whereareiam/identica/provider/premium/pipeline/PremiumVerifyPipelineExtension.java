@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.pipeline.extension.PipelineExtension;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
 import me.whereareiam.identica.provider.premium.step.VerifyPremiumProfileStep;
+import me.whereareiam.identica.type.pipeline.PipelineScope;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,6 +35,14 @@ public class PremiumVerifyPipelineExtension implements PipelineExtension {
 		builder.registerStep(
 				providerId,
 				StageType.PROVIDER,
+				verifyPremiumProfileStep
+		);
+
+		builder.registerStep(
+				PipelineScope.MIGRATION,
+				providerId,
+				StageType.PROVIDER,
+				PipelineType.MIGRATION,
 				verifyPremiumProfileStep
 		);
 	}

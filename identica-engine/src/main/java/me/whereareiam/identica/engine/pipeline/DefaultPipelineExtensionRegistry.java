@@ -13,6 +13,7 @@ import me.whereareiam.identica.pipeline.phase.PhasePlacement;
 import me.whereareiam.identica.pipeline.phase.PipelinePhase;
 import me.whereareiam.identica.pipeline.journey.registry.AuthenticationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.MigrationJourneyRegistry;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.pipeline.journey.registry.RegistrationJourneyRegistry;
@@ -36,28 +37,33 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DefaultPipelineExtensionRegistry implements PipelineExtensionRegistry {
 	private final PipelineRegistry authenticationRegistry;
 	private final PipelineRegistry registrationRegistry;
+	private final PipelineRegistry migrationRegistry;
 	private final AuthenticationJourneyRegistry authenticationStageRegistry;
 	private final RegistrationJourneyRegistry registrationStageRegistry;
+	private final MigrationJourneyRegistry migrationStageRegistry;
 	private final Map<String, RegisteredExtension> extensions = new ConcurrentHashMap<>();
 
 	@Inject
 	public DefaultPipelineExtensionRegistry(
 			@Named("authenticationPipelineRegistry") PipelineRegistry authenticationRegistry,
 			@Named("registrationPipelineRegistry") PipelineRegistry registrationRegistry,
+			@Named("migrationPipelineRegistry") PipelineRegistry migrationRegistry,
 			AuthenticationJourneyRegistry authenticationStageRegistry,
-			RegistrationJourneyRegistry registrationStageRegistry
+			RegistrationJourneyRegistry registrationStageRegistry,
+			MigrationJourneyRegistry migrationStageRegistry
 	) {
 		this.authenticationRegistry = authenticationRegistry;
 		this.registrationRegistry = registrationRegistry;
+		this.migrationRegistry = migrationRegistry;
 		this.authenticationStageRegistry = authenticationStageRegistry;
 		this.registrationStageRegistry = registrationStageRegistry;
+		this.migrationStageRegistry = migrationStageRegistry;
 	}
 
 	@Override
 	public synchronized void register(@NotNull PipelineExtension extension) {
 		String extensionId = extension.id();
-		if (extensionId.isBlank())
-			return;
+		if (extensionId.isBlank()) return;
 
 		String key = extensionId.toLowerCase();
 		RegisteredExtension existing = extensions.get(key);
@@ -73,12 +79,10 @@ public class DefaultPipelineExtensionRegistry implements PipelineExtensionRegist
 
 	@Override
 	public synchronized boolean unregister(@NotNull String extensionId) {
-		if (extensionId.isBlank())
-			return false;
+		if (extensionId.isBlank()) return false;
 
 		RegisteredExtension removed = extensions.remove(extensionId.toLowerCase());
-		if (removed == null)
-			return false;
+		if (removed == null) return false;
 
 		removed.rollback();
 		return true;
@@ -101,13 +105,16 @@ public class DefaultPipelineExtensionRegistry implements PipelineExtensionRegist
 		return switch (scope) {
 			case AUTHENTICATION -> authenticationRegistry;
 			case REGISTRATION -> registrationRegistry;
+			case MIGRATION -> migrationRegistry;
 		};
 	}
 
 	private @NotNull JourneyRegistry resolveJourneyRegistry(@NotNull PipelineScope scope) {
 		return scope == PipelineScope.REGISTRATION
 				? registrationStageRegistry
-				: authenticationStageRegistry;
+				: scope == PipelineScope.MIGRATION
+						? migrationStageRegistry
+						: authenticationStageRegistry;
 	}
 
 	private final class RegistrationJournal implements PipelineExtensionBuilder {
@@ -150,7 +157,9 @@ public class DefaultPipelineExtensionRegistry implements PipelineExtensionRegist
 			for (PipelineType pipelineType : targetTypes) {
 				JourneyRegistry registry = pipelineType == PipelineType.REGISTRATION
 						? registrationStageRegistry
-						: authenticationStageRegistry;
+						: pipelineType == PipelineType.MIGRATION
+								? migrationStageRegistry
+								: authenticationStageRegistry;
 				registry.registerStep(step.toBuilder()
 						.scenarios(EnumSet.of(pipelineType))
 						.build());

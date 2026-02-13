@@ -89,18 +89,29 @@ public class DefaultProviderLinkPersistenceService implements ProviderLinkPersis
 	}
 
 	@Override
+	public void setPrimaryExclusive(@NotNull UUID uniqueId, @NotNull String providerId) {
+		if (providerId.isBlank()) throw new IllegalArgumentException("Provider id is required");
+		repository.clearPrimary(uniqueId, false);
+		repository.updatePrimary(uniqueId, providerId, true);
+	}
+
+	@Override
+	public void delete(@NotNull UUID uniqueId, @NotNull String providerId) {
+		if (providerId.isBlank()) throw new IllegalArgumentException("Provider id is required");
+		repository.delete(uniqueId, providerId);
+	}
+
+	@Override
 	public void deleteAll(@NotNull UUID uniqueId) {
 		repository.deleteAll(uniqueId);
 	}
 
 	@IdenticEvent(EventOrder.HIGH)
 	public void onAccountClear(@NotNull AccountClearEvent event) {
-		if (event.getScope() != ClearScope.ALL)
-			return;
+		if (event.getScope() != ClearScope.ALL) return;
 
 		UUID uniqueId = event.getIdentity().getUniqueId();
-		if (uniqueId == null)
-			return;
+		if (uniqueId == null) return;
 
 		deleteAll(uniqueId);
 	}

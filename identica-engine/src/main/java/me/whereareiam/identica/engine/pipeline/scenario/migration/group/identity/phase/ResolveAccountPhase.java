@@ -58,9 +58,7 @@ public class ResolveAccountPhase implements PipelinePhase<IdentityState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		UUID accountUniqueId = context.getAccountUniqueId();
-		if (accountUniqueId == null)
-			accountUniqueId = context.getIdenticaUniqueId();
+		UUID accountUniqueId = context.getIdenticaUniqueId();
 		if (accountUniqueId == null) {
 			state.setResult(PipelineResult.failed(accountMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
@@ -73,7 +71,7 @@ public class ResolveAccountPhase implements PipelinePhase<IdentityState> {
 		}
 
 		accountPersistenceService.updateLastSeen(accountUniqueId, System.currentTimeMillis());
-		context.setAccountUniqueId(accountUniqueId);
+		context.setIdenticaUniqueId(accountUniqueId);
 		pipelineState.setScenario(context);
 		state.setContext(context);
 		state.setAccount(account);

@@ -31,7 +31,4 @@ public class MigrationContext implements ScenarioContext, PipelineStateItem {
 
 	@Setter
 	private @Nullable String targetProviderId;
-
-	@Setter
-	private @Nullable UUID accountUniqueId;
 }

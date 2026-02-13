@@ -43,7 +43,7 @@ public class VelocityLoginDecisionAdapter extends ConnectionDecisionAdapter impl
 				.orElse(null);
 
 		ConnectionRequest request = ConnectionRequest.builder()
-				.identity(new ConnectionIdentity(player.getUniqueId(), player.getUsername(), ip))
+				.identity(new ConnectionIdentity(player.getUsername(), ip))
 				.connectionUniqueId(player.getUniqueId())
 				.intendedServer(intendedServer)
 				.build();

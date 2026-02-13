@@ -12,8 +12,8 @@ import java.util.UUID;
 @Builder
 @ToString
 public class MigrationPrecheckContext {
+	private @Nullable UUID uniqueId;
 	private @Nullable UUID connectionUniqueId;
-	private @Nullable UUID accountUniqueId;
 	private @Nullable String username;
 	private @Nullable String ip;
 	private @Nullable String providerId;

@@ -60,9 +60,7 @@ public class BuildSessionPhase implements PipelinePhase<SessionState> {
 		}
 
 		ProviderContext provider = context.getProvider();
-		UUID accountUniqueId = context.getAccountUniqueId();
-		if (accountUniqueId == null)
-			accountUniqueId = context.getIdenticaUniqueId();
+		UUID accountUniqueId = context.getIdenticaUniqueId();
 
 		String currentUsername = resolveCurrentUsername(identity);
 		if (provider == null || isBlank(currentUsername) || accountUniqueId == null) {

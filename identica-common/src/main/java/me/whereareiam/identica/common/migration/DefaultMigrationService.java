@@ -77,16 +77,16 @@ public class DefaultMigrationService implements MigrationService {
 		String targetProviderId = normalize(request.getTargetProviderId());
 		if (targetProviderId == null) return result(MigrationResultStatus.FAILED, null);
 
-		UUID accountUniqueId = resolveAccountUniqueId(request.getAccountUniqueId(), connectionUniqueId);
+		UUID identicaUniqueId = resolveIdenticaUniqueId(request.getIdenticaUniqueId(), connectionUniqueId);
 
 		AccountProviderLink link = providerLinkPersistenceService
-				.findByUniqueIdAndProviderId(accountUniqueId, targetProviderId)
+				.findByUniqueIdAndProviderId(identicaUniqueId, targetProviderId)
 				.orElse(null);
 		if (link != null && link.isPrimary()) return result(MigrationResultStatus.ALREADY_PRIMARY, null);
 
 		PendingMigration pendingMigration = new PendingMigration(
 				connectionUniqueId,
-				accountUniqueId,
+				identicaUniqueId,
 				targetProviderId,
 				normalize(request.getUsername()),
 				normalize(request.getIp()),
@@ -124,13 +124,13 @@ public class DefaultMigrationService implements MigrationService {
 			return result(MigrationResultStatus.PRECHECK_DENIED, precheck.getMessage());
 		}
 
-		UUID accountUniqueId = pendingMigration.accountUniqueId();
-		if (accountUniqueId == null)
-			accountUniqueId = connectionUniqueId;
+		UUID identicaUniqueId = pendingMigration.uniqueId();
+		if (identicaUniqueId == null)
+			identicaUniqueId = connectionUniqueId;
 
 		String targetProviderId = pendingMigration.targetProviderId();
 		AccountProviderLink link = providerLinkPersistenceService
-				.findByUniqueIdAndProviderId(accountUniqueId, targetProviderId)
+				.findByUniqueIdAndProviderId(identicaUniqueId, targetProviderId)
 				.orElse(null);
 		if (link != null && link.isPrimary()) {
 			pending.remove(connectionUniqueId);
@@ -140,17 +140,17 @@ public class DefaultMigrationService implements MigrationService {
 		String kickMessage = resolveKickMessage(confirm.getKickMessage(), precheck);
 
 		if (link != null) {
-			providerLinkPersistenceService.setPrimaryExclusive(accountUniqueId, targetProviderId);
-			closeSession(accountUniqueId);
+			providerLinkPersistenceService.setPrimaryExclusive(identicaUniqueId, targetProviderId);
+			closeSession(identicaUniqueId);
 			disconnect(connectionUniqueId, pendingMigration.username(), kickMessage);
 			pending.remove(connectionUniqueId);
 			return result(MigrationResultStatus.PRIMARY_SET, null);
 		}
 
-		boolean stored = storePendingMigration(pendingMigration, accountUniqueId);
+		boolean stored = storePendingMigration(pendingMigration, identicaUniqueId);
 		if (!stored) return result(MigrationResultStatus.FAILED, null);
 
-		closeSession(accountUniqueId);
+		closeSession(identicaUniqueId);
 		disconnect(connectionUniqueId, pendingMigration.username(), kickMessage);
 		pending.remove(connectionUniqueId);
 
@@ -159,9 +159,9 @@ public class DefaultMigrationService implements MigrationService {
 
 	@Override
 	public @NotNull MigrationResult start(@NotNull MigrationStart start) {
-		UUID accountUniqueId = resolveAccountUniqueId(start.getAccountUniqueId(), start.getConnectionUniqueId());
-		UUID connectionUniqueId = resolveAccountUniqueId(start.getConnectionUniqueId(), accountUniqueId);
-		if (accountUniqueId == null) return result(MigrationResultStatus.FAILED, null);
+		UUID identicaUniqueId = resolveIdenticaUniqueId(start.getUniqueId(), start.getConnectionUniqueId());
+		UUID connectionUniqueId = resolveIdenticaUniqueId(start.getConnectionUniqueId(), identicaUniqueId);
+		if (identicaUniqueId == null) return result(MigrationResultStatus.FAILED, null);
 
 		pending.remove(connectionUniqueId);
 		if (hasPendingMigration(connectionUniqueId)) return result(MigrationResultStatus.PENDING_EXISTS, null);
@@ -170,10 +170,10 @@ public class DefaultMigrationService implements MigrationService {
 		if (targetProviderId == null) return result(MigrationResultStatus.FAILED, null);
 
 		PendingMigration pendingMigration = new PendingMigration(
+				identicaUniqueId,
 				connectionUniqueId,
-				accountUniqueId,
 				targetProviderId,
-				resolveUsername(start.getUsername(), accountUniqueId),
+				resolveUsername(start.getUsername(), identicaUniqueId),
 				normalize(start.getIp()),
 				start.getInitiator(),
 				start.getInitiatorUniqueId(),
@@ -185,7 +185,7 @@ public class DefaultMigrationService implements MigrationService {
 			return result(MigrationResultStatus.PRECHECK_DENIED, precheck.getMessage());
 
 		AccountProviderLink link = providerLinkPersistenceService
-				.findByUniqueIdAndProviderId(accountUniqueId, targetProviderId)
+				.findByUniqueIdAndProviderId(identicaUniqueId, targetProviderId)
 				.orElse(null);
 		if (link != null && link.isPrimary())
 			return result(MigrationResultStatus.ALREADY_PRIMARY, null);
@@ -193,17 +193,17 @@ public class DefaultMigrationService implements MigrationService {
 		String kickMessage = resolveKickMessage(start.getKickMessage(), precheck);
 
 		if (link != null) {
-			providerLinkPersistenceService.setPrimaryExclusive(accountUniqueId, targetProviderId);
-			closeSession(accountUniqueId);
+			providerLinkPersistenceService.setPrimaryExclusive(identicaUniqueId, targetProviderId);
+			closeSession(identicaUniqueId);
 			disconnect(connectionUniqueId, pendingMigration.username(), kickMessage);
 			return result(MigrationResultStatus.PRIMARY_SET, null);
 		}
 
-		boolean stored = storePendingMigration(pendingMigration, accountUniqueId);
+		boolean stored = storePendingMigration(pendingMigration, identicaUniqueId);
 		if (!stored)
 			return result(MigrationResultStatus.FAILED, null);
 
-		closeSession(accountUniqueId);
+		closeSession(identicaUniqueId);
 		disconnect(connectionUniqueId, pendingMigration.username(), kickMessage);
 		return result(MigrationResultStatus.STARTED, null);
 	}
@@ -237,7 +237,7 @@ public class DefaultMigrationService implements MigrationService {
 				: result(MigrationResultStatus.NO_PENDING, null);
 	}
 
-	private boolean storePendingMigration(@NotNull PendingMigration pendingMigration, @NotNull UUID accountUniqueId) {
+	private boolean storePendingMigration(@NotNull PendingMigration pendingMigration, @NotNull UUID identicaUniqueId) {
 		long ttlMs = settingsProvider.get().getConnection().getMigration().pipelineTtlMillis();
 		if (ttlMs <= 0) return false;
 
@@ -245,12 +245,11 @@ public class DefaultMigrationService implements MigrationService {
 		MigrationContext context = MigrationContext.builder()
 				.connectionUniqueId(pendingMigration.connectionUniqueId())
 				.identity(new ConnectionIdentity(
-						pendingMigration.connectionUniqueId(),
+						identicaUniqueId,
 						nonNull(pendingMigration.username()),
 						pendingMigration.ip()
 				))
 				.targetProviderId(pendingMigration.targetProviderId())
-				.accountUniqueId(accountUniqueId)
 				.build();
 
 		PipelineState pipelineState = PipelineState.initial();
@@ -287,8 +286,8 @@ public class DefaultMigrationService implements MigrationService {
 			return MigrationPrecheckResult.allow();
 
 		MigrationPrecheckContext context = MigrationPrecheckContext.builder()
+				.uniqueId(pendingMigration.uniqueId())
 				.connectionUniqueId(pendingMigration.connectionUniqueId())
-				.accountUniqueId(pendingMigration.accountUniqueId())
 				.username(pendingMigration.username())
 				.ip(pendingMigration.ip())
 				.providerId(pendingMigration.targetProviderId())
@@ -324,10 +323,10 @@ public class DefaultMigrationService implements MigrationService {
 		return null;
 	}
 
-	private void closeSession(@Nullable UUID accountUniqueId) {
-		if (accountUniqueId == null) return;
+	private void closeSession(@Nullable UUID identicaUniqueId) {
+		if (identicaUniqueId == null) return;
 
-		sessionService.close(accountUniqueId).join();
+		sessionService.close(identicaUniqueId).join();
 	}
 
 	private void disconnect(@NotNull UUID connectionUniqueId, @Nullable String username, @Nullable String message) {
@@ -348,8 +347,8 @@ public class DefaultMigrationService implements MigrationService {
 				.build();
 	}
 
-	private UUID resolveAccountUniqueId(@Nullable UUID accountUniqueId, @Nullable UUID fallback) {
-		return accountUniqueId != null ? accountUniqueId : fallback;
+	private UUID resolveIdenticaUniqueId(@Nullable UUID identicaUniqueId, @Nullable UUID fallback) {
+		return identicaUniqueId != null ? identicaUniqueId : fallback;
 	}
 
 	private boolean isExpired(@NotNull PendingMigration pendingMigration) {
@@ -367,11 +366,11 @@ public class DefaultMigrationService implements MigrationService {
 		return value == null ? "" : value;
 	}
 
-	private @Nullable String resolveUsername(@Nullable String username, @NotNull UUID accountUniqueId) {
+	private @Nullable String resolveUsername(@Nullable String username, @NotNull UUID identicaUniqueId) {
 		String normalized = normalize(username);
 		if (normalized != null) return normalized;
 
-		Account account = accountPersistenceService.findByUniqueId(accountUniqueId).orElse(null);
+		Account account = accountPersistenceService.findByUniqueId(identicaUniqueId).orElse(null);
 		if (account == null) return null;
 
 		return normalize(account.getUsername());
@@ -385,8 +384,8 @@ public class DefaultMigrationService implements MigrationService {
 	}
 
 	private record PendingMigration(
+			UUID uniqueId,
 			UUID connectionUniqueId,
-			UUID accountUniqueId,
 			String targetProviderId,
 			String username,
 			String ip,

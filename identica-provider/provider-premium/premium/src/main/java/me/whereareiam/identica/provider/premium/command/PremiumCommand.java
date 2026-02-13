@@ -38,7 +38,7 @@ public class PremiumCommand {
 
 		MigrationResult result = migrationService.request(MigrationRequest.builder()
 				.connectionUniqueId(identity.getUniqueId())
-				.accountUniqueId(identity.getUniqueId())
+				.identicaUniqueId(identity.getUniqueId())
 				.targetProviderId(PremiumConstants.PROVIDER_ID)
 				.username(identity.getUsername())
 				.ip(identity.getIp())

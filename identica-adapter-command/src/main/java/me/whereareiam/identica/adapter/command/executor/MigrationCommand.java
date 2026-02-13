@@ -98,7 +98,7 @@ public class MigrationCommand {
 
 		MigrationResult result = migrationService.start(MigrationStart.builder()
 				.connectionUniqueId(resolved.uniqueId())
-				.accountUniqueId(resolved.uniqueId())
+				.uniqueId(resolved.uniqueId())
 				.targetProviderId(providerId)
 				.username(resolved.username())
 				.initiator(MigrationInitiator.ADMIN)

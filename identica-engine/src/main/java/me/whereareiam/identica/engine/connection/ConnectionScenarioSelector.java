@@ -44,6 +44,7 @@ public class ConnectionScenarioSelector {
 		var identity = request.getIdentity();
 
 		var uniqueId = identity.getUniqueId();
+		if (uniqueId == null) uniqueId = request.getConnectionUniqueId();
 		if (uniqueId == null) return true;
 
 		return providerLinkPersistenceService.findByUniqueId(uniqueId).isEmpty();
@@ -52,6 +53,7 @@ public class ConnectionScenarioSelector {
 	public boolean isRegistration(@Nullable ResumeRequest request) {
 		if (request == null) return true;
 		var uniqueId = request.getIdentityUniqueId();
+		if (uniqueId == null) uniqueId = request.getConnectionUniqueId();
 		if (uniqueId == null) return true;
 
 		return providerLinkPersistenceService.findByUniqueId(uniqueId).isEmpty();

@@ -80,7 +80,7 @@ public class ValidateTargetPhase implements PipelinePhase<IdentityState> {
 		state.setContext(context);
 
 		Account account = state.getAccount();
-		UUID accountId = account != null ? account.getUniqueId() : context.getAccountUniqueId();
+		UUID accountId = account != null ? account.getUniqueId() : context.getIdenticaUniqueId();
 		if (accountId == null) {
 			state.setResult(PipelineResult.failed(accountMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));

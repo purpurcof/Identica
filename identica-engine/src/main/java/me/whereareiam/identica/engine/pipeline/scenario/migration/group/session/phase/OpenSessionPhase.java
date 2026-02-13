@@ -65,7 +65,7 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 						return PhaseResult.pass(state);
 					}
 
-					context.setAccountUniqueId(openedSession.getUniqueId());
+					context.setIdenticaUniqueId(openedSession.getUniqueId());
 					pipelineState.setScenario(context);
 					pipelineState.removeItem(IdentityMetaItem.class);
 					state.setResult(result);

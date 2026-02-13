@@ -354,6 +354,7 @@ public abstract class AbstractScenarioPipeline {
 	private @Nullable ScenarioContext buildContext(@NotNull ConnectionRequest request) {
 		if (request.getIdentity().getUniqueId() == null) {
 			UUID fallbackUniqueId = request.getConnectionUniqueId();
+			boolean usedConnectionId = fallbackUniqueId != null;
 			if (fallbackUniqueId == null)
 				fallbackUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(request.getUsername());
 
@@ -362,7 +363,11 @@ public abstract class AbstractScenarioPipeline {
 				return null;
 			}
 
-			Logger.warn("%s request missing Identica UUID, applying fallback UUID %s", pipelineType, fallbackUniqueId);
+			if (usedConnectionId) {
+				Logger.debug("%s request missing Identica UUID, using connection UUID %s", pipelineType, fallbackUniqueId);
+			} else {
+				Logger.warn("%s request missing Identica UUID, applying fallback UUID %s", pipelineType, fallbackUniqueId);
+			}
 			request.getIdentity().setUniqueId(fallbackUniqueId);
 		}
 
@@ -376,7 +381,6 @@ public abstract class AbstractScenarioPipeline {
 					.connectionUniqueId(request.getConnectionUniqueId())
 					.identity(request.getIdentity())
 					.intendedServer(request.getIntendedServer())
-					.accountUniqueId(request.getIdentity().getUniqueId())
 					.build();
 			case AUTHENTICATION -> AuthContext.builder()
 					.connectionUniqueId(request.getConnectionUniqueId())
@@ -486,7 +490,13 @@ public abstract class AbstractScenarioPipeline {
 			return base;
 
 		String ip = request.getIp() != null ? request.getIp() : base.getIp();
-		ConnectionIdentity identity = new ConnectionIdentity(connectionId, username, ip);
+		UUID identicaUniqueId = base.getIdenticaUniqueId();
+		if (identicaUniqueId == null && base instanceof MigrationContext migration) {
+			identicaUniqueId = migration.getIdenticaUniqueId();
+		}
+		ConnectionIdentity identity = identicaUniqueId != null
+				? new ConnectionIdentity(identicaUniqueId, username, ip)
+				: new ConnectionIdentity(username, ip);
 
 		String intendedServer = request.getIntendedServer() != null
 				? request.getIntendedServer()
@@ -508,7 +518,6 @@ public abstract class AbstractScenarioPipeline {
 						.identity(identity)
 						.intendedServer(intendedServer)
 						.targetProviderId(migration.getTargetProviderId())
-						.accountUniqueId(migration.getAccountUniqueId())
 						.build();
 				merged.setProvider(migration.getProvider());
 				return merged;

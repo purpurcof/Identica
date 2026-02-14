@@ -3,18 +3,22 @@ package me.whereareiam.identica.provider.premium.pipeline;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.pipeline.extension.PipelineExtension;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
-import me.whereareiam.identica.provider.premium.step.VerifyPremiumProfileStep;
+import me.whereareiam.identica.provider.premium.step.FinalizeProfileStep;
+import me.whereareiam.identica.provider.premium.step.OfflineCheckStep;
+import me.whereareiam.identica.provider.premium.step.ProfilePresenceStep;
 import me.whereareiam.identica.type.pipeline.PipelineScope;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
 
 @RequiredArgsConstructor
-public class PremiumVerifyPipelineExtension implements PipelineExtension {
+public class PremiumPipelineExtension implements PipelineExtension {
 	private final @NotNull String providerId;
 
 	// Steps
-	private final @NotNull VerifyPremiumProfileStep verifyPremiumProfileStep;
+	private final @NotNull ProfilePresenceStep profilePresenceStep;
+	private final @NotNull OfflineCheckStep offlineCheckStep;
+	private final @NotNull FinalizeProfileStep finalizeProfileStep;
 
 	public static @NotNull String extensionIdFor(@NotNull String providerId) {
 		return providerId + ":verify-resolver";
@@ -35,7 +39,17 @@ public class PremiumVerifyPipelineExtension implements PipelineExtension {
 		builder.registerStep(
 				providerId,
 				StageType.PROVIDER,
-				verifyPremiumProfileStep
+				profilePresenceStep
+		);
+		builder.registerStep(
+				providerId,
+				StageType.PROVIDER,
+				offlineCheckStep
+		);
+		builder.registerStep(
+				providerId,
+				StageType.PROVIDER,
+				finalizeProfileStep
 		);
 
 		builder.registerStep(
@@ -43,7 +57,21 @@ public class PremiumVerifyPipelineExtension implements PipelineExtension {
 				providerId,
 				StageType.PROVIDER,
 				PipelineType.MIGRATION,
-				verifyPremiumProfileStep
+				profilePresenceStep
+		);
+		builder.registerStep(
+				PipelineScope.MIGRATION,
+				providerId,
+				StageType.PROVIDER,
+				PipelineType.MIGRATION,
+				offlineCheckStep
+		);
+		builder.registerStep(
+				PipelineScope.MIGRATION,
+				providerId,
+				StageType.PROVIDER,
+				PipelineType.MIGRATION,
+				finalizeProfileStep
 		);
 	}
 }

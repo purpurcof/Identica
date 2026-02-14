@@ -135,7 +135,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 					if (fallbackResult != null && fallbackResult.result != null) {
 						String failedProviderId = normalizeProviderId(fallbackResult.failedProviderId);
 						if (failedProviderId != null && excludedProviders.add(failedProviderId)) {
-							recordExcludedProviders(context, pipelineType, excludedProviders);
+							recordExcludedProviders(pipelineState, context, pipelineType, excludedProviders);
 							JourneyExecutionPlan updatedPlan = removeExcludedProviders(plan, excludedProviders);
 							if (!updatedPlan.equals(plan) && !updatedPlan.blocks().isEmpty()) {
 								plan = updatedPlan;
@@ -289,6 +289,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private void recordExcludedProviders(
+			@NotNull PipelineState pipelineState,
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
 			@NotNull Set<String> excludedProviders
@@ -301,31 +302,30 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		if (ttlMs <= 0)
 			return;
 
-		pipelineStateStore.update(reference, ttlMs, state -> {
-			JourneyOverrideItem current = state.item(JourneyOverrideItem.class).orElse(null);
-			List<String> existing = current != null && current.getExcludedProviders() != null
-					? current.getExcludedProviders()
-					: List.of();
+		JourneyOverrideItem current = pipelineState.item(JourneyOverrideItem.class).orElse(null);
+		List<String> existing = current != null && current.getExcludedProviders() != null
+				? current.getExcludedProviders()
+				: List.of();
 
-			Set<String> merged = new HashSet<>();
-			for (String providerId : existing) {
-				String normalized = normalizeProviderId(providerId);
-				if (normalized != null)
-					merged.add(normalized);
-			}
-			merged.addAll(excludedProviders);
+		Set<String> merged = new HashSet<>();
+		for (String providerId : existing) {
+			String normalized = normalizeProviderId(providerId);
+			if (normalized != null)
+				merged.add(normalized);
+		}
+		merged.addAll(excludedProviders);
 
-			JourneyOverrideItem updated = new JourneyOverrideItem(
-					current != null ? current.getFlow() : null,
-					current != null ? current.getStageId() : null,
-					current != null ? current.getStepIndex() : -1,
-					current != null && current.isClearProvider(),
-					current != null ? current.getProviderId() : null,
-					List.copyOf(merged)
-			);
+		JourneyOverrideItem updated = new JourneyOverrideItem(
+				current != null ? current.getFlow() : null,
+				current != null ? current.getStageId() : null,
+				current != null ? current.getStepIndex() : -1,
+				current != null && current.isClearProvider(),
+				current != null ? current.getProviderId() : null,
+				List.copyOf(merged)
+		);
 
-			return state.withItem(updated, ttlMs);
-		});
+		pipelineState.putItem(updated, ttlMs);
+		pipelineStateStore.update(reference, ttlMs, state -> state.withItem(updated, ttlMs));
 	}
 
 	private @NotNull JourneyExecutionPlan removeExcludedProviders(

@@ -9,7 +9,9 @@ import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttemptItem;
 import me.whereareiam.identica.provider.premium.PremiumIdentityMetaItem;
+import me.whereareiam.identica.util.UniqueIdGenerator;
 
 import java.util.UUID;
 
@@ -36,16 +38,20 @@ public class PremiumGameProfileRequestListener implements DynamicListener<GamePr
 				.username(username)
 				.ip(ip)
 				.build();
+
+		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
+		if (offlineUuid != null && !profileId.equals(offlineUuid)) {
+			pipelineStateStore.update(reference, ttlMs,
+					state -> state.withoutItem(PremiumHandshakeAttemptItem.class));
+		}
+
 		pipelineStateStore.update(reference, ttlMs,
 				state -> state.withItem(new PremiumIdentityMetaItem(profileId.toString()), ttlMs));
 	}
 
 	private String resolveIp(GameProfileRequestEvent event) {
-		if (event.getConnection().getRemoteAddress() == null)
-			return null;
-
-		if (event.getConnection().getRemoteAddress().getAddress() == null)
-			return null;
+		if (event.getConnection().getRemoteAddress() == null) return null;
+		if (event.getConnection().getRemoteAddress().getAddress() == null) return null;
 
 		return event.getConnection().getRemoteAddress().getAddress().getHostAddress();
 	}

@@ -31,6 +31,8 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(context.getConnectionUniqueId())
 				.identityUniqueId(identity.getUniqueId())
+				.username(identity.getUsername())
+				.ip(identity.getIp())
 				.build();
 	}
 
@@ -39,6 +41,8 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(request.getConnectionUniqueId())
 				.identityUniqueId(identity != null ? identity.getUniqueId() : null)
+				.username(identity != null ? identity.getUsername() : null)
+				.ip(identity != null ? identity.getIp() : null)
 				.build();
 	}
 }

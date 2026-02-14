@@ -1,15 +1,24 @@
 package me.whereareiam.identica.model.pipeline.journey;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public record JourneyRuleContext(
-		@NotNull ScenarioContext context,
-		@NotNull PipelineType pipelineType,
-		@NotNull JourneyType flow,
-		@Nullable JourneyStateItem pending
-) {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class JourneyRuleContext {
+	private @NotNull ScenarioContext context;
+	private @NotNull PipelineType pipelineType;
+	private @NotNull JourneyType flow;
+	private @Nullable JourneyStateItem pending;
+	private @Nullable PipelineState pipelineState;
 }

@@ -15,6 +15,7 @@ import java.time.Duration;
 @ToString
 public class PremiumSettings {
 	private @NotNull Lookup lookup = new Lookup();
+	private @NotNull Replication replication = new Replication();
 
 	/**
 	 * Lookup configuration for premium resolver checks.
@@ -35,5 +36,25 @@ public class PremiumSettings {
 		 * Cache time-to-live for resolver lookup results.
 		 */
 		private @NotNull Duration cacheTtl = Duration.ofMinutes(5);
+	}
+
+	/**
+	 * Replication configuration for premium provider caches.
+	 */
+	@Getter
+	@Setter
+	@ToString
+	public static class Replication {
+		private @NotNull Cache cache = new Cache();
+	}
+
+	/**
+	 * Cache namespaces used by the premium provider.
+	 */
+	@Getter
+	@Setter
+	@ToString
+	public static class Cache {
+		private @NotNull String profile = "premium-resolver";
 	}
 }

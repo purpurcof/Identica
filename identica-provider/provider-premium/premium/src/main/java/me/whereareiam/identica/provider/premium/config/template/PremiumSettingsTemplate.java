@@ -16,6 +16,13 @@ public class PremiumSettingsTemplate implements TemplateProvider<PremiumSettings
 		lookup.setCacheTtl(Duration.ofMinutes(5));
 
 		config.setLookup(lookup);
+
+		PremiumSettings.Cache cache = new PremiumSettings.Cache();
+		cache.setProfile("premium-resolver");
+		PremiumSettings.Replication replication = new PremiumSettings.Replication();
+		replication.setCache(cache);
+		config.setReplication(replication);
+
 		return config;
 	}
 }

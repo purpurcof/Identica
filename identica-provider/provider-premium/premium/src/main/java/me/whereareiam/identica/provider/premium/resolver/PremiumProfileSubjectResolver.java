@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
-import me.whereareiam.identica.provider.premium.PremiumProfileIdItem;
+import me.whereareiam.identica.provider.premium.PremiumIdentityMetaItem;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
@@ -52,8 +52,8 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 				.ip(context.getIp())
 				.build();
 		String profileUniqueId = pipelineStateStore.find(reference)
-				.flatMap(state -> state.item(PremiumProfileIdItem.class))
-				.map(PremiumProfileIdItem::getProfileId)
+				.flatMap(state -> state.item(PremiumIdentityMetaItem.class))
+				.map(PremiumIdentityMetaItem::getProfileId)
 				.orElse(null);
 		if (profileUniqueId == null || profileUniqueId.isBlank())
 			return null;

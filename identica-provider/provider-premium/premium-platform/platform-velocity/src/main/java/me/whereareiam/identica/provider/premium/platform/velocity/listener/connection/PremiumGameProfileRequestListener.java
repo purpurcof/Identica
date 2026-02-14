@@ -9,7 +9,7 @@ import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
-import me.whereareiam.identica.provider.premium.PremiumProfileIdItem;
+import me.whereareiam.identica.provider.premium.PremiumIdentityMetaItem;
 
 import java.util.UUID;
 
@@ -37,7 +37,7 @@ public class PremiumGameProfileRequestListener implements DynamicListener<GamePr
 				.ip(ip)
 				.build();
 		pipelineStateStore.update(reference, ttlMs,
-				state -> state.withItem(new PremiumProfileIdItem(profileId.toString()), ttlMs));
+				state -> state.withItem(new PremiumIdentityMetaItem(profileId.toString()), ttlMs));
 	}
 
 	private String resolveIp(GameProfileRequestEvent event) {

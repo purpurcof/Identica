@@ -8,7 +8,7 @@ import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.Jou
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.pipeline.phase.PipelinePhase;
 import me.whereareiam.identica.pipeline.phase.PhaseResult;
@@ -55,7 +55,7 @@ public class LoadContextPhase implements PipelinePhase<JourneyState> {
 		}
 
 		state.setContext(context);
-		state.setPending(pipelineState.item(JourneyPendingState.class).orElse(null));
+		state.setPending(pipelineState.item(JourneyStateItem.class).orElse(null));
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}
 

@@ -16,7 +16,7 @@ import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
-import me.whereareiam.identica.provider.premium.PremiumProfileIdItem;
+import me.whereareiam.identica.provider.premium.PremiumIdentityMetaItem;
 import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -96,8 +96,8 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 				.ip(ip)
 				.build();
 		String profileId = pipelineStateStore.find(reference)
-				.flatMap(state -> state.item(PremiumProfileIdItem.class))
-				.map(PremiumProfileIdItem::getProfileId)
+				.flatMap(state -> state.item(PremiumIdentityMetaItem.class))
+				.map(PremiumIdentityMetaItem::getProfileId)
 				.orElse(null);
 
 		if (profileId == null || profileId.isBlank())

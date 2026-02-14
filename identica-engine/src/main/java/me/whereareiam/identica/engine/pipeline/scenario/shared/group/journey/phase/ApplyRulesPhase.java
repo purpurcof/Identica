@@ -11,7 +11,7 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionStage;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionPlan;
@@ -67,7 +67,7 @@ public class ApplyRulesPhase implements PipelinePhase<JourneyState> {
 		ScenarioContext context = state.getContext();
 		PipelineType pipelineType = pipelineState.getPipelineType();
 		JourneyType flow = state.getFlow();
-		JourneyPendingState pending = state.getPending();
+		JourneyStateItem pending = state.getPending();
 		JourneyExecutionPlan executionPlan = state.getExecutionPlan();
 		if (context == null || pipelineType == null || flow == null) {
 			state.setResult(PipelineResult.failed(journeyMissingContextMessage(pipelineState)));

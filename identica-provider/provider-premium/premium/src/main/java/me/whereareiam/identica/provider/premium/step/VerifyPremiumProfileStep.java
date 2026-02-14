@@ -5,19 +5,22 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.journey.step.type.SeamlessStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
-import me.whereareiam.identica.provider.premium.PremiumProfileIdItem;
+import me.whereareiam.identica.provider.premium.PremiumIdentityMetaItem;
+import me.whereareiam.identica.provider.premium.PremiumVerifyAttemptItem;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
+import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 
@@ -63,19 +66,30 @@ public class VerifyPremiumProfileStep extends SeamlessStep {
 				.username(username)
 				.ip(ip)
 				.build();
-		String providerSubject = pipelineStateStore.find(reference)
-				.flatMap(state -> state.item(PremiumProfileIdItem.class))
-				.map(PremiumProfileIdItem::getProfileId)
-				.orElse(null);
+		var stored = pipelineStateStore.find(reference).orElse(null);
+		String providerSubject = stored != null
+				? stored.item(PremiumIdentityMetaItem.class).map(PremiumIdentityMetaItem::getProfileId).orElse(null)
+				: null;
+		boolean attempted = stored != null && stored.item(PremiumVerifyAttemptItem.class).isPresent();
 		if (providerSubject != null && !providerSubject.isBlank())
-			pipelineStateStore.clear(reference);
+			clearProfileItem(reference);
 		if (providerSubject == null || providerSubject.isBlank())
 			return CompletableFuture.completedFuture(failed(verification));
 
 		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		if (offlineUuid != null && providerSubject.equalsIgnoreCase(offlineUuid.toString()))
-			return CompletableFuture.completedFuture(requireReconnect(verification, username, ip));
+		if (offlineUuid != null && providerSubject.equalsIgnoreCase(offlineUuid.toString())) {
+			if (!attempted) {
+				markAttempt(reference);
+				return CompletableFuture.completedFuture(requireReconnect(verification, username, ip, true));
+			}
 
+			clearAttempt(reference);
+			requestFallbackEnrollment(context);
+			return CompletableFuture.completedFuture(requireReconnect(verification, username, ip, false));
+		}
+
+		if (attempted)
+			clearAttempt(reference);
 		return CompletableFuture.completedFuture(completeWithProfile(context, providerSubject, username));
 	}
 
@@ -91,9 +105,17 @@ public class VerifyPremiumProfileStep extends SeamlessStep {
 		return StepResult.complete(context);
 	}
 
-	private StepResult requireReconnect(PremiumMessages.Verification verification, String username, String ip) {
+	private StepResult requireReconnect(
+			PremiumMessages.Verification verification,
+			String username,
+			String ip,
+			boolean forceOnline
+	) {
 		String message = joinLines(preferRejoinMessage(verification));
-		requestForceOnline(username, ip);
+		if (forceOnline)
+			requestForceOnline(username, ip);
+		else
+			handshakeStore.invalidateInstruction(username);
 		return StepResult.requireReconnect(message);
 	}
 
@@ -122,6 +144,49 @@ public class VerifyPremiumProfileStep extends SeamlessStep {
 		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE,
 				new PremiumForceOnlineInstruction("verify"));
 		handshakeStore.putInstruction(instruction);
+	}
+
+	private void clearProfileItem(PipelineStateReference reference) {
+		long ttlMillis = settingsProvider.get()
+				.getConnection()
+				.handshakeInstructionTtlMillis();
+		pipelineStateStore.update(reference, ttlMillis,
+				state -> state.withoutItem(PremiumIdentityMetaItem.class));
+	}
+
+	private void markAttempt(PipelineStateReference reference) {
+		long ttlMillis = settingsProvider.get()
+				.getConnection()
+				.handshakeInstructionTtlMillis();
+		pipelineStateStore.update(reference, ttlMillis,
+				state -> state.withItem(new PremiumVerifyAttemptItem(System.currentTimeMillis()), ttlMillis));
+	}
+
+	private void clearAttempt(PipelineStateReference reference) {
+		long ttlMillis = settingsProvider.get()
+				.getConnection()
+				.handshakeInstructionTtlMillis();
+		pipelineStateStore.update(reference, ttlMillis,
+				state -> state.withoutItem(PremiumVerifyAttemptItem.class));
+	}
+
+	private void requestFallbackEnrollment(ScenarioContext context) {
+		PipelineStateReference reference = PipelineStateReference.from(context);
+		if (reference.isEmpty())
+			return;
+
+		long ttlMillis = settingsProvider.get()
+				.getConnection()
+				.handshakeInstructionTtlMillis();
+		JourneyOverrideItem override = new JourneyOverrideItem(
+				null,
+				StageType.PRE.id(),
+				0,
+				true,
+				null
+		);
+		pipelineStateStore.update(reference, ttlMillis,
+				state -> state.withItem(override, ttlMillis));
 	}
 
 	private String joinLines(List<String> lines) {

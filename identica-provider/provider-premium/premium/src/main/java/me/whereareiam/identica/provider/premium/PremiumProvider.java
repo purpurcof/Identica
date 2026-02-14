@@ -8,10 +8,12 @@ import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.premium.command.CommandRegistrar;
-import me.whereareiam.identica.provider.premium.pipeline.PremiumVerifyPipelineExtension;
+import me.whereareiam.identica.provider.premium.pipeline.PremiumPipelineExtension;
 import me.whereareiam.identica.provider.premium.platform.velocity.PremiumVelocityModule;
 import me.whereareiam.identica.provider.premium.platform.velocity.listener.connection.PremiumGameProfileRequestListener;
-import me.whereareiam.identica.provider.premium.step.VerifyPremiumProfileStep;
+import me.whereareiam.identica.provider.premium.step.FinalizeProfileStep;
+import me.whereareiam.identica.provider.premium.step.OfflineCheckStep;
+import me.whereareiam.identica.provider.premium.step.ProfilePresenceStep;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -26,7 +28,9 @@ public class PremiumProvider extends IdenticaProvider {
 	private PremiumGameProfileRequestListener gameProfileRequestListener;
 
 	// Steps
-	private VerifyPremiumProfileStep verifyPremiumProfileStep;
+	private ProfilePresenceStep profilePresenceStep;
+	private OfflineCheckStep offlineCheckStep;
+	private FinalizeProfileStep finalizeProfileStep;
 
 	@Override
 	public @NotNull List<Module> modules() {
@@ -39,7 +43,12 @@ public class PremiumProvider extends IdenticaProvider {
 	@Override
 	public void onEnable() {
 		commandRegistrar.registerCommands();
-		pipelineExtensionRegistry.register(new PremiumVerifyPipelineExtension(descriptor.getId(), verifyPremiumProfileStep));
+		pipelineExtensionRegistry.register(new PremiumPipelineExtension(
+				descriptor.getId(),
+				profilePresenceStep,
+				offlineCheckStep,
+				finalizeProfileStep
+		));
 		listenerRegistry.register(gameProfileRequestListener);
 	}
 

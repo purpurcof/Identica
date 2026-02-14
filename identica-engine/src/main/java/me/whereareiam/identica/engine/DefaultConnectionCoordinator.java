@@ -5,14 +5,13 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.engine.connection.ConnectionDecisionResolver;
-import me.whereareiam.identica.engine.connection.ConnectionScenarioSelector;
+import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
+import me.whereareiam.identica.engine.pipeline.scenario.ScenarioRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.ScenarioSelection;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.pipeline.PipelineState;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipeline;
-import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
-import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
 import me.whereareiam.identica.engine.pipeline.handshake.HandshakePipeline;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
@@ -28,7 +27,6 @@ import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
@@ -41,15 +39,10 @@ import java.util.concurrent.CompletionStage;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultConnectionCoordinator implements ConnectionCoordinator, EventListener {
-	// Pipelines
-	private final RegistrationPipeline registrationPipeline;
-	private final AuthenticationPipeline authenticationPipeline;
-	private final MigrationPipeline migrationPipeline;
-
 	// Identity/account lifecycle
 	private final RegistrationAccountService registrationAccountService;
 	private final IdentityService identityService;
-	private final ConnectionScenarioSelector scenarioSelector;
+	private final ScenarioRegistry scenarioRegistry;
 	private final ConnectionDecisionResolver decisionResolver;
 
 	// Persistence/state
@@ -80,40 +73,31 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 
 	@Override
 	public @NotNull CompletionStage<ConnectionDecision> process(@Nullable ConnectionRequest request) {
-		ConnectionScenarioSelector.ScenarioSelection selection = scenarioSelector.select(request);
-		if (selection.resume()) {
-			CompletionStage<PipelineResult> execution = executePipeline(selection.pipelineType(), null, selection.resumeRequest());
+		ScenarioSelection selection = scenarioRegistry.select(request);
+		if (selection.isResume()) {
+			CompletionStage<PipelineResult> execution = selection.getRunner().execute(null, selection.getResumeRequest());
 
-			return execution.handle((result, error) -> resolveDecision(result, error, selection.pipelineType()))
+			return execution.handle((result, error) -> resolveDecision(result, error, selection.getRunner().type()))
 					.thenCompose(decision -> {
-						if (decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
-							return executeNewPipeline(request, selection.pipelineType());
+						if (decision.getStatus() == ConnectionDecision.Status.NO_PENDING) {
+							AbstractScenarioPipeline runner = scenarioRegistry.selectNewFlow(request);
+							return executeNewPipeline(request, runner);
+						}
 						return CompletableFuture.completedFuture(decision);
 					});
 		}
 
-		return executeNewPipeline(request, selection.pipelineType());
+		return executeNewPipeline(request, selection.getRunner());
 	}
 
 	@Override
 	public @NotNull CompletionStage<ConnectionDecision> resume(
 			@NotNull ResumeRequest request
 	) {
-		PipelineType pipelineType = resolvePendingPipelineType(request);
-		CompletionStage<PipelineResult> execution = executePipeline(pipelineType, null, request);
+		AbstractScenarioPipeline runner = scenarioRegistry.selectForResume(request);
+		CompletionStage<PipelineResult> execution = runner.execute(null, request);
 
-		return execution.handle((result, error) -> resolveDecision(result, error, pipelineType));
-	}
-
-	private @NotNull PipelineType resolvePendingPipelineType(@NotNull ResumeRequest request) {
-		PipelineType fallback = scenarioSelector.isRegistration(request)
-				? PipelineType.REGISTRATION
-				: PipelineType.AUTHENTICATION;
-		PipelineStateReference reference = PipelineStateReference.from(request);
-		return pipelineStateStore.find(reference)
-				.filter(state -> state.item(JourneyStateItem.class).isPresent())
-				.map(PipelineState::getPipelineType)
-				.orElse(fallback);
+		return execution.handle((result, error) -> resolveDecision(result, error, runner.type()));
 	}
 
 	@Override
@@ -122,9 +106,9 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 				.connectionUniqueId(connectionUniqueId)
 				.build();
 
-		return pipelineStateStore.find(reference)
-				.map(state -> state.item(JourneyStateItem.class).isPresent())
-				.orElse(false);
+		PipelineState state = pipelineStateStore.find(reference).orElse(null);
+		if (state == null) return false;
+		return scenarioRegistry.isPending(state);
 	}
 
 	@Override
@@ -166,21 +150,9 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 
 	private @NotNull CompletionStage<ConnectionDecision> executeNewPipeline(
 			@Nullable ConnectionRequest request,
-			@NotNull PipelineType pipelineType
+			@NotNull AbstractScenarioPipeline runner
 	) {
-		CompletionStage<PipelineResult> execution = executePipeline(pipelineType, request, null);
-		return execution.handle((result, error) -> resolveDecision(result, error, pipelineType));
-	}
-
-	private @NotNull CompletionStage<PipelineResult> executePipeline(
-			@NotNull PipelineType pipelineType,
-			@Nullable ConnectionRequest request,
-			@Nullable ResumeRequest resumeRequest
-	) {
-		return switch (pipelineType) {
-			case REGISTRATION -> registrationPipeline.execute(request, resumeRequest);
-			case MIGRATION -> migrationPipeline.execute(request, resumeRequest);
-			case AUTHENTICATION -> authenticationPipeline.execute(request, resumeRequest);
-		};
+		CompletionStage<PipelineResult> execution = runner.execute(request, null);
+		return execution.handle((result, error) -> resolveDecision(result, error, runner.type()));
 	}
 }

@@ -14,7 +14,7 @@ import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -97,7 +97,7 @@ public class EnrollCommand {
 		PipelineState stored = pipelineStateStore.find(reference).orElse(null);
 		if (stored == null) return;
 
-		JourneyPendingState pending = stored.item(JourneyPendingState.class).orElse(null);
+		JourneyStateItem pending = stored.item(JourneyStateItem.class).orElse(null);
 		if (pending == null) return;
 
 		ScenarioContext context = stored.getScenario(PipelineType.REGISTRATION);
@@ -124,7 +124,7 @@ public class EnrollCommand {
 
 		long ttlMs = settingsProvider.get().getConnection().getRegistration().pipelineTtlMillis();
 		if (ttlMs > 0) {
-			stored.putItem(new JourneyPendingState(
+			stored.putItem(new JourneyStateItem(
 					pending.getFlow(),
 					StageType.PROVIDER.id(),
 					0

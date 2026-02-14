@@ -11,6 +11,7 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttemptItem;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
@@ -53,12 +54,11 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 
 		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
 		if (offlineUuid != null && providerSubject.equalsIgnoreCase(offlineUuid.toString())) {
-			if (!hasAttempt(reference)) {
-				markAttempt(reference);
+			if (!hasHandshakeAttempt(reference)) {
+				markHandshakeAttempt(reference);
 				return CompletableFuture.completedFuture(requireReconnect(verification, username, ip));
 			}
 
-			clearAttempt(reference);
 			clearProfileItem(reference);
 			handshakeStore.invalidateInstruction(username);
 			return CompletableFuture.completedFuture(StepResult.failed(joinLines(verification.getInvalidSession())));
@@ -88,5 +88,19 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE,
 				new PremiumForceOnlineInstruction("verify"));
 		handshakeStore.putInstruction(instruction);
+	}
+
+	private boolean hasHandshakeAttempt(@NotNull PipelineStateReference reference) {
+		return pipelineStateStore.find(reference)
+				.flatMap(state -> state.item(PremiumHandshakeAttemptItem.class))
+				.isPresent();
+	}
+
+	private void markHandshakeAttempt(@NotNull PipelineStateReference reference) {
+		long ttlMillis = ttlMillis();
+		if (ttlMillis <= 0) return;
+
+		pipelineStateStore.update(reference, ttlMillis,
+				state -> state.withItem(new PremiumHandshakeAttemptItem(System.currentTimeMillis()), ttlMillis));
 	}
 }

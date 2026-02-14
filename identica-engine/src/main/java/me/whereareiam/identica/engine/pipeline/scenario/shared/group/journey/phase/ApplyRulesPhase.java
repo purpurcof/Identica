@@ -78,7 +78,7 @@ public class ApplyRulesPhase implements PipelinePhase<JourneyState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		JourneyRuleContext ruleContext = new JourneyRuleContext(context, pipelineType, flow, pending);
+		JourneyRuleContext ruleContext = new JourneyRuleContext(context, pipelineType, flow, pending, pipelineState);
 		for (JourneyRule rule : resolveRules()) {
 			if (rule == null || !rule.supports(ruleContext))
 				continue;

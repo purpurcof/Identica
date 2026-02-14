@@ -71,9 +71,9 @@ public class SelectProvidersRule implements JourneyRule {
 		if (current.blocks().isEmpty())
 			return current;
 
-		ScenarioContext context = ctx.context();
-		PipelineType pipelineType = ctx.pipelineType();
-		JourneyType flow = ctx.flow();
+		ScenarioContext context = ctx.getContext();
+		PipelineType pipelineType = ctx.getPipelineType();
+		JourneyType flow = ctx.getFlow();
 
 		List<InternalProvider> eligibleProviders = new ArrayList<>(
 				providerOperations.eligibleProviders(context, pipelineType, flow)
@@ -85,7 +85,7 @@ public class SelectProvidersRule implements JourneyRule {
 		}
 		String pendingProviderId = resolvePendingProviderId(context, pipelineType);
 		String preferredProviderId = resolvePreferredProviderId(context, pipelineType);
-		Set<String> excludedProviderIds = resolveExcludedProviderIds(context);
+		Set<String> excludedProviderIds = resolveExcludedProviderIds(ctx);
 		List<String> orderedProviderIds = orderedProviderIds(
 				eligibleProviders,
 				pendingProviderId,
@@ -229,8 +229,16 @@ public class SelectProvidersRule implements JourneyRule {
 		return provider.getDescriptor().getId();
 	}
 
-	private @NotNull Set<String> resolveExcludedProviderIds(@NotNull ScenarioContext context) {
-		PipelineStateReference reference = PipelineStateReference.from(context);
+	private @NotNull Set<String> resolveExcludedProviderIds(@NotNull JourneyRuleContext ctx) {
+		PipelineState state = ctx.getPipelineState();
+		if (state != null) {
+			JourneyOverrideItem override = state.item(JourneyOverrideItem.class).orElse(null);
+			if (override != null && override.getExcludedProviders() != null && !override.getExcludedProviders().isEmpty()) {
+				return normalizeExcluded(override.getExcludedProviders());
+			}
+		}
+
+		PipelineStateReference reference = PipelineStateReference.from(ctx.getContext());
 		if (reference.isEmpty())
 			return Set.of();
 
@@ -242,8 +250,12 @@ public class SelectProvidersRule implements JourneyRule {
 		if (override == null || override.getExcludedProviders() == null || override.getExcludedProviders().isEmpty())
 			return Set.of();
 
+		return normalizeExcluded(override.getExcludedProviders());
+	}
+
+	private @NotNull Set<String> normalizeExcluded(@NotNull List<String> excluded) {
 		Set<String> normalized = new HashSet<>();
-		for (String providerId : override.getExcludedProviders()) {
+		for (String providerId : excluded) {
 			String normalizedId = normalizeProviderId(providerId);
 			if (normalizedId != null)
 				normalized.add(normalizedId);

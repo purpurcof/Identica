@@ -16,6 +16,7 @@ import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
+import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttemptItem;
 import me.whereareiam.identica.provider.premium.PremiumIdentityMetaItem;
 import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
@@ -52,6 +53,14 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		if (username == null || username.isBlank())
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
+		PipelineStateReference reference = PipelineStateReference.builder()
+				.username(username)
+				.ip(ip)
+				.build();
+		if (hasHandshakeAttempt(reference)) {
+			return CompletableFuture.completedFuture(HandshakeDecision.allow());
+		}
+
 		if (hasPremiumLinkByProfileId(username, ip) || hasPremiumLinkByUsername(username)) {
 			requestForceOnline(username, ip, "linked");
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
@@ -61,13 +70,18 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		Settings.Connection connection = settings != null ? settings.getConnection() : null;
 		Settings.Scenario scenario = connection != null ? connection.getAuthentication() : null;
 		JourneyType preferredFlow = scenario != null ? scenario.getFlow() : null;
-		if (preferredFlow == JourneyType.INTERACTIVE)
+		if (preferredFlow == JourneyType.INTERACTIVE) {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
+		}
 
 		return profileLookup.hasPremiumProfile(username)
-				.thenApply(hasProfile -> hasProfile
-						? requestAndAllow(username, ip)
-						: HandshakeDecision.allow());
+				.thenApply(hasProfile -> {
+					if (!hasProfile)
+						return HandshakeDecision.allow();
+
+					markHandshakeAttempt(reference);
+					return requestAndAllow(username, ip);
+				});
 	}
 
 	private HandshakeDecision requestAndAllow(String username, String ip) {
@@ -88,6 +102,22 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE,
 				new PremiumForceOnlineInstruction(reason));
 		handshakeStore.putInstruction(instruction);
+	}
+
+	private boolean hasHandshakeAttempt(PipelineStateReference reference) {
+		return pipelineStateStore.find(reference)
+				.flatMap(state -> state.item(PremiumHandshakeAttemptItem.class))
+				.isPresent();
+	}
+
+	private void markHandshakeAttempt(PipelineStateReference reference) {
+		long ttlMillis = settingsProvider.get()
+				.getConnection()
+				.handshakeInstructionTtlMillis();
+
+		if (ttlMillis <= 0) return;
+		pipelineStateStore.update(reference, ttlMillis,
+				state -> state.withItem(new PremiumHandshakeAttemptItem(System.currentTimeMillis()), ttlMillis));
 	}
 
 	private boolean hasPremiumLinkByProfileId(String username, String ip) {

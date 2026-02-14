@@ -3,15 +3,11 @@ package me.whereareiam.identica.provider.premium.handshake;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import me.whereareiam.identica.pipeline.state.PipelineStateItem;
 
-/**
- * Payload used to request a premium online-mode handshake.
- */
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PremiumForceOnlineInstruction {
-	private String reason;
+public final class PremiumHandshakeAttemptItem implements PipelineStateItem {
+	private long attemptedAt;
 }

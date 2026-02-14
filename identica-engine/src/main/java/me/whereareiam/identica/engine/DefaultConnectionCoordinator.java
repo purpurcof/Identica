@@ -9,6 +9,7 @@ import me.whereareiam.identica.engine.connection.ConnectionScenarioSelector;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
@@ -27,7 +28,7 @@ import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
@@ -98,12 +99,21 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 	public @NotNull CompletionStage<ConnectionDecision> resume(
 			@NotNull ResumeRequest request
 	) {
-		PipelineType pipelineType = scenarioSelector.isRegistration(request)
-				? PipelineType.REGISTRATION
-				: PipelineType.AUTHENTICATION;
+		PipelineType pipelineType = resolvePendingPipelineType(request);
 		CompletionStage<PipelineResult> execution = executePipeline(pipelineType, null, request);
 
 		return execution.handle((result, error) -> resolveDecision(result, error, pipelineType));
+	}
+
+	private @NotNull PipelineType resolvePendingPipelineType(@NotNull ResumeRequest request) {
+		PipelineType fallback = scenarioSelector.isRegistration(request)
+				? PipelineType.REGISTRATION
+				: PipelineType.AUTHENTICATION;
+		PipelineStateReference reference = PipelineStateReference.from(request);
+		return pipelineStateStore.find(reference)
+				.filter(state -> state.item(JourneyStateItem.class).isPresent())
+				.map(PipelineState::getPipelineType)
+				.orElse(fallback);
 	}
 
 	@Override
@@ -113,7 +123,7 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 				.build();
 
 		return pipelineStateStore.find(reference)
-				.map(state -> state.item(JourneyPendingState.class).isPresent())
+				.map(state -> state.item(JourneyStateItem.class).isPresent())
 				.orElse(false);
 	}
 

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
@@ -24,7 +24,7 @@ public class ConnectionScenarioSelector {
 		ResumeRequest resumeRequest = buildResumeRequest(request);
 		if (resumeRequest != null) {
 			PipelineState pending = pipelineStateStore.find(PipelineStateReference.from(resumeRequest)).orElse(null);
-			if (pending != null && pending.item(JourneyPendingState.class).isPresent()) {
+			if (pending != null && pending.item(JourneyStateItem.class).isPresent()) {
 				PipelineType pendingType = pending.getPipelineType();
 				PipelineType resolved = pendingType != null
 						? pendingType

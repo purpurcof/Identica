@@ -10,6 +10,6 @@ public record JourneyRuleContext(
 		@NotNull ScenarioContext context,
 		@NotNull PipelineType pipelineType,
 		@NotNull JourneyType flow,
-		@Nullable JourneyPendingState pending
+		@Nullable JourneyStateItem pending
 ) {
 }

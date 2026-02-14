@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.pipeline.group.GroupOutcome;
 import me.whereareiam.identica.pipeline.group.PipelineGroup;
@@ -53,7 +53,7 @@ public class JourneyGroup implements PipelineGroup<JourneyState> {
 		}
 
 		if (result.getStatus() == PipelineStatus.COMPLETE)
-			pipelineState.removeItem(JourneyPendingState.class);
+			pipelineState.removeItem(JourneyStateItem.class);
 
 		return result.getStatus() == PipelineStatus.COMPLETE
 				? GroupOutcome.result(result)

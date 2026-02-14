@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.model.replication.ReplicationType;
-import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,8 +32,7 @@ public class PremiumProfileLookup {
 	@Inject
 	public PremiumProfileLookup(
 			@NotNull Provider<PremiumSettings> settingsProvider,
-			@NotNull ReplicationSystem replicationSystem,
-			@NotNull Provider<Replication> replicationProvider
+			@NotNull ReplicationSystem replicationSystem
 	) {
 		this.httpClient = HttpClient.newBuilder()
 				.followRedirects(HttpClient.Redirect.NORMAL)
@@ -42,7 +40,7 @@ public class PremiumProfileLookup {
 
 		this.settingsProvider = settingsProvider;
 		ReplicationType<Boolean, Boolean> type = ReplicationType.identity(Boolean.class);
-		this.cache = replicationSystem.cache(resolveNamespace(replicationProvider)).replicated(type);
+		this.cache = replicationSystem.cache(resolveNamespace(settingsProvider)).replicated(type);
 	}
 
 	/**
@@ -137,14 +135,9 @@ public class PremiumProfileLookup {
 		return duration.toMillis();
 	}
 
-	private static String resolveNamespace(Provider<Replication> replicationProvider) {
-		Replication replication = replicationProvider.get();
-		if (replication == null)
-			throw new IllegalStateException("replication is missing");
-
-		String namespace = replication.getCache().getPremiumProfile();
-		if (namespace.isBlank())
-			throw new IllegalStateException("replication.cache.premiumProfile is missing");
+	private static String resolveNamespace(Provider<PremiumSettings> settingsProvider) {
+		String namespace = settingsProvider.get().getReplication().getCache().getProfile();
+		if (namespace.isBlank()) throw new IllegalStateException("premium.settings.replication.cache.profile is missing");
 
 		return namespace;
 	}

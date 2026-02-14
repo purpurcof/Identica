@@ -12,8 +12,10 @@ import org.jetbrains.annotations.Nullable;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public final class JourneyPendingState implements PipelineStateItem {
+public final class JourneyOverrideItem implements PipelineStateItem {
 	private @Nullable JourneyType flow;
 	private @Nullable String stageId;
 	private int stepIndex;
+	private boolean clearProvider;
+	private @Nullable String providerId;
 }

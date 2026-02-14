@@ -23,7 +23,7 @@ import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.PipelineState;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
@@ -262,7 +262,7 @@ public class DefaultMigrationService implements MigrationService {
 				pendingMigration.initiator(),
 				pendingMigration.initiatorUniqueId()
 		), ttlMs);
-		pipelineState.putItem(new JourneyPendingState(flow, null, 0), ttlMs);
+		pipelineState.putItem(new JourneyStateItem(flow, null, 0), ttlMs);
 
 		PipelineStateReference reference = PipelineStateReference.from(context);
 		pipelineStateStore.save(reference, pipelineState, ttlMs);

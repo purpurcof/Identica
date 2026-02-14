@@ -15,7 +15,7 @@ import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.PipelineCursor;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.registration.RegistrationContext;
@@ -418,7 +418,7 @@ public abstract class AbstractScenarioPipeline {
 			return resumeUnavailable(request);
 		}
 
-		JourneyPendingState pending = stored.item(JourneyPendingState.class).orElse(null);
+		JourneyStateItem pending = stored.item(JourneyStateItem.class).orElse(null);
 		if (pending == null) {
 			return resumeUnavailable(request);
 		}

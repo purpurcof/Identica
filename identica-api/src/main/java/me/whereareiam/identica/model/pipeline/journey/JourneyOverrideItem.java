@@ -8,6 +8,8 @@ import me.whereareiam.identica.pipeline.state.PipelineStateItem;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 @Getter
 @ToString
 @NoArgsConstructor
@@ -18,4 +20,5 @@ public final class JourneyOverrideItem implements PipelineStateItem {
 	private int stepIndex;
 	private boolean clearProvider;
 	private @Nullable String providerId;
+	private @Nullable List<String> excludedProviders;
 }

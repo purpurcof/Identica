@@ -7,7 +7,6 @@ import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
@@ -15,11 +14,9 @@ import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
-import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -58,55 +55,26 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 		if (offlineUuid != null && providerSubject.equalsIgnoreCase(offlineUuid.toString())) {
 			if (!hasAttempt(reference)) {
 				markAttempt(reference);
-				return CompletableFuture.completedFuture(requireReconnect(verification, username, ip, true));
+				return CompletableFuture.completedFuture(requireReconnect(verification, username, ip));
 			}
 
 			clearAttempt(reference);
 			clearProfileItem(reference);
-			requestFallbackEnrollment(context);
-
-			return CompletableFuture.completedFuture(requireReconnect(verification, username, ip, false));
+			handshakeStore.invalidateInstruction(username);
+			return CompletableFuture.completedFuture(StepResult.failed(joinLines(verification.getInvalidSession())));
 		}
 
 		return CompletableFuture.completedFuture(StepResult.proceed(context));
 	}
 
-	private void requestFallbackEnrollment(ScenarioContext context) {
-		PipelineStateReference reference = PipelineStateReference.from(context);
-		if (reference.isEmpty()) return;
-
-		long ttlMillis = ttlMillis();
-		JourneyOverrideItem override = new JourneyOverrideItem(
-				null,
-				StageType.PRE.id(),
-				0,
-				true,
-				null
-		);
-		pipelineStateStore.update(reference, ttlMillis,
-				state -> state.withItem(override, ttlMillis));
-	}
-
 	private StepResult requireReconnect(
 			PremiumMessages.Verification verification,
 			String username,
-			String ip,
-			boolean forceOnline
+			String ip
 	) {
-		String message = joinLines(preferRejoinMessage(verification));
-		if (forceOnline)
-			requestForceOnline(username, ip);
-		else
-			handshakeStore.invalidateInstruction(username);
+		requestForceOnline(username, ip);
 
-		return StepResult.requireReconnect(message);
-	}
-
-	private List<String> preferRejoinMessage(PremiumMessages.Verification verification) {
-		List<String> rejoin = verification.getRejoin();
-		return !rejoin.isEmpty()
-				? rejoin
-				: verification.getInvalidSession();
+		return StepResult.requireReconnect(joinLines(verification.getRejoin()));
 	}
 
 	private void requestForceOnline(String username, String ip) {

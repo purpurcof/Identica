@@ -16,8 +16,8 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 				"",
 				"<white>Please rejoin to verify your premium account.",
 				"",
-				"<gray>If you don't have a premium account, you will be",
-				"<gray>forwarded to a fallback provider on your second attempt.",
+				"<gray>If you don't have a premium account, you'll be",
+				"<gray>asked to choose a different provider next time.",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));

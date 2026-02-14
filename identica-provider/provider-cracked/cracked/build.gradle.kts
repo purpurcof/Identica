@@ -5,15 +5,19 @@ plugins {
 }
 
 dependencies {
-    "compileOnly"(project(":identica-provider:provider-cracked:cracked-api"))
-    "testImplementation"(project(":identica-provider:provider-cracked:cracked-api"))
+    "implementation"(project(":identica-provider:provider-cracked:cracked-api"))
+    "implementation"(project(":identica-provider:provider-cracked:cracked-common"))
+    "implementation"(project(":identica-provider:provider-cracked:cracked-database"))
+    "implementation"(project(":identica-provider:provider-cracked:cracked-crypto:hash-bcrypt"))
+    "implementation"(project(":identica-provider:provider-cracked:cracked-crypto:hash-argon2id"))
 
-    "compileOnly"(rootProject.libs.argon2)
-    "compileOnly"(rootProject.libs.bcrypt)
-    "compileOnly"(rootProject.libs.jdbi.core)
+    "testImplementation"(project(":identica-provider:provider-cracked:cracked-api"))
 }
 
 tasks.named<ShadowJar>("shadowJar") {
     archiveBaseName.set("Cracked")
     archiveClassifier.set("")
+
+    relocate("org.jdbi", "me.whereareiam.identica.library.jdbi")
+    relocate("me.whereareiam.dialectica", "me.whereareiam.identica.library.dialectica")
 }

@@ -45,7 +45,6 @@ public class Replication {
 		private @NotNull String reservations;
 		private @NotNull String instructions;
 		private @NotNull Sessions sessions;
-		private @NotNull String premiumProfile;
 		/**
 		 * Cache namespace for pipeline state.
 		 */

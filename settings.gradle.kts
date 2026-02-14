@@ -24,7 +24,12 @@ include("identica-provider")
 
 include("identica-provider:provider-cracked")
 include("identica-provider:provider-cracked:cracked")
+include("identica-provider:provider-cracked:cracked-common")
 include("identica-provider:provider-cracked:cracked-api")
+include("identica-provider:provider-cracked:cracked-crypto")
+include("identica-provider:provider-cracked:cracked-crypto:hash-bcrypt")
+include("identica-provider:provider-cracked:cracked-crypto:hash-argon2id")
+include("identica-provider:provider-cracked:cracked-database")
 include("identica-provider:provider-premium")
 
 include("identica-provider:provider-premium:premium")

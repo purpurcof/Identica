@@ -17,6 +17,8 @@ import me.whereareiam.identica.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.RegistrationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.MigrationJourneyRegistry;
+import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
@@ -27,9 +29,14 @@ import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -39,6 +46,7 @@ public class SelectProvidersRule implements JourneyRule {
 	private final RegistrationJourneyRegistry registrationJourneyRegistry;
 	private final MigrationJourneyRegistry migrationJourneyRegistry;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
+	private final PipelineStateStore pipelineStateStore;
 
 	@Override
 	public @NotNull String id() {
@@ -77,7 +85,14 @@ public class SelectProvidersRule implements JourneyRule {
 		}
 		String pendingProviderId = resolvePendingProviderId(context, pipelineType);
 		String preferredProviderId = resolvePreferredProviderId(context, pipelineType);
-		List<String> orderedProviderIds = orderedProviderIds(eligibleProviders, pendingProviderId, preferredProviderId, pipelineType);
+		Set<String> excludedProviderIds = resolveExcludedProviderIds(context);
+		List<String> orderedProviderIds = orderedProviderIds(
+				eligibleProviders,
+				pendingProviderId,
+				preferredProviderId,
+				excludedProviderIds,
+				pipelineType
+		);
 
 		if (orderedProviderIds.isEmpty())
 			return current;
@@ -124,6 +139,7 @@ public class SelectProvidersRule implements JourneyRule {
 			@NotNull List<InternalProvider> eligibleProviders,
 			@Nullable String pendingProviderId,
 			@Nullable String preferredProviderId,
+			@NotNull Set<String> excludedProviderIds,
 			@NotNull PipelineType pipelineType
 	) {
 		List<String> providerIds = new ArrayList<>();
@@ -133,6 +149,10 @@ public class SelectProvidersRule implements JourneyRule {
 				continue;
 			if (indexOfProvider(providerIds, id) < 0)
 				providerIds.add(id);
+		}
+
+		if (!excludedProviderIds.isEmpty()) {
+			providerIds.removeIf(id -> excludedProviderIds.contains(normalizeProviderId(id)));
 		}
 
 		if (pipelineType == PipelineType.MIGRATION) {
@@ -207,5 +227,33 @@ public class SelectProvidersRule implements JourneyRule {
 			return "";
 
 		return provider.getDescriptor().getId();
+	}
+
+	private @NotNull Set<String> resolveExcludedProviderIds(@NotNull ScenarioContext context) {
+		PipelineStateReference reference = PipelineStateReference.from(context);
+		if (reference.isEmpty())
+			return Set.of();
+
+		PipelineState stored = pipelineStateStore.find(reference).orElse(null);
+		if (stored == null)
+			return Set.of();
+
+		JourneyOverrideItem override = stored.item(JourneyOverrideItem.class).orElse(null);
+		if (override == null || override.getExcludedProviders() == null || override.getExcludedProviders().isEmpty())
+			return Set.of();
+
+		Set<String> normalized = new HashSet<>();
+		for (String providerId : override.getExcludedProviders()) {
+			String normalizedId = normalizeProviderId(providerId);
+			if (normalizedId != null)
+				normalized.add(normalizedId);
+		}
+		return normalized;
+	}
+
+	private @Nullable String normalizeProviderId(@Nullable String providerId) {
+		if (providerId == null || providerId.isBlank())
+			return null;
+		return providerId.trim().toLowerCase(Locale.ROOT);
 	}
 }

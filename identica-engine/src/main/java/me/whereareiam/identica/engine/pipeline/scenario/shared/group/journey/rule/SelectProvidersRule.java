@@ -135,8 +135,6 @@ public class SelectProvidersRule implements JourneyRule {
 				providerIds.add(id);
 		}
 
-		providerIds.sort(String.CASE_INSENSITIVE_ORDER);
-
 		if (pipelineType == PipelineType.MIGRATION) {
 			if (pendingProviderId == null || pendingProviderId.isBlank())
 				return List.of();

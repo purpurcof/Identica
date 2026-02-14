@@ -1,35 +1,28 @@
-package me.whereareiam.identica.engine.pipeline.scenario.shared;
+package me.whereareiam.identica.engine.pipeline.scenario;
 
 import com.google.inject.Provider;
-import me.whereareiam.identica.event.auth.AuthContextBuildEvent;
 import me.whereareiam.identica.event.pipeline.attempt.ScenarioContextBuiltEvent;
-import me.whereareiam.identica.event.registration.RegistrationContextBuildEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.migration.MigrationContext;
-import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.PipelineCursor;
+import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.PipelineState;
-import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.group.GroupOutcome;
 import me.whereareiam.identica.pipeline.group.PipelineGroup;
-import me.whereareiam.identica.pipeline.phase.PipelinePhase;
 import me.whereareiam.identica.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.pipeline.phase.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.util.EventUtil;
-import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,11 +53,11 @@ public abstract class AbstractScenarioPipeline {
 		this.pipelineType = pipelineType;
 	}
 
-	public CompletionStage<PipelineResult> execute(@Nullable ConnectionRequest request) {
+	public @NotNull CompletionStage<PipelineResult> execute(@Nullable ConnectionRequest request) {
 		return execute(request, null);
 	}
 
-	public CompletionStage<PipelineResult> execute(
+	public @NotNull CompletionStage<PipelineResult> execute(
 			@Nullable ConnectionRequest request,
 			@Nullable ResumeRequest resumeRequest
 	) {
@@ -76,7 +69,8 @@ public abstract class AbstractScenarioPipeline {
 			return CompletableFuture.completedFuture(resumeResolution.result());
 		if (resumeResolution.state() != null)
 			pipelineState = resumeResolution.state();
-		markScenarioStart(pipelineState, resumeResolution.state() != null);
+
+		onStart(pipelineState, resumeResolution.state() != null);
 
 		PipelineResult startResult = ensureScenario(pipelineState, request);
 		if (startResult != null)
@@ -85,19 +79,81 @@ public abstract class AbstractScenarioPipeline {
 		return run(pipelineState, resumeRequest);
 	}
 
+	public @NotNull PipelineType type() {
+		return pipelineType;
+	}
+
+	public @NotNull PipelineRegistry registry() {
+		return registry;
+	}
+
+	public boolean matchesNewFlow(@Nullable ConnectionRequest request) {
+		return false;
+	}
+
+	public @NotNull ConnectionDecision mapDecision(@Nullable PipelineResult result) {
+		if (result == null) return failureDecision();
+
+		return switch (result.getStatus()) {
+			case CONTINUE, COMPLETE -> ConnectionDecision.allow();
+			case WAITING -> ConnectionDecision.waiting(result.getMessage());
+			case FAILED, DENIED -> ConnectionDecision.deny(messageOrFallback(result.getMessage()));
+			case REQUIRE_RECONNECT -> ConnectionDecision.requireReconnect(messageOrFallback(result.getMessage()));
+			case NO_PENDING -> ConnectionDecision.noPending();
+		};
+	}
+
+	public @NotNull ConnectionDecision failureDecision() {
+		return ConnectionDecision.deny(failureMessage());
+	}
+
+	protected @NotNull String messageOrFallback(@Nullable String message) {
+		if (message != null && !message.isBlank())
+			return message;
+		return failureMessage();
+	}
+
+	protected @NotNull String failureMessage() {
+		return joinMessage(resolveFailureMessage(pipelineType));
+	}
+
+	protected @NotNull String noCompletionMessage() {
+		return joinMessage(resolveScenarioMessages(pipelineType).getNoCompletionPipeline());
+	}
+
+	protected @Nullable ScenarioContext resolveScenarioContext(@NotNull PipelineResult result) {
+		PipelineState state = result.getState();
+		if (state == null)
+			return null;
+
+		ScenarioContext scenario = state.getScenario(pipelineType);
+		if (scenario == null)
+			scenario = state.getScenario();
+
+		return scenario;
+	}
+
+	protected abstract @Nullable ScenarioContext buildContext(@NotNull ConnectionRequest request);
+
+	protected abstract @NotNull ScenarioContext mergeContext(@NotNull ScenarioContext base, @NotNull ResumeRequest request);
+
+	protected abstract boolean isPending(@NotNull PipelineState state);
+
+	protected abstract void onStart(@NotNull PipelineState state, boolean resumed);
+
 	private @NotNull CompletableFuture<PipelineResult> run(
 			@NotNull PipelineState pipelineState,
 			@Nullable ResumeRequest resumeRequest
 	) {
 		ExecutionSnapshot snapshot = snapshot(pipelineState);
 		if (snapshot.groups().isEmpty())
-			return CompletableFuture.completedFuture(failedAuth(pipelineType));
+			return CompletableFuture.completedFuture(failedAuth());
 
 		ExecutionState executionState = new ExecutionState();
 		return executeGroups(snapshot, pipelineState, 0, executionState)
 				.thenApply(ignored -> {
 					PipelineResult result = executionState.result;
-					if (result == null) result = failedNoCompletion(pipelineType);
+					if (result == null) result = failedNoCompletion();
 					result = result.withState(pipelineState);
 					persistState(pipelineState, result, resumeRequest);
 
@@ -204,7 +260,7 @@ public abstract class AbstractScenarioPipeline {
 
 		PipelineStatus status = result.getStatus();
 		if (status == PipelineStatus.WAITING || status == PipelineStatus.REQUIRE_RECONNECT) {
-			Settings.Scenario scenario = resolveScenario(settingsProvider.get(), pipelineType);
+			Settings.Scenario scenario = resolveScenario(pipelineType);
 			if (!scenario.isAllowResume()) {
 				pipelineStateStore.clear(reference);
 				return;
@@ -248,87 +304,12 @@ public abstract class AbstractScenarioPipeline {
 		return pipelineState.getScenario(stateType);
 	}
 
-	private @NotNull PipelineResult failedAuth(@NotNull PipelineType type) {
-		return PipelineResult.failed(joinMessage(resolveFailureMessage(type)));
+	private @NotNull PipelineResult failedAuth() {
+		return PipelineResult.failed(failureMessage());
 	}
 
-	private @NotNull PipelineResult failedNoCompletion(@NotNull PipelineType type) {
-		return PipelineResult.failed(joinMessage(resolveScenarioMessages(type).getNoCompletionPipeline()));
-	}
-
-	@NotNull
-	public ConnectionDecision mapDecision(
-			@Nullable PipelineResult result
-	) {
-		if (result == null) return failureDecision();
-
-		return switch (result.getStatus()) {
-			case CONTINUE, COMPLETE -> ConnectionDecision.allow();
-			case WAITING -> ConnectionDecision.waiting(result.getMessage());
-			case FAILED, DENIED -> ConnectionDecision.deny(messageOrFallback(result.getMessage()));
-			case REQUIRE_RECONNECT -> ConnectionDecision.requireReconnect(messageOrFallback(result.getMessage()));
-			case NO_PENDING -> ConnectionDecision.noPending();
-		};
-	}
-
-	@NotNull
-	public ConnectionDecision failureDecision() {
-		return ConnectionDecision.deny(failureMessage());
-	}
-
-	protected @NotNull String messageOrFallback(@Nullable String message) {
-		if (message != null && !message.isBlank())
-			return message;
-		return failureMessage();
-	}
-
-	protected @NotNull String failureMessage() {
-		return joinMessage(resolveFailureMessage(pipelineType));
-	}
-
-	protected @Nullable ScenarioContext resolveScenarioContext(@NotNull PipelineResult result) {
-		PipelineState state = result.getState();
-		if (state == null)
-			return null;
-
-		ScenarioContext scenario = state.getScenario(pipelineType);
-		if (scenario == null)
-			scenario = state.getScenario();
-
-		return scenario;
-	}
-
-	private @NotNull Messages.Connection.Scenario resolveScenarioMessages(@NotNull PipelineType type) {
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (type == PipelineType.REGISTRATION)
-			return connection.getRegistration();
-		if (type == PipelineType.MIGRATION)
-			return connection.getMigration();
-		return connection.getAuthentication();
-	}
-
-	private @NotNull List<String> resolveFailureMessage(@NotNull PipelineType type) {
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (type == PipelineType.REGISTRATION) {
-			return connection.getRegistration().getRegistrationFailed();
-		}
-		if (type == PipelineType.MIGRATION) {
-			return connection.getMigration().getMigrationFailed();
-		}
-
-		return connection.getAuthentication().getAuthenticationFailed();
-	}
-
-	private @NotNull Settings.Scenario resolveScenario(
-			@NotNull Settings settings,
-			@NotNull PipelineType type
-	) {
-		Settings.Connection connection = settings.getConnection();
-		if (type == PipelineType.REGISTRATION)
-			return connection.getRegistration();
-		if (type == PipelineType.MIGRATION)
-			return connection.getMigration();
-		return connection.getAuthentication();
+	private @NotNull PipelineResult failedNoCompletion() {
+		return PipelineResult.failed(noCompletionMessage());
 	}
 
 	private @Nullable PipelineResult ensureScenario(
@@ -339,64 +320,16 @@ public abstract class AbstractScenarioPipeline {
 
 		if (request == null) {
 			Logger.severe("%s request missing identity (connection request unresolved)", pipelineType);
-			return failedAuth(pipelineType);
+			return failedAuth();
 		}
 
 		ScenarioContext context = buildContext(request);
 		if (context == null) {
-			return failedAuth(pipelineType);
+			return failedAuth();
 		}
 
 		pipelineState.setScenario(context);
 		return null;
-	}
-
-	private @Nullable ScenarioContext buildContext(@NotNull ConnectionRequest request) {
-		if (request.getIdentity().getUniqueId() == null) {
-			UUID fallbackUniqueId = request.getConnectionUniqueId();
-			boolean usedConnectionId = fallbackUniqueId != null;
-			if (fallbackUniqueId == null)
-				fallbackUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(request.getUsername());
-
-			if (fallbackUniqueId == null) {
-				Logger.severe("%s request missing Identica UUID and fallback UUID", pipelineType);
-				return null;
-			}
-
-			if (usedConnectionId) {
-				Logger.debug("%s request missing Identica UUID, using connection UUID %s", pipelineType, fallbackUniqueId);
-			} else {
-				Logger.warn("%s request missing Identica UUID, applying fallback UUID %s", pipelineType, fallbackUniqueId);
-			}
-			request.getIdentity().setUniqueId(fallbackUniqueId);
-		}
-
-		ScenarioContext context = switch (pipelineType) {
-			case REGISTRATION -> RegistrationContext.builder()
-					.connectionUniqueId(request.getConnectionUniqueId())
-					.identity(request.getIdentity())
-					.intendedServer(request.getIntendedServer())
-					.build();
-			case MIGRATION -> me.whereareiam.identica.model.migration.MigrationContext.builder()
-					.connectionUniqueId(request.getConnectionUniqueId())
-					.identity(request.getIdentity())
-					.intendedServer(request.getIntendedServer())
-					.build();
-			case AUTHENTICATION -> AuthContext.builder()
-					.connectionUniqueId(request.getConnectionUniqueId())
-					.identity(request.getIdentity())
-					.intendedServer(request.getIntendedServer())
-					.build();
-		};
-
-		if (context instanceof AuthContext authContext)
-			EventUtil.callEvent(new AuthContextBuildEvent(authContext));
-		if (context instanceof RegistrationContext registrationContext)
-			EventUtil.callEvent(new RegistrationContextBuildEvent(registrationContext));
-
-		EventUtil.callEvent(new ScenarioContextBuiltEvent(context));
-
-		return context;
 	}
 
 	private @NotNull ResumeResolution resolveResume(
@@ -405,7 +338,7 @@ public abstract class AbstractScenarioPipeline {
 	) {
 		if (resumeRequest == null) return new ResumeResolution(null, null);
 
-		Settings.Scenario scenario = resolveScenario(settingsProvider.get(), pipelineType);
+		Settings.Scenario scenario = resolveScenario(pipelineType);
 		if (!scenario.isAllowResume()) {
 			pipelineStateStore.clear(PipelineStateReference.from(resumeRequest));
 			return resumeUnavailable(request);
@@ -422,8 +355,7 @@ public abstract class AbstractScenarioPipeline {
 			return resumeUnavailable(request);
 		}
 
-		JourneyStateItem pending = stored.item(JourneyStateItem.class).orElse(null);
-		if (pending == null) {
+		if (!isPending(stored)) {
 			return resumeUnavailable(request);
 		}
 
@@ -440,106 +372,59 @@ public abstract class AbstractScenarioPipeline {
 				: new ResumeResolution(null, null);
 	}
 
-	private void markScenarioStart(@NotNull PipelineState pipelineState, boolean resumed) {
-		if (pipelineType == PipelineType.AUTHENTICATION) {
-			me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem identity =
-					pipelineState.item(me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem.class)
-							.orElse(null);
-			if (identity == null) {
-				identity = new me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem();
-			}
-			identity.setResumed(resumed);
-			pipelineState.putItem(identity, 0L);
-			return;
-		}
-
-		if (pipelineType == PipelineType.REGISTRATION) {
-			me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityMetaItem identity =
-					pipelineState.item(me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityMetaItem.class)
-							.orElse(null);
-			if (identity == null) {
-				identity = new me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityMetaItem();
-			}
-			identity.setResumed(resumed);
-			pipelineState.putItem(identity, 0L);
-			return;
-		}
-
-		if (pipelineType == PipelineType.MIGRATION) {
-			me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem identity =
-					pipelineState.item(me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem.class)
-							.orElse(null);
-			if (identity == null) {
-				identity = new me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem();
-			}
-			identity.setResumed(resumed);
-			pipelineState.putItem(identity, 0L);
-		}
+	protected @NotNull Messages.Connection.Scenario resolveScenarioMessages(@NotNull PipelineType type) {
+		Messages.Connection connection = messagesProvider.get().getConnection();
+		if (type == PipelineType.REGISTRATION)
+			return connection.getRegistration();
+		if (type == PipelineType.MIGRATION)
+			return connection.getMigration();
+		return connection.getAuthentication();
 	}
 
-	private @NotNull ScenarioContext mergeContext(
-			@NotNull ScenarioContext base,
+	protected @NotNull List<String> resolveFailureMessage(@NotNull PipelineType type) {
+		Messages.Connection connection = messagesProvider.get().getConnection();
+		if (type == PipelineType.REGISTRATION) {
+			return connection.getRegistration().getRegistrationFailed();
+		}
+		if (type == PipelineType.MIGRATION) {
+			return connection.getMigration().getMigrationFailed();
+		}
+
+		return connection.getAuthentication().getAuthenticationFailed();
+	}
+
+	protected @NotNull Settings.Scenario resolveScenario(@NotNull PipelineType type) {
+		Settings.Connection connection = settingsProvider.get().getConnection();
+		if (type == PipelineType.REGISTRATION)
+			return connection.getRegistration();
+		if (type == PipelineType.MIGRATION)
+			return connection.getMigration();
+		return connection.getAuthentication();
+	}
+
+	protected @NotNull String joinMessage(@NotNull List<String> lines) {
+		return String.join("\n", lines);
+	}
+
+	protected @Nullable ConnectionIdentity mergeIdentity(
+			@Nullable ScenarioContext base,
 			@NotNull ResumeRequest request
 	) {
+		if (base == null) return null;
 		UUID connectionId = request.getConnectionUniqueId() != null
 				? request.getConnectionUniqueId()
 				: base.getConnectionUniqueId();
 
 		String username = request.getUsername() != null ? request.getUsername() : base.getUsername();
 		if (username == null || username.isBlank())
-			return base;
+			return null;
 
 		String ip = request.getIp() != null ? request.getIp() : base.getIp();
-		UUID identicaUniqueId = base.getIdenticaUniqueId();
-		if (identicaUniqueId == null && base instanceof MigrationContext migration) {
-			identicaUniqueId = migration.getIdenticaUniqueId();
-		}
-		ConnectionIdentity identity = identicaUniqueId != null
-				? new ConnectionIdentity(identicaUniqueId, username, ip)
-				: new ConnectionIdentity(username, ip);
-
-		String intendedServer = request.getIntendedServer() != null
-				? request.getIntendedServer()
-				: base.getIntendedServer();
-
-		switch (base) {
-			case RegistrationContext registration -> {
-				RegistrationContext merged = RegistrationContext.builder()
-						.connectionUniqueId(connectionId)
-						.identity(identity)
-						.intendedServer(intendedServer)
-						.build();
-				merged.setProvider(registration.getProvider());
-				return merged;
-			}
-			case MigrationContext migration -> {
-				MigrationContext merged = MigrationContext.builder()
-						.connectionUniqueId(connectionId)
-						.identity(identity)
-						.intendedServer(intendedServer)
-						.targetProviderId(migration.getTargetProviderId())
-						.build();
-				merged.setProvider(migration.getProvider());
-				return merged;
-			}
-			case AuthContext authContext -> {
-				AuthContext merged = AuthContext.builder()
-						.connectionUniqueId(connectionId)
-						.identity(identity)
-						.intendedServer(intendedServer)
-						.build();
-				merged.setProvider(authContext.getProvider());
-				return merged;
-			}
-			default -> {
-			}
-		}
-
-		return base;
+		return new ConnectionIdentity(connectionId, username, ip);
 	}
 
-	private String joinMessage(@NotNull List<String> lines) {
-		return String.join("\n", lines);
+	protected void emitScenarioBuilt(@NotNull ScenarioContext context) {
+		EventUtil.callEvent(new ScenarioContextBuiltEvent(context));
 	}
 
 	private record GroupSnapshot<S>(

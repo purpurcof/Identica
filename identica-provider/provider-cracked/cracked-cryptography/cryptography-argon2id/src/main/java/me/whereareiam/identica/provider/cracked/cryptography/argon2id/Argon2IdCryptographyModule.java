@@ -1,0 +1,14 @@
+package me.whereareiam.identica.provider.cracked.cryptography.argon2id;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
+import me.whereareiam.identica.provider.cracked.CryptographyAlgorithm;
+
+public class Argon2IdCryptographyModule extends AbstractModule {
+	@Override
+	protected void configure() {
+		Multibinder.newSetBinder(binder(), CryptographyAlgorithm.class)
+				.addBinding()
+				.to(Argon2IdCryptographyAlgorithm.class);
+	}
+}

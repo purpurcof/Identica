@@ -1,0 +1,124 @@
+package me.whereareiam.identica.provider.cracked.config;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+public class CrackedSettings {
+	private Scenario scenario;
+	private Replication replication;
+	private Cryptography cryptography;
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Scenario {
+		private Registration registration;
+		private Authentication authentication;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Registration {
+		private boolean enabled;
+		private boolean requireRepeat;
+		private Username username;
+		private Password password;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Authentication {
+		private int maxAttempts;
+		private int lockSeconds;
+		private Session session;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Session {
+		private long autoLoginSeconds;
+		private boolean requireSameIp;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Replication {
+		private Cache cache;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Cache {
+		private String lockout;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Username {
+		private int minLength;
+		private int maxLength;
+		private String allowedPattern;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Password {
+		private Requirements requirements;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Requirements {
+		private int minLength;
+		private int maxLength;
+		private int minUpper;
+		private int minLower;
+		private int minNumber;
+		private int minSpecial;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Cryptography {
+		private String algorithm;
+		private boolean autoupgrade;
+		private Algorithms algorithms;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Algorithms {
+		private Bcrypt bcrypt;
+		private Argon2id argon2id;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Bcrypt {
+		private int cost;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Argon2id {
+		private int iterations;
+		private int parallelism;
+		private int memoryKb;
+	}
+}

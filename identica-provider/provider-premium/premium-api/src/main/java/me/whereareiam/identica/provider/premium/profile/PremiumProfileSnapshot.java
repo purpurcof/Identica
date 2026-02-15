@@ -13,5 +13,4 @@ import org.jetbrains.annotations.NotNull;
 public class PremiumProfileSnapshot {
 	private @NotNull String profileId;
 	private long observedAt;
-	private long attemptAt;
 }

@@ -27,6 +27,7 @@ public class ReplicationTemplate implements TemplateProvider<Replication> {
 		Replication.Cache cache = new Replication.Cache();
 		cache.setReservations("identica:reservation");
 		cache.setInstructions("identica:handshake-instructions");
+		cache.setAttempts("identica:provider-attempts");
 
 		Replication.Sessions sessions = new Replication.Sessions();
 		sessions.setUser("identica:sessions:user");

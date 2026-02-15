@@ -28,6 +28,7 @@ import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTyp
 import me.whereareiam.identica.common.conflict.ConflictPrepareLifecycle;
 import me.whereareiam.identica.common.conflict.DefaultConflictService;
 import me.whereareiam.identica.common.conflict.type.UsernameConflictType;
+import me.whereareiam.identica.common.provider.DefaultProviderAttemptStore;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
 import me.whereareiam.identica.common.listener.AccountClearReplicationListener;
@@ -67,6 +68,7 @@ import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.provider.ProviderAttemptStore;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -110,6 +112,7 @@ public class CommonConfiguration extends AbstractModule {
 				.toProvider(ReloadableRegistry.class)
 				.asEagerSingleton();
 		bind(HandshakeStore.class).to(DefaultHandshakeStore.class).asEagerSingleton();
+		bind(ProviderAttemptStore.class).to(DefaultProviderAttemptStore.class).asEagerSingleton();
 
 		// Replication
 		OptionalBinder.newOptionalBinder(binder(), Key.get(ReplicationAdapter.class, Names.named("replicationAdapter")))

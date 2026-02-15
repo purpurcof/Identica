@@ -36,6 +36,10 @@ public class Settings {
 		 */
 		private @NotNull Duration handshakeInstructionTtl;
 		/**
+		 * Time-to-live for provider attempt markers.
+		 */
+		private @NotNull Duration attemptTtl;
+		/**
 		 * Time-to-live for reserved account identities.
 		 */
 		private @NotNull Duration reservationTtl;
@@ -56,6 +60,19 @@ public class Settings {
 			}
 
 			return handshakeInstructionTtl.toMillis();
+		}
+
+		/**
+		 * Returns provider attempt TTL in milliseconds with validation.
+		 *
+		 * @return provider attempt TTL in milliseconds
+		 */
+		public long attemptTtlMillis() {
+			if (attemptTtl.isZero() || attemptTtl.isNegative()) {
+				throw new IllegalStateException("settings.connection.attemptTtl must be positive");
+			}
+
+			return attemptTtl.toMillis();
 		}
 	}
 
@@ -114,6 +131,10 @@ public class Settings {
 		 */
 		private @NotNull Duration pipelineTtl;
 		/**
+		 * Time-to-live for advance locks.
+		 */
+		private @NotNull Duration advanceLockTtl;
+		/**
 		 * Whether resume requests are allowed for this scenario.
 		 */
 		private boolean allowResume;
@@ -133,6 +154,19 @@ public class Settings {
 			}
 
 			return pipelineTtl.toMillis();
+		}
+
+		/**
+		 * Returns advance lock TTL in milliseconds with validation.
+		 *
+		 * @return advance lock TTL in milliseconds
+		 */
+		public long advanceLockTtlMillis() {
+			if (advanceLockTtl.isZero() || advanceLockTtl.isNegative()) {
+				throw new IllegalStateException("settings.connection.advanceLockTtl must be positive");
+			}
+
+			return advanceLockTtl.toMillis();
 		}
 	}
 

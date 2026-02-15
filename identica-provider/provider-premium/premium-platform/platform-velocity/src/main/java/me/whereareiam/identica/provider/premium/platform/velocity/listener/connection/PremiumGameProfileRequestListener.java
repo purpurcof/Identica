@@ -5,6 +5,8 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListener;
+import me.whereareiam.identica.provider.ProviderAttemptStore;
+import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 
@@ -14,6 +16,7 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumGameProfileRequestListener implements DynamicListener<GameProfileRequestEvent> {
 	private final PremiumProfileStore profileStore;
+	private final ProviderAttemptStore attemptStore;
 
 	@Override
 	public void onEvent(GameProfileRequestEvent event) {
@@ -26,7 +29,7 @@ public class PremiumGameProfileRequestListener implements DynamicListener<GamePr
 
 		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
 		if (offlineUuid != null && !profileId.equals(offlineUuid)) {
-			profileStore.clearAttempt(username, ip);
+			attemptStore.clearAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
 		}
 
 		profileStore.save(username, ip, profileId.toString());

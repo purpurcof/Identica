@@ -25,6 +25,7 @@ import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
+import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -96,6 +97,21 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 	) {
 		AbstractScenarioPipeline runner = scenarioRegistry.selectForResume(request);
 		CompletionStage<PipelineResult> execution = runner.execute(null, request);
+
+		return execution.handle((result, error) -> resolveDecision(result, error, runner.type()));
+	}
+
+	@Override
+	public @NotNull CompletionStage<ConnectionDecision> advanceFlow(
+			@NotNull AdvanceRequest request
+	) {
+		AbstractScenarioPipeline runner = scenarioRegistry.selectForAdvance(request);
+		ResumeRequest pendingRequest = ResumeRequest.builder()
+				.connectionUniqueId(request.getConnectionUniqueId())
+				.identity(request.getIdentity())
+				.intendedServer(request.getIntendedServer())
+				.build();
+		CompletionStage<PipelineResult> execution = runner.executeAdvance(pendingRequest);
 
 		return execution.handle((result, error) -> resolveDecision(result, error, runner.type()));
 	}

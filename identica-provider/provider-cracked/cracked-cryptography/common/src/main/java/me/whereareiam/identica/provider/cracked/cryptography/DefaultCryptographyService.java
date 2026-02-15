@@ -69,11 +69,11 @@ public class DefaultCryptographyService implements CryptographyService {
 		CrackedSettings.Bcrypt bcrypt = algorithms.getBcrypt();
 		if (bcrypt != null) options.setBcryptCost(bcrypt.getCost());
 
-		CrackedSettings.Argon2id argon2id = algorithms.getArgon2id();
-		if (argon2id != null) {
-			options.setArgon2Iterations(argon2id.getIterations());
-			options.setArgon2MemoryKb(argon2id.getMemoryKb());
-			options.setArgon2Parallelism(argon2id.getParallelism());
+		CrackedSettings.Argon2 argon2 = algorithms.getArgon2();
+		if (argon2 != null) {
+			options.setArgon2Iterations(argon2.getIterations());
+			options.setArgon2MemoryKb(argon2.getMemoryKb());
+			options.setArgon2Parallelism(argon2.getParallelism());
 		}
 
 		return options;

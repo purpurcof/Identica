@@ -85,8 +85,7 @@ public class DefaultCrackedAccountService implements CrackedAccountService {
 
 	@Override
 	public void delete(@NotNull String providerSubject) {
-		if (providerSubject.isBlank())
-			return;
+		if (providerSubject.isBlank()) return;
 		persistenceService.delete(CrackedConstants.PROVIDER_ID, providerSubject);
 	}
 

@@ -31,7 +31,8 @@ import me.whereareiam.identica.common.conflict.type.UsernameConflictType;
 import me.whereareiam.identica.common.provider.DefaultProviderAttemptStore;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
-import me.whereareiam.identica.common.listener.AccountClearReplicationListener;
+import me.whereareiam.identica.common.listener.clear.AccountClearReplicationListener;
+import me.whereareiam.identica.common.listener.clear.AccountClearSessionListener;
 import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.listener.SessionReplacedListener;
 import me.whereareiam.identica.common.identity.DefaultIdentityService;
@@ -147,6 +148,7 @@ public class CommonConfiguration extends AbstractModule {
 
 		// Event listeners
 		bind(AccountClearReplicationListener.class).asEagerSingleton();
+		bind(AccountClearSessionListener.class).asEagerSingleton();
 		bind(SessionReplacedListener.class).asEagerSingleton();
 		bind(ConflictPrepareLifecycle.class).asEagerSingleton();
 		bind(DynamicListenerRegistry.class).to(DefaultDynamicListenerRegistry.class).asEagerSingleton();

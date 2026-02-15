@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.engine.connection.ConnectionDecisionResolver;
+import me.whereareiam.identica.engine.pipeline.AccountClearPipelineListener;
 import me.whereareiam.identica.engine.pipeline.DefaultPipelineExtensionRegistry;
 import me.whereareiam.identica.engine.pipeline.DefaultPipelineStateStore;
 import me.whereareiam.identica.engine.pipeline.PendingPipelineKickCoordinator;
@@ -31,6 +32,7 @@ public class EngineConfiguration extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(PipelineStateStore.class).to(DefaultPipelineStateStore.class).asEagerSingleton();
+		bind(AccountClearPipelineListener.class).asEagerSingleton();
 
 		bind(PipelineRegistry.class).annotatedWith(Names.named("authenticationPipelineRegistry"))
 				.to(AuthenticationPipelineRegistry.class)

@@ -91,12 +91,4 @@ public interface ConnectionCoordinator {
 	 */
 	boolean hasPending(@NotNull UUID connectionUniqueId);
 
-	/**
-	 * Clears any pending flow for the provided connection ID.
-	 *
-	 * @param connectionUniqueId unique connection identifier
-	 * @return {@code true} if the pending flow was cleared
-	 */
-	boolean clearPending(@NotNull UUID connectionUniqueId);
-
 }

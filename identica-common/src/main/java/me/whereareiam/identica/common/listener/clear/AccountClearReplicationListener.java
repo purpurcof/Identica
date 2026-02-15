@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.listener;
+package me.whereareiam.identica.common.listener.clear;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;

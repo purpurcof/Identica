@@ -433,6 +433,10 @@ public class Messages {
 			 */
 			private @NotNull List<String> pipelineKick;
 			/**
+			 * Message shown when a pending pipeline expires.
+			 */
+			private @NotNull List<String> pipelineExpired;
+			/**
 			 * Message shown when an advance request is blocked by a pending lock.
 			 */
 			private @NotNull List<String> advanceBusy;

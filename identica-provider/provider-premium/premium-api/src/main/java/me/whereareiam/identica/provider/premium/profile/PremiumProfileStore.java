@@ -3,6 +3,10 @@ package me.whereareiam.identica.provider.premium.profile;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.account.AccountClearEvent;
+import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import me.whereareiam.identica.replication.ReplicationSystem;
@@ -16,7 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Singleton
-public class PremiumProfileStore {
+public class PremiumProfileStore implements EventListener {
 	private static final String KEY_USERNAME_PREFIX = "u:";
 	private static final String KEY_USERNAME_IP_PREFIX = "uip:";
 
@@ -26,12 +30,14 @@ public class PremiumProfileStore {
 	@Inject
 	public PremiumProfileStore(
 			@NotNull Provider<PremiumSettings> settingsProvider,
-			@NotNull ReplicationSystem replicationSystem
+			@NotNull ReplicationSystem replicationSystem,
+			@NotNull EventManager eventManager
 	) {
 		this.settingsProvider = settingsProvider;
 		ReplicationType<PremiumProfileSnapshot, PremiumProfileSnapshot> type =
 				ReplicationType.identity(PremiumProfileSnapshot.class);
 		this.cache = replicationSystem.cache(resolveNamespace(settingsProvider)).replicated(type);
+		eventManager.register(this);
 	}
 
 	public void save(@Nullable String username, @Nullable String ip, @NotNull String profileId) {
@@ -68,6 +74,15 @@ public class PremiumProfileStore {
 		}
 	}
 
+	@IdenticEvent
+	public void onAccountClear(@NotNull AccountClearEvent event) {
+		String username = event.getIdentity().getUsername();
+		if (username.isBlank()) return;
+
+		clear(username, null);
+		clearHostnameScoped(username);
+	}
+
 	private @NotNull List<String> resolveKeys(@Nullable String username, @Nullable String ip) {
 		List<String> keys = new ArrayList<>(2);
 
@@ -78,6 +93,37 @@ public class PremiumProfileStore {
 		if (normalizedIp != null) keys.add(KEY_USERNAME_IP_PREFIX + normalizedUsername + "|" + normalizedIp);
 		keys.add(KEY_USERNAME_PREFIX + normalizedUsername);
 		return keys;
+	}
+
+	private void clearHostnameScoped(@Nullable String username) {
+		String normalizedUsername = normalize(username);
+		if (normalizedUsername == null) return;
+
+		String prefix = KEY_USERNAME_IP_PREFIX + normalizedUsername + "|";
+		List<String> keysToInvalidate = new ArrayList<>();
+		int page = 1;
+		int pageSize = 200;
+		while (true) {
+			var result = cache.listKeys(page, pageSize).join();
+			if (result == null || result.getEntries().isEmpty())
+				break;
+
+			for (String key : result.getEntries()) {
+				if (key != null && key.startsWith(prefix))
+					keysToInvalidate.add(key);
+			}
+
+			boolean hasMoreByTotal = result.getTotal() > (page * pageSize);
+			boolean hasMoreByPageSize = result.getEntries().size() >= pageSize;
+			if (!hasMoreByTotal && !hasMoreByPageSize)
+				break;
+
+			page++;
+		}
+
+		for (String key : keysToInvalidate) {
+			cache.invalidate(key).join();
+		}
 	}
 
 	private @Nullable String normalize(@Nullable String value) {
@@ -102,6 +148,7 @@ public class PremiumProfileStore {
 				.getReplication()
 				.getCache()
 				.getProfileSnapshot();
+
 		if (namespace.isBlank()) {
 			throw new IllegalStateException("premium.settings.replication.cache.profileSnapshot is missing");
 		}

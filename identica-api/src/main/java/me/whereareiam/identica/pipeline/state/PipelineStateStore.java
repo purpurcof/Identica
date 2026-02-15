@@ -1,6 +1,7 @@
 package me.whereareiam.identica.pipeline.state;
 
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import org.jetbrains.annotations.NotNull;
@@ -72,6 +73,7 @@ public interface PipelineStateStore {
 		return updated;
 	}
 
+
 	/**
 	 * Finds a pipeline state snapshot by resume request.
 	 *
@@ -79,6 +81,16 @@ public interface PipelineStateStore {
 	 * @return optional state snapshot
 	 */
 	default @NotNull Optional<PipelineState> find(@NotNull ResumeRequest request) {
+		return find(PipelineStateReference.from(request));
+	}
+
+	/**
+	 * Finds a pipeline state snapshot by advance request.
+	 *
+	 * @param request advance request
+	 * @return optional state snapshot
+	 */
+	default @NotNull Optional<PipelineState> find(@NotNull AdvanceRequest request) {
 		return find(PipelineStateReference.from(request));
 	}
 
@@ -99,6 +111,16 @@ public interface PipelineStateStore {
 	 * @return {@code true} when a snapshot exists
 	 */
 	default boolean hasState(@NotNull ResumeRequest request) {
+		return find(request).isPresent();
+	}
+
+	/**
+	 * Returns whether a pipeline state snapshot exists for the advance request.
+	 *
+	 * @param request advance request
+	 * @return {@code true} when a snapshot exists
+	 */
+	default boolean hasState(@NotNull AdvanceRequest request) {
 		return find(request).isPresent();
 	}
 

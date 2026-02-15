@@ -8,8 +8,9 @@ dependencies {
     "implementation"(project(":identica-provider:provider-cracked:cracked-api"))
     "implementation"(project(":identica-provider:provider-cracked:cracked-common"))
     "implementation"(project(":identica-provider:provider-cracked:cracked-database"))
-    "implementation"(project(":identica-provider:provider-cracked:cracked-crypto:hash-bcrypt"))
-    "implementation"(project(":identica-provider:provider-cracked:cracked-crypto:hash-argon2id"))
+    "implementation"(project(":identica-provider:provider-cracked:cracked-cryptography:common"))
+    "implementation"(project(":identica-provider:provider-cracked:cracked-cryptography:cryptography-bcrypt"))
+    "implementation"(project(":identica-provider:provider-cracked:cracked-cryptography:cryptography-argon2id"))
 
     "testImplementation"(project(":identica-provider:provider-cracked:cracked-api"))
 }

@@ -9,6 +9,7 @@ public class CryptographyModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(CryptographyRegistry.class).to(DefaultCryptographyRegistry.class).asEagerSingleton();
+		bind(CryptographyService.class).to(DefaultCryptographyService.class).asEagerSingleton();
 		Multibinder.newSetBinder(binder(), CryptographyAlgorithm.class);
 	}
 }

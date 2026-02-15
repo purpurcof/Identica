@@ -103,7 +103,7 @@ public class CrackedSettings {
 	@ToString
 	public static class Algorithms {
 		private Bcrypt bcrypt;
-		private Argon2id argon2id;
+		private Argon2 argon2;
 	}
 
 	@Getter
@@ -116,7 +116,7 @@ public class CrackedSettings {
 	@Getter
 	@Setter
 	@ToString
-	public static class Argon2id {
+	public static class Argon2 {
 		private int iterations;
 		private int parallelism;
 		private int memoryKb;

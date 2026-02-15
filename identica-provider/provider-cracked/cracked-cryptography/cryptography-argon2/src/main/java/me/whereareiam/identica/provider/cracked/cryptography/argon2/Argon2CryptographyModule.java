@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import me.whereareiam.identica.provider.cracked.CryptographyAlgorithm;
 
-public class Argon2IdCryptographyModule extends AbstractModule {
+public class Argon2CryptographyModule extends AbstractModule {
 	@Override
 	protected void configure() {
 		Multibinder.newSetBinder(binder(), CryptographyAlgorithm.class)

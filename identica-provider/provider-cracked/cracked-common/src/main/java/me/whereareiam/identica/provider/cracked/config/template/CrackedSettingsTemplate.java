@@ -44,7 +44,7 @@ public class CrackedSettingsTemplate implements TemplateProvider<CrackedSettings
 		registration.setPassword(password);
 
 		CrackedSettings.Cryptography cryptography = new CrackedSettings.Cryptography();
-		cryptography.setAlgorithm("argon2id");
+		cryptography.setAlgorithm("argon2");
 		cryptography.setAutoupgrade(true);
 
 		CrackedSettings.Algorithms algorithms = new CrackedSettings.Algorithms();
@@ -53,11 +53,11 @@ public class CrackedSettingsTemplate implements TemplateProvider<CrackedSettings
 		bcrypt.setCost(12);
 		algorithms.setBcrypt(bcrypt);
 
-		CrackedSettings.Argon2id argon2id = new CrackedSettings.Argon2id();
-		argon2id.setIterations(3);
-		argon2id.setParallelism(1);
-		argon2id.setMemoryKb(65536);
-		algorithms.setArgon2id(argon2id);
+		CrackedSettings.Argon2 argon2 = new CrackedSettings.Argon2();
+		argon2.setIterations(3);
+		argon2.setParallelism(1);
+		argon2.setMemoryKb(65536);
+		algorithms.setArgon2(argon2);
 
 		cryptography.setAlgorithms(algorithms);
 

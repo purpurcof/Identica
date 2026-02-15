@@ -121,6 +121,9 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		scenario.setAdvanceBusy(List.of(
+				"<white>Please wait, processing your request.</white>"
+		));
 		scenario.setNoCompletionPipeline(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",

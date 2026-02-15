@@ -9,8 +9,9 @@ import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.provider.ProviderAttemptStore;
+import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
@@ -23,15 +24,19 @@ import java.util.concurrent.CompletableFuture;
 
 @Singleton
 public class OfflineCheckStep extends AbstractProfileVerificationStep {
+	private final ProviderAttemptStore attemptStore;
+
 	@Inject
 	public OfflineCheckStep(
 			Provider<PremiumMessages> messagesProvider,
 			PipelineStateStore pipelineStateStore,
 			PremiumProfileStore profileStore,
+			ProviderAttemptStore attemptStore,
 			HandshakeStore handshakeStore,
 			Provider<Settings> settingsProvider
 	) {
 		super("offline-check", messagesProvider, pipelineStateStore, profileStore, handshakeStore, settingsProvider);
+		this.attemptStore = attemptStore;
 	}
 
 	@Override
@@ -47,7 +52,6 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 		if (username == null || username.isBlank() || ip == null || ip.isBlank())
 			return CompletableFuture.completedFuture(failed(verification));
 
-		PipelineStateReference reference = referenceFor(username, ip);
 		String providerSubject = readProfileId(username, ip);
 		if (providerSubject == null || providerSubject.isBlank()) {
 			return CompletableFuture.completedFuture(failed(verification));
@@ -55,8 +59,8 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 
 		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
 		if (offlineUuid != null && providerSubject.equalsIgnoreCase(offlineUuid.toString())) {
-			if (!hasHandshakeAttempt(reference)) {
-				markHandshakeAttempt(reference);
+			if (!hasHandshakeAttempt(username, ip)) {
+				markHandshakeAttempt(username, ip);
 				return CompletableFuture.completedFuture(requireReconnect(verification, username, ip));
 			}
 
@@ -91,11 +95,11 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 		handshakeStore.putInstruction(instruction);
 	}
 
-	private boolean hasHandshakeAttempt(@NotNull PipelineStateReference reference) {
-		return profileStore.hasAttempt(reference.getUsername(), reference.getIp());
+	private boolean hasHandshakeAttempt(@NotNull String username, @NotNull String ip) {
+		return attemptStore.hasAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
 	}
 
-	private void markHandshakeAttempt(@NotNull PipelineStateReference reference) {
-		profileStore.markAttempt(reference.getUsername(), reference.getIp());
+	private void markHandshakeAttempt(@NotNull String username, @NotNull String ip) {
+		attemptStore.markAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
 	}
 }

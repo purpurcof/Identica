@@ -433,6 +433,10 @@ public class Messages {
 			 */
 			private @NotNull List<String> pipelineKick;
 			/**
+			 * Message shown when an advance request is blocked by a pending lock.
+			 */
+			private @NotNull List<String> advanceBusy;
+			/**
 			 * Message shown when the pipeline finishes without a completion result.
 			 */
 			private @NotNull List<String> noCompletionPipeline;

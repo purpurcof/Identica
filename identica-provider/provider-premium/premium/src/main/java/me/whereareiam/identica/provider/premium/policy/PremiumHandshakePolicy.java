@@ -16,6 +16,7 @@ import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
+import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
@@ -36,6 +37,7 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 	private final PremiumProfileLookup profileLookup;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final PremiumProfileStore profileStore;
+	private final ProviderAttemptStore attemptStore;
 	private final Provider<Settings> settingsProvider;
 	private final HandshakeStore handshakeStore;
 
@@ -51,7 +53,7 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		if (username == null || username.isBlank())
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
-		if (profileStore.hasAttempt(username, ip)) {
+		if (attemptStore.hasAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip)) {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 
@@ -73,7 +75,7 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 					if (!hasProfile)
 						return HandshakeDecision.allow();
 
-					profileStore.markAttempt(username, ip);
+					attemptStore.markAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
 					return requestAndAllow(username, ip);
 				});
 	}

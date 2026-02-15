@@ -49,6 +49,10 @@ public class Replication {
 		 * Cache namespace for pipeline state.
 		 */
 		private @NotNull String pipelineState;
+		/**
+		 * Cache namespace for provider attempts.
+		 */
+		private @NotNull String attempts;
 	}
 
 	/**

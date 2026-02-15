@@ -41,12 +41,7 @@ public class PremiumProfileStore {
 		long ttlMs = resolveTtlMs(settingsProvider.get().getProfileSnapshotTtl());
 		if (ttlMs <= 0) return;
 
-		long attemptAt = 0L;
-		PremiumProfileSnapshot existing = find(username, ip);
-		if (existing != null)
-			attemptAt = existing.getAttemptAt();
-
-		PremiumProfileSnapshot snapshot = new PremiumProfileSnapshot(profileId, System.currentTimeMillis(), attemptAt);
+		PremiumProfileSnapshot snapshot = new PremiumProfileSnapshot(profileId, System.currentTimeMillis());
 		for (String key : keys) {
 			cache.put(key, snapshot, ttlMs).join();
 		}
@@ -65,48 +60,6 @@ public class PremiumProfileStore {
 
 		String key = KEY_USERNAME_PREFIX + normalizedUsername;
 		return cache.get(key).join().orElse(null);
-	}
-
-	public boolean hasAttempt(@Nullable String username, @Nullable String ip) {
-		PremiumProfileSnapshot snapshot = find(username, ip);
-		return snapshot != null && snapshot.getAttemptAt() > 0;
-	}
-
-	public void markAttempt(@Nullable String username, @Nullable String ip) {
-		List<String> keys = resolveKeys(username, ip);
-		if (keys.isEmpty()) return;
-
-		long ttlMs = resolveTtlMs(settingsProvider.get().getProfileSnapshotTtl());
-		if (ttlMs <= 0) return;
-
-		PremiumProfileSnapshot existing = find(username, ip);
-		String profileId = existing != null ? existing.getProfileId() : "";
-		long observedAt = existing != null ? existing.getObservedAt() : System.currentTimeMillis();
-
-		PremiumProfileSnapshot snapshot = new PremiumProfileSnapshot(profileId, observedAt, System.currentTimeMillis());
-		for (String key : keys) {
-			cache.put(key, snapshot, ttlMs).join();
-		}
-	}
-
-	public void clearAttempt(@Nullable String username, @Nullable String ip) {
-		List<String> keys = resolveKeys(username, ip);
-		if (keys.isEmpty()) return;
-
-		long ttlMs = resolveTtlMs(settingsProvider.get().getProfileSnapshotTtl());
-		if (ttlMs <= 0) return;
-
-		PremiumProfileSnapshot existing = find(username, ip);
-		if (existing == null) return;
-
-		PremiumProfileSnapshot snapshot = new PremiumProfileSnapshot(
-				existing.getProfileId(),
-				existing.getObservedAt(),
-				0L
-		);
-		for (String key : keys) {
-			cache.put(key, snapshot, ttlMs).join();
-		}
 	}
 
 	public void clear(@Nullable String username, @Nullable String ip) {

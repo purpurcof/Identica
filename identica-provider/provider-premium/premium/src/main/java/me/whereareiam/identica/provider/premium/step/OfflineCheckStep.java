@@ -11,10 +11,10 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttemptItem;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,10 +27,11 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 	public OfflineCheckStep(
 			Provider<PremiumMessages> messagesProvider,
 			PipelineStateStore pipelineStateStore,
+			PremiumProfileStore profileStore,
 			HandshakeStore handshakeStore,
 			Provider<Settings> settingsProvider
 	) {
-		super("offline-check", messagesProvider, pipelineStateStore, handshakeStore, settingsProvider);
+		super("offline-check", messagesProvider, pipelineStateStore, profileStore, handshakeStore, settingsProvider);
 	}
 
 	@Override
@@ -47,7 +48,7 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 			return CompletableFuture.completedFuture(failed(verification));
 
 		PipelineStateReference reference = referenceFor(username, ip);
-		String providerSubject = readProfileId(reference);
+		String providerSubject = readProfileId(username, ip);
 		if (providerSubject == null || providerSubject.isBlank()) {
 			return CompletableFuture.completedFuture(failed(verification));
 		}
@@ -59,7 +60,7 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 				return CompletableFuture.completedFuture(requireReconnect(verification, username, ip));
 			}
 
-			clearProfileItem(reference);
+			clearProfileItem(username, ip);
 			handshakeStore.invalidateInstruction(username);
 			return CompletableFuture.completedFuture(StepResult.failed(joinLines(verification.getInvalidSession())));
 		}
@@ -91,16 +92,10 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 	}
 
 	private boolean hasHandshakeAttempt(@NotNull PipelineStateReference reference) {
-		return pipelineStateStore.find(reference)
-				.flatMap(state -> state.item(PremiumHandshakeAttemptItem.class))
-				.isPresent();
+		return profileStore.hasAttempt(reference.getUsername(), reference.getIp());
 	}
 
 	private void markHandshakeAttempt(@NotNull PipelineStateReference reference) {
-		long ttlMillis = ttlMillis();
-		if (ttlMillis <= 0) return;
-
-		pipelineStateStore.update(reference, ttlMillis,
-				state -> state.withItem(new PremiumHandshakeAttemptItem(System.currentTimeMillis()), ttlMillis));
+		profileStore.markAttempt(reference.getUsername(), reference.getIp());
 	}
 }

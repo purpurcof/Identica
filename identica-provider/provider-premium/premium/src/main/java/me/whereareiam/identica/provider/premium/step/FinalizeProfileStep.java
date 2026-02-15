@@ -12,6 +12,7 @@ import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -22,10 +23,11 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 	public FinalizeProfileStep(
 			Provider<PremiumMessages> messagesProvider,
 			PipelineStateStore pipelineStateStore,
+			PremiumProfileStore profileStore,
 			HandshakeStore handshakeStore,
 			Provider<Settings> settingsProvider
 	) {
-		super("finalize-profile", messagesProvider, pipelineStateStore, handshakeStore, settingsProvider);
+		super("finalize-profile", messagesProvider, pipelineStateStore, profileStore, handshakeStore, settingsProvider);
 	}
 
 	@Override
@@ -42,7 +44,7 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 			return CompletableFuture.completedFuture(failed(verification));
 
 		PipelineStateReference reference = referenceFor(username, ip);
-		String providerSubject = readProfileId(reference);
+		String providerSubject = readProfileId(username, ip);
 		if (providerSubject == null || providerSubject.isBlank()) {
 			return CompletableFuture.completedFuture(failed(verification));
 		}
@@ -55,7 +57,7 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 				.build();
 
 		context.setProvider(provider);
-		clearProfileItem(reference);
+		clearProfileItem(username, ip);
 
 		return CompletableFuture.completedFuture(StepResult.complete(context));
 	}

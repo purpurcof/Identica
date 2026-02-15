@@ -7,9 +7,10 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.journey.step.type.SeamlessStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.provider.premium.PremiumIdentityMetaItem;
 import me.whereareiam.identica.provider.premium.PremiumVerifyAttemptItem;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,6 +19,7 @@ import java.util.List;
 public abstract class AbstractProfileVerificationStep extends SeamlessStep {
 	protected final Provider<PremiumMessages> messagesProvider;
 	protected final PipelineStateStore pipelineStateStore;
+	protected final PremiumProfileStore profileStore;
 	protected final HandshakeStore handshakeStore;
 	protected final Provider<Settings> settingsProvider;
 
@@ -25,12 +27,14 @@ public abstract class AbstractProfileVerificationStep extends SeamlessStep {
 			String name,
 			Provider<PremiumMessages> messagesProvider,
 			PipelineStateStore pipelineStateStore,
+			PremiumProfileStore profileStore,
 			HandshakeStore handshakeStore,
 			Provider<Settings> settingsProvider
 	) {
 		super(name);
 		this.messagesProvider = messagesProvider;
 		this.pipelineStateStore = pipelineStateStore;
+		this.profileStore = profileStore;
 		this.handshakeStore = handshakeStore;
 		this.settingsProvider = settingsProvider;
 	}
@@ -46,11 +50,9 @@ public abstract class AbstractProfileVerificationStep extends SeamlessStep {
 				.build();
 	}
 
-	protected @Nullable String readProfileId(@NotNull PipelineStateReference reference) {
-		return pipelineStateStore.find(reference)
-				.flatMap(state -> state.item(PremiumIdentityMetaItem.class))
-				.map(PremiumIdentityMetaItem::getProfileId)
-				.orElse(null);
+	protected @Nullable String readProfileId(@NotNull String username, @NotNull String ip) {
+		PremiumProfileSnapshot snapshot = profileStore.find(username, ip);
+		return snapshot != null ? snapshot.getProfileId() : null;
 	}
 
 	protected boolean hasAttempt(@NotNull PipelineStateReference reference) {
@@ -59,22 +61,14 @@ public abstract class AbstractProfileVerificationStep extends SeamlessStep {
 				.isPresent();
 	}
 
-	protected void markAttempt(@NotNull PipelineStateReference reference) {
-		long ttlMillis = ttlMillis();
-		pipelineStateStore.update(reference, ttlMillis,
-				state -> state.withItem(new PremiumVerifyAttemptItem(System.currentTimeMillis()), ttlMillis));
-	}
-
 	protected void clearAttempt(@NotNull PipelineStateReference reference) {
 		long ttlMillis = ttlMillis();
 		pipelineStateStore.update(reference, ttlMillis,
 				state -> state.withoutItem(PremiumVerifyAttemptItem.class));
 	}
 
-	protected void clearProfileItem(@NotNull PipelineStateReference reference) {
-		long ttlMillis = ttlMillis();
-		pipelineStateStore.update(reference, ttlMillis,
-				state -> state.withoutItem(PremiumIdentityMetaItem.class));
+	protected void clearProfileItem(@NotNull String username, @NotNull String ip) {
+		profileStore.clear(username, ip);
 	}
 
 	protected StepResult failed(PremiumMessages.Verification verification) {

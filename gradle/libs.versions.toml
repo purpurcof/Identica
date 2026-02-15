@@ -17,6 +17,7 @@ dialectica = "dev-332d268"
 
 guice = "7.0.0"
 annotations = "26.0.1"
+jedis = "7.0.0"
 
 # adventure
 adventure = "4.25.0"
@@ -38,18 +39,16 @@ mariadb = "3.5.6"
 sqlite = "3.45.3.0"
 h2 = "2.4.240"
 
-# redis
-jedis = "7.0.0"
-
-# security
-argon2 = "2.11"
-bcrypt = "0.10.2"
-
 # testing
 junit = "6.0.1"
 mockito = "5.20.0"
 testcontainers = "2.0.2"
 testcontainers-redis = "2.2.4"
+
+# providers
+# cracked provider
+argon2 = "2.12"
+bcrypt = "0.10.2"
 
 [libraries]
 
@@ -64,6 +63,7 @@ configura = { group = "me.whereareiam", name = "configura", version.ref = "confi
 commandant = { group = "me.whereareiam", name = "commandant", version.ref = "commandant" }
 keystone = { group = "me.whereareiam", name = "keystone", version.ref = "keystone" }
 dialectica = { group = "me.whereareiam", name = "dialectica", version.ref = "dialectica" }
+jedis = { group = "redis.clients", name = "jedis", version.ref = "jedis" }
 
 guice = { group = "com.google.inject", name = "guice", version.ref = "guice" }
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
@@ -92,13 +92,6 @@ mariadb = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version.re
 sqlite = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite" }
 h2 = { group = "com.h2database", name = "h2", version.ref = "h2" }
 
-# redis
-jedis = { group = "redis.clients", name = "jedis", version.ref = "jedis" }
-
-# security
-argon2 = { group = "de.mkammerer", name = "argon2-jvm", version.ref = "argon2" }
-bcrypt = { group = "at.favre.lib", name = "bcrypt", version.ref = "bcrypt" }
-
 # testing
 junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
 junit-platform = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit" }
@@ -108,6 +101,11 @@ testcontainers-junit = { group = "org.testcontainers", name = "testcontainers-ju
 testcontainers-mariadb = { group = "org.testcontainers", name = "testcontainers-mariadb", version.ref = "testcontainers" }
 testcontainers-postgresql = { group = "org.testcontainers", name = "testcontainers-postgresql", version.ref = "testcontainers" }
 testcontainers-redis = { group = "com.redis", name = "testcontainers-redis", version.ref = "testcontainers-redis" }
+
+# providers
+# cracked provider
+argon2 = { group = "de.mkammerer", name = "argon2-jvm", version.ref = "argon2" }
+bcrypt = { group = "at.favre.lib", name = "bcrypt", version.ref = "bcrypt" }
 
 [bundles]
 

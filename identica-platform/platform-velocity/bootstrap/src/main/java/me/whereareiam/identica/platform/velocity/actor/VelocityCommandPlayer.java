@@ -12,7 +12,7 @@ public class VelocityCommandPlayer extends Identity {
 	private final Player player;
 
 	public VelocityCommandPlayer(@NotNull Player player) {
-		super(player.getUniqueId(), player.getUsername());
+		super(player.getUniqueId(), player.getUsername(), resolveIp(player));
 		this.player = player;
 	}
 
@@ -44,5 +44,15 @@ public class VelocityCommandPlayer extends Identity {
 	@Override
 	public @NotNull Audience getAudience() {
 		return player;
+	}
+
+	private static String resolveIp(@NotNull Player player) {
+		if (player.getRemoteAddress() == null)
+			return null;
+
+		if (player.getRemoteAddress().getAddress() != null)
+			return player.getRemoteAddress().getAddress().getHostAddress();
+
+		return player.getRemoteAddress().getHostString();
 	}
 }

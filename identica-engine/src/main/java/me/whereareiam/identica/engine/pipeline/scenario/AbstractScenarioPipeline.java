@@ -12,6 +12,7 @@ import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineCursor;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.AdvanceMarkerItem;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.group.GroupOutcome;
@@ -33,6 +34,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 public abstract class AbstractScenarioPipeline {
+	private static final long ADVANCE_LOCK_FALLBACK_MS = 5_000L;
+
 	private final PipelineRegistry registry;
 	private final Provider<Messages> messagesProvider;
 	private final Provider<Settings> settingsProvider;
@@ -54,29 +57,41 @@ public abstract class AbstractScenarioPipeline {
 	}
 
 	public @NotNull CompletionStage<PipelineResult> execute(@Nullable ConnectionRequest request) {
-		return execute(request, null);
+		return execute(request, null, PendingMode.RESUME);
 	}
 
 	public @NotNull CompletionStage<PipelineResult> execute(
 			@Nullable ConnectionRequest request,
 			@Nullable ResumeRequest resumeRequest
 	) {
+		return execute(request, resumeRequest, PendingMode.RESUME);
+	}
+
+	public @NotNull CompletionStage<PipelineResult> executeAdvance(@NotNull ResumeRequest advanceRequest) {
+		return execute(null, advanceRequest, PendingMode.ADVANCE);
+	}
+
+	private @NotNull CompletionStage<PipelineResult> execute(
+			@Nullable ConnectionRequest request,
+			@Nullable ResumeRequest pendingRequest,
+			@NotNull PendingMode pendingMode
+	) {
 		PipelineState pipelineState = PipelineState.initial();
 		pipelineState.setPipelineType(pipelineType);
 
-		ResumeResolution resumeResolution = resolveResume(request, resumeRequest);
-		if (resumeResolution.result() != null)
-			return CompletableFuture.completedFuture(resumeResolution.result());
-		if (resumeResolution.state() != null)
-			pipelineState = resumeResolution.state();
+		ResumeResolution pendingResolution = resolvePending(request, pendingRequest, pendingMode);
+		if (pendingResolution.result() != null)
+			return CompletableFuture.completedFuture(pendingResolution.result());
+		if (pendingResolution.state() != null)
+			pipelineState = pendingResolution.state();
 
-		onStart(pipelineState, resumeResolution.state() != null);
+		onStart(pipelineState, pendingResolution.state() != null);
 
 		PipelineResult startResult = ensureScenario(pipelineState, request);
 		if (startResult != null)
 			return CompletableFuture.completedFuture(startResult);
 
-		return run(pipelineState, resumeRequest);
+		return run(pipelineState, pendingRequest, pendingMode);
 	}
 
 	public @NotNull PipelineType type() {
@@ -143,7 +158,8 @@ public abstract class AbstractScenarioPipeline {
 
 	private @NotNull CompletableFuture<PipelineResult> run(
 			@NotNull PipelineState pipelineState,
-			@Nullable ResumeRequest resumeRequest
+			@Nullable ResumeRequest pendingRequest,
+			@NotNull PendingMode pendingMode
 	) {
 		ExecutionSnapshot snapshot = snapshot(pipelineState);
 		if (snapshot.groups().isEmpty())
@@ -155,7 +171,10 @@ public abstract class AbstractScenarioPipeline {
 					PipelineResult result = executionState.result;
 					if (result == null) result = failedNoCompletion();
 					result = result.withState(pipelineState);
-					persistState(pipelineState, result, resumeRequest);
+					if (pendingMode == PendingMode.ADVANCE) {
+						pipelineState.removeItem(AdvanceMarkerItem.class);
+					}
+					persistState(pipelineState, result, pendingRequest);
 
 					return result;
 				})
@@ -332,15 +351,27 @@ public abstract class AbstractScenarioPipeline {
 		return null;
 	}
 
+	private @NotNull ResumeResolution resolvePending(
+			@Nullable ConnectionRequest request,
+			@Nullable ResumeRequest pendingRequest,
+			@NotNull PendingMode pendingMode
+	) {
+		if (pendingRequest == null) return new ResumeResolution(null, null);
+
+		if (pendingMode == PendingMode.RESUME)
+			return resolveResume(request, pendingRequest);
+
+		return resolveAdvance(request, pendingRequest);
+	}
+
 	private @NotNull ResumeResolution resolveResume(
 			@Nullable ConnectionRequest request,
-			@Nullable ResumeRequest resumeRequest
+			@NotNull ResumeRequest resumeRequest
 	) {
-		if (resumeRequest == null) return new ResumeResolution(null, null);
-
+		PipelineStateReference resumeReference = PipelineStateReference.from(resumeRequest);
 		Settings.Scenario scenario = resolveScenario(pipelineType);
 		if (!scenario.isAllowResume()) {
-			pipelineStateStore.clear(PipelineStateReference.from(resumeRequest));
+			pipelineStateStore.clear(resumeReference);
 			return resumeUnavailable(request);
 		}
 
@@ -364,6 +395,70 @@ public abstract class AbstractScenarioPipeline {
 		stored.setPipelineType(pipelineType);
 
 		return new ResumeResolution(stored, null);
+	}
+
+	private @NotNull ResumeResolution resolveAdvance(
+			@Nullable ConnectionRequest request,
+			@NotNull ResumeRequest advanceRequest
+	) {
+		PipelineStateReference reference = PipelineStateReference.from(advanceRequest);
+		PipelineState stored = pipelineStateStore.find(reference).orElse(null);
+		if (stored == null) {
+			return resumeUnavailable(request);
+		}
+
+		PipelineType storedType = stored.getPipelineType();
+		ScenarioContext storedContext = stored.getScenario(pipelineType);
+		if (storedType == null || storedType != pipelineType || storedContext == null) {
+			return resumeUnavailable(request);
+		}
+
+		if (!isPending(stored)) {
+			return resumeUnavailable(request);
+		}
+
+		long now = System.currentTimeMillis();
+		AdvanceMarkerItem lockItem = stored.item(AdvanceMarkerItem.class).orElse(null);
+		if (lockItem != null && lockItem.getExpiresAt() > now) {
+			return new ResumeResolution(null, PipelineResult.waiting(advanceBusyMessage()));
+		}
+
+		long lockTtlMs = resolveAdvanceLockTtlMillis();
+		AdvanceMarkerItem nextLock = new AdvanceMarkerItem(resolveLockOwner(advanceRequest), now + lockTtlMs);
+		stored.putItem(nextLock, lockTtlMs);
+
+		ScenarioContext merged = mergeContext(storedContext, advanceRequest);
+		stored.setScenario(merged);
+		stored.setPipelineType(pipelineType);
+
+		long ttlMs = resolveScenario(pipelineType).pipelineTtlMillis();
+		if (ttlMs > 0) {
+			pipelineStateStore.save(reference, stored, ttlMs);
+		}
+
+		return new ResumeResolution(stored, null);
+	}
+
+	private @Nullable UUID resolveLockOwner(@NotNull ResumeRequest request) {
+		UUID ownerId = request.getConnectionUniqueId();
+		if (ownerId != null) return ownerId;
+		return request.getIdentityUniqueId();
+	}
+
+	private @NotNull String advanceBusyMessage() {
+		List<String> lines = resolveScenarioMessages(pipelineType).getAdvanceBusy();
+		if (lines.isEmpty())
+			return "";
+		return joinMessage(lines);
+	}
+
+	private long resolveAdvanceLockTtlMillis() {
+		try {
+			long ttlMs = resolveScenario(pipelineType).advanceLockTtlMillis();
+			return ttlMs > 0 ? ttlMs : ADVANCE_LOCK_FALLBACK_MS;
+		} catch (Exception ignored) {
+			return ADVANCE_LOCK_FALLBACK_MS;
+		}
 	}
 
 	private @NotNull ResumeResolution resumeUnavailable(@Nullable ConnectionRequest request) {
@@ -436,6 +531,11 @@ public abstract class AbstractScenarioPipeline {
 	private record ExecutionSnapshot(
 			@NotNull List<GroupSnapshot<?>> groups
 	) {
+	}
+
+	private enum PendingMode {
+		RESUME,
+		ADVANCE
 	}
 
 	private static final class ExecutionState {

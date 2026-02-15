@@ -6,6 +6,7 @@ import me.whereareiam.identica.engine.pipeline.scenario.authentication.Authentic
 import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
+import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
@@ -70,6 +71,15 @@ public class ScenarioRegistry {
 		return selectNewFlow(fallbackRequest);
 	}
 
+	public @NotNull AbstractScenarioPipeline selectForAdvance(@NotNull AdvanceRequest request) {
+		AbstractScenarioPipeline advanceRunner = resolveAdvanceRunner(request);
+		if (advanceRunner != null)
+			return advanceRunner;
+
+		ConnectionRequest fallbackRequest = toConnectionRequest(request);
+		return selectNewFlow(fallbackRequest);
+	}
+
 	public @Nullable AbstractScenarioPipeline resolve(@NotNull PipelineType type) {
 		return runnersByType.get(type);
 	}
@@ -100,6 +110,25 @@ public class ScenarioRegistry {
 		return runner.isPending(stored) ? runner : null;
 	}
 
+	private @Nullable AbstractScenarioPipeline resolveAdvanceRunner(@NotNull AdvanceRequest request) {
+		PipelineState stored = pipelineStateStore.find(PipelineStateReference.from(request)).orElse(null);
+		if (stored == null) return null;
+
+		PipelineType storedType = stored.getPipelineType();
+		if (storedType != null) {
+			AbstractScenarioPipeline runner = runnersByType.get(storedType);
+			if (runner != null && runner.isPending(stored))
+				return runner;
+		}
+
+		for (AbstractScenarioPipeline runner : runners) {
+			if (runner.isPending(stored))
+				return runner;
+		}
+
+		return null;
+	}
+
 	private @Nullable ResumeRequest buildResumeRequest(@Nullable ConnectionRequest request) {
 		if (request == null) return null;
 		return ResumeRequest.builder()
@@ -110,6 +139,15 @@ public class ScenarioRegistry {
 	}
 
 	private @Nullable ConnectionRequest toConnectionRequest(@NotNull ResumeRequest request) {
+		if (!request.hasIdentity()) return null;
+		return ConnectionRequest.builder()
+				.connectionUniqueId(request.getConnectionUniqueId())
+				.identity(request.getIdentity())
+				.intendedServer(request.getIntendedServer())
+				.build();
+	}
+
+	private @Nullable ConnectionRequest toConnectionRequest(@NotNull AdvanceRequest request) {
 		if (!request.hasIdentity()) return null;
 		return ConnectionRequest.builder()
 				.connectionUniqueId(request.getConnectionUniqueId())

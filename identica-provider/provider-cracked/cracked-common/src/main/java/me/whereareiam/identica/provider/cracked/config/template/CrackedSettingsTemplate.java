@@ -4,56 +4,62 @@ import com.google.inject.Singleton;
 import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
 
+import java.time.Duration;
+
 @Singleton
 public class CrackedSettingsTemplate implements TemplateProvider<CrackedSettings> {
 	@Override
 	public CrackedSettings supply(CrackedSettings config) {
-		CrackedSettings.Registration registration = new CrackedSettings.Registration();
+		CrackedSettings.Scenario.Registration registration = new CrackedSettings.Scenario.Registration();
 		registration.setEnabled(true);
 		registration.setRequireRepeat(true);
 
-		CrackedSettings.Authentication authentication = new CrackedSettings.Authentication();
-		authentication.setMaxAttempts(5);
-		authentication.setLockSeconds(300);
-		CrackedSettings.Session session = new CrackedSettings.Session();
-		session.setAutoLoginSeconds(1209600L);
-		session.setRequireSameIp(true);
-		authentication.setSession(session);
+		CrackedSettings.Scenario.Authentication authentication = new CrackedSettings.Scenario.Authentication();
+		CrackedSettings.Scenario.Authentication.Bruteforce bruteforce = new CrackedSettings.Scenario.Authentication.Bruteforce();
+		bruteforce.setMaxAttempts(5);
+		CrackedSettings.Scenario.Authentication.Bruteforce.Lockout lockout =
+				new CrackedSettings.Scenario.Authentication.Bruteforce.Lockout();
+		lockout.setEnabled(true);
+		lockout.setDuration(Duration.ofSeconds(300));
+		bruteforce.setLockout(lockout);
+		CrackedSettings.Scenario.Authentication.Bruteforce.Warning warning =
+				new CrackedSettings.Scenario.Authentication.Bruteforce.Warning();
+		warning.setEnabled(true);
+		warning.setThresholdPercentage(50);
+		bruteforce.setWarning(warning);
+		authentication.setBruteforce(bruteforce);
 
 		CrackedSettings.Scenario scenario = new CrackedSettings.Scenario();
 		scenario.setRegistration(registration);
 		scenario.setAuthentication(authentication);
 		config.setScenario(scenario);
 
-		CrackedSettings.Username username = new CrackedSettings.Username();
+		CrackedSettings.Scenario.Registration.Username username = new CrackedSettings.Scenario.Registration.Username();
 		username.setMinLength(3);
 		username.setMaxLength(16);
-		username.setAllowedPattern("^[a-zA-Z0-9_]+$");
+		username.setPattern("^[a-zA-Z0-9_]+$");
 
-		CrackedSettings.Requirements requirements = new CrackedSettings.Requirements();
-		requirements.setMinLength(6);
-		requirements.setMaxLength(64);
-		requirements.setMinUpper(0);
-		requirements.setMinLower(1);
-		requirements.setMinNumber(1);
-		requirements.setMinSpecial(0);
-
-		CrackedSettings.Password password = new CrackedSettings.Password();
-		password.setRequirements(requirements);
+		CrackedSettings.Scenario.Registration.Password password = new CrackedSettings.Scenario.Registration.Password();
+		password.setMinLength(6);
+		password.setMaxLength(32);
+		password.setMinUpper(1);
+		password.setMinLower(1);
+		password.setMinNumber(1);
+		password.setMinSpecial(1);
 		registration.setUsername(username);
 		registration.setPassword(password);
 
 		CrackedSettings.Cryptography cryptography = new CrackedSettings.Cryptography();
-		cryptography.setAlgorithm("argon2");
+		cryptography.setAlgorithm("bcrypt");
 		cryptography.setAutoupgrade(true);
 
-		CrackedSettings.Algorithms algorithms = new CrackedSettings.Algorithms();
+		CrackedSettings.Cryptography.Algorithms algorithms = new CrackedSettings.Cryptography.Algorithms();
 
-		CrackedSettings.Bcrypt bcrypt = new CrackedSettings.Bcrypt();
+		CrackedSettings.Cryptography.Algorithms.Bcrypt bcrypt = new CrackedSettings.Cryptography.Algorithms.Bcrypt();
 		bcrypt.setCost(12);
 		algorithms.setBcrypt(bcrypt);
 
-		CrackedSettings.Argon2 argon2 = new CrackedSettings.Argon2();
+		CrackedSettings.Cryptography.Algorithms.Argon2 argon2 = new CrackedSettings.Cryptography.Algorithms.Argon2();
 		argon2.setIterations(3);
 		argon2.setParallelism(1);
 		argon2.setMemoryKb(65536);
@@ -63,7 +69,7 @@ public class CrackedSettingsTemplate implements TemplateProvider<CrackedSettings
 
 		config.setCryptography(cryptography);
 
-		CrackedSettings.Cache cache = new CrackedSettings.Cache();
+		CrackedSettings.Replication.Cache cache = new CrackedSettings.Replication.Cache();
 		cache.setLockout("cracked-lockout");
 		CrackedSettings.Replication replication = new CrackedSettings.Replication();
 		replication.setCache(cache);

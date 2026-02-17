@@ -17,20 +17,29 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.ratelimit.RateLimitDefinition;
+import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.type.event.EventOrder;
+import me.whereareiam.identica.common.ratelimit.ResumeSpamRateLimitDefinition;
 
 public class Identica implements EventListener {
 	private final Injector injector;
 	private final ListenerRegistrar listenerRegistrar;
+	private final Registry<RateLimitDefinition> rateLimitRegistry;
+	private final ResumeSpamRateLimitDefinition resumeSpamRateLimitDefinition;
 
 	@Inject
 	public Identica(
 			Injector injector,
 			EventManager eventManager,
-			ListenerRegistrar listenerRegistrar
+			ListenerRegistrar listenerRegistrar,
+			Registry<RateLimitDefinition> rateLimitRegistry,
+			ResumeSpamRateLimitDefinition resumeSpamRateLimitDefinition
 	) {
 		this.injector = injector;
 		this.listenerRegistrar = listenerRegistrar;
+		this.rateLimitRegistry = rateLimitRegistry;
+		this.resumeSpamRateLimitDefinition = resumeSpamRateLimitDefinition;
 
 		eventManager.register(this);
 	}
@@ -38,6 +47,8 @@ public class Identica implements EventListener {
 	@IdenticEvent
 	public void onBootstrapped(IdenticaBootstrappedEvent event) {
 		Logger.init(injector.getInstance(LoggingHelper.class));
+
+		rateLimitRegistry.register(resumeSpamRateLimitDefinition);
 
 		injector.getInstance(Settings.class);
 		injector.getInstance(Messages.class);
@@ -62,6 +73,8 @@ public class Identica implements EventListener {
 	@IdenticEvent(EventOrder.LOW)
 	public void onShutdown(IdenticaShutdownEvent event) {
 		injector.getInstance(ProviderManager.class).unloadProviders();
+
+		rateLimitRegistry.unregister(resumeSpamRateLimitDefinition);
 
 		IdenticaAPI.shutdown();
 	}

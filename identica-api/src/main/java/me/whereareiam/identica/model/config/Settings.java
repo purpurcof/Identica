@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.model.Event;
+import me.whereareiam.identica.model.ratelimit.RateLimitPolicy;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
@@ -48,6 +49,7 @@ public class Settings {
 		private @NotNull AuthenticationScenario authentication;
 		private @NotNull RegistrationScenario registration;
 		private @NotNull MigrationScenario migration;
+		private @NotNull RateLimits rateLimits;
 
 		/**
 		 * Returns handshake instruction TTL in milliseconds with validation.
@@ -74,6 +76,16 @@ public class Settings {
 
 			return attemptTtl.toMillis();
 		}
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class RateLimits {
+		/**
+		 * Rate limit applied when clients spam pipeline resume/advance requests.
+		 */
+		private @NotNull RateLimitPolicy resumeSpam;
 	}
 
 	@Getter

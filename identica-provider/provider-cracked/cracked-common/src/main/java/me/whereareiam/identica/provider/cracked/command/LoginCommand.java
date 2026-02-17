@@ -36,7 +36,7 @@ public class LoginCommand {
 		if (!(sender instanceof Identity identity))
 			return;
 
-		CrackedMessages.Login messages = messagesProvider.get().getLogin();
+		CrackedMessages.Scenario.Authentication messages = messagesProvider.get().getScenario().getAuthentication();
 		if (!hasPending(identity)) {
 			sendMessage(identity, messages.getNoPending());
 			return;
@@ -50,7 +50,7 @@ public class LoginCommand {
 
 	private void handleDecision(
 			@NotNull Identity identity,
-			@NotNull CrackedMessages.Login messages,
+			@NotNull CrackedMessages.Scenario.Authentication messages,
 			ConnectionDecision decision
 	) {
 		if (decision == null || decision.getStatus() == null)

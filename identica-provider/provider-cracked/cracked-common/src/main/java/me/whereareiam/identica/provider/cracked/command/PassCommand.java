@@ -36,7 +36,7 @@ public class PassCommand {
 		if (!(sender instanceof Identity identity))
 			return;
 
-		CrackedMessages.Register messages = messagesProvider.get().getRegister();
+		CrackedMessages.Scenario.Registration messages = messagesProvider.get().getScenario().getRegistration();
 		if (!hasPending(identity)) {
 			sendMessage(identity, messages.getNoPending());
 			return;
@@ -54,7 +54,7 @@ public class PassCommand {
 		if (!(sender instanceof Identity identity))
 			return;
 
-		CrackedMessages.Register messages = messagesProvider.get().getRegister();
+		CrackedMessages.Scenario.Registration messages = messagesProvider.get().getScenario().getRegistration();
 		if (!hasPending(identity)) {
 			sendMessage(identity, messages.getNoPending());
 			return;
@@ -68,7 +68,7 @@ public class PassCommand {
 
 	private void handleDecision(
 			@NotNull Identity identity,
-			@NotNull CrackedMessages.Register messages,
+			@NotNull CrackedMessages.Scenario.Registration messages,
 			ConnectionDecision decision
 	) {
 		if (decision == null || decision.getStatus() == null)

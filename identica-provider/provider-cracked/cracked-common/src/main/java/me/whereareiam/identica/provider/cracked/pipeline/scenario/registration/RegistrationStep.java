@@ -57,13 +57,13 @@ public class RegistrationStep extends AbstractCrackedRegistrationStep {
 
 		CrackedSettings settings = settingsProvider.get();
 		CrackedMessages messages = messagesProvider.get();
-		CrackedSettings.Registration registrationSettings = settings != null
+		CrackedSettings.Scenario.Registration registrationSettings = settings != null
 				&& settings.getScenario() != null
 				? settings.getScenario().getRegistration()
 				: null;
 
 		if (registrationSettings == null || !registrationSettings.isEnabled()) {
-			return CompletableFuture.completedFuture(StepResult.denied(messages.getRegister().getDisabled()));
+			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getRegistration().getDisabled()));
 		}
 
 		boolean requireRepeat = registrationSettings.isRequireRepeat();
@@ -82,7 +82,7 @@ public class RegistrationStep extends AbstractCrackedRegistrationStep {
 			return CompletableFuture.completedFuture(StepResult.waiting(joinRegisterPrompt(messages)));
 
 		if (input.isConfirm())
-			return CompletableFuture.completedFuture(StepResult.waiting(messages.getRegister().getNoPending()));
+			return CompletableFuture.completedFuture(StepResult.waiting(messages.getScenario().getRegistration().getNoPending()));
 
 		String error = passwordPolicy.validate(input.getPassword());
 		if (error != null && !error.isBlank())
@@ -114,7 +114,7 @@ public class RegistrationStep extends AbstractCrackedRegistrationStep {
 	}
 
 	private String joinRegisterPrompt(CrackedMessages messages) {
-		return joinLines(messages.getRegister().getPrompt());
+		return joinLines(messages.getScenario().getRegistration().getPrompt());
 	}
 
 }

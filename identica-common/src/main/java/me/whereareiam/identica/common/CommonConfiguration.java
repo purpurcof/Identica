@@ -41,6 +41,9 @@ import me.whereareiam.identica.common.provider.DefaultProviderOperations;
 import me.whereareiam.identica.common.provider.SerializerEngineProvider;
 import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
+import me.whereareiam.identica.common.ratelimit.DefaultRateLimitService;
+import me.whereareiam.identica.common.ratelimit.RateLimitRegistry;
+import me.whereareiam.identica.common.ratelimit.ResumeSpamRateLimitDefinition;
 import me.whereareiam.identica.common.routing.PhaseRoutingService;
 import me.whereareiam.identica.common.routing.DefaultRoutingStateStore;
 import me.whereareiam.identica.common.routing.RoutingLifecycle;
@@ -62,6 +65,8 @@ import me.whereareiam.identica.provider.ProviderDescriptorReader;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.ratelimit.RateLimitService;
+import me.whereareiam.identica.ratelimit.RateLimitDefinition;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.routing.RoutingStateStore;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -112,6 +117,10 @@ public class CommonConfiguration extends AbstractModule {
 				.annotatedWith(Names.named("reloadables"))
 				.toProvider(ReloadableRegistry.class)
 				.asEagerSingleton();
+		bind(ResumeSpamRateLimitDefinition.class).asEagerSingleton();
+		bind(new TypeLiteral<Registry<RateLimitDefinition>>() {})
+				.to(RateLimitRegistry.class)
+				.asEagerSingleton();
 		bind(HandshakeStore.class).to(DefaultHandshakeStore.class).asEagerSingleton();
 		bind(ProviderAttemptStore.class).to(DefaultProviderAttemptStore.class).asEagerSingleton();
 
@@ -124,6 +133,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(ReplicationAdapter.class).to(DefaultReplicationAdapter.class).asEagerSingleton();
 		bind(ReplicationSystem.class).to(DefaultReplicationSystem.class).asEagerSingleton();
 		bind(ReservationCache.class).to(DefaultReservationCache.class).asEagerSingleton();
+		bind(RateLimitService.class).to(DefaultRateLimitService.class).asEagerSingleton();
 
 		// Account + presence
 		bind(RegistrationAccountService.class).to(DefaultRegistrationAccountService.class).asEagerSingleton();

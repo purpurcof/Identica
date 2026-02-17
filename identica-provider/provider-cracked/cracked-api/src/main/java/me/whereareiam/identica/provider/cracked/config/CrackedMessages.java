@@ -10,10 +10,8 @@ import java.util.List;
 @Setter
 @ToString
 public class CrackedMessages {
-	private Register register;
-	private Login login;
+	private Scenario scenario;
 	private Password password;
-	private Lockout lockout;
 	private ChangePassword changePassword;
 	private Commands commands;
 	private Conflict conflict;
@@ -21,25 +19,42 @@ public class CrackedMessages {
 	@Getter
 	@Setter
 	@ToString
-	public static class Register {
-		private List<String> prompt;
-		private List<String> confirmPrompt;
-		private String success;
-		private String disabled;
-		private String alreadyRegistered;
-		private String mismatch;
-		private String noPending;
-	}
+	public static class Scenario {
+		private Authentication authentication;
+		private Registration registration;
 
-	@Getter
-	@Setter
-	@ToString
-	public static class Login {
-		private List<String> prompt;
-		private String success;
-		private String invalid;
-		private String notRegistered;
-		private String noPending;
+		@Getter
+		@Setter
+		@ToString
+		public static class Registration {
+			private List<String> prompt;
+			private List<String> confirmPrompt;
+			private String success;
+			private String disabled;
+			private String alreadyRegistered;
+			private String mismatch;
+			private String noPending;
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Authentication {
+			private List<String> prompt;
+			private String success;
+			private String invalid;
+			private String notRegistered;
+			private String noPending;
+			private Bruteforce bruteforce;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Bruteforce {
+				private List<String> exceeded;
+				private List<String> remaining;
+			}
+		}
 	}
 
 	@Getter
@@ -52,13 +67,6 @@ public class CrackedMessages {
 		private String missingLower;
 		private String missingNumber;
 		private String missingSpecial;
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class Lockout {
-		private List<String> exceeded;
 	}
 
 	@Getter

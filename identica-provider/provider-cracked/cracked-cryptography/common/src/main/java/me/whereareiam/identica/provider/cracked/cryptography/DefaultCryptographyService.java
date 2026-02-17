@@ -63,13 +63,13 @@ public class DefaultCryptographyService implements CryptographyService {
 		CryptographyOptions options = new CryptographyOptions();
 		if (cryptography == null) return options;
 
-		CrackedSettings.Algorithms algorithms = cryptography.getAlgorithms();
+		CrackedSettings.Cryptography.Algorithms algorithms = cryptography.getAlgorithms();
 		if (algorithms == null) return options;
 
-		CrackedSettings.Bcrypt bcrypt = algorithms.getBcrypt();
+		CrackedSettings.Cryptography.Algorithms.Bcrypt bcrypt = algorithms.getBcrypt();
 		if (bcrypt != null) options.setBcryptCost(bcrypt.getCost());
 
-		CrackedSettings.Argon2 argon2 = algorithms.getArgon2();
+		CrackedSettings.Cryptography.Algorithms.Argon2 argon2 = algorithms.getArgon2();
 		if (argon2 != null) {
 			options.setArgon2Iterations(argon2.getIterations());
 			options.setArgon2MemoryKb(argon2.getMemoryKb());

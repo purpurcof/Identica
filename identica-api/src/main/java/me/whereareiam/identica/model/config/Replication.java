@@ -53,6 +53,10 @@ public class Replication {
 		 * Cache namespace for provider attempts.
 		 */
 		private @NotNull String attempts;
+		/**
+		 * Cache namespace for rate limits.
+		 */
+		private @NotNull String rateLimits;
 	}
 
 	/**

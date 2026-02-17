@@ -418,6 +418,10 @@ public class Messages {
 		 * Message shown when an existing session is kicked due to a new login.
 		 */
 		private @NotNull List<String> concurrentLoginKick;
+		/**
+		 * Message shown when resume or advance requests are rate limited.
+		 */
+		private @NotNull List<String> resumeRateLimited;
 		private @NotNull Journey journey;
 		private @NotNull Authentication authentication;
 		private @NotNull Registration registration;

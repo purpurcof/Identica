@@ -10,44 +10,71 @@ import java.util.List;
 public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages> {
 	@Override
 	public CrackedMessages supply(CrackedMessages messages) {
-		CrackedMessages.Register register = new CrackedMessages.Register();
-		register.setPrompt(List.of(
-				" ",
-				" <green><bold>Identica</bold>",
-				" ",
-				"  <white>Create your cracked account</white>",
-				"  <white>Use <gold>/pass <password></gold> to continue</white>",
-				" "
-		));
-		register.setConfirmPrompt(List.of(
-				" ",
-				" <green><bold>Identica</bold>",
-				" ",
-				"  <white>Confirm your password</white>",
-				"  <white>Use <gold>/passconfirm <repeat></gold> to continue</white>",
-				" "
-		));
-		register.setSuccess("{prefix}<white>Your account was <green>registered</green>.</white>");
-		register.setDisabled("{prefix}<white>Registration is <red>disabled</red>.</white>");
-		register.setAlreadyRegistered("{prefix}<white>Your account is already <green>registered</green>.</white>");
-		register.setMismatch("{prefix}<white>Passwords do not <red>match</red>.</white>");
-		register.setNoPending("{prefix}<white>No pending registration.</white>");
-		messages.setRegister(register);
+		CrackedMessages.Scenario scenario = new CrackedMessages.Scenario();
 
-		CrackedMessages.Login login = new CrackedMessages.Login();
-		login.setPrompt(List.of(
+		CrackedMessages.Scenario.Registration registration = new CrackedMessages.Scenario.Registration();
+		registration.setPrompt(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
 				" ",
-				"  <white>Login required</white>",
-				"  <white>Use <gold>/login <password></gold> to continue</white>",
+				"  <white>To create your cracked account, you have to</white>",
+				"  <white>walk through some registration steps.</white>",
+				" ",
+				"  <gray>Information:",
+				"   <gray>6-32 characters, at least 1 uppercase, 1 lowercase,</gray>",
+				"   <gray>1 number, and 1 special character.</gray>",
+				" ", 
+				"  <white>Use <yellow>/pass</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
-		login.setSuccess("{prefix}<white>Successfully <green>logged in</green>.</white>");
-		login.setInvalid("{prefix}<white>Invalid <red>password</red>.</white>");
-		login.setNotRegistered("{prefix}<white>No cracked account found.</white>");
-		login.setNoPending("{prefix}<white>No pending login.</white>");
-		messages.setLogin(login);
+		registration.setConfirmPrompt(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>To finish your cracked account registration,</white>",
+				"  <white>repeat the same password you entered before.</white>",
+				" ",
+				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Password]</gray> to continue.</white>",
+				" "
+		));
+		registration.setSuccess("{prefix}<white>You have been <green>successfully registered</green>.</white>");
+		registration.setDisabled("{prefix}<white>Registration is <red>disabled</red>.</white>");
+		registration.setAlreadyRegistered("{prefix}<white>Your account is already <green>registered</green>.</white>");
+		registration.setMismatch("{prefix}<white>Passwords do not <red>match</red>.</white>");
+		registration.setNoPending("{prefix}<white>No pending registration.</white>");
+		scenario.setRegistration(registration);
+
+		CrackedMessages.Scenario.Authentication authentication = new CrackedMessages.Scenario.Authentication();
+		authentication.setPrompt(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Welcome back to our server.</white>",
+				"  <white>Please log in to proceed.</white>",
+				" ",
+				"  <white>Use <yellow>/login</yellow> <gray>[Password]</gray> to continue.</white>",
+				" "
+		));
+		authentication.setSuccess("{prefix}<white>Successfully <green>logged in</green>.</white>");
+		authentication.setInvalid("{prefix}<white>Invalid <red>password</red>.</white>");
+		authentication.setNotRegistered("{prefix}<white>No cracked account found.</white>");
+		authentication.setNoPending("{prefix}<white>No pending login.</white>");
+
+		CrackedMessages.Scenario.Authentication.Bruteforce bruteforce = new CrackedMessages.Scenario.Authentication.Bruteforce();
+		bruteforce.setExceeded(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Too many attempts.</white>",
+				"<white>Try again in <red>{seconds}s</red>.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		bruteforce.setRemaining(List.of(
+				"{prefix}<white>You have <red>{remaining}</red> tries left.</white>"
+		));
+		authentication.setBruteforce(bruteforce);
+		scenario.setAuthentication(authentication);
+		messages.setScenario(scenario);
 
 		CrackedMessages.Password password = new CrackedMessages.Password();
 		password.setTooShort("{prefix}<white>Password is too <red>short</red>.</white>");
@@ -57,17 +84,6 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 		password.setMissingNumber("{prefix}<white>Password needs a <red>number</red>.</white>");
 		password.setMissingSpecial("{prefix}<white>Password needs a <red>special</red> character.</white>");
 		messages.setPassword(password);
-
-		CrackedMessages.Lockout lockout = new CrackedMessages.Lockout();
-		lockout.setExceeded(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Too many attempts.</white>",
-				"<white>Try again in <red>{seconds}s</red>.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		messages.setLockout(lockout);
 
 		CrackedMessages.ChangePassword changePassword = new CrackedMessages.ChangePassword();
 		changePassword.setSuccess("{prefix}<white>Password <green>updated</green>.</white>");
@@ -83,8 +99,8 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 				" <green><bold>Identica</bold>",
 				" ",
 				"  <white>Confirm cracked migration</white>",
-				"  <white>Use <gold>/cracked confirm</gold> to continue</white>",
-				"  <gray>Cancel with <red>/cracked cancel</red></gray>",
+				"  <white>Use <yellow>/cracked</yellow> <gray>[Confirm]</gray> to continue</white>",
+				"  <white>Cancel with <yellow>/cracked</yellow> <gray>[Cancel]</gray></white>",
 				" "
 		));
 		cracked.setConfirmed(List.of(

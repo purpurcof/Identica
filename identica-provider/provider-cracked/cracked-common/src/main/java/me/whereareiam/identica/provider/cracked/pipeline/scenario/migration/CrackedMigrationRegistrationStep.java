@@ -78,13 +78,13 @@ public class CrackedMigrationRegistrationStep extends InteractiveStep {
 
 		CrackedMessages messages = messagesProvider.get();
 		CrackedSettings settings = settingsProvider.get();
-		CrackedSettings.Registration registrationSettings = settings != null
+		CrackedSettings.Scenario.Registration registrationSettings = settings != null
 				&& settings.getScenario() != null
 				? settings.getScenario().getRegistration()
 				: null;
 
 		if (registrationSettings == null || !registrationSettings.isEnabled())
-			return CompletableFuture.completedFuture(StepResult.denied(messages.getRegister().getDisabled()));
+			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getRegistration().getDisabled()));
 
 		long ttlMs = migrationTtlMs();
 		boolean requireRepeat = registrationSettings.isRequireRepeat();
@@ -98,10 +98,10 @@ public class CrackedMigrationRegistrationStep extends InteractiveStep {
 
 		CrackedRegistrationAttempt input = consumeRegistrationAttempt(context, ttlMs);
 		if (input == null)
-			return CompletableFuture.completedFuture(StepResult.waiting(joinLines(messages.getRegister().getPrompt())));
+			return CompletableFuture.completedFuture(StepResult.waiting(joinLines(messages.getScenario().getRegistration().getPrompt())));
 
 		if (input.isConfirm())
-			return CompletableFuture.completedFuture(StepResult.waiting(messages.getRegister().getNoPending()));
+			return CompletableFuture.completedFuture(StepResult.waiting(messages.getScenario().getRegistration().getNoPending()));
 
 		String error = passwordPolicy.validate(input.getPassword());
 		if (error != null && !error.isBlank())

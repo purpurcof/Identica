@@ -18,37 +18,33 @@ public class PasswordRules {
 		CrackedSettings settings = settingsProvider.get();
 		if (settings == null || settings.getScenario() == null || settings.getScenario().getRegistration() == null)
 			return null;
-		CrackedSettings.Password passwordSettings = settings.getScenario().getRegistration().getPassword();
-		if (passwordSettings == null || passwordSettings.getRequirements() == null)
-			return null;
-
-		CrackedSettings.Requirements requirements = passwordSettings.getRequirements();
+		CrackedSettings.Scenario.Registration.Password passwordSettings = settings.getScenario().getRegistration().getPassword();
 		String value = password == null ? "" : password;
 		int length = value.length();
 
 		CrackedMessages.Password messages = messagesProvider.get().getPassword();
 
-		int minLength = requirements.getMinLength();
+		int minLength = passwordSettings.getMinLength();
 		if (minLength > 0 && length < minLength)
 			return messages.getTooShort();
 
-		int maxLength = requirements.getMaxLength();
+		int maxLength = passwordSettings.getMaxLength();
 		if (maxLength > 0 && length > maxLength)
 			return messages.getTooLong();
 
-		int minUpper = requirements.getMinUpper();
+		int minUpper = passwordSettings.getMinUpper();
 		if (minUpper > 0 && countUpper(value) < minUpper)
 			return messages.getMissingUpper();
 
-		int minLower = requirements.getMinLower();
+		int minLower = passwordSettings.getMinLower();
 		if (minLower > 0 && countLower(value) < minLower)
 			return messages.getMissingLower();
 
-		int minNumber = requirements.getMinNumber();
+		int minNumber = passwordSettings.getMinNumber();
 		if (minNumber > 0 && countDigits(value) < minNumber)
 			return messages.getMissingNumber();
 
-		int minSpecial = requirements.getMinSpecial();
+		int minSpecial = passwordSettings.getMinSpecial();
 		if (minSpecial > 0 && countSpecial(value) < minSpecial)
 			return messages.getMissingSpecial();
 
@@ -61,6 +57,7 @@ public class PasswordRules {
 			if (Character.isUpperCase(value.charAt(i)))
 				count++;
 		}
+
 		return count;
 	}
 
@@ -70,6 +67,7 @@ public class PasswordRules {
 			if (Character.isLowerCase(value.charAt(i)))
 				count++;
 		}
+
 		return count;
 	}
 
@@ -79,6 +77,7 @@ public class PasswordRules {
 			if (Character.isDigit(value.charAt(i)))
 				count++;
 		}
+
 		return count;
 	}
 
@@ -89,6 +88,7 @@ public class PasswordRules {
 			if (!Character.isLetterOrDigit(ch))
 				count++;
 		}
+
 		return count;
 	}
 }

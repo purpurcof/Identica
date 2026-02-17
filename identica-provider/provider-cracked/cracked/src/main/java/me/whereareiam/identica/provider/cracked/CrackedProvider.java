@@ -15,6 +15,9 @@ import me.whereareiam.identica.provider.cracked.cryptography.argon2.Argon2Crypto
 import me.whereareiam.identica.provider.cracked.cryptography.bcrypt.BcryptCryptographyModule;
 import me.whereareiam.identica.provider.cracked.database.DatabaseModule;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedPipelineExtension;
+import me.whereareiam.identica.provider.cracked.ratelimit.BruteForceRateLimitDefinition;
+import me.whereareiam.identica.ratelimit.RateLimitDefinition;
+import me.whereareiam.identica.registry.Registry;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -26,6 +29,8 @@ public class CrackedProvider extends IdenticaProvider {
 	private CommandRegistrar commandRegistrar;
 	private PipelineExtensionRegistry pipelineExtensionRegistry;
 	private CrackedPipelineExtension crackedPipelineExtension;
+	private Registry<RateLimitDefinition> rateLimitRegistry;
+	private BruteForceRateLimitDefinition bruteForceRateLimitDefinition;
 
 	@Override
 	public @NotNull List<Module> modules() {
@@ -60,10 +65,12 @@ public class CrackedProvider extends IdenticaProvider {
 	public void onEnable() {
 		commandRegistrar.registerCommands();
 		pipelineExtensionRegistry.register(crackedPipelineExtension);
+		rateLimitRegistry.register(bruteForceRateLimitDefinition);
 	}
 
 	@Override
 	public void onDisable() {
 		pipelineExtensionRegistry.unregister(CrackedPipelineExtension.extensionId());
+		rateLimitRegistry.unregister(bruteForceRateLimitDefinition);
 	}
 }

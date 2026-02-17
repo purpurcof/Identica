@@ -91,15 +91,15 @@ public class RegistrationConfirmStep extends AbstractCrackedRegistrationStep {
 	}
 
 	private String joinRegisterPrompt(CrackedMessages messages) {
-		return joinLines(messages.getRegister().getPrompt());
+		return joinLines(messages.getScenario().getRegistration().getPrompt());
 	}
 
 	private String joinConfirmPrompt(CrackedMessages messages) {
-		return joinLines(messages.getRegister().getConfirmPrompt());
+		return joinLines(messages.getScenario().getRegistration().getConfirmPrompt());
 	}
 
 	private String joinRegisterReset(CrackedMessages messages) {
-		String mismatch = messages.getRegister().getMismatch();
+		String mismatch = messages.getScenario().getRegistration().getMismatch();
 		String prompt = joinRegisterPrompt(messages);
 		if (mismatch == null || mismatch.isBlank())
 			return prompt;

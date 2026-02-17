@@ -5,31 +5,27 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.engine.connection.ConnectionDecisionResolver;
-import me.whereareiam.identica.engine.connection.ConnectionScenarioSelector;
-import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
+import me.whereareiam.identica.engine.pipeline.scenario.ScenarioRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.ScenarioSelection;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipeline;
-import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
-import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
+import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.engine.pipeline.handshake.HandshakePipeline;
-import me.whereareiam.identica.event.EventListener;
-import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.account.AccountClearEvent;
-import me.whereareiam.identica.event.auth.AuthPendingClearedEvent;
-import me.whereareiam.identica.event.base.IdenticEvent;
-import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
+import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.event.EventOrder;
+import me.whereareiam.identica.model.ratelimit.RateLimitContext;
+import me.whereareiam.identica.model.ratelimit.RateLimitDecision;
+import me.whereareiam.identica.ratelimit.RateLimitService;
+import me.whereareiam.identica.type.ratelimit.RateLimitScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,16 +35,10 @@ import java.util.concurrent.CompletionStage;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class DefaultConnectionCoordinator implements ConnectionCoordinator, EventListener {
-	// Pipelines
-	private final RegistrationPipeline registrationPipeline;
-	private final AuthenticationPipeline authenticationPipeline;
-	private final MigrationPipeline migrationPipeline;
-
+public class DefaultConnectionCoordinator implements ConnectionCoordinator {
 	// Identity/account lifecycle
 	private final RegistrationAccountService registrationAccountService;
-	private final IdentityService identityService;
-	private final ConnectionScenarioSelector scenarioSelector;
+	private final ScenarioRegistry scenarioRegistry;
 	private final ConnectionDecisionResolver decisionResolver;
 
 	// Persistence/state
@@ -56,12 +46,7 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 
 	// Runtime orchestration
 	private final HandshakePipeline handshakePipeline;
-	private final EventManager eventManager;
-
-	@Inject
-	void registerListeners() {
-		eventManager.register(this);
-	}
+	private final RateLimitService rateLimitService;
 
 	@Override
 	public @NotNull CompletionStage<HandshakeDecision> handshake(@Nullable HandshakeRequest request) {
@@ -79,31 +64,57 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 
 	@Override
 	public @NotNull CompletionStage<ConnectionDecision> process(@Nullable ConnectionRequest request) {
-		ConnectionScenarioSelector.ScenarioSelection selection = scenarioSelector.select(request);
-		if (selection.resume()) {
-			CompletionStage<PipelineResult> execution = executePipeline(selection.pipelineType(), null, selection.resumeRequest());
+		ConnectionDecision limited = checkRateLimit(RateLimitScope.PROCESS, rateLimitContext(request));
+		if (limited != null) return CompletableFuture.completedFuture(limited);
 
-			return execution.handle((result, error) -> resolveDecision(result, error, selection.pipelineType()))
+		ScenarioSelection selection = scenarioRegistry.select(request);
+		if (selection.isResume()) {
+			CompletionStage<PipelineResult> execution = selection.getRunner().execute(null, selection.getResumeRequest());
+
+			return execution.handle((result, error) -> resolveDecision(result, error, selection.getRunner().type()))
 					.thenCompose(decision -> {
-						if (decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
-							return executeNewPipeline(request, selection.pipelineType());
+						if (decision.getStatus() == ConnectionDecision.Status.NO_PENDING) {
+							AbstractScenarioPipeline runner = scenarioRegistry.selectNewFlow(request);
+							return executeNewPipeline(request, runner);
+						}
 						return CompletableFuture.completedFuture(decision);
 					});
 		}
 
-		return executeNewPipeline(request, selection.pipelineType());
+		return executeNewPipeline(request, selection.getRunner());
 	}
 
 	@Override
 	public @NotNull CompletionStage<ConnectionDecision> resume(
 			@NotNull ResumeRequest request
 	) {
-		PipelineType pipelineType = scenarioSelector.isRegistration(request)
-				? PipelineType.REGISTRATION
-				: PipelineType.AUTHENTICATION;
-		CompletionStage<PipelineResult> execution = executePipeline(pipelineType, null, request);
+		ConnectionDecision limited = checkRateLimit(RateLimitScope.RESUME, rateLimitContext(request));
+		if (limited != null)
+			return CompletableFuture.completedFuture(limited);
 
-		return execution.handle((result, error) -> resolveDecision(result, error, pipelineType));
+		AbstractScenarioPipeline runner = scenarioRegistry.selectForResume(request);
+		CompletionStage<PipelineResult> execution = runner.execute(null, request);
+
+		return execution.handle((result, error) -> resolveDecision(result, error, runner.type()));
+	}
+
+	@Override
+	public @NotNull CompletionStage<ConnectionDecision> advanceFlow(
+			@NotNull AdvanceRequest request
+	) {
+		ConnectionDecision limited = checkRateLimit(RateLimitScope.ADVANCE, rateLimitContext(request));
+		if (limited != null)
+			return CompletableFuture.completedFuture(limited);
+
+		AbstractScenarioPipeline runner = scenarioRegistry.selectForAdvance(request);
+		ResumeRequest pendingRequest = ResumeRequest.builder()
+				.connectionUniqueId(request.getConnectionUniqueId())
+				.identity(request.getIdentity())
+				.intendedServer(request.getIntendedServer())
+				.build();
+		CompletionStage<PipelineResult> execution = runner.executeAdvance(pendingRequest);
+
+		return execution.handle((result, error) -> resolveDecision(result, error, runner.type()));
 	}
 
 	@Override
@@ -112,38 +123,9 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 				.connectionUniqueId(connectionUniqueId)
 				.build();
 
-		return pipelineStateStore.find(reference)
-				.map(state -> state.item(JourneyPendingState.class).isPresent())
-				.orElse(false);
-	}
-
-	@Override
-	public boolean clearPending(@NotNull UUID connectionUniqueId) {
-		PipelineStateReference reference = PipelineStateReference.builder()
-				.connectionUniqueId(connectionUniqueId)
-				.build();
-
-		boolean removed = pipelineStateStore.consume(reference).isPresent();
-		eventManager.call(new AuthPendingClearedEvent(connectionUniqueId, removed));
-
-		return removed;
-	}
-
-	@IdenticEvent(EventOrder.LOW)
-	public void onAccountClear(@NotNull AccountClearEvent event) {
-		UUID connectionUniqueId = event.getIdentity().getUniqueId();
-		if (connectionUniqueId == null) {
-			String username = event.getIdentity().getUsername();
-			if (!username.isBlank()) {
-				connectionUniqueId = identityService.find(username)
-						.map(Identity::getUniqueId)
-						.orElse(null);
-			}
-		}
-		if (connectionUniqueId == null)
-			return;
-
-		clearPending(connectionUniqueId);
+		PipelineState state = pipelineStateStore.find(reference).orElse(null);
+		if (state == null) return false;
+		return scenarioRegistry.isPending(state);
 	}
 
 	private @NotNull ConnectionDecision resolveDecision(
@@ -156,21 +138,49 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator, Even
 
 	private @NotNull CompletionStage<ConnectionDecision> executeNewPipeline(
 			@Nullable ConnectionRequest request,
-			@NotNull PipelineType pipelineType
+			@NotNull AbstractScenarioPipeline runner
 	) {
-		CompletionStage<PipelineResult> execution = executePipeline(pipelineType, request, null);
-		return execution.handle((result, error) -> resolveDecision(result, error, pipelineType));
+		CompletionStage<PipelineResult> execution = runner.execute(request, null);
+		return execution.handle((result, error) -> resolveDecision(result, error, runner.type()));
 	}
 
-	private @NotNull CompletionStage<PipelineResult> executePipeline(
-			@NotNull PipelineType pipelineType,
-			@Nullable ConnectionRequest request,
-			@Nullable ResumeRequest resumeRequest
+	private @Nullable ConnectionDecision checkRateLimit(
+			@NotNull RateLimitScope scope,
+			@Nullable RateLimitContext ctx
 	) {
-		return switch (pipelineType) {
-			case REGISTRATION -> registrationPipeline.execute(request, resumeRequest);
-			case MIGRATION -> migrationPipeline.execute(request, resumeRequest);
-			case AUTHENTICATION -> authenticationPipeline.execute(request, resumeRequest);
-		};
+		if (ctx == null) return null;
+		RateLimitDecision decision = rateLimitService.evaluate(scope, ctx).orElse(null);
+		if (decision == null || !decision.isLimited() || !decision.isDeny()) return null;
+		return ConnectionDecision.deny(decision.getMessage());
+	}
+
+	private @Nullable RateLimitContext rateLimitContext(@Nullable ConnectionRequest request) {
+		if (request == null) return null;
+		return RateLimitContext.builder()
+				.ip(request.getIp())
+				.username(request.getUsername())
+				.uniqueId(request.getIdentity().getUniqueId())
+				.connectionUniqueId(request.getConnectionUniqueId())
+				.build();
+	}
+
+	private @Nullable RateLimitContext rateLimitContext(@Nullable ResumeRequest request) {
+		if (request == null) return null;
+		return RateLimitContext.builder()
+				.ip(request.getIp())
+				.username(request.getUsername())
+				.uniqueId(request.getIdentityUniqueId())
+				.connectionUniqueId(request.getConnectionUniqueId())
+				.build();
+	}
+
+	private @Nullable RateLimitContext rateLimitContext(@Nullable AdvanceRequest request) {
+		if (request == null) return null;
+		return RateLimitContext.builder()
+				.ip(request.getIp())
+				.username(request.getUsername())
+				.uniqueId(request.getIdentityUniqueId())
+				.connectionUniqueId(request.getConnectionUniqueId())
+				.build();
 	}
 }

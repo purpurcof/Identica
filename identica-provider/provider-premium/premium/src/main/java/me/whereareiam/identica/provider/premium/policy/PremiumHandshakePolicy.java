@@ -16,11 +16,11 @@ import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
-import me.whereareiam.identica.provider.premium.PremiumProfileIdItem;
+import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.provider.premium.resolver.PremiumProfileLookup;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import me.whereareiam.identica.util.UniqueIdGenerator;
@@ -36,7 +36,8 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 	private final AccountPersistenceService accountPersistenceService;
 	private final PremiumProfileLookup profileLookup;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
-	private final PipelineStateStore pipelineStateStore;
+	private final PremiumProfileStore profileStore;
+	private final ProviderAttemptStore attemptStore;
 	private final Provider<Settings> settingsProvider;
 	private final HandshakeStore handshakeStore;
 
@@ -52,6 +53,10 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		if (username == null || username.isBlank())
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
+		if (attemptStore.hasAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip)) {
+			return CompletableFuture.completedFuture(HandshakeDecision.allow());
+		}
+
 		if (hasPremiumLinkByProfileId(username, ip) || hasPremiumLinkByUsername(username)) {
 			requestForceOnline(username, ip, "linked");
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
@@ -61,13 +66,18 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		Settings.Connection connection = settings != null ? settings.getConnection() : null;
 		Settings.Scenario scenario = connection != null ? connection.getAuthentication() : null;
 		JourneyType preferredFlow = scenario != null ? scenario.getFlow() : null;
-		if (preferredFlow == JourneyType.INTERACTIVE)
+		if (preferredFlow == JourneyType.INTERACTIVE) {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
+		}
 
 		return profileLookup.hasPremiumProfile(username)
-				.thenApply(hasProfile -> hasProfile
-						? requestAndAllow(username, ip)
-						: HandshakeDecision.allow());
+				.thenApply(hasProfile -> {
+					if (!hasProfile)
+						return HandshakeDecision.allow();
+
+					attemptStore.markAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
+					return requestAndAllow(username, ip);
+				});
 	}
 
 	private HandshakeDecision requestAndAllow(String username, String ip) {
@@ -91,14 +101,8 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 	}
 
 	private boolean hasPremiumLinkByProfileId(String username, String ip) {
-		PipelineStateReference reference = PipelineStateReference.builder()
-				.username(username)
-				.ip(ip)
-				.build();
-		String profileId = pipelineStateStore.find(reference)
-				.flatMap(state -> state.item(PremiumProfileIdItem.class))
-				.map(PremiumProfileIdItem::getProfileId)
-				.orElse(null);
+		PremiumProfileSnapshot snapshot = profileStore.find(username, ip);
+		String profileId = snapshot != null ? snapshot.getProfileId() : null;
 
 		if (profileId == null || profileId.isBlank())
 			return false;

@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipeline;
-import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
-import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
+import me.whereareiam.identica.engine.pipeline.scenario.ScenarioRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.auth.ConnectionDecisionEvent;
 import me.whereareiam.identica.event.pipeline.attempt.FlowAttemptFinishedEvent;
@@ -20,9 +20,7 @@ import org.jetbrains.annotations.Nullable;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class ConnectionDecisionResolver {
-	private final AuthenticationPipeline authenticationPipeline;
-	private final RegistrationPipeline registrationPipeline;
-	private final MigrationPipeline migrationPipeline;
+	private final ScenarioRegistry scenarioRegistry;
 	private final EventManager eventManager;
 
 	public @NotNull ConnectionDecision resolveDecision(
@@ -30,23 +28,22 @@ public class ConnectionDecisionResolver {
 			@Nullable Throwable error,
 			@NotNull PipelineType pipelineType
 	) {
+		AbstractScenarioPipeline runner = scenarioRegistry.resolve(pipelineType);
 		if (error != null) {
 			Logger.severe("Connection flow failed %s", error);
-			return failureDecision(pipelineType);
+			return failureDecision(runner);
 		}
 
 		if (result == null)
-			return failureDecision(pipelineType);
+			return failureDecision(runner);
 
-		AuthContext authContext = resolveAuthContext(result, pipelineType);
+		AuthContext authContext = resolveAuthContext(result, pipelineType, runner);
 		if (authContext != null)
 			eventManager.call(new FlowAttemptFinishedEvent(authContext, result));
 
-		ConnectionDecision decision = switch (pipelineType) {
-			case REGISTRATION -> registrationPipeline.mapDecision(result);
-			case MIGRATION -> migrationPipeline.mapDecision(result);
-			case AUTHENTICATION -> authenticationPipeline.mapDecision(result);
-		};
+		ConnectionDecision decision = runner != null
+				? runner.mapDecision(result)
+				: ConnectionDecision.deny("Connection failed");
 		if (authContext == null)
 			return decision;
 
@@ -56,17 +53,22 @@ public class ConnectionDecisionResolver {
 		return finalDecision != null ? finalDecision : decision;
 	}
 
-	private @Nullable AuthContext resolveAuthContext(@NotNull PipelineResult result, @NotNull PipelineType pipelineType) {
+	private @Nullable AuthContext resolveAuthContext(
+			@NotNull PipelineResult result,
+			@NotNull PipelineType pipelineType,
+			@Nullable AbstractScenarioPipeline runner
+	) {
 		if (pipelineType != PipelineType.AUTHENTICATION)
 			return null;
-		return authenticationPipeline.resolveAuthContext(result);
+		if (runner instanceof AuthenticationPipeline authenticationPipeline)
+			return authenticationPipeline.resolveAuthContext(result);
+		return null;
 	}
 
-	private @NotNull ConnectionDecision failureDecision(@NotNull PipelineType pipelineType) {
-		return switch (pipelineType) {
-			case REGISTRATION -> registrationPipeline.failureDecision();
-			case MIGRATION -> migrationPipeline.failureDecision();
-			case AUTHENTICATION -> authenticationPipeline.failureDecision();
-		};
+	private @NotNull ConnectionDecision failureDecision(@Nullable AbstractScenarioPipeline runner) {
+		if (runner == null) {
+			return ConnectionDecision.deny("Connection failed");
+		}
+		return runner.failureDecision();
 	}
 }

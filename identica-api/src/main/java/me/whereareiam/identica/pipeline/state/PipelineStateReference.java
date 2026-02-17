@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +32,8 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(context.getConnectionUniqueId())
 				.identityUniqueId(identity.getUniqueId())
+				.username(identity.getUsername())
+				.ip(identity.getIp())
 				.build();
 	}
 
@@ -39,6 +42,18 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(request.getConnectionUniqueId())
 				.identityUniqueId(identity != null ? identity.getUniqueId() : null)
+				.username(identity != null ? identity.getUsername() : null)
+				.ip(identity != null ? identity.getIp() : null)
+				.build();
+	}
+
+	public static @NotNull PipelineStateReference from(@NotNull AdvanceRequest request) {
+		ConnectionIdentity identity = request.getIdentity();
+		return PipelineStateReference.builder()
+				.connectionUniqueId(request.getConnectionUniqueId())
+				.identityUniqueId(identity != null ? identity.getUniqueId() : null)
+				.username(identity != null ? identity.getUsername() : null)
+				.ip(identity != null ? identity.getIp() : null)
 				.build();
 	}
 }

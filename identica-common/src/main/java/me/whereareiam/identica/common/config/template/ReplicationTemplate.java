@@ -27,13 +27,14 @@ public class ReplicationTemplate implements TemplateProvider<Replication> {
 		Replication.Cache cache = new Replication.Cache();
 		cache.setReservations("identica:reservation");
 		cache.setInstructions("identica:handshake-instructions");
+		cache.setAttempts("identica:provider-attempts");
+		cache.setRateLimits("identica:rate-limits");
 
 		Replication.Sessions sessions = new Replication.Sessions();
 		sessions.setUser("identica:sessions:user");
 		sessions.setSession("identica:sessions:session");
 		sessions.setSubject("identica:sessions:subject");
 		cache.setSessions(sessions);
-		cache.setPremiumProfile("premium-resolver");
 		cache.setPipelineState("identica:pipeline-state");
 
 		replication.setRedis(redis);

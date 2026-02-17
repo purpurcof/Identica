@@ -1,0 +1,163 @@
+package me.whereareiam.identica.provider.cracked.pipeline.scenario.migration;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
+import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
+import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.provider.cracked.CrackedConstants;
+import me.whereareiam.identica.provider.cracked.account.CrackedAccountService;
+import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
+import me.whereareiam.identica.provider.cracked.cryptography.CryptographyService;
+import me.whereareiam.identica.provider.cracked.model.CrackedAccount;
+import me.whereareiam.identica.provider.cracked.pipeline.CrackedAuthenticationAttempt;
+import me.whereareiam.identica.ratelimit.RateLimitService;
+import me.whereareiam.identica.model.ratelimit.RateLimitContext;
+import me.whereareiam.identica.model.ratelimit.RateLimitDecision;
+import me.whereareiam.identica.util.UniqueIdGenerator;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+@Singleton
+public class CrackedMigrationAuthenticationStep extends InteractiveStep {
+	private final Provider<CrackedMessages> messagesProvider;
+	private final Provider<Settings> coreSettingsProvider;
+	private final CrackedAccountService accountService;
+	private final CryptographyService cryptographyService;
+	private final PipelineStateStore pipelineStateStore;
+	private final RateLimitService rateLimitService;
+
+	@Inject
+	public CrackedMigrationAuthenticationStep(
+			Provider<CrackedMessages> messagesProvider,
+			Provider<Settings> coreSettingsProvider,
+			CrackedAccountService accountService,
+			CryptographyService cryptographyService,
+			PipelineStateStore pipelineStateStore,
+			RateLimitService rateLimitService
+	) {
+		super("cracked-migration-authentication");
+		this.messagesProvider = messagesProvider;
+		this.coreSettingsProvider = coreSettingsProvider;
+		this.accountService = accountService;
+		this.cryptographyService = cryptographyService;
+		this.pipelineStateStore = pipelineStateStore;
+		this.rateLimitService = rateLimitService;
+	}
+
+	@Override
+	public int order() {
+		return 10;
+	}
+
+	@Override
+	public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
+		String username = context.getUsername();
+		String providerSubject = resolveProviderSubject(username);
+		if (providerSubject == null)
+			return CompletableFuture.completedFuture(StepResult.failed(""));
+
+		CrackedAccount account = accountService.find(providerSubject).orElse(null);
+		if (account == null)
+			return CompletableFuture.completedFuture(StepResult.proceed(context));
+
+		CrackedMessages messages = messagesProvider.get();
+		long ttlMs = migrationTtlMs();
+		CrackedAuthenticationAttempt input = consumeAuthenticationAttempt(context, ttlMs);
+		if (input == null)
+			return CompletableFuture.completedFuture(StepResult.waiting(joinLines(messages.getScenario().getAuthentication().getPrompt())));
+
+		if (!cryptographyService.verify(account, input.getPassword())) {
+			RateLimitDecision decision = rateLimitService.record(
+					CrackedConstants.RATE_LIMIT.BRUTE_FORCE,
+					rateLimitContext(context)
+			);
+			if (decision.isLimited() && decision.isDeny())
+				return CompletableFuture.completedFuture(StepResult.denied(decision.getMessage()));
+			return CompletableFuture.completedFuture(invalidWithWarning(messages, decision));
+		}
+
+		rateLimitService.clear(CrackedConstants.RATE_LIMIT.BRUTE_FORCE, rateLimitContext(context));
+		return CompletableFuture.completedFuture(complete(context, account.getProviderSubject(), username));
+	}
+
+	private StepResult complete(ScenarioContext context, String providerSubject, String username) {
+		ProviderContext provider = ProviderContext.builder()
+				.providerId(CrackedConstants.PROVIDER_ID)
+				.providerSubject(providerSubject)
+				.providerUsername(username == null ? "" : username)
+				.build();
+		context.setProvider(provider);
+		return StepResult.complete(context);
+	}
+
+	private String resolveProviderSubject(String username) {
+		UUID uuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
+		return uuid != null ? uuid.toString() : null;
+	}
+
+	private long migrationTtlMs() {
+		Settings settings = coreSettingsProvider.get();
+		if (settings == null)
+			return 0L;
+		return settings.getConnection().getMigration().pipelineTtlMillis();
+	}
+
+	private RateLimitContext rateLimitContext(@NotNull ScenarioContext context) {
+		return RateLimitContext.builder()
+				.ip(context.getIp())
+				.username(context.getUsername())
+				.uniqueId(context.getIdenticaUniqueId())
+				.connectionUniqueId(context.getConnectionUniqueId())
+				.build();
+	}
+
+	private @NotNull PipelineStateReference reference(@NotNull ScenarioContext context) {
+		return PipelineStateReference.from(context);
+	}
+
+	private @Nullable CrackedAuthenticationAttempt consumeAuthenticationAttempt(
+			@NotNull ScenarioContext context,
+			long ttlMs
+	) {
+		PipelineStateReference reference = reference(context);
+		PipelineState stored = pipelineStateStore.find(reference).orElse(null);
+		if (stored == null) return null;
+
+		CrackedAuthenticationAttempt input = stored.item(CrackedAuthenticationAttempt.class).orElse(null);
+		if (input == null) return null;
+
+		stored.removeItem(CrackedAuthenticationAttempt.class);
+		if (ttlMs > 0) {
+			pipelineStateStore.save(reference, stored, ttlMs);
+		}
+		return input;
+	}
+
+	private static @NotNull String joinLines(@Nullable List<String> lines) {
+		if (lines == null || lines.isEmpty())
+			return "";
+		return String.join("\n", lines);
+	}
+
+	private StepResult invalidWithWarning(CrackedMessages messages, RateLimitDecision decision) {
+		String invalid = messages.getScenario().getAuthentication().getInvalid();
+		String warning = decision.getWarningMessage();
+		if (warning == null || warning.isBlank())
+			return StepResult.waiting(invalid);
+		if (invalid == null || invalid.isBlank())
+			return StepResult.waiting(warning);
+		return StepResult.waiting(invalid + "\n" + warning);
+	}
+
+}

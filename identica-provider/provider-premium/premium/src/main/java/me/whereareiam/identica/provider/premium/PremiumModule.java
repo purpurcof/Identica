@@ -17,6 +17,7 @@ import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumCommandsProvider;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumMessagesProvider;
 import me.whereareiam.identica.provider.premium.config.provider.PremiumSettingsProvider;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.provider.premium.resolver.PremiumProfileSubjectResolver;
 import me.whereareiam.identica.provider.premium.migration.PremiumMigrationPrecheck;
 
@@ -26,6 +27,7 @@ public class PremiumModule extends AbstractModule {
 		// Configs
 		bind(PremiumSettingsProvider.class).asEagerSingleton();
 		bind(PremiumSettings.class).toProvider(PremiumSettingsProvider.class);
+		bind(PremiumProfileStore.class).asEagerSingleton();
 		bind(PremiumMessagesProvider.class).asEagerSingleton();
 		bind(PremiumMessages.class).toProvider(PremiumMessagesProvider.class);
 		bind(PremiumCommandsProvider.class).asEagerSingleton();

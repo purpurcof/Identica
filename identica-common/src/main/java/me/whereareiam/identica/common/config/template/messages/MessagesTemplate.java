@@ -53,6 +53,14 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		connection.setResumeRateLimited(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Too many requests.</white>",
+				"<white>Try again in <red>{seconds}s</red>.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
 		connection.setJourney(buildJourneyMessages());
 		Messages.Connection.Authentication authentication = new Messages.Connection.Authentication();
 		applyScenario(authentication, "Authentication");
@@ -120,6 +128,17 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"<white>" + label + " pipeline already in progress.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
+		));
+		scenario.setPipelineExpired(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>" + label + " pipeline expired.</white>",
+				"<white>Please reconnect to start again.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		scenario.setAdvanceBusy(List.of(
+				"<white>Please wait, processing your request.</white>"
 		));
 		scenario.setNoCompletionPipeline(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",

@@ -4,9 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
-import me.whereareiam.identica.provider.premium.PremiumProfileIdItem;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.provider.profile.ProfileResolveContext;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
@@ -19,7 +18,7 @@ import java.util.UUID;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
-	private final PipelineStateStore pipelineStateStore;
+	private final PremiumProfileStore profileStore;
 
 	@Override
 	public boolean supports(@NotNull ProfileResolveContext context) {
@@ -47,14 +46,8 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 		if (username == null || username.isBlank())
 			return null;
 
-		PipelineStateReference reference = PipelineStateReference.builder()
-				.username(username)
-				.ip(context.getIp())
-				.build();
-		String profileUniqueId = pipelineStateStore.find(reference)
-				.flatMap(state -> state.item(PremiumProfileIdItem.class))
-				.map(PremiumProfileIdItem::getProfileId)
-				.orElse(null);
+		PremiumProfileSnapshot snapshot = profileStore.find(username, context.getIp());
+		String profileUniqueId = snapshot != null ? snapshot.getProfileId() : null;
 		if (profileUniqueId == null || profileUniqueId.isBlank())
 			return null;
 

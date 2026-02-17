@@ -34,7 +34,6 @@ public final class RedisTestFixtures {
 		Replication.Cache cache = new Replication.Cache();
 		cache.setReservations("reservations");
 		cache.setInstructions("instructions");
-		cache.setPremiumProfile("premium-profile");
 		cache.setPipelineState("pipeline-state");
 
 		Replication.Sessions sessions = new Replication.Sessions();

@@ -82,5 +82,4 @@ public class VelocityLoginDecisionAdapter extends ConnectionDecisionAdapter impl
 			}
 		};
 	}
-
 }

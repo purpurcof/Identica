@@ -28,9 +28,11 @@ import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTyp
 import me.whereareiam.identica.common.conflict.ConflictPrepareLifecycle;
 import me.whereareiam.identica.common.conflict.DefaultConflictService;
 import me.whereareiam.identica.common.conflict.type.UsernameConflictType;
+import me.whereareiam.identica.common.provider.DefaultProviderAttemptStore;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
-import me.whereareiam.identica.common.listener.AccountClearReplicationListener;
+import me.whereareiam.identica.common.listener.clear.AccountClearReplicationListener;
+import me.whereareiam.identica.common.listener.clear.AccountClearSessionListener;
 import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.listener.SessionReplacedListener;
 import me.whereareiam.identica.common.identity.DefaultIdentityService;
@@ -39,6 +41,9 @@ import me.whereareiam.identica.common.provider.DefaultProviderOperations;
 import me.whereareiam.identica.common.provider.SerializerEngineProvider;
 import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
+import me.whereareiam.identica.common.ratelimit.DefaultRateLimitService;
+import me.whereareiam.identica.common.ratelimit.RateLimitRegistry;
+import me.whereareiam.identica.common.ratelimit.ResumeSpamRateLimitDefinition;
 import me.whereareiam.identica.common.routing.PhaseRoutingService;
 import me.whereareiam.identica.common.routing.DefaultRoutingStateStore;
 import me.whereareiam.identica.common.routing.RoutingLifecycle;
@@ -60,6 +65,8 @@ import me.whereareiam.identica.provider.ProviderDescriptorReader;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.ratelimit.RateLimitService;
+import me.whereareiam.identica.ratelimit.RateLimitDefinition;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.routing.RoutingStateStore;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -67,6 +74,7 @@ import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.provider.ProviderAttemptStore;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -109,7 +117,12 @@ public class CommonConfiguration extends AbstractModule {
 				.annotatedWith(Names.named("reloadables"))
 				.toProvider(ReloadableRegistry.class)
 				.asEagerSingleton();
+		bind(ResumeSpamRateLimitDefinition.class).asEagerSingleton();
+		bind(new TypeLiteral<Registry<RateLimitDefinition>>() {})
+				.to(RateLimitRegistry.class)
+				.asEagerSingleton();
 		bind(HandshakeStore.class).to(DefaultHandshakeStore.class).asEagerSingleton();
+		bind(ProviderAttemptStore.class).to(DefaultProviderAttemptStore.class).asEagerSingleton();
 
 		// Replication
 		OptionalBinder.newOptionalBinder(binder(), Key.get(ReplicationAdapter.class, Names.named("replicationAdapter")))
@@ -120,6 +133,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(ReplicationAdapter.class).to(DefaultReplicationAdapter.class).asEagerSingleton();
 		bind(ReplicationSystem.class).to(DefaultReplicationSystem.class).asEagerSingleton();
 		bind(ReservationCache.class).to(DefaultReservationCache.class).asEagerSingleton();
+		bind(RateLimitService.class).to(DefaultRateLimitService.class).asEagerSingleton();
 
 		// Account + presence
 		bind(RegistrationAccountService.class).to(DefaultRegistrationAccountService.class).asEagerSingleton();
@@ -144,6 +158,7 @@ public class CommonConfiguration extends AbstractModule {
 
 		// Event listeners
 		bind(AccountClearReplicationListener.class).asEagerSingleton();
+		bind(AccountClearSessionListener.class).asEagerSingleton();
 		bind(SessionReplacedListener.class).asEagerSingleton();
 		bind(ConflictPrepareLifecycle.class).asEagerSingleton();
 		bind(DynamicListenerRegistry.class).to(DefaultDynamicListenerRegistry.class).asEagerSingleton();

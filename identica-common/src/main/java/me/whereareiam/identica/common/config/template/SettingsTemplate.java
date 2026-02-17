@@ -5,6 +5,7 @@ import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.event.EventPriority;
+import me.whereareiam.identica.model.ratelimit.RateLimitPolicy;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
@@ -49,10 +50,12 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		connection.setRouting(routing);
 		connection.setSessions(sessions);
 		connection.setHandshakeInstructionTtl(Duration.ofMinutes(10));
+		connection.setAttemptTtl(Duration.ofMinutes(10));
 		connection.setReservationTtl(Duration.ofMinutes(15));
 		connection.setAuthentication(defaultAuthenticationScenario());
 		connection.setRegistration(defaultRegistrationScenario());
 		connection.setMigration(defaultMigrationScenario());
+		connection.setRateLimits(defaultRateLimits());
 		settings.setConnection(connection);
 
 		return settings;
@@ -61,6 +64,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 	private Settings.AuthenticationScenario defaultAuthenticationScenario() {
 		Settings.AuthenticationScenario scenario = new Settings.AuthenticationScenario();
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
+		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
 		scenario.setSessionConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
@@ -71,6 +75,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 	private Settings.RegistrationScenario defaultRegistrationScenario() {
 		Settings.RegistrationScenario scenario = new Settings.RegistrationScenario();
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
+		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
 		scenario.setFlow(JourneyType.SEAMLESS);
@@ -80,9 +85,30 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 	private Settings.MigrationScenario defaultMigrationScenario() {
 		Settings.MigrationScenario scenario = new Settings.MigrationScenario();
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
+		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
 		scenario.setFlow(JourneyType.INTERACTIVE);
 		return scenario;
+	}
+
+	private Settings.RateLimits defaultRateLimits() {
+		Settings.RateLimits rateLimits = new Settings.RateLimits();
+		RateLimitPolicy resumeSpam = new RateLimitPolicy();
+		resumeSpam.setEnabled(false);
+		resumeSpam.setMaxAttempts(10);
+
+		RateLimitPolicy.Lockout lockout = new RateLimitPolicy.Lockout();
+		lockout.setEnabled(true);
+		lockout.setDuration(Duration.ofSeconds(30));
+		resumeSpam.setLockout(lockout);
+
+		RateLimitPolicy.Warning warning = new RateLimitPolicy.Warning();
+		warning.setEnabled(false);
+		warning.setThresholdPercentage(0);
+		resumeSpam.setWarning(warning);
+		rateLimits.setResumeSpam(resumeSpam);
+
+		return rateLimits;
 	}
 
 	private Map<String, Event> defaultListenerEvents() {

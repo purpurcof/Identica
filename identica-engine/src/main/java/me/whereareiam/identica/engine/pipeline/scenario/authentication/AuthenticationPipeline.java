@@ -4,31 +4,123 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractScenarioPipeline;
+import me.whereareiam.identica.database.ProviderLinkPersistenceService;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem;
+import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
+import me.whereareiam.identica.event.auth.AuthContextBuildEvent;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;
+import me.whereareiam.identica.model.auth.request.ConnectionRequest;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.util.EventUtil;
+import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 @Singleton
 public class AuthenticationPipeline extends AbstractScenarioPipeline {
+	private final ProviderLinkPersistenceService providerLinkPersistenceService;
+
 	@Inject
 	public AuthenticationPipeline(
-			@Named("authenticationPipelineRegistry") PipelineRegistry flowGroupRegistry,
+			@Named("authenticationPipelineRegistry") PipelineRegistry registry,
 			Provider<Messages> messagesProvider,
 			Provider<Settings> settingsProvider,
-			PipelineStateStore pipelineStateStore
+			PipelineStateStore pipelineStateStore,
+			ProviderLinkPersistenceService providerLinkPersistenceService
 	) {
-		super(flowGroupRegistry, messagesProvider, settingsProvider, pipelineStateStore, PipelineType.AUTHENTICATION);
+		super(registry, messagesProvider, settingsProvider, pipelineStateStore, PipelineType.AUTHENTICATION);
+		this.providerLinkPersistenceService = providerLinkPersistenceService;
+	}
+
+	@Override
+	protected @Nullable ScenarioContext buildContext(@NotNull ConnectionRequest request) {
+		if (request.getIdentity().getUniqueId() == null) {
+			UUID fallbackUniqueId = request.getConnectionUniqueId();
+			if (fallbackUniqueId == null)
+				fallbackUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(request.getUsername());
+
+			if (fallbackUniqueId == null) {
+				Logger.severe("%s request missing Identica UUID and fallback UUID", type());
+				return null;
+			}
+
+			Logger.warn("%s request missing Identica UUID, applying fallback UUID %s", type(), fallbackUniqueId);
+			request.getIdentity().setUniqueId(fallbackUniqueId);
+		}
+
+		AuthContext context = AuthContext.builder()
+				.connectionUniqueId(request.getConnectionUniqueId())
+				.identity(request.getIdentity())
+				.intendedServer(request.getIntendedServer())
+				.build();
+
+		EventUtil.callEvent(new AuthContextBuildEvent(context));
+		emitScenarioBuilt(context);
+
+		return context;
+	}
+
+	@Override
+	protected @NotNull ScenarioContext mergeContext(@NotNull ScenarioContext base, @NotNull ResumeRequest request) {
+		ConnectionIdentity identity = mergeIdentity(base, request);
+		if (identity == null) return base;
+
+		String intendedServer = request.getIntendedServer() != null
+				? request.getIntendedServer()
+				: base.getIntendedServer();
+
+		if (base instanceof AuthContext authContext) {
+			AuthContext merged = AuthContext.builder()
+					.connectionUniqueId(identity.getUniqueId())
+					.identity(identity)
+					.intendedServer(intendedServer)
+					.build();
+
+			merged.setProvider(authContext.getProvider());
+			return merged;
+		}
+
+		return base;
+	}
+
+	@Override
+	protected boolean isPending(@NotNull PipelineState state) {
+		return state.item(JourneyStateItem.class).isPresent();
+	}
+
+	@Override
+	protected void onStart(@NotNull PipelineState pipelineState, boolean resumed) {
+		IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
+		if (identity == null) identity = new IdentityMetaItem();
+
+		identity.setResumed(resumed);
+		pipelineState.putItem(identity, 0L);
+	}
+
+	@Override
+	public boolean matchesNewFlow(@Nullable ConnectionRequest request) {
+		if (request == null) return false;
+		UUID uniqueId = request.getIdentity().getUniqueId();
+		if (uniqueId == null) return false;
+
+		return !providerLinkPersistenceService.findByUniqueId(uniqueId).isEmpty();
 	}
 
 	public @Nullable AuthContext resolveAuthContext(@NotNull PipelineResult result) {
-		var scenario = resolveScenarioContext(result);
+		ScenarioContext scenario = resolveScenarioContext(result);
 		return scenario instanceof AuthContext authContext ? authContext : null;
 	}
 }

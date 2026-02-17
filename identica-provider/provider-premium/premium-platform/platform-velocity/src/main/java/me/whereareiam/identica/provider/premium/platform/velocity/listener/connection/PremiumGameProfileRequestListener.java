@@ -1,23 +1,22 @@
 package me.whereareiam.identica.provider.premium.platform.velocity.listener.connection;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListener;
-import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
-import me.whereareiam.identica.provider.premium.PremiumProfileIdItem;
+import me.whereareiam.identica.provider.ProviderAttemptStore;
+import me.whereareiam.identica.provider.premium.PremiumConstants;
+import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
+import me.whereareiam.identica.util.UniqueIdGenerator;
 
 import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumGameProfileRequestListener implements DynamicListener<GameProfileRequestEvent> {
-	private final PipelineStateStore pipelineStateStore;
-	private final Provider<Settings> settingsProvider;
+	private final PremiumProfileStore profileStore;
+	private final ProviderAttemptStore attemptStore;
 
 	@Override
 	public void onEvent(GameProfileRequestEvent event) {
@@ -28,24 +27,17 @@ public class PremiumGameProfileRequestListener implements DynamicListener<GamePr
 		if (username == null || username.isBlank()) return;
 		String ip = resolveIp(event);
 
-		long ttlMs = settingsProvider.get()
-				.getConnection()
-				.handshakeInstructionTtlMillis();
+		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
+		if (offlineUuid != null && !profileId.equals(offlineUuid)) {
+			attemptStore.clearAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
+		}
 
-		PipelineStateReference reference = PipelineStateReference.builder()
-				.username(username)
-				.ip(ip)
-				.build();
-		pipelineStateStore.update(reference, ttlMs,
-				state -> state.withItem(new PremiumProfileIdItem(profileId.toString()), ttlMs));
+		profileStore.save(username, ip, profileId.toString());
 	}
 
 	private String resolveIp(GameProfileRequestEvent event) {
-		if (event.getConnection().getRemoteAddress() == null)
-			return null;
-
-		if (event.getConnection().getRemoteAddress().getAddress() == null)
-			return null;
+		if (event.getConnection().getRemoteAddress() == null) return null;
+		if (event.getConnection().getRemoteAddress().getAddress() == null) return null;
 
 		return event.getConnection().getRemoteAddress().getAddress().getHostAddress();
 	}

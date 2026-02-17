@@ -4,6 +4,7 @@ import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
+import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import org.jetbrains.annotations.NotNull;
@@ -72,19 +73,22 @@ public interface ConnectionCoordinator {
 	);
 
 	/**
+	 * Advances a pending connection flow within the same session.
+	 *
+	 * @param request advance request details
+	 * @return a completion journey that resolves to the connection decision
+	 */
+	@NotNull
+	CompletionStage<ConnectionDecision> advanceFlow(
+			@NotNull AdvanceRequest request
+	);
+
+	/**
 	 * Checks whether a connection has a pending flow.
 	 *
 	 * @param connectionUniqueId unique connection identifier
 	 * @return {@code true} if the connection has a pending flow
 	 */
 	boolean hasPending(@NotNull UUID connectionUniqueId);
-
-	/**
-	 * Clears any pending flow for the provided connection ID.
-	 *
-	 * @param connectionUniqueId unique connection identifier
-	 * @return {@code true} if the pending flow was cleared
-	 */
-	boolean clearPending(@NotNull UUID connectionUniqueId);
 
 }

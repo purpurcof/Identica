@@ -10,4 +10,8 @@ public final class PremiumConstants {
 	 * Provider id for the premium authentication provider.
 	 */
 	public static final @NotNull String PROVIDER_ID = "premium";
+	/**
+	 * Attempt scope for premium verification flow.
+	 */
+	public static final @NotNull String ATTEMPT_SCOPE_VERIFY = "verify";
 }

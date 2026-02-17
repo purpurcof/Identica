@@ -5,13 +5,16 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import me.whereareiam.identica.replication.cache.ReplicatedCache;
-import me.whereareiam.identica.replication.ReplicationSystem;
-import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.event.pipeline.state.PipelineStateClearedEvent;
+import me.whereareiam.identica.event.pipeline.state.PipelineStateSavedEvent;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -61,16 +64,21 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 		PipelineStateSnapshot stored = new PipelineStateSnapshot(state, keys, expiresAt);
 		for (String key : keys)
 			stateCache.put(key, stored, ttlMs).join();
+
+		EventUtil.callEvent(new PipelineStateSavedEvent(reference, state, expiresAt));
 	}
 
 	@Override
 	public @NotNull Optional<PipelineState> consume(@NotNull PipelineStateReference reference) {
-		return read(reference, true);
+		Optional<PipelineState> resolved = read(reference, true);
+		resolved.ifPresent(state -> EventUtil.callEvent(new PipelineStateClearedEvent(reference, state)));
+		return resolved;
 	}
 
 	@Override
 	public void clear(@NotNull PipelineStateReference reference) {
-		read(reference, true);
+		Optional<PipelineState> resolved = read(reference, true);
+		resolved.ifPresent(state -> EventUtil.callEvent(new PipelineStateClearedEvent(reference, state)));
 	}
 
 	private @NotNull Optional<PipelineState> read(
@@ -91,7 +99,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 				continue;
 
 			if (stored.expiresAt > 0 && stored.expiresAt <= now) {
-				clearByKeys(stored.keys);
+				invalidateKeys(stored.keys);
 				continue;
 			}
 
@@ -100,7 +108,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 					: null;
 
 			if (consume)
-				clearByKeys(stored.keys);
+				invalidateKeys(stored.keys);
 
 			return Optional.ofNullable(resolved);
 		}
@@ -114,7 +122,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 				: stateCache.getFresh(key).join().orElse(null);
 	}
 
-	private void clearByKeys(@Nullable List<String> keys) {
+	private void invalidateKeys(@Nullable List<String> keys) {
 		if (keys == null || keys.isEmpty())
 			return;
 		for (String key : keys)

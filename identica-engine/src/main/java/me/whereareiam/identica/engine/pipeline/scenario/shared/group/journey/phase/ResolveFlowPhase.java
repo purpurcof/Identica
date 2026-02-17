@@ -9,7 +9,7 @@ import me.whereareiam.identica.event.auth.scenario.AuthScenarioStartedEvent;
 import me.whereareiam.identica.event.registration.scenario.RegistrationScenarioStartedEvent;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineState;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPendingState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.JourneyPlan;
@@ -117,7 +117,7 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 	private @NotNull JourneyType resolveFlow(
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			JourneyPendingState pending
+			JourneyStateItem pending
 	) {
 		if (pending != null && pending.getFlow() != null)
 			return pending.getFlow();

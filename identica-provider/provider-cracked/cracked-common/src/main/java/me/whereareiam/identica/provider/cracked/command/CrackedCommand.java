@@ -42,7 +42,6 @@ public class CrackedCommand {
 
 		MigrationResult result = migrationService.request(MigrationRequest.builder()
 				.connectionUniqueId(identity.getUniqueId())
-				.accountUniqueId(identity.getUniqueId())
 				.targetProviderId(CrackedConstants.PROVIDER_ID)
 				.username(identity.getUsername())
 				.ip(identity.getIp())

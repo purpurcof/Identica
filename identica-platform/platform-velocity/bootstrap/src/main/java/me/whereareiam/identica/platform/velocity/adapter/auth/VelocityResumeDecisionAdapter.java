@@ -45,7 +45,7 @@ public class VelocityResumeDecisionAdapter extends ConnectionDecisionAdapter imp
 
 		ResumeRequest request = ResumeRequest.builder()
 				.connectionUniqueId(player.getUniqueId())
-				.identity(new ConnectionIdentity(player.getUsername(), ip))
+				.identity(new ConnectionIdentity(player.getUniqueId(), player.getUsername(), ip))
 				.intendedServer(intendedServer)
 				.build();
 

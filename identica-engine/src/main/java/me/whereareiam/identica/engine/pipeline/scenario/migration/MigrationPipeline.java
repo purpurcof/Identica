@@ -57,7 +57,6 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 				.connectionUniqueId(request.getConnectionUniqueId())
 				.identity(request.getIdentity())
 				.intendedServer(request.getIntendedServer())
-				.accountUniqueId(request.getIdentity().getUniqueId())
 				.build();
 
 		emitScenarioBuilt(context);
@@ -80,7 +79,6 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 					.identity(identity)
 					.intendedServer(intendedServer)
 					.targetProviderId(migration.getTargetProviderId())
-					.accountUniqueId(migration.getAccountUniqueId())
 					.build();
 
 			merged.setProvider(migration.getProvider());

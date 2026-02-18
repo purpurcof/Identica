@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.model.Event;
-import me.whereareiam.identica.model.ratelimit.RateLimitPolicy;
+import me.whereareiam.identica.model.sentinel.SentinelPolicy;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
@@ -49,7 +49,7 @@ public class Settings {
 		private @NotNull AuthenticationScenario authentication;
 		private @NotNull RegistrationScenario registration;
 		private @NotNull MigrationScenario migration;
-		private @NotNull RateLimits rateLimits;
+		private @NotNull Sentinels sentinels;
 
 		/**
 		 * Returns handshake instruction TTL in milliseconds with validation.
@@ -81,11 +81,11 @@ public class Settings {
 	@Getter
 	@Setter
 	@ToString
-	public static class RateLimits {
+	public static class Sentinels {
 		/**
 		 * Rate limit applied when clients spam pipeline resume/advance requests.
 		 */
-		private @NotNull RateLimitPolicy resumeSpam;
+		private @NotNull SentinelPolicy resumeSpam;
 	}
 
 	@Getter

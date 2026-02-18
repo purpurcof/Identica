@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.ratelimit;
+package me.whereareiam.identica.common.sentinel;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -6,21 +6,21 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.ratelimit.RateLimitContext;
-import me.whereareiam.identica.model.ratelimit.RateLimitPolicy;
-import me.whereareiam.identica.ratelimit.RateLimitDefinition;
-import me.whereareiam.identica.type.ratelimit.RateLimitMode;
-import me.whereareiam.identica.type.ratelimit.RateLimitScope;
+import me.whereareiam.identica.model.sentinel.SentinelContext;
+import me.whereareiam.identica.model.sentinel.SentinelPolicy;
+import me.whereareiam.identica.sentinel.SentinelDefinition;
+import me.whereareiam.identica.type.sentinel.SentinelMode;
+import me.whereareiam.identica.type.sentinel.SentinelScope;
 
 import java.util.List;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class ResumeSpamRateLimitDefinition implements RateLimitDefinition {
-	private static final RateLimitScope[] SCOPES = new RateLimitScope[]{
-			RateLimitScope.PROCESS,
-			RateLimitScope.RESUME,
-			RateLimitScope.ADVANCE
+public class ResumeSpamSentinelDefinition implements SentinelDefinition {
+	private static final SentinelScope[] SCOPES = new SentinelScope[]{
+			SentinelScope.PROCESS,
+			SentinelScope.RESUME,
+			SentinelScope.ADVANCE
 	};
 
 	private final Provider<Settings> settingsProvider;
@@ -32,21 +32,21 @@ public class ResumeSpamRateLimitDefinition implements RateLimitDefinition {
 	}
 
 	@Override
-	public RateLimitScope[] scopes() {
+	public SentinelScope[] scopes() {
 		return SCOPES;
 	}
 
 	@Override
-	public RateLimitMode modeFor(RateLimitScope scope) {
-		return RateLimitMode.RECORD;
+	public SentinelMode modeFor(SentinelScope scope) {
+		return SentinelMode.RECORD;
 	}
 
 	@Override
-	public RateLimitPolicy policy(RateLimitContext ctx) {
-		RateLimitPolicy policy = settingsProvider.get().getConnection().getRateLimits().getResumeSpam();
+	public SentinelPolicy policy(SentinelContext ctx) {
+		SentinelPolicy policy = settingsProvider.get().getConnection().getSentinels().getResumeSpam();
 
 		if (policy.getLockout() == null) {
-			policy.setLockout(new RateLimitPolicy.Lockout());
+			policy.setLockout(new SentinelPolicy.Lockout());
 		}
 
 		policy.getLockout().setMessageSupplier((_, remainingSeconds) -> buildMessage(remainingSeconds));
@@ -56,7 +56,7 @@ public class ResumeSpamRateLimitDefinition implements RateLimitDefinition {
 
 	private String buildMessage(long remainingSeconds) {
 		Messages messages = messagesProvider.get();
-		List<String> lines = messages.getConnection().getResumeRateLimited();
+		List<String> lines = messages.getConnection().getResumeSentineled();
 
 		String seconds = String.valueOf(Math.max(0L, remainingSeconds));
 		StringBuilder builder = new StringBuilder();

@@ -20,8 +20,8 @@ import me.whereareiam.identica.provider.cracked.config.provider.CrackedMessagesP
 import me.whereareiam.identica.provider.cracked.config.provider.CrackedSettingsProvider;
 import me.whereareiam.identica.provider.cracked.listener.AccountClearCrackedListener;
 import me.whereareiam.identica.provider.cracked.migration.CrackedMigrationPrecheck;
-import me.whereareiam.identica.provider.cracked.ratelimit.BruteForceRateLimitLifecycle;
-import me.whereareiam.identica.provider.cracked.ratelimit.BruteForceRateLimitDefinition;
+import me.whereareiam.identica.provider.cracked.sentinel.BruteForceSentinelLifecycle;
+import me.whereareiam.identica.provider.cracked.sentinel.BruteForceSentinelDefinition;
 import me.whereareiam.identica.provider.cracked.util.PasswordRules;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 
@@ -47,8 +47,8 @@ public class CommonConfiguration extends AbstractModule {
 		bind(AutoupgradeLifecycle.class).asEagerSingleton();
 		bind(PasswordRules.class).asEagerSingleton();
 
-		bind(BruteForceRateLimitDefinition.class).asEagerSingleton();
-		bind(BruteForceRateLimitLifecycle.class).asEagerSingleton();
+		bind(BruteForceSentinelDefinition.class).asEagerSingleton();
+		bind(BruteForceSentinelLifecycle.class).asEagerSingleton();
 
 		Multibinder<Object> crackedCommandInstances = Multibinder.newSetBinder(
 				binder(),

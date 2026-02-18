@@ -5,7 +5,7 @@ import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.event.EventPriority;
-import me.whereareiam.identica.model.ratelimit.RateLimitPolicy;
+import me.whereareiam.identica.model.sentinel.SentinelPolicy;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
@@ -55,7 +55,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		connection.setAuthentication(defaultAuthenticationScenario());
 		connection.setRegistration(defaultRegistrationScenario());
 		connection.setMigration(defaultMigrationScenario());
-		connection.setRateLimits(defaultRateLimits());
+		connection.setSentinels(defaultSentinels());
 		settings.setConnection(connection);
 
 		return settings;
@@ -91,24 +91,24 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		return scenario;
 	}
 
-	private Settings.RateLimits defaultRateLimits() {
-		Settings.RateLimits rateLimits = new Settings.RateLimits();
-		RateLimitPolicy resumeSpam = new RateLimitPolicy();
+	private Settings.Sentinels defaultSentinels() {
+		Settings.Sentinels sentinels = new Settings.Sentinels();
+		SentinelPolicy resumeSpam = new SentinelPolicy();
 		resumeSpam.setEnabled(false);
 		resumeSpam.setMaxAttempts(10);
 
-		RateLimitPolicy.Lockout lockout = new RateLimitPolicy.Lockout();
+		SentinelPolicy.Lockout lockout = new SentinelPolicy.Lockout();
 		lockout.setEnabled(true);
 		lockout.setDuration(Duration.ofSeconds(30));
 		resumeSpam.setLockout(lockout);
 
-		RateLimitPolicy.Warning warning = new RateLimitPolicy.Warning();
+		SentinelPolicy.Warning warning = new SentinelPolicy.Warning();
 		warning.setEnabled(false);
 		warning.setThresholdPercentage(0);
 		resumeSpam.setWarning(warning);
-		rateLimits.setResumeSpam(resumeSpam);
+		sentinels.setResumeSpam(resumeSpam);
 
-		return rateLimits;
+		return sentinels;
 	}
 
 	private Map<String, Event> defaultListenerEvents() {

@@ -54,9 +54,9 @@ public class Replication {
 		 */
 		private @NotNull String attempts;
 		/**
-		 * Cache namespace for rate limits.
+		 * Cache namespace for sentinels.
 		 */
-		private @NotNull String rateLimits;
+		private @NotNull String sentinels;
 	}
 
 	/**

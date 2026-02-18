@@ -1,4 +1,4 @@
-package me.whereareiam.identica.provider.cracked.ratelimit;
+package me.whereareiam.identica.provider.cracked.sentinel;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -7,21 +7,21 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
-import me.whereareiam.identica.model.ratelimit.RateLimitContext;
-import me.whereareiam.identica.model.ratelimit.RateLimitPolicy;
-import me.whereareiam.identica.ratelimit.RateLimitDefinition;
-import me.whereareiam.identica.type.ratelimit.RateLimitMode;
-import me.whereareiam.identica.type.ratelimit.RateLimitScope;
+import me.whereareiam.identica.model.sentinel.SentinelContext;
+import me.whereareiam.identica.model.sentinel.SentinelPolicy;
+import me.whereareiam.identica.sentinel.SentinelDefinition;
+import me.whereareiam.identica.type.sentinel.SentinelMode;
+import me.whereareiam.identica.type.sentinel.SentinelScope;
 
 import java.util.List;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class BruteForceRateLimitDefinition implements RateLimitDefinition {
-	private static final RateLimitScope[] SCOPES = new RateLimitScope[]{
-			RateLimitScope.PROCESS,
-			RateLimitScope.RESUME,
-			RateLimitScope.ADVANCE
+public class BruteForceSentinelDefinition implements SentinelDefinition {
+	private static final SentinelScope[] SCOPES = new SentinelScope[]{
+			SentinelScope.PROCESS,
+			SentinelScope.RESUME,
+			SentinelScope.ADVANCE
 	};
 
 	private final Provider<CrackedSettings> settingsProvider;
@@ -29,21 +29,21 @@ public class BruteForceRateLimitDefinition implements RateLimitDefinition {
 
 	@Override
 	public String id() {
-		return CrackedConstants.RATE_LIMIT.BRUTE_FORCE;
+		return CrackedConstants.SENTINEL.BRUTE_FORCE;
 	}
 
 	@Override
-	public RateLimitScope[] scopes() {
+	public SentinelScope[] scopes() {
 		return SCOPES;
 	}
 
 	@Override
-	public RateLimitMode modeFor(RateLimitScope scope) {
-		return RateLimitMode.CHECK;
+	public SentinelMode modeFor(SentinelScope scope) {
+		return SentinelMode.CHECK;
 	}
 
 	@Override
-	public RateLimitPolicy policy(RateLimitContext ctx) {
+	public SentinelPolicy policy(SentinelContext ctx) {
 		CrackedSettings settings = settingsProvider.get();
 		CrackedSettings.Scenario.Authentication authentication = settings != null
 				&& settings.getScenario() != null
@@ -53,7 +53,7 @@ public class BruteForceRateLimitDefinition implements RateLimitDefinition {
 				? authentication.getBruteforce()
 				: null;
 
-		RateLimitPolicy policy = new RateLimitPolicy();
+		SentinelPolicy policy = new SentinelPolicy();
 		int maxAttempts = bruteForce != null ? bruteForce.getMaxAttempts() : 0;
 		policy.setMaxAttempts(maxAttempts);
 		policy.setEnabled(maxAttempts > 0);
@@ -62,9 +62,9 @@ public class BruteForceRateLimitDefinition implements RateLimitDefinition {
 				? bruteForce.getLockout()
 				: null;
 
-		RateLimitPolicy.Lockout policyLockout = policy.getLockout();
+		SentinelPolicy.Lockout policyLockout = policy.getLockout();
 		if (policyLockout == null) {
-			policyLockout = new RateLimitPolicy.Lockout();
+			policyLockout = new SentinelPolicy.Lockout();
 			policy.setLockout(policyLockout);
 		}
 
@@ -76,9 +76,9 @@ public class BruteForceRateLimitDefinition implements RateLimitDefinition {
 				? bruteForce.getWarning()
 				: null;
 
-		RateLimitPolicy.Warning policyWarning = policy.getWarning();
+		SentinelPolicy.Warning policyWarning = policy.getWarning();
 		if (policyWarning == null) {
-			policyWarning = new RateLimitPolicy.Warning();
+			policyWarning = new SentinelPolicy.Warning();
 			policy.setWarning(policyWarning);
 		}
 

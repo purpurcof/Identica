@@ -1,4 +1,4 @@
-package me.whereareiam.identica.model.ratelimit;
+package me.whereareiam.identica.model.sentinel;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -9,15 +9,15 @@ import java.util.Locale;
 @Getter
 @ToString
 @RequiredArgsConstructor
-public class RateLimitKey {
+public class SentinelKey {
 	private final String key;
 
 	public boolean isBlank() {
 		return key == null || key.isBlank();
 	}
 
-	public static RateLimitKey ipAndIdentity(RateLimitContext ctx) {
-		if (ctx == null) return new RateLimitKey(null);
+	public static SentinelKey ipAndIdentity(SentinelContext ctx) {
+		if (ctx == null) return new SentinelKey(null);
 
 		String ip = normalize(ctx.getIp());
 		String identity;
@@ -30,11 +30,11 @@ public class RateLimitKey {
 		if (identity == null && ctx.getConnectionUniqueId() != null)
 			identity = ctx.getConnectionUniqueId().toString();
 
-		if (ip == null && identity == null) return new RateLimitKey(null);
-		if (ip == null) return new RateLimitKey(identity);
-		if (identity == null) return new RateLimitKey(ip);
+		if (ip == null && identity == null) return new SentinelKey(null);
+		if (ip == null) return new SentinelKey(identity);
+		if (identity == null) return new SentinelKey(ip);
 
-		return new RateLimitKey(ip + "|" + identity);
+		return new SentinelKey(ip + "|" + identity);
 	}
 
 	private static String normalize(String value) {

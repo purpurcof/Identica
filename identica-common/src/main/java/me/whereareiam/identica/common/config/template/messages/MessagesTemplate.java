@@ -65,7 +65,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		connection.setResumeRateLimited(List.of(
+		connection.setResumeSentineled(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Too many resume attempts.</white>",

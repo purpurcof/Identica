@@ -418,9 +418,9 @@ public class Messages {
 		 */
 		private @NotNull List<String> concurrentLoginKick;
 		/**
-		 * Message shown when resume or advance requests are rate limited.
+		 * Message shown when resume or advance requests are sentineled.
 		 */
-		private @NotNull List<String> resumeRateLimited;
+		private @NotNull List<String> resumeSentineled;
 		private @NotNull Journey journey;
 		private @NotNull Authentication authentication;
 		private @NotNull Registration registration;

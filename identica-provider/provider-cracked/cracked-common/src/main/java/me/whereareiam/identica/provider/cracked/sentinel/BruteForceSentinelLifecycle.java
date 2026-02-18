@@ -1,27 +1,27 @@
-package me.whereareiam.identica.provider.cracked.ratelimit;
+package me.whereareiam.identica.provider.cracked.sentinel;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
-import me.whereareiam.identica.model.ratelimit.RateLimitContext;
-import me.whereareiam.identica.model.ratelimit.RateLimitDecision;
+import me.whereareiam.identica.model.sentinel.SentinelContext;
+import me.whereareiam.identica.model.sentinel.SentinelDecision;
 import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.event.authentication.AuthenticationAttemptDecision;
 import me.whereareiam.identica.provider.cracked.event.authentication.AuthenticationAttemptFailedEvent;
 import me.whereareiam.identica.provider.cracked.event.authentication.AuthenticationAttemptSucceededEvent;
 import me.whereareiam.identica.provider.cracked.model.authentication.AuthenticationAttemptContext;
-import me.whereareiam.identica.ratelimit.RateLimitService;
+import me.whereareiam.identica.sentinel.SentinelService;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
-public class BruteForceRateLimitLifecycle implements EventListener {
-	private final RateLimitService rateLimitService;
+public class BruteForceSentinelLifecycle implements EventListener {
+	private final SentinelService sentinelService;
 
 	@Inject
-	public BruteForceRateLimitLifecycle(RateLimitService rateLimitService, EventManager eventManager) {
-		this.rateLimitService = rateLimitService;
+	public BruteForceSentinelLifecycle(SentinelService sentinelService, EventManager eventManager) {
+		this.sentinelService = sentinelService;
 		eventManager.register(this);
 	}
 
@@ -29,9 +29,9 @@ public class BruteForceRateLimitLifecycle implements EventListener {
 	public void onCrackedAuthenticationFailed(@NotNull AuthenticationAttemptFailedEvent event) {
 		if (event.getDecision() != null) return;
 
-		RateLimitContext context = rateLimitContext(event);
-		RateLimitDecision decision = rateLimitService.record(
-				CrackedConstants.RATE_LIMIT.BRUTE_FORCE,
+		SentinelContext context = sentinelContext(event);
+		SentinelDecision decision = sentinelService.record(
+				CrackedConstants.SENTINEL.BRUTE_FORCE,
 				context
 		);
 		event.setDecision(toDecision(decision));
@@ -39,16 +39,16 @@ public class BruteForceRateLimitLifecycle implements EventListener {
 
 	@IdenticEvent
 	public void onCrackedAuthenticationSucceeded(@NotNull AuthenticationAttemptSucceededEvent event) {
-		RateLimitContext context = rateLimitContext(event);
-		rateLimitService.clear(
-				CrackedConstants.RATE_LIMIT.BRUTE_FORCE,
+		SentinelContext context = sentinelContext(event);
+		sentinelService.clear(
+				CrackedConstants.SENTINEL.BRUTE_FORCE,
 				context
 		);
 	}
 
-	private RateLimitContext rateLimitContext(@NotNull AuthenticationAttemptFailedEvent event) {
+	private SentinelContext sentinelContext(@NotNull AuthenticationAttemptFailedEvent event) {
 		AuthenticationAttemptContext context = event.getContext();
-		return RateLimitContext.builder()
+		return SentinelContext.builder()
 				.connectionUniqueId(context.getConnectionUniqueId())
 				.uniqueId(context.getIdentityUniqueId())
 				.username(context.getUsername())
@@ -56,9 +56,9 @@ public class BruteForceRateLimitLifecycle implements EventListener {
 				.build();
 	}
 
-	private RateLimitContext rateLimitContext(@NotNull AuthenticationAttemptSucceededEvent event) {
+	private SentinelContext sentinelContext(@NotNull AuthenticationAttemptSucceededEvent event) {
 		AuthenticationAttemptContext context = event.getContext();
-		return RateLimitContext.builder()
+		return SentinelContext.builder()
 				.connectionUniqueId(context.getConnectionUniqueId())
 				.uniqueId(context.getIdentityUniqueId())
 				.username(context.getUsername())
@@ -66,7 +66,7 @@ public class BruteForceRateLimitLifecycle implements EventListener {
 				.build();
 	}
 
-	private AuthenticationAttemptDecision toDecision(RateLimitDecision decision) {
+	private AuthenticationAttemptDecision toDecision(SentinelDecision decision) {
 		if (decision == null) return AuthenticationAttemptDecision.allow();
 
 		boolean deny = decision.isLimited() && decision.isDeny();

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.model.ratelimit;
+package me.whereareiam.identica.model.sentinel;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 @ToString
 @Builder
-public class RateLimitContext {
+public class SentinelContext {
 	private final UUID uniqueId;
 	private final UUID connectionUniqueId;
 	private final String username;

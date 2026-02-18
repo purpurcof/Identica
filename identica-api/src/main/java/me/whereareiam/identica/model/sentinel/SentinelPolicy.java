@@ -1,4 +1,4 @@
-package me.whereareiam.identica.model.ratelimit;
+package me.whereareiam.identica.model.sentinel;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +11,7 @@ import java.util.function.BiFunction;
 @Getter
 @Setter
 @ToString
-public class RateLimitPolicy {
+public class SentinelPolicy {
 	private boolean enabled;
 	private int maxAttempts;
 	private Lockout lockout = new Lockout();
@@ -25,8 +25,8 @@ public class RateLimitPolicy {
 				&& ((lockout.isEnabled()) || (warning != null && warning.isEnabled()));
 	}
 
-	public static RateLimitPolicy disabled() {
-		RateLimitPolicy policy = new RateLimitPolicy();
+	public static SentinelPolicy disabled() {
+		SentinelPolicy policy = new SentinelPolicy();
 		policy.setEnabled(false);
 		policy.setMaxAttempts(0);
 		if (policy.getLockout() != null) {
@@ -51,8 +51,8 @@ public class RateLimitPolicy {
 	public static class Lockout {
 		private boolean enabled = true;
 		private Duration duration;
-		private transient BiFunction<RateLimitContext, Long, String> messageSupplier;
-		private transient BiConsumer<RateLimitContext, RateLimitDecision> customAction;
+		private transient BiFunction<SentinelContext, Long, String> messageSupplier;
+		private transient BiConsumer<SentinelContext, SentinelDecision> customAction;
 	}
 
 	@Getter
@@ -61,7 +61,7 @@ public class RateLimitPolicy {
 	public static class Warning {
 		private boolean enabled = true;
 		private int thresholdPercentage;
-		private transient BiFunction<RateLimitContext, Integer, String> messageSupplier;
-		private transient BiConsumer<RateLimitContext, RateLimitDecision> customAction;
+		private transient BiFunction<SentinelContext, Integer, String> messageSupplier;
+		private transient BiConsumer<SentinelContext, SentinelDecision> customAction;
 	}
 }

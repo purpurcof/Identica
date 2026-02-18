@@ -17,29 +17,29 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.ratelimit.RateLimitDefinition;
+import me.whereareiam.identica.sentinel.SentinelDefinition;
 import me.whereareiam.identica.registry.Registry;
 import me.whereareiam.identica.type.event.EventOrder;
-import me.whereareiam.identica.common.ratelimit.ResumeSpamRateLimitDefinition;
+import me.whereareiam.identica.common.sentinel.ResumeSpamSentinelDefinition;
 
 public class Identica implements EventListener {
 	private final Injector injector;
 	private final ListenerRegistrar listenerRegistrar;
-	private final Registry<RateLimitDefinition> rateLimitRegistry;
-	private final ResumeSpamRateLimitDefinition resumeSpamRateLimitDefinition;
+	private final Registry<SentinelDefinition> sentinelRegistry;
+	private final ResumeSpamSentinelDefinition resumeSpamSentinelDefinition;
 
 	@Inject
 	public Identica(
 			Injector injector,
 			EventManager eventManager,
 			ListenerRegistrar listenerRegistrar,
-			Registry<RateLimitDefinition> rateLimitRegistry,
-			ResumeSpamRateLimitDefinition resumeSpamRateLimitDefinition
+			Registry<SentinelDefinition> sentinelRegistry,
+			ResumeSpamSentinelDefinition resumeSpamSentinelDefinition
 	) {
 		this.injector = injector;
 		this.listenerRegistrar = listenerRegistrar;
-		this.rateLimitRegistry = rateLimitRegistry;
-		this.resumeSpamRateLimitDefinition = resumeSpamRateLimitDefinition;
+		this.sentinelRegistry = sentinelRegistry;
+		this.resumeSpamSentinelDefinition = resumeSpamSentinelDefinition;
 
 		eventManager.register(this);
 	}
@@ -48,7 +48,7 @@ public class Identica implements EventListener {
 	public void onBootstrapped(IdenticaBootstrappedEvent event) {
 		Logger.init(injector.getInstance(LoggingHelper.class));
 
-		rateLimitRegistry.register(resumeSpamRateLimitDefinition);
+		sentinelRegistry.register(resumeSpamSentinelDefinition);
 
 		injector.getInstance(Settings.class);
 		injector.getInstance(Messages.class);
@@ -74,7 +74,7 @@ public class Identica implements EventListener {
 	public void onShutdown(IdenticaShutdownEvent event) {
 		injector.getInstance(ProviderManager.class).unloadProviders();
 
-		rateLimitRegistry.unregister(resumeSpamRateLimitDefinition);
+		sentinelRegistry.unregister(resumeSpamSentinelDefinition);
 
 		IdenticaAPI.shutdown();
 	}

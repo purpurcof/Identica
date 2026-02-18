@@ -56,6 +56,6 @@ public class IdentityGroup implements PipelineGroup<IdentityState> {
 				.getConnection()
 				.getMigration()
 				.getErrors()
-				.getIdentityGroupMissingResult());
+				.getIdentity().getGroupMissingResult());
 	}
 }

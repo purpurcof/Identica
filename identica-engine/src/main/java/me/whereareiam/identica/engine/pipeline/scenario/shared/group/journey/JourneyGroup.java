@@ -62,7 +62,7 @@ public class JourneyGroup implements PipelineGroup<JourneyState> {
 
 	private @NotNull String journeyMissingResultMessage(@NotNull PipelineState pipelineState) {
 		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
-		return String.join("\n", errors.getJourneyMissingResult());
+		return String.join("\n", errors.getJourney().getMissingResult());
 	}
 
 	private @NotNull Messages.Connection.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {

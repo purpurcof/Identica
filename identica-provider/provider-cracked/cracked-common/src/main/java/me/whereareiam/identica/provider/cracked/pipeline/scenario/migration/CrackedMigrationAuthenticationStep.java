@@ -151,7 +151,7 @@ public class CrackedMigrationAuthenticationStep extends InteractiveStep {
 	}
 
 	private StepResult invalidWithWarning(CrackedMessages messages, RateLimitDecision decision) {
-		String invalid = messages.getScenario().getAuthentication().getInvalid();
+		String invalid = messages.getScenario().getAuthentication().getStatus().getInvalid();
 		String warning = decision.getWarningMessage();
 		if (warning == null || warning.isBlank())
 			return StepResult.waiting(invalid);

@@ -420,7 +420,7 @@ public abstract class AbstractScenarioPipeline {
 		long now = System.currentTimeMillis();
 		AdvanceMarkerItem lockItem = stored.item(AdvanceMarkerItem.class).orElse(null);
 		if (lockItem != null && lockItem.getExpiresAt() > now) {
-			return new ResumeResolution(null, PipelineResult.waiting(advanceBusyMessage()));
+			return new ResumeResolution(null, PipelineResult.waiting(resolveScenarioMessages(pipelineType).getAdvanceBusy().getChat()));
 		}
 
 		long lockTtlMs = resolveAdvanceLockTtlMillis();
@@ -443,13 +443,6 @@ public abstract class AbstractScenarioPipeline {
 		UUID ownerId = request.getConnectionUniqueId();
 		if (ownerId != null) return ownerId;
 		return request.getIdentityUniqueId();
-	}
-
-	private @NotNull String advanceBusyMessage() {
-		List<String> lines = resolveScenarioMessages(pipelineType).getAdvanceBusy();
-		if (lines.isEmpty())
-			return "";
-		return joinMessage(lines);
 	}
 
 	private long resolveAdvanceLockTtlMillis() {

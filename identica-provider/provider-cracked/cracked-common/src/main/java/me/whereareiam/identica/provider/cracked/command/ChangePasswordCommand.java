@@ -73,7 +73,7 @@ public class ChangePasswordCommand {
 				? accountService.find(providerSubject).orElse(null)
 				: null;
 		if (account == null) {
-			sendMessage(identity, messagesProvider.get().getScenario().getAuthentication().getNotRegistered());
+			sendMessage(identity, messagesProvider.get().getScenario().getAuthentication().getStatus().getNotRegistered());
 			return;
 		}
 

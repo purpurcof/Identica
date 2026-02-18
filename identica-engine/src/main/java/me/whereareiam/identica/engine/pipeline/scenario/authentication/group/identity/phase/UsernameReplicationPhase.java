@@ -93,7 +93,7 @@ public class UsernameReplicationPhase implements PipelinePhase<IdentityState> {
 				.getConnection()
 				.getAuthentication()
 				.getErrors()
-				.getIdentityReplicationMissing());
+				.getIdentity().getReplicationMissing());
 	}
 
 	private @NotNull String joinMessage(@NotNull List<String> lines) {

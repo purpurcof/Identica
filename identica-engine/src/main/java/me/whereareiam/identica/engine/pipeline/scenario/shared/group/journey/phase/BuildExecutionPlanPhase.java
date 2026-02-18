@@ -80,7 +80,7 @@ public class BuildExecutionPlanPhase implements PipelinePhase<JourneyState> {
 
 	private @NotNull String journeyMissingContextMessage(@NotNull PipelineState pipelineState) {
 		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
-		return String.join("\n", errors.getJourneyMissingContext());
+		return String.join("\n", errors.getJourney().getMissingContext());
 	}
 
 	private @NotNull Messages.Connection.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {

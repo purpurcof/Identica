@@ -84,7 +84,7 @@ public class CrackedMigrationRegistrationStep extends InteractiveStep {
 				: null;
 
 		if (registrationSettings == null || !registrationSettings.isEnabled())
-			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getRegistration().getDisabled()));
+			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getRegistration().getStatus().getDisabled()));
 
 		long ttlMs = migrationTtlMs();
 		boolean requireRepeat = registrationSettings.isRequireRepeat();
@@ -101,7 +101,7 @@ public class CrackedMigrationRegistrationStep extends InteractiveStep {
 			return CompletableFuture.completedFuture(StepResult.waiting(joinLines(messages.getScenario().getRegistration().getPrompt())));
 
 		if (input.isConfirm())
-			return CompletableFuture.completedFuture(StepResult.waiting(messages.getScenario().getRegistration().getNoPending()));
+			return CompletableFuture.completedFuture(StepResult.waiting(messages.getScenario().getRegistration().getStatus().getNoPending()));
 
 		String error = passwordPolicy.validate(input.getPassword());
 		if (error != null && !error.isBlank())

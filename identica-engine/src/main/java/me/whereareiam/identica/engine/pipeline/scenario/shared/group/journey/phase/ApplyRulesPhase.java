@@ -177,12 +177,12 @@ public class ApplyRulesPhase implements PipelinePhase<JourneyState> {
 
 	private @NotNull String journeyMissingContextMessage(@NotNull PipelineState pipelineState) {
 		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
-		return String.join("\n", errors.getJourneyMissingContext());
+		return String.join("\n", errors.getJourney().getMissingContext());
 	}
 
 	private @NotNull String journeyMissingPlanMessage(@NotNull PipelineState pipelineState) {
 		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
-		return String.join("\n", errors.getJourneyMissingPlan());
+		return String.join("\n", errors.getJourney().getMissingPlan());
 	}
 
 	private @NotNull Messages.Connection.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {

@@ -12,6 +12,14 @@ import java.util.Map;
 public class MessagesTemplate implements TemplateProvider<Messages> {
 	@Override
 	public Messages supply(Messages messages) {
+		applyGeneral(messages);
+		applyCommands(messages);
+		applyProviders(messages);
+		applyConnection(messages);
+		return messages;
+	}
+
+	private void applyGeneral(Messages messages) {
 		messages.setPrefix("<green>Identica</green> <dark_gray>| ");
 		Messages.Format format = new Messages.Format();
 		Messages.Format.Temporal temporal = new Messages.Format.Temporal();
@@ -19,18 +27,20 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 		temporal.setDateTime(new DateTimePattern("dd.MM.yyyy HH:mm:ss"));
 		format.setTemporal(temporal);
 		messages.setFormat(format);
+	}
 
-		// Commands
+	private void applyCommands(Messages messages) {
 		Messages.Commands commands = new MessagesCommandsTemplate().supply(new Messages.Commands());
 		messages.setCommands(commands);
+	}
 
-		// Providers
+	private void applyProviders(Messages messages) {
 		Messages.Providers providers = new Messages.Providers();
 		providers.setNoProvidersAvailable(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>No providers available, if this issue persists",
-				"<white>please report it to the server administrator.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
@@ -38,77 +48,94 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>No providers matched, if this issue persists",
-				"<white>please report it to the server administrator.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
 		messages.setProviders(providers);
+	}
 
-		// Connection
+	private void applyConnection(Messages messages) {
 		Messages.Connection connection = new Messages.Connection();
 		connection.setConcurrentLoginKick(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>You logged in from another location.</white>",
+				"<white>Your session was interrupted.</white>",
+				"<white>Logged in from another location.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
 		connection.setResumeRateLimited(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>Too many requests.</white>",
-				"<white>Try again in <red>{seconds}s</red>.</white>",
+				"<white>Too many resume attempts.</white>",
+				"<white>Please try again in <green>{seconds}s</green>.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
 		connection.setJourney(buildJourneyMessages());
+		connection.setAuthentication(buildAuthentication());
+		connection.setRegistration(buildRegistration());
+		connection.setMigration(buildMigration());
+		messages.setConnection(connection);
+	}
+
+	private Messages.Connection.Authentication buildAuthentication() {
 		Messages.Connection.Authentication authentication = new Messages.Connection.Authentication();
 		applyScenario(authentication, "Authentication");
 		authentication.setAuthenticationFailed(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>Authentication failed.</white>",
+				"<white>Authentication could not be completed.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
 		authentication.setSessionBuildFailed(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>Unable to start session.</white>",
+				"<white>Unable to establish your session.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		return authentication;
+	}
+
+	private Messages.Connection.Registration buildRegistration() {
 		Messages.Connection.Registration registration = new Messages.Connection.Registration();
 		applyScenario(registration, "Registration");
 		registration.setRegistrationFailed(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>Registration failed.</white>",
+				"<white>Registration could not be completed.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
 		registration.setAccountAlreadyExists(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>Account already exists.</white>",
+				"<white>An account for this identity already exists.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		return registration;
+	}
+
+	private Messages.Connection.Migration buildMigration() {
 		Messages.Connection.Migration migration = new Messages.Connection.Migration();
 		applyScenario(migration, "Migration");
 		migration.setMigrationFailed(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>Migration failed.</white>",
+				"<white>Migration could not be completed.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		connection.setAuthentication(authentication);
-		connection.setRegistration(registration);
-		connection.setMigration(migration);
-		messages.setConnection(connection);
-
-		return messages;
+		return migration;
 	}
 
 	private void applyScenario(
@@ -118,32 +145,43 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 		scenario.setHandshakeDenied(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>Handshake denied.</white>",
+				"<white>Connection handshake was denied.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
 		scenario.setPipelineKick(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>" + label + " pipeline already in progress.</white>",
+				"<white>" + label + " is already in progress.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
 		scenario.setPipelineExpired(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>" + label + " pipeline expired.</white>",
-				"<white>Please reconnect to start again.</white>",
+				"<white>Your time for " + label.toLowerCase() + " ran out.</white>",
+				"<white>Reconnect to try again.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		scenario.setAdvanceBusy(List.of(
-				"<white>Please wait, processing your request.</white>"
+		Messages.Connection.Scenario.AdvanceBusy advanceBusy = new Messages.Connection.Scenario.AdvanceBusy();
+		advanceBusy.setChat("{prefix}<white>Please wait, processing your request.</white>");
+		advanceBusy.setKick(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Your previous request is still processing.</white>",
+				"<white>Please try again in a moment.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
 		));
+		scenario.setAdvanceBusy(advanceBusy);
 		scenario.setNoCompletionPipeline(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>" + label + " pipeline incomplete.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
@@ -151,7 +189,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 		routingMessages.setMissingServer(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>No target server available.</white>",
+				"<white>No target server available for routing</white>",
 				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
@@ -166,19 +204,65 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Connection setup did not produce a context.</white>",
-				"<white>Please try again.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		errors.setIdentityGroupMissingResult(List.of(
+		Messages.Connection.Scenario.Errors.Identity identity = new Messages.Connection.Scenario.Errors.Identity();
+		identity.setGroupMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>" + label + " flow could not continue.</white>",
-				"<white>Identity stage did not return a result.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		errors.setPolicyGroupMissingResult(List.of(
+		identity.setProfileMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Unable to load provider profile.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		identity.setReplicationMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Unable to synchronize username.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		identity.setAccountMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Account data is missing.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		Messages.Connection.Scenario.Errors.Identity.Provider identityProvider = new Messages.Connection.Scenario.Errors.Identity.Provider();
+		identityProvider.setValidationMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Unable to validate provider.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		identityProvider.setLinkMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Unable to link provider.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		identity.setProvider(identityProvider);
+		errors.setIdentity(identity);
+
+		Messages.Connection.Scenario.Errors.Policy policy = new Messages.Connection.Scenario.Errors.Policy();
+		policy.setGroupMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>" + label + " flow could not continue.</white>",
@@ -186,115 +270,83 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		errors.setSessionGroupMissingResult(List.of(
+		policy.setAccountReviewMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Unable to review account.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		policy.setEnsureNewAccountMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Unable to verify account status.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		policy.setAccountCreationMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Unable to create account.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		errors.setPolicy(policy);
+
+		Messages.Connection.Scenario.Errors.Session session = new Messages.Connection.Scenario.Errors.Session();
+		session.setGroupMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>" + label + " flow could not continue.</white>",
-				"<white>Session stage did not return a result.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		errors.setJourneyMissingResult(List.of(
+		session.setBuildMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Unable to build a session.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		errors.setSession(session);
+
+		Messages.Connection.Scenario.Errors.Journey journey = new Messages.Connection.Scenario.Errors.Journey();
+		journey.setMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Journey did not return a result.</white>",
-				"<white>Please try again.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		errors.setJourneyMissingContext(List.of(
+		journey.setMissingContext(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Journey could not start.</white>",
-				"<white>Required context was missing.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		errors.setJourneyMissingPlan(List.of(
+		journey.setMissingPlan(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Journey could not start.</white>",
-				"<white>Execution plan was missing.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		errors.setJourney(journey);
+
 		errors.setFinalizeMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Finalization did not return a result.</white>",
-				"<white>Please try again.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		errors.setIdentityProfileMissing(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Unable to load provider profile.</white>",
-				"<white>Required provider data is missing.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		errors.setAccountReviewMissing(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Unable to review account.</white>",
-				"<white>Required account data is missing.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		errors.setIdentityReplicationMissing(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Unable to synchronize username.</white>",
-				"<white>Required account data is missing.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		errors.setProviderValidationMissing(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Unable to validate provider.</white>",
-				"<white>Required provider data is missing.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		errors.setEnsureNewAccountMissing(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Unable to verify account status.</white>",
-				"<white>Required provider data is missing.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		errors.setAccountCreationMissing(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Unable to create account.</white>",
-				"<white>Required provider profile is missing.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		errors.setProviderLinkMissing(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Unable to link provider.</white>",
-				"<white>Required account data is missing.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		errors.setSessionBuildMissing(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Unable to build session.</white>",
-				"<white>Required context is missing.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		errors.setAccountMissing(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Account data is missing.</white>",
-				"<white>Please rejoin and try again.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
@@ -308,6 +360,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Journey stage pipeline incomplete.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
@@ -317,6 +370,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Journey step returned no status.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
@@ -339,6 +393,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>No providers available for this account.</white>",
+				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
@@ -349,6 +404,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 		step.setEnrollment(enrollment);
 		journey.setStage(stage);
 		journey.setStep(step);
+
 		return journey;
 	}
 }

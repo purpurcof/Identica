@@ -87,7 +87,7 @@ public class LoadIdentityProfilePhase implements PipelinePhase<IdentityState> {
 				.getConnection()
 				.getAuthentication()
 				.getErrors()
-				.getIdentityProfileMissing());
+				.getIdentity().getProfileMissing());
 	}
 
 	private boolean isBlank(@Nullable String value) {

@@ -63,7 +63,7 @@ public class RegistrationStep extends AbstractCrackedRegistrationStep {
 				: null;
 
 		if (registrationSettings == null || !registrationSettings.isEnabled()) {
-			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getRegistration().getDisabled()));
+			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getRegistration().getStatus().getDisabled()));
 		}
 
 		boolean requireRepeat = registrationSettings.isRequireRepeat();
@@ -82,7 +82,7 @@ public class RegistrationStep extends AbstractCrackedRegistrationStep {
 			return CompletableFuture.completedFuture(StepResult.waiting(joinRegisterPrompt(messages)));
 
 		if (input.isConfirm())
-			return CompletableFuture.completedFuture(StepResult.waiting(messages.getScenario().getRegistration().getNoPending()));
+			return CompletableFuture.completedFuture(StepResult.waiting(messages.getScenario().getRegistration().getStatus().getNoPending()));
 
 		String error = passwordPolicy.validate(input.getPassword());
 		if (error != null && !error.isBlank())

@@ -89,7 +89,7 @@ public class AccountPresenceStep extends AbstractCrackedRegistrationStep {
 	}
 
 	private String joinAlreadyRegistered(CrackedMessages messages) {
-		String registered = messages.getScenario().getRegistration().getAlreadyRegistered();
+		String registered = messages.getScenario().getRegistration().getStatus().getAlreadyRegistered();
 		String prompt = joinLines(messages.getScenario().getAuthentication().getPrompt());
 		if (registered == null || registered.isBlank())
 			return prompt;
@@ -106,7 +106,7 @@ public class AccountPresenceStep extends AbstractCrackedRegistrationStep {
 	}
 
 	private StepResult invalidWithWarning(CrackedMessages messages, RateLimitDecision decision) {
-		String invalid = messages.getScenario().getAuthentication().getInvalid();
+		String invalid = messages.getScenario().getAuthentication().getStatus().getInvalid();
 		String warning = decision.getWarningMessage();
 
 		if (warning == null || warning.isBlank())

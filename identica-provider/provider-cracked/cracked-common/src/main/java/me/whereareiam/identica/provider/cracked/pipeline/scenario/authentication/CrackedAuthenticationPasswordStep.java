@@ -70,7 +70,7 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 		CrackedMessages messages = messagesProvider.get();
 		CrackedAccount account = accountService.find(providerSubject).orElse(null);
 		if (account == null)
-			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getAuthentication().getNotRegistered()));
+			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getAuthentication().getStatus().getNotRegistered()));
 
 		long ttlMs = authenticationTtlMs();
 		CrackedAuthenticationAttempt input = consumeAuthenticationAttempt(context, ttlMs);
@@ -151,7 +151,7 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 	}
 
 	private StepResult invalidWithWarning(CrackedMessages messages, RateLimitDecision decision) {
-		String invalid = messages.getScenario().getAuthentication().getInvalid();
+		String invalid = messages.getScenario().getAuthentication().getStatus().getInvalid();
 		String warning = decision.getWarningMessage();
 		if (warning == null || warning.isBlank())
 			return StepResult.waiting(invalid);

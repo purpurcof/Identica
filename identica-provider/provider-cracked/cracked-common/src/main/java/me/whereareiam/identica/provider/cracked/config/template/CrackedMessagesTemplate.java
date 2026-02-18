@@ -37,11 +37,13 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
-		registration.setSuccess("{prefix}<white>You have been <green>successfully registered</green>.</white>");
-		registration.setDisabled("{prefix}<white>Registration is <red>disabled</red>.</white>");
-		registration.setAlreadyRegistered("{prefix}<white>Your account is already <green>registered</green>.</white>");
-		registration.setMismatch("{prefix}<white>Passwords do not <red>match</red>.</white>");
-		registration.setNoPending("{prefix}<white>No pending registration.</white>");
+		CrackedMessages.Scenario.Registration.Status registrationStatus = new CrackedMessages.Scenario.Registration.Status();
+		registrationStatus.setSuccess("{prefix}<white>You have been <green>successfully registered</green>.</white>");
+		registrationStatus.setDisabled("{prefix}<white>Registration is <red>disabled</red>.</white>");
+		registrationStatus.setAlreadyRegistered("{prefix}<white>Your account is already <green>registered</green>.</white>");
+		registrationStatus.setMismatch("{prefix}<white>Passwords do not <red>match</red>.</white>");
+		registrationStatus.setNoPending("{prefix}<white>No pending registration.</white>");
+		registration.setStatus(registrationStatus);
 		scenario.setRegistration(registration);
 
 		CrackedMessages.Scenario.Authentication authentication = new CrackedMessages.Scenario.Authentication();
@@ -55,10 +57,12 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 				"  <white>Use <yellow>/login</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
-		authentication.setSuccess("{prefix}<white>Successfully <green>logged in</green>.</white>");
-		authentication.setInvalid("{prefix}<white>Invalid <red>password</red>.</white>");
-		authentication.setNotRegistered("{prefix}<white>No cracked account found.</white>");
-		authentication.setNoPending("{prefix}<white>No pending login.</white>");
+		CrackedMessages.Scenario.Authentication.Status authenticationStatus = new CrackedMessages.Scenario.Authentication.Status();
+		authenticationStatus.setSuccess("{prefix}<white>Successfully <green>logged in</green>.</white>");
+		authenticationStatus.setInvalid("{prefix}<white>Invalid <red>password</red>.</white>");
+		authenticationStatus.setNotRegistered("{prefix}<white>No cracked account found.</white>");
+		authenticationStatus.setNoPending("{prefix}<white>No pending login.</white>");
+		authentication.setStatus(authenticationStatus);
 
 		CrackedMessages.Scenario.Authentication.Bruteforce bruteforce = new CrackedMessages.Scenario.Authentication.Bruteforce();
 		bruteforce.setExceeded(List.of(
@@ -127,22 +131,6 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 		commands.setAdmin(admin);
 
 		messages.setCommands(commands);
-
-		CrackedMessages.Conflict conflict = new CrackedMessages.Conflict();
-		conflict.setRenamed(List.of(
-				" ",
-				" <green><bold>Identica</bold>",
-				" ",
-				"  <white>Using <green>{username}</green> for this session.</white>",
-				" "
-		));
-		conflict.setDenied(List.of(
-				"<white>Name conflict detected. Access denied.</white>",
-				"<white>You were kicked due to a name conflict.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		messages.setConflict(conflict);
 		return messages;
 	}
 }

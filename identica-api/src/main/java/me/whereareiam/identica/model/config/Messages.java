@@ -57,113 +57,107 @@ public class Messages {
 		private @NotNull ExceptionMessages exceptions;
 		private @NotNull PaginationMessages pagination;
 		private @NotNull HelpMessages help;
-		private @NotNull String main;
+		private @NotNull Enroll enroll;
+
+		private @NotNull Migration migration;
+		private @NotNull Sessions sessions;
 		private @NotNull Reload reload;
 		private @NotNull Clear clear;
-		private @NotNull Sessions sessions;
-		private @NotNull Enroll enroll;
-		private @NotNull Migration migration;
 
 		/**
-		 * Configuration for reload command messages.
+		 * Configuration for enroll command messages.
 		 */
 		@Getter
 		@Setter
 		@ToString
-		public static class Reload {
+		public static class Enroll {
 			/**
-			 * Success message when reload completes successfully.
-			 * Placeholders:
-			 * - {prefix}: The global message prefix
-			 */
-			private @NotNull String success;
-
-			/**
-			 * Error message when reload fails.
-			 * Placeholders:
-			 * - {prefix}: The global message prefix
-			 * - {error}: The error message
-			 */
-			private @NotNull String error;
-		}
-
-		@Getter
-		@Setter
-		@ToString
-		public static class Clear {
-			/**
-			 * Confirmation message shown before clearing.
-			 * Placeholders:
-			 * - {prefix}: The global message prefix
-			 * - {target}: Provided input
-			 * - {scope}: clear scope (cache/all)
-			 * - {uniqueId}: Identica UUID
-			 */
-			private @NotNull List<String> confirm;
-
-			/**
-			 * Message shown when no pending clear exists.
+			 * Message shown when no pending enrollment is found.
 			 */
 			private @NotNull String noPending;
 
 			/**
-			 * Message shown when pending clear expired.
+			 * Message shown when enrollment completes successfully.
 			 */
-			private @NotNull String expired;
+			private @NotNull String completed;
+		}
 
-			/**
-			 * Message shown when clear is cancelled.
-			 */
-			private @NotNull String cancelled;
-
-			/**
-			 * Message shown when no account could be resolved.
-			 */
-			private @NotNull String notFound;
-
-			private @NotNull Multiple multiple;
-
-			/**
-			 * Message shown on successful clear.
-			 * Placeholders:
-			 * - {scope}
-			 * - {uniqueId}
-			 */
-			private @NotNull String success;
-
-			/**
-			 * Message shown when a clear fails.
-			 * Placeholders:
-			 * - {error}
-			 */
-			private @NotNull String error;
-
-			/**
-			 * Message sent to the target when disconnected.
-			 */
-			private @NotNull List<String> disconnect;
+		/**
+		 * Configuration for migration command messages.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Migration {
+			private @NotNull Listing list;
+			private @NotNull Links links;
+			private @NotNull Start start;
+			private @NotNull Cancel cancel;
+			private @NotNull Primary primary;
+			private @NotNull Drop drop;
+			private @NotNull String targetNotFound;
 
 			@Getter
 			@Setter
 			@ToString
-			public static class Multiple {
+			public static class Listing {
 				/**
-				 * Lines shown before listing matches.
+				 * Lines shown in migration list output.
 				 * Placeholders:
-				 * - {target}
-				 * - {count}
 				 * - {entries}
 				 */
 				private @NotNull List<String> body;
 
 				/**
-				 * Entry formats for each match.
+				 * Entry format for a single provider link in list output.
 				 * Placeholders:
-				 * - {username}
-				 * - {uniqueId}
-				 * - {command}
+				 * - {providerId}
+				 * - {providerName}
+				 * - {primary}
 				 */
 				private @NotNull EntryFormat entry;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Links {
+				private @NotNull String noLinks;
+				private @NotNull String notLinked;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Start {
+				private @NotNull String pendingExists;
+				private @NotNull String started;
+				private @NotNull String providerUnsupported;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Cancel {
+				private @NotNull String cancelled;
+				private @NotNull String noPending;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Primary {
+				private @NotNull String set;
+				private @NotNull String alreadyPrimary;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Drop {
+				private @NotNull String dropped;
+				private @NotNull String primaryDenied;
+				private @NotNull String lastLinkDenied;
 			}
 		}
 
@@ -286,101 +280,106 @@ public class Messages {
 				private @NotNull EntryFormat entry;
 			}
 		}
-
 		/**
-		 * Configuration for enroll command messages.
+		 * Configuration for reload command messages.
 		 */
 		@Getter
 		@Setter
 		@ToString
-		public static class Enroll {
+		public static class Reload {
 			/**
-			 * Message shown when no pending enrollment is found.
+			 * Success message when reload completes successfully.
+			 * Placeholders:
+			 * - {prefix}: The global message prefix
+			 */
+			private @NotNull String success;
+
+			/**
+			 * Error message when reload fails.
+			 * Placeholders:
+			 * - {prefix}: The global message prefix
+			 * - {error}: The error message
+			 */
+			private @NotNull String error;
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Clear {
+			/**
+			 * Confirmation message shown before clearing.
+			 * Placeholders:
+			 * - {prefix}: The global message prefix
+			 * - {target}: Provided input
+			 * - {scope}: clear scope (cache/all)
+			 * - {uniqueId}: Identica UUID
+			 */
+			private @NotNull List<String> confirm;
+
+			/**
+			 * Message shown when no pending clear exists.
 			 */
 			private @NotNull String noPending;
 
 			/**
-			 * Message shown when enrollment completes successfully.
+			 * Message shown when pending clear expired.
 			 */
-			private @NotNull String completed;
-		}
+			private @NotNull String expired;
 
-		/**
-		 * Configuration for migration command messages.
-		 */
-		@Getter
-		@Setter
-		@ToString
-		public static class Migration {
-			private @NotNull Listing list;
-			private @NotNull Links links;
-			private @NotNull Start start;
-			private @NotNull Cancel cancel;
-			private @NotNull Primary primary;
-			private @NotNull Drop drop;
-			private @NotNull String targetNotFound;
+			/**
+			 * Message shown when clear is cancelled.
+			 */
+			private @NotNull String cancelled;
+
+			/**
+			 * Message shown when no account could be resolved.
+			 */
+			private @NotNull String notFound;
+
+			private @NotNull Multiple multiple;
+
+			/**
+			 * Message shown on successful clear.
+			 * Placeholders:
+			 * - {scope}
+			 * - {uniqueId}
+			 */
+			private @NotNull String success;
+
+			/**
+			 * Message shown when a clear fails.
+			 * Placeholders:
+			 * - {error}
+			 */
+			private @NotNull String error;
+
+			/**
+			 * Message sent to the target when disconnected.
+			 */
+			private @NotNull List<String> disconnect;
 
 			@Getter
 			@Setter
 			@ToString
-			public static class Listing {
+			public static class Multiple {
 				/**
-				 * Lines shown in migration list output.
+				 * Lines shown before listing matches.
 				 * Placeholders:
+				 * - {target}
+				 * - {count}
 				 * - {entries}
 				 */
 				private @NotNull List<String> body;
 
 				/**
-				 * Entry format for a single provider link in list output.
+				 * Entry formats for each match.
 				 * Placeholders:
-				 * - {providerId}
-				 * - {providerName}
-				 * - {primary}
+				 * - {username}
+				 * - {uniqueId}
+				 * - {command}
 				 */
 				private @NotNull EntryFormat entry;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Links {
-				private @NotNull String noLinks;
-				private @NotNull String notLinked;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Start {
-				private @NotNull String pendingExists;
-				private @NotNull String started;
-				private @NotNull String providerUnsupported;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Cancel {
-				private @NotNull String cancelled;
-				private @NotNull String noPending;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Primary {
-				private @NotNull String set;
-				private @NotNull String alreadyPrimary;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Drop {
-				private @NotNull String dropped;
-				private @NotNull String primaryDenied;
-				private @NotNull String lastLinkDenied;
 			}
 		}
 
@@ -430,54 +429,6 @@ public class Messages {
 		@Getter
 		@Setter
 		@ToString
-		public static class Scenario {
-			private @NotNull List<String> handshakeDenied;
-			/**
-			 * Message shown when a pipeline attempt is rejected due to concurrency.
-			 */
-			private @NotNull List<String> pipelineKick;
-			/**
-			 * Message shown when a pending pipeline expires.
-			 */
-			private @NotNull List<String> pipelineExpired;
-			/**
-			 * Message shown when an advance request is blocked by a pending lock.
-			 */
-			private @NotNull List<String> advanceBusy;
-			/**
-			 * Message shown when the pipeline finishes without a completion result.
-			 */
-			private @NotNull List<String> noCompletionPipeline;
-			private @NotNull Routing routing;
-			private @NotNull Errors errors;
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Errors {
-				private @NotNull List<String> preparationMissingContext;
-				private @NotNull List<String> identityGroupMissingResult;
-				private @NotNull List<String> policyGroupMissingResult;
-				private @NotNull List<String> sessionGroupMissingResult;
-				private @NotNull List<String> journeyMissingResult;
-				private @NotNull List<String> journeyMissingContext;
-				private @NotNull List<String> journeyMissingPlan;
-				private @NotNull List<String> finalizeMissingResult;
-				private @NotNull List<String> identityProfileMissing;
-				private @NotNull List<String> accountReviewMissing;
-				private @NotNull List<String> identityReplicationMissing;
-				private @NotNull List<String> providerValidationMissing;
-				private @NotNull List<String> ensureNewAccountMissing;
-				private @NotNull List<String> accountCreationMissing;
-				private @NotNull List<String> providerLinkMissing;
-				private @NotNull List<String> sessionBuildMissing;
-				private @NotNull List<String> accountMissing;
-			}
-		}
-
-		@Getter
-		@Setter
-		@ToString
 		public static class Authentication extends Scenario {
 			private @NotNull List<String> authenticationFailed;
 			private @NotNull List<String> sessionBuildFailed;
@@ -496,6 +447,103 @@ public class Messages {
 		@ToString
 		public static class Migration extends Scenario {
 			private @NotNull List<String> migrationFailed;
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Scenario {
+			private @NotNull List<String> handshakeDenied;
+			/**
+			 * Message shown when a pipeline attempt is rejected due to concurrency.
+			 */
+			private @NotNull List<String> pipelineKick;
+			/**
+			 * Message shown when a pending pipeline expires.
+			 */
+			private @NotNull List<String> pipelineExpired;
+			/**
+			 * Messages shown when an advance request is blocked by a pending lock.
+			 */
+			private @NotNull AdvanceBusy advanceBusy;
+			/**
+			 * Message shown when the pipeline finishes without a completion result.
+			 */
+			private @NotNull List<String> noCompletionPipeline;
+			private @NotNull Routing routing;
+			private @NotNull Errors errors;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class AdvanceBusy {
+				/**
+				 * Chat message shown when an advance request is blocked by a pending lock.
+				 */
+				private @NotNull String chat;
+				/**
+				 * Disconnect message shown when an advance request is blocked by a pending lock.
+				 */
+				private @NotNull List<String> kick;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Errors {
+				private @NotNull List<String> preparationMissingContext;
+				private @NotNull List<String> finalizeMissingResult;
+				private @NotNull Identity identity;
+				private @NotNull Policy policy;
+				private @NotNull Session session;
+				private @NotNull Journey journey;
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Identity {
+					private @NotNull List<String> groupMissingResult;
+					private @NotNull List<String> profileMissing;
+					private @NotNull List<String> replicationMissing;
+					private @NotNull List<String> accountMissing;
+					private @NotNull Provider provider;
+
+					@Getter
+					@Setter
+					@ToString
+					public static class Provider {
+						private @NotNull List<String> validationMissing;
+						private @NotNull List<String> linkMissing;
+					}
+				}
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Policy {
+					private @NotNull List<String> groupMissingResult;
+					private @NotNull List<String> accountReviewMissing;
+					private @NotNull List<String> ensureNewAccountMissing;
+					private @NotNull List<String> accountCreationMissing;
+				}
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Session {
+					private @NotNull List<String> groupMissingResult;
+					private @NotNull List<String> buildMissing;
+				}
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Journey {
+					private @NotNull List<String> missingResult;
+					private @NotNull List<String> missingContext;
+					private @NotNull List<String> missingPlan;
+				}
+			}
 		}
 
 		@Getter

@@ -115,7 +115,7 @@ public class BuildSessionPhase implements PipelinePhase<SessionState> {
 				.getConnection()
 				.getMigration()
 				.getErrors()
-				.getSessionBuildMissing());
+				.getSession().getBuildMissing());
 	}
 
 	private @NotNull String joinMessage(@NotNull List<String> lines) {

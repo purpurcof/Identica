@@ -94,6 +94,6 @@ public class LinkProviderPhase implements PipelinePhase<IdentityState> {
 				.getConnection()
 				.getRegistration()
 				.getErrors()
-				.getProviderLinkMissing());
+				.getIdentity().getProvider().getLinkMissing());
 	}
 }

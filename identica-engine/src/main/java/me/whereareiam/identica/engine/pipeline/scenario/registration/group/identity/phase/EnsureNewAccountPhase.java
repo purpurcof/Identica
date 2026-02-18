@@ -84,7 +84,7 @@ public class EnsureNewAccountPhase implements PipelinePhase<IdentityState> {
 				.getConnection()
 				.getRegistration()
 				.getErrors()
-				.getEnsureNewAccountMissing());
+				.getPolicy().getEnsureNewAccountMissing());
 	}
 
 	private @NotNull String accountAlreadyExistsMessage() {

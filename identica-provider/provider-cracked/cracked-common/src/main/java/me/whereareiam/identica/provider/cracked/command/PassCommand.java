@@ -38,7 +38,7 @@ public class PassCommand {
 
 		CrackedMessages.Scenario.Registration messages = messagesProvider.get().getScenario().getRegistration();
 		if (!hasPending(identity)) {
-			sendMessage(identity, messages.getNoPending());
+			sendMessage(identity, messages.getStatus().getNoPending());
 			return;
 		}
 
@@ -56,7 +56,7 @@ public class PassCommand {
 
 		CrackedMessages.Scenario.Registration messages = messagesProvider.get().getScenario().getRegistration();
 		if (!hasPending(identity)) {
-			sendMessage(identity, messages.getNoPending());
+			sendMessage(identity, messages.getStatus().getNoPending());
 			return;
 		}
 
@@ -77,8 +77,8 @@ public class PassCommand {
 		switch (decision.getStatus()) {
 			case WAIT -> sendMessage(identity, decision.getMessage());
 			case DENY, REQUIRE_RECONNECT -> disconnect(identity, decision.getMessage());
-			case NO_PENDING -> sendMessage(identity, messages.getNoPending());
-			case ALLOW -> sendMessage(identity, messages.getSuccess());
+			case NO_PENDING -> sendMessage(identity, messages.getStatus().getNoPending());
+			case ALLOW -> sendMessage(identity, messages.getStatus().getSuccess());
 			default -> {
 			}
 		}

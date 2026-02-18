@@ -56,6 +56,6 @@ public class SessionGroup implements PipelineGroup<SessionState> {
 				.getConnection()
 				.getMigration()
 				.getErrors()
-				.getSessionGroupMissingResult());
+				.getSession().getGroupMissingResult());
 	}
 }

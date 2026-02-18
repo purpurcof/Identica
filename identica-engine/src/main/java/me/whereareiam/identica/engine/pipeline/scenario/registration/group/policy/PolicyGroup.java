@@ -55,6 +55,6 @@ public class PolicyGroup implements PipelineGroup<PolicyState> {
 				.getConnection()
 				.getRegistration()
 				.getErrors()
-				.getPolicyGroupMissingResult());
+				.getPolicy().getGroupMissingResult());
 	}
 }

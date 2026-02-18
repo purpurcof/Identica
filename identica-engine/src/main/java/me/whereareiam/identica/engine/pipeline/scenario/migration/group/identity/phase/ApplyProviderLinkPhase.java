@@ -96,7 +96,7 @@ public class ApplyProviderLinkPhase implements PipelinePhase<IdentityState> {
 				.getConnection()
 				.getMigration()
 				.getErrors()
-				.getProviderLinkMissing());
+				.getIdentity().getProvider().getLinkMissing());
 	}
 
 }

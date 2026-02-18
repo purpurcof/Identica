@@ -14,7 +14,6 @@ public class CrackedMessages {
 	private Password password;
 	private ChangePassword changePassword;
 	private Commands commands;
-	private Conflict conflict;
 
 	@Getter
 	@Setter
@@ -29,11 +28,18 @@ public class CrackedMessages {
 		public static class Registration {
 			private List<String> prompt;
 			private List<String> confirmPrompt;
-			private String success;
-			private String disabled;
-			private String alreadyRegistered;
-			private String mismatch;
-			private String noPending;
+			private Status status;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Status {
+				private String success;
+				private String disabled;
+				private String alreadyRegistered;
+				private String mismatch;
+				private String noPending;
+			}
 		}
 
 		@Getter
@@ -41,11 +47,18 @@ public class CrackedMessages {
 		@ToString
 		public static class Authentication {
 			private List<String> prompt;
-			private String success;
-			private String invalid;
-			private String notRegistered;
-			private String noPending;
 			private Bruteforce bruteforce;
+			private Status status;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Status {
+				private String success;
+				private String invalid;
+				private String notRegistered;
+				private String noPending;
+			}
 
 			@Getter
 			@Setter
@@ -109,13 +122,5 @@ public class CrackedMessages {
 			private String notFound;
 			private String alreadyRegistered;
 		}
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class Conflict {
-		private List<String> renamed;
-		private List<String> denied;
 	}
 }

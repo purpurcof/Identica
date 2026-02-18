@@ -137,7 +137,7 @@ public class CrackedMigrationConfirmStep extends InteractiveStep {
 	}
 
 	private String joinRegisterReset(CrackedMessages messages) {
-		String mismatch = messages.getScenario().getRegistration().getMismatch();
+		String mismatch = messages.getScenario().getRegistration().getStatus().getMismatch();
 		String prompt = joinRegisterPrompt(messages);
 		if (mismatch == null || mismatch.isBlank())
 			return prompt;

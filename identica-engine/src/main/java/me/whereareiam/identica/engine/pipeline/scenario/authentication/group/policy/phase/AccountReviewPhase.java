@@ -168,7 +168,7 @@ public class AccountReviewPhase implements PipelinePhase<PolicyState> {
 				.getConnection()
 				.getAuthentication()
 				.getErrors()
-				.getAccountReviewMissing());
+				.getPolicy().getAccountReviewMissing());
 	}
 
 	private @NotNull String joinMessage(@NotNull List<String> lines) {

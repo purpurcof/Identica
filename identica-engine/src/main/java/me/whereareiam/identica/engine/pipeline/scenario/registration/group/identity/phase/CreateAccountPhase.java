@@ -95,6 +95,6 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 				.getConnection()
 				.getRegistration()
 				.getErrors()
-				.getAccountCreationMissing());
+				.getPolicy().getAccountCreationMissing());
 	}
 }

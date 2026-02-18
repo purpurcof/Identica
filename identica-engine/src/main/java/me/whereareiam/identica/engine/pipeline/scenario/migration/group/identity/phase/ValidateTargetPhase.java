@@ -132,7 +132,7 @@ public class ValidateTargetPhase implements PipelinePhase<IdentityState> {
 				.getConnection()
 				.getMigration()
 				.getErrors()
-				.getProviderValidationMissing());
+				.getIdentity().getProvider().getValidationMissing());
 	}
 
 	private @NotNull String accountMissingMessage() {
@@ -140,7 +140,7 @@ public class ValidateTargetPhase implements PipelinePhase<IdentityState> {
 				.getConnection()
 				.getMigration()
 				.getErrors()
-				.getAccountMissing());
+				.getIdentity().getAccountMissing());
 	}
 
 	private @NotNull String joinMessage(@NotNull List<String> lines) {

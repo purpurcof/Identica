@@ -1,4 +1,4 @@
-package me.whereareiam.identica.event.auth;
+package me.whereareiam.identica.event.connection;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,7 @@ import java.util.UUID;
 @Getter
 @ToString
 @RequiredArgsConstructor
-public class AuthPendingClearedEvent implements Event, SynchronousEvent {
+public class ConnectionPendingClearedEvent implements Event, SynchronousEvent {
 	private final UUID connectionUniqueId;
 	private final boolean hadPending;
 }

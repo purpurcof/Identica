@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
-import me.whereareiam.identica.event.auth.provider.ProviderSelectedEvent;
+import me.whereareiam.identica.event.pipeline.scenario.shared.ProviderSelectedEvent;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
 import me.whereareiam.identica.event.step.StepPrepareEvent;

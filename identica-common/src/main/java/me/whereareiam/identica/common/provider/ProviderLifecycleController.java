@@ -15,10 +15,10 @@ import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.provider.ProviderDisabledEvent;
-import me.whereareiam.identica.event.provider.ProviderEnabledEvent;
-import me.whereareiam.identica.event.provider.ProviderLoadedEvent;
-import me.whereareiam.identica.event.provider.ProviderUnloadedEvent;
+import me.whereareiam.identica.event.provider.state.ProviderDisabledEvent;
+import me.whereareiam.identica.event.provider.state.ProviderEnabledEvent;
+import me.whereareiam.identica.event.provider.state.ProviderLoadedEvent;
+import me.whereareiam.identica.event.provider.state.ProviderUnloadedEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;

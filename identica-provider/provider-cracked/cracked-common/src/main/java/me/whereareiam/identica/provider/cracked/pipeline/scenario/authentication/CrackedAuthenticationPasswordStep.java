@@ -3,6 +3,7 @@ package me.whereareiam.identica.provider.cracked.pipeline.scenario.authenticatio
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
@@ -15,11 +16,12 @@ import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.account.CrackedAccountService;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 import me.whereareiam.identica.provider.cracked.cryptography.CryptographyService;
+import me.whereareiam.identica.provider.cracked.event.authentication.AuthenticationAttemptDecision;
+import me.whereareiam.identica.provider.cracked.event.authentication.AuthenticationAttemptFailedEvent;
+import me.whereareiam.identica.provider.cracked.event.authentication.AuthenticationAttemptSucceededEvent;
 import me.whereareiam.identica.provider.cracked.model.CrackedAccount;
+import me.whereareiam.identica.provider.cracked.model.authentication.AuthenticationAttemptContext;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedAuthenticationAttempt;
-import me.whereareiam.identica.ratelimit.RateLimitService;
-import me.whereareiam.identica.model.ratelimit.RateLimitContext;
-import me.whereareiam.identica.model.ratelimit.RateLimitDecision;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +37,7 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 	private final CrackedAccountService accountService;
 	private final CryptographyService cryptographyService;
 	private final PipelineStateStore pipelineStateStore;
-	private final RateLimitService rateLimitService;
+	private final EventManager eventManager;
 
 	@Inject
 	public CrackedAuthenticationPasswordStep(
@@ -44,7 +46,7 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 			CrackedAccountService accountService,
 			CryptographyService cryptographyService,
 			PipelineStateStore pipelineStateStore,
-			RateLimitService rateLimitService
+			EventManager eventManager
 	) {
 		super("cracked-authentication-password");
 		this.messagesProvider = messagesProvider;
@@ -52,7 +54,7 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 		this.accountService = accountService;
 		this.cryptographyService = cryptographyService;
 		this.pipelineStateStore = pipelineStateStore;
-		this.rateLimitService = rateLimitService;
+		this.eventManager = eventManager;
 	}
 
 	@Override
@@ -78,17 +80,47 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 			return CompletableFuture.completedFuture(StepResult.waiting(joinLines(messages.getScenario().getAuthentication().getPrompt())));
 
 		if (!cryptographyService.verify(account, input.getPassword())) {
-			RateLimitDecision decision = rateLimitService.record(
-					CrackedConstants.RATE_LIMIT.BRUTE_FORCE,
-					rateLimitContext(context)
-			);
-			if (decision.isLimited() && decision.isDeny())
-				return CompletableFuture.completedFuture(StepResult.denied(decision.getMessage()));
-			return CompletableFuture.completedFuture(invalidWithWarning(messages, decision));
+			AuthenticationAttemptDecision decision = recordBruteForceDecision(account, context);
+			if (decision.isDeny())
+				return CompletableFuture.completedFuture(StepResult.denied(decision.getDenyMessage()));
+			return CompletableFuture.completedFuture(invalidWithWarning(messages, decision.getWarningMessage()));
 		}
 
-		rateLimitService.clear(CrackedConstants.RATE_LIMIT.BRUTE_FORCE, rateLimitContext(context));
+		clearBruteForce(account, context);
 		return CompletableFuture.completedFuture(complete(context, providerSubject, username));
+	}
+
+	private @NotNull AuthenticationAttemptDecision recordBruteForceDecision(
+			@NotNull CrackedAccount account,
+			@NotNull ScenarioContext context
+	) {
+		AuthenticationAttemptFailedEvent event = new AuthenticationAttemptFailedEvent(
+				attemptContext(account, context),
+				null
+		);
+		eventManager.call(event);
+		AuthenticationAttemptDecision decision = event.getDecision();
+		return decision != null ? decision : AuthenticationAttemptDecision.allow();
+	}
+
+	private void clearBruteForce(
+			@NotNull CrackedAccount account,
+			@NotNull ScenarioContext context
+	) {
+		eventManager.call(new AuthenticationAttemptSucceededEvent(attemptContext(account, context)));
+	}
+
+	private @NotNull AuthenticationAttemptContext attemptContext(
+			@NotNull CrackedAccount account,
+			@NotNull ScenarioContext context
+	) {
+		return new AuthenticationAttemptContext(
+				account,
+				context.getConnectionUniqueId(),
+				context.getIdenticaUniqueId(),
+				context.getUsername(),
+				context.getIp()
+		);
 	}
 
 	private StepResult complete(ScenarioContext context, String providerSubject, String username) {
@@ -111,15 +143,6 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 		if (settings == null)
 			return 0L;
 		return settings.getConnection().getAuthentication().pipelineTtlMillis();
-	}
-
-	private RateLimitContext rateLimitContext(@NotNull ScenarioContext context) {
-		return RateLimitContext.builder()
-				.ip(context.getIp())
-				.username(context.getUsername())
-				.uniqueId(context.getIdenticaUniqueId())
-				.connectionUniqueId(context.getConnectionUniqueId())
-				.build();
 	}
 
 	private @NotNull PipelineStateReference reference(@NotNull ScenarioContext context) {
@@ -150,9 +173,8 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 		return String.join("\n", lines);
 	}
 
-	private StepResult invalidWithWarning(CrackedMessages messages, RateLimitDecision decision) {
+	private StepResult invalidWithWarning(CrackedMessages messages, String warning) {
 		String invalid = messages.getScenario().getAuthentication().getStatus().getInvalid();
-		String warning = decision.getWarningMessage();
 		if (warning == null || warning.isBlank())
 			return StepResult.waiting(invalid);
 		if (invalid == null || invalid.isBlank())

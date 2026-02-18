@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
-import me.whereareiam.identica.event.auth.AuthPendingClearedEvent;
+import me.whereareiam.identica.event.connection.ConnectionPendingClearedEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -48,7 +48,7 @@ public class AccountClearPipelineListener implements EventListener {
 
 		boolean removed = pipelineStateStore.consume(reference).isPresent();
 		if (connectionUniqueId != null) {
-			eventManager.call(new AuthPendingClearedEvent(connectionUniqueId, removed));
+			eventManager.call(new ConnectionPendingClearedEvent(connectionUniqueId, removed));
 		}
 	}
 

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.event.auth;
+package me.whereareiam.identica.event.pipeline.scenario.authentication;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +10,6 @@ import me.whereareiam.identica.model.auth.AuthContext;
 @Getter
 @ToString
 @RequiredArgsConstructor
-public class AuthContextBuildEvent implements Event, SynchronousEvent {
+public class AuthenticationContextBuiltEvent implements Event, SynchronousEvent {
 	private final AuthContext context;
 }

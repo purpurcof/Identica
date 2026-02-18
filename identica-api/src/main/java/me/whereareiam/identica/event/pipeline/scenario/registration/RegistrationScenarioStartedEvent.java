@@ -1,4 +1,4 @@
-package me.whereareiam.identica.event.registration.scenario;
+package me.whereareiam.identica.event.pipeline.scenario.registration;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

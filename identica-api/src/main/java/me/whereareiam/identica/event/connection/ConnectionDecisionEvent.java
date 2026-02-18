@@ -1,4 +1,4 @@
-package me.whereareiam.identica.event.auth;
+package me.whereareiam.identica.event.connection;
 
 import lombok.*;
 import me.whereareiam.identica.event.base.Event;

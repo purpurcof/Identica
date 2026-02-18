@@ -9,7 +9,7 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.provider.cracked.CryptographyAlgorithm;
 import me.whereareiam.identica.provider.cracked.CryptographyRegistry;
 import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
-import me.whereareiam.identica.provider.cracked.event.PasswordVerifiedEvent;
+import me.whereareiam.identica.provider.cracked.event.account.password.PasswordVerifiedEvent;
 import me.whereareiam.identica.provider.cracked.model.CrackedAccount;
 import me.whereareiam.identica.provider.cracked.model.CryptographyOptions;
 import org.jetbrains.annotations.NotNull;

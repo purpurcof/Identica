@@ -7,7 +7,7 @@ import me.whereareiam.identica.engine.pipeline.scenario.authentication.Authentic
 import me.whereareiam.identica.engine.pipeline.scenario.ScenarioRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.auth.ConnectionDecisionEvent;
+import me.whereareiam.identica.event.connection.ConnectionDecisionEvent;
 import me.whereareiam.identica.event.pipeline.attempt.FlowAttemptFinishedEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.provider.cracked.event;
+package me.whereareiam.identica.provider.cracked.event.account.password;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.event.auth.enrollment;
+package me.whereareiam.identica.event.pipeline.scenario.registration;
 
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;

@@ -7,7 +7,7 @@ import com.google.inject.name.Named;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
-import me.whereareiam.identica.event.auth.AuthContextBuildEvent;
+import me.whereareiam.identica.event.pipeline.scenario.authentication.AuthenticationContextBuiltEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;
@@ -67,7 +67,7 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 				.intendedServer(request.getIntendedServer())
 				.build();
 
-		EventUtil.callEvent(new AuthContextBuildEvent(context));
+		EventUtil.callEvent(new AuthenticationContextBuiltEvent(context));
 		emitScenarioBuilt(context);
 
 		return context;

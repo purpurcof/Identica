@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.auth.AuthPendingClearedEvent;
+import me.whereareiam.identica.event.connection.ConnectionPendingClearedEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.routing.RoutingTargetUpdatedEvent;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
@@ -95,7 +95,7 @@ public class RoutingLifecycle implements EventListener {
 	}
 
 	@IdenticEvent
-	public void onPendingCleared(AuthPendingClearedEvent event) {
+	public void onPendingCleared(ConnectionPendingClearedEvent event) {
 		if (event == null || event.getConnectionUniqueId() == null) return;
 		routingStateStore.clear(event.getConnectionUniqueId());
 	}

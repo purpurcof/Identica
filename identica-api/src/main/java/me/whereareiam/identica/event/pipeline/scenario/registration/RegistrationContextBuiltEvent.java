@@ -1,4 +1,4 @@
-package me.whereareiam.identica.event.registration;
+package me.whereareiam.identica.event.pipeline.scenario.registration;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +10,6 @@ import me.whereareiam.identica.model.registration.RegistrationContext;
 @Getter
 @ToString
 @RequiredArgsConstructor
-public class RegistrationContextBuildEvent implements Event, SynchronousEvent {
+public class RegistrationContextBuiltEvent implements Event, SynchronousEvent {
 	private final RegistrationContext context;
 }

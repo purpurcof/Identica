@@ -5,8 +5,8 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
-import me.whereareiam.identica.event.auth.scenario.AuthScenarioStartedEvent;
-import me.whereareiam.identica.event.registration.scenario.RegistrationScenarioStartedEvent;
+import me.whereareiam.identica.event.pipeline.scenario.authentication.AuthenticationScenarioStartedEvent;
+import me.whereareiam.identica.event.pipeline.scenario.registration.RegistrationScenarioStartedEvent;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
@@ -82,7 +82,7 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 	) {
 		boolean resumed = resolveResumed(pipelineType, pipelineState);
 		if (context instanceof me.whereareiam.identica.model.auth.AuthContext authContext) {
-			EventUtil.callEvent(new AuthScenarioStartedEvent(authContext, flow, resumed));
+			EventUtil.callEvent(new AuthenticationScenarioStartedEvent(authContext, flow, resumed));
 		}
 		if (context instanceof me.whereareiam.identica.model.registration.RegistrationContext registrationContext) {
 			EventUtil.callEvent(new RegistrationScenarioStartedEvent(registrationContext, flow, resumed));

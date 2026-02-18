@@ -1,4 +1,4 @@
-package me.whereareiam.identica.event.provider;
+package me.whereareiam.identica.event.provider.state;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -9,11 +9,11 @@ import me.whereareiam.identica.model.provider.InternalProvider;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Event fired when a provider is disabled.
+ * Event fired when a provider is loaded successfully.
  */
 @Getter
 @ToString
 @RequiredArgsConstructor
-public class ProviderDisabledEvent implements Event, SynchronousEvent {
+public class ProviderLoadedEvent implements Event, SynchronousEvent {
 	private final @NotNull InternalProvider provider;
 }

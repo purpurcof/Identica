@@ -1,4 +1,4 @@
-package me.whereareiam.identica.event.auth.scenario;
+package me.whereareiam.identica.event.pipeline.scenario.authentication;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 @ToString
 @RequiredArgsConstructor
-public class AuthScenarioStartedEvent implements Event, SynchronousEvent {
+public class AuthenticationScenarioStartedEvent implements Event, SynchronousEvent {
 	private final @NotNull AuthContext context;
 	private final @NotNull JourneyType flow;
 	private final boolean resumed;

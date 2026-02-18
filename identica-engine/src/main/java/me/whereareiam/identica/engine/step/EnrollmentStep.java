@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.auth.enrollment.EnrollmentOptionsEvent;
+import me.whereareiam.identica.event.pipeline.scenario.registration.EnrollmentOptionsEvent;
 import me.whereareiam.identica.model.auth.EnrollmentEntry;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.config.Messages;

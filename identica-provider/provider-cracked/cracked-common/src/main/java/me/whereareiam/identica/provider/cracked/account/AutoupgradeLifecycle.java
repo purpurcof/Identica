@@ -10,7 +10,7 @@ import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
 import me.whereareiam.identica.provider.cracked.cryptography.CryptographyService;
 import me.whereareiam.identica.provider.cracked.cryptography.PasswordCandidate;
-import me.whereareiam.identica.provider.cracked.event.PasswordVerifiedEvent;
+import me.whereareiam.identica.provider.cracked.event.account.password.PasswordVerifiedEvent;
 import me.whereareiam.identica.provider.cracked.type.PasswordChangeReason;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -8,6 +8,11 @@ import me.whereareiam.identica.engine.connection.ConnectionDecisionResolver;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.ScenarioRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.ScenarioSelection;
+import me.whereareiam.identica.event.connection.attempt.ConnectionAdvanceAttemptEvent;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.connection.attempt.ConnectionAttemptEvent;
+import me.whereareiam.identica.event.connection.attempt.ConnectionProcessAttemptEvent;
+import me.whereareiam.identica.event.connection.attempt.ConnectionResumeAttemptEvent;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.pipeline.PipelineState;
@@ -22,10 +27,6 @@ import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.model.ratelimit.RateLimitContext;
-import me.whereareiam.identica.model.ratelimit.RateLimitDecision;
-import me.whereareiam.identica.ratelimit.RateLimitService;
-import me.whereareiam.identica.type.ratelimit.RateLimitScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +47,7 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator {
 
 	// Runtime orchestration
 	private final HandshakePipeline handshakePipeline;
-	private final RateLimitService rateLimitService;
+	private final EventManager eventManager;
 
 	@Override
 	public @NotNull CompletionStage<HandshakeDecision> handshake(@Nullable HandshakeRequest request) {
@@ -64,8 +65,17 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator {
 
 	@Override
 	public @NotNull CompletionStage<ConnectionDecision> process(@Nullable ConnectionRequest request) {
-		ConnectionDecision limited = checkRateLimit(RateLimitScope.PROCESS, rateLimitContext(request));
-		if (limited != null) return CompletableFuture.completedFuture(limited);
+		if (request != null) {
+			ConnectionAttemptEvent entryEvent = new ConnectionProcessAttemptEvent(
+					request.getConnectionUniqueId(),
+					request.getIdentity().getUniqueId(),
+					request.getUsername(),
+					request.getIp()
+			);
+			eventManager.call(entryEvent);
+			if (entryEvent.getDecision() != null)
+				return CompletableFuture.completedFuture(entryEvent.getDecision());
+		}
 
 		ScenarioSelection selection = scenarioRegistry.select(request);
 		if (selection.isResume()) {
@@ -88,9 +98,15 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator {
 	public @NotNull CompletionStage<ConnectionDecision> resume(
 			@NotNull ResumeRequest request
 	) {
-		ConnectionDecision limited = checkRateLimit(RateLimitScope.RESUME, rateLimitContext(request));
-		if (limited != null)
-			return CompletableFuture.completedFuture(limited);
+		ConnectionAttemptEvent entryEvent = new ConnectionResumeAttemptEvent(
+				request.getConnectionUniqueId(),
+				request.getIdentityUniqueId(),
+				request.getUsername(),
+				request.getIp()
+		);
+		eventManager.call(entryEvent);
+		if (entryEvent.getDecision() != null)
+			return CompletableFuture.completedFuture(entryEvent.getDecision());
 
 		AbstractScenarioPipeline runner = scenarioRegistry.selectForResume(request);
 		CompletionStage<PipelineResult> execution = runner.execute(null, request);
@@ -102,9 +118,15 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator {
 	public @NotNull CompletionStage<ConnectionDecision> advanceFlow(
 			@NotNull AdvanceRequest request
 	) {
-		ConnectionDecision limited = checkRateLimit(RateLimitScope.ADVANCE, rateLimitContext(request));
-		if (limited != null)
-			return CompletableFuture.completedFuture(limited);
+		ConnectionAttemptEvent entryEvent = new ConnectionAdvanceAttemptEvent(
+				request.getConnectionUniqueId(),
+				request.getIdentityUniqueId(),
+				request.getUsername(),
+				request.getIp()
+		);
+		eventManager.call(entryEvent);
+		if (entryEvent.getDecision() != null)
+			return CompletableFuture.completedFuture(entryEvent.getDecision());
 
 		AbstractScenarioPipeline runner = scenarioRegistry.selectForAdvance(request);
 		ResumeRequest pendingRequest = ResumeRequest.builder()
@@ -142,45 +164,5 @@ public class DefaultConnectionCoordinator implements ConnectionCoordinator {
 	) {
 		CompletionStage<PipelineResult> execution = runner.execute(request, null);
 		return execution.handle((result, error) -> resolveDecision(result, error, runner.type()));
-	}
-
-	private @Nullable ConnectionDecision checkRateLimit(
-			@NotNull RateLimitScope scope,
-			@Nullable RateLimitContext ctx
-	) {
-		if (ctx == null) return null;
-		RateLimitDecision decision = rateLimitService.evaluate(scope, ctx).orElse(null);
-		if (decision == null || !decision.isLimited() || !decision.isDeny()) return null;
-		return ConnectionDecision.deny(decision.getMessage());
-	}
-
-	private @Nullable RateLimitContext rateLimitContext(@Nullable ConnectionRequest request) {
-		if (request == null) return null;
-		return RateLimitContext.builder()
-				.ip(request.getIp())
-				.username(request.getUsername())
-				.uniqueId(request.getIdentity().getUniqueId())
-				.connectionUniqueId(request.getConnectionUniqueId())
-				.build();
-	}
-
-	private @Nullable RateLimitContext rateLimitContext(@Nullable ResumeRequest request) {
-		if (request == null) return null;
-		return RateLimitContext.builder()
-				.ip(request.getIp())
-				.username(request.getUsername())
-				.uniqueId(request.getIdentityUniqueId())
-				.connectionUniqueId(request.getConnectionUniqueId())
-				.build();
-	}
-
-	private @Nullable RateLimitContext rateLimitContext(@Nullable AdvanceRequest request) {
-		if (request == null) return null;
-		return RateLimitContext.builder()
-				.ip(request.getIp())
-				.username(request.getUsername())
-				.uniqueId(request.getIdentityUniqueId())
-				.connectionUniqueId(request.getConnectionUniqueId())
-				.build();
 	}
 }

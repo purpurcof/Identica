@@ -42,6 +42,7 @@ import me.whereareiam.identica.common.provider.SerializerEngineProvider;
 import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
 import me.whereareiam.identica.common.ratelimit.DefaultRateLimitService;
+import me.whereareiam.identica.common.ratelimit.ConnectionAttemptRateLimitLifecycle;
 import me.whereareiam.identica.common.ratelimit.RateLimitRegistry;
 import me.whereareiam.identica.common.ratelimit.ResumeSpamRateLimitDefinition;
 import me.whereareiam.identica.common.routing.PhaseRoutingService;
@@ -161,6 +162,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(AccountClearSessionListener.class).asEagerSingleton();
 		bind(SessionReplacedListener.class).asEagerSingleton();
 		bind(ConflictPrepareLifecycle.class).asEagerSingleton();
+		bind(ConnectionAttemptRateLimitLifecycle.class).asEagerSingleton();
 		bind(DynamicListenerRegistry.class).to(DefaultDynamicListenerRegistry.class).asEagerSingleton();
 
 		// Provider system

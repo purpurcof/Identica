@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.auth.provider.ProviderEligibilityEvent;
+import me.whereareiam.identica.event.provider.ProviderEligibilityEvent;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;

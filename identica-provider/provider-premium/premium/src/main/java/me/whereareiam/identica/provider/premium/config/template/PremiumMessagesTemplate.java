@@ -37,9 +37,11 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 				" ",
 				" <green><bold>Identica</bold>",
 				" ",
-				"  <white>Confirm premium migration</white>",
-				"  <white>Use <gold>/premium confirm</gold> to continue</white>",
-				"  <gray>Cancel with <red>/premium cancel</red></gray>",
+				"  <white>You are about to switch to a <gold>licensed Minecraft account</gold>.</white>",
+				"  <white>After this, you will log in with that licensed account.</white>",
+				" ",
+				"  <yellow>/premium confirm</yellow> <dark_gray>- <white>Continue migration</white>",
+				"  <yellow>/premium cancel</yellow> <dark_gray>- <white>Cancel migration</white>",
 				" "
 		));
 		premium.setConfirmed(List.of(

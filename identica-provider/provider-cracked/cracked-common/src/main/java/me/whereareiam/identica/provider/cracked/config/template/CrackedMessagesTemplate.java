@@ -102,9 +102,11 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 				" ",
 				" <green><bold>Identica</bold>",
 				" ",
-				"  <white>Confirm cracked migration</white>",
-				"  <white>Use <yellow>/cracked</yellow> <gray>[Confirm]</gray> to continue</white>",
-				"  <white>Cancel with <yellow>/cracked</yellow> <gray>[Cancel]</gray></white>",
+				"  <white>You are about to switch to a <gold>cracked account</gold>.</white>",
+				"  <white>After this, you will log in using a password.</white>",
+				" ",
+				"  <yellow>/cracked confirm</yellow> <dark_gray>- <white>Continue migration</white>",
+				"  <yellow>/cracked cancel</yellow> <dark_gray>- <white>Cancel migration</white>",
 				" "
 		));
 		cracked.setConfirmed(List.of(

@@ -86,7 +86,7 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 	}
 
 	private void requestForceOnline(String username, String ip, String reason) {
-		if (username == null || username.isBlank()) return;
+		if (username == null || username.isBlank() || ip == null || ip.isBlank()) return;
 
 		long ttlMillis = settingsProvider.get()
 				.getConnection()

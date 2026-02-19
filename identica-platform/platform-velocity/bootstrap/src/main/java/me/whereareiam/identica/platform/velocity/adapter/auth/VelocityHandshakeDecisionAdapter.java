@@ -17,6 +17,7 @@ import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.platform.velocity.api.handshake.VelocityHandshakeContext;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -44,14 +45,14 @@ public class VelocityHandshakeDecisionAdapter extends HandshakeDecisionAdapter i
 		if (!event.getResult().isAllowed())
 			return null;
 
-		String ip = null;
-		if (event.getConnection().getRemoteAddress() != null
-				&& event.getConnection().getRemoteAddress().getAddress() != null) {
-			ip = event.getConnection().getRemoteAddress().getAddress().getHostAddress();
+		String resolvedIp = resolveIp(event);
+		if (resolvedIp == null) {
+			Logger.warn("PreLogin missing remote IP for %s, skipping handshake processing", event.getUsername());
+			return null;
 		}
 
 		CompletableFuture<?> future = connectionCoordinator
-				.handshake(new HandshakeRequest(new ConnectionIdentity(event.getUsername(), ip)))
+				.handshake(new HandshakeRequest(new ConnectionIdentity(event.getUsername(), resolvedIp)))
 				.whenComplete((decision, error) -> {
 					if (error != null) {
 						Logger.severe("Handshake failed", error);
@@ -62,7 +63,7 @@ public class VelocityHandshakeDecisionAdapter extends HandshakeDecisionAdapter i
 					apply(resolved, target(event));
 
 					if (resolved.getStatus() != HandshakeDecision.Status.DENY) {
-						handshakeStore.consumeInstruction(event.getUsername())
+						handshakeStore.consumeInstruction(event.getUsername(), resolvedIp)
 								.ifPresent(instruction -> applierRegistry.applyAll(
 										new VelocityHandshakeContext(event),
 										instruction
@@ -76,5 +77,20 @@ public class VelocityHandshakeDecisionAdapter extends HandshakeDecisionAdapter i
 
 	private @NotNull HandshakeDecisionTarget target(@NotNull PreLoginEvent event) {
 		return message -> event.setResult(PreLoginEvent.PreLoginComponentResult.denied(message));
+	}
+
+	private @Nullable String resolveIp(@NotNull PreLoginEvent event) {
+		if (event.getConnection().getRemoteAddress() == null) return null;
+
+		if (event.getConnection().getRemoteAddress().getAddress() != null) {
+			String hostAddress = event.getConnection().getRemoteAddress().getAddress().getHostAddress();
+			if (hostAddress != null && !hostAddress.isBlank())
+				return hostAddress;
+		}
+
+		String hostString = event.getConnection().getRemoteAddress().getHostString();
+		if (hostString == null || hostString.isBlank()) return null;
+
+		return hostString;
 	}
 }

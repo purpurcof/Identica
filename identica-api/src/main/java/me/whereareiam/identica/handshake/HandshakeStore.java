@@ -18,7 +18,7 @@ public interface HandshakeStore {
 
 	void putInstruction(@NotNull HandshakeInstruction instruction);
 
-	@NotNull Optional<HandshakeInstruction> consumeInstruction(@NotNull String username);
+	@NotNull Optional<HandshakeInstruction> consumeInstruction(@NotNull String username, @NotNull String ip);
 
-	void invalidateInstruction(@NotNull String username);
+	void invalidateInstruction(@NotNull String username, @NotNull String ip);
 }

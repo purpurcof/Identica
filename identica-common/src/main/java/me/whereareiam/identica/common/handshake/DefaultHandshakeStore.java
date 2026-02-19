@@ -20,6 +20,7 @@ import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -68,34 +69,35 @@ public final class DefaultHandshakeStore implements HandshakeStore, EventListene
 		HandshakeInstruction stored = event.getInstruction();
 		String username = stored.getIdentity().getUsername();
 		if (username.isBlank()) return;
+		String ip = stored.getIdentity().getIp();
+		if (ip == null || ip.isBlank()) return;
 
-		String key = normalize(username);
+		String key = resolveKey(username, ip);
 		long ttlMs = Math.max(1, stored.getExpiresAt() - System.currentTimeMillis());
 		cache.put(key, stored, ttlMs).join();
 	}
 
 	@Override
-	public @NotNull Optional<HandshakeInstruction> consumeInstruction(@NotNull String username) {
-		if (username.isBlank()) return Optional.empty();
-		return read(username);
+	public @NotNull Optional<HandshakeInstruction> consumeInstruction(@NotNull String username, @NotNull String ip) {
+		if (username.isBlank() || ip.isBlank()) return Optional.empty();
+		return readByKey(resolveKey(username, ip));
 	}
 
 	@Override
-	public void invalidateInstruction(@NotNull String username) {
-		if (username.isBlank()) return;
-		String key = normalize(username);
-		cache.invalidate(key).join();
+	public void invalidateInstruction(@NotNull String username, @NotNull String ip) {
+		if (username.isBlank() || ip.isBlank()) return;
+		cache.invalidate(resolveKey(username, ip)).join();
 	}
 
 	@IdenticEvent(EventOrder.LOWEST)
 	public void onAccountClear(@NotNull AccountClearEvent event) {
 		String username = event.getIdentity().getUsername();
-		if (username.isBlank()) return;
-		invalidateInstruction(username);
+		String ip = event.getIdentity().getIp();
+		if (username.isBlank() || ip == null || ip.isBlank()) return;
+		invalidateInstruction(username, ip);
 	}
 
-	private Optional<HandshakeInstruction> read(String username) {
-		String key = normalize(username);
+	private Optional<HandshakeInstruction> readByKey(@NotNull String key) {
 		HandshakeInstruction instruction = (cache.consume(key))
 				.join()
 				.orElse(null);
@@ -107,8 +109,12 @@ public final class DefaultHandshakeStore implements HandshakeStore, EventListene
 		return Optional.of(instruction);
 	}
 
-	private String normalize(String username) {
-		return username.trim().toLowerCase();
+	private @NotNull String resolveKey(@NotNull String username, @NotNull String ip) {
+		return normalize(username) + "|" + normalize(ip);
+	}
+
+	private @NotNull String normalize(@NotNull String value) {
+		return value.trim().toLowerCase(Locale.ROOT);
 	}
 
 	private static String resolveNamespace(Provider<Replication> replicationProvider) {

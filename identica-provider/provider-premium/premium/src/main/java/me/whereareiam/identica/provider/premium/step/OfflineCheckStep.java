@@ -65,7 +65,7 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 			}
 
 			clearProfileItem(username, ip);
-			handshakeStore.invalidateInstruction(username);
+			handshakeStore.invalidateInstruction(username, ip);
 			return CompletableFuture.completedFuture(StepResult.failed(joinLines(verification.getInvalidSession())));
 		}
 

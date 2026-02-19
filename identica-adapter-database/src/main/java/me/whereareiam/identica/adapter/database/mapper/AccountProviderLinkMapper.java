@@ -10,7 +10,7 @@ public final class AccountProviderLinkMapper {
 				.uniqueId(entity.getUniqueId())
 				.providerId(entity.getProviderId())
 				.providerSubject(entity.getProviderSubject())
-				.primary(entity.isPrimary())
+				.primaryLink(entity.isPrimaryLink())
 				.linkedAt(entity.getLinkedAt())
 				.lastSeenAt(entity.getLastSeenAt())
 				.build();
@@ -22,7 +22,7 @@ public final class AccountProviderLinkMapper {
 				.uniqueId(link.getUniqueId())
 				.providerId(link.getProviderId())
 				.providerSubject(link.getProviderSubject())
-				.primary(link.isPrimary())
+				.primaryLink(link.isPrimaryLink())
 				.linkedAt(link.getLinkedAt())
 				.lastSeenAt(link.getLastSeenAt())
 				.build();

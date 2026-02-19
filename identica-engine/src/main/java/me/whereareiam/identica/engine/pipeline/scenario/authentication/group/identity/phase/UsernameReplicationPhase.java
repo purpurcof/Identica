@@ -112,7 +112,7 @@ public class UsernameReplicationPhase implements PipelinePhase<IdentityState> {
 		if (account.getSource() == UsernameSource.MANUAL)
 			return false;
 
-		if (!link.isPrimary())
+		if (!link.isPrimaryLink())
 			return false;
 
 		if (!isProviderAuthoritative(link.getProviderId()))

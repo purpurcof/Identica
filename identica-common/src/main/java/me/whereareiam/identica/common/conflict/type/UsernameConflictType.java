@@ -193,7 +193,7 @@ public class UsernameConflictType implements ConflictType {
 		if (links.isEmpty()) return Optional.empty();
 
 		for (AccountProviderLink link : links) {
-			if (link != null && link.isPrimary()) return Optional.of(link);
+			if (link != null && link.isPrimaryLink()) return Optional.of(link);
 		}
 
 		return Optional.of(links.getFirst());

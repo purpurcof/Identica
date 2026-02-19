@@ -62,12 +62,12 @@ public class DefaultProviderLinkPersistenceService implements ProviderLinkPersis
 		AccountProviderLinkEntity entity = AccountProviderLinkMapper.toEntity(link);
 		Optional<AccountProviderLinkEntity> existing = repository.findBySubject(link.getProviderId(), link.getProviderSubject());
 		if (existing.isPresent()) {
-			repository.update(link.getProviderId(), link.getProviderSubject(), link.isPrimary(), link.getLastSeenAt());
-			if (link.isPrimary()) {
+			repository.update(link.getProviderId(), link.getProviderSubject(), link.isPrimaryLink(), link.getLastSeenAt());
+			if (link.isPrimaryLink()) {
 				repository.updatePrimary(link.getUniqueId(), link.getProviderId(), true);
 			}
 			return AccountProviderLinkMapper.toModel(existing.get().toBuilder()
-					.primary(link.isPrimary())
+					.primaryLink(link.isPrimaryLink())
 					.lastSeenAt(link.getLastSeenAt())
 					.build());
 		}
@@ -76,12 +76,12 @@ public class DefaultProviderLinkPersistenceService implements ProviderLinkPersis
 				entity.getUniqueId(),
 				entity.getProviderId(),
 				entity.getProviderSubject(),
-				entity.isPrimary(),
+				entity.isPrimaryLink(),
 				entity.getLinkedAt(),
 				entity.getLastSeenAt()
 		);
 
-		if (link.isPrimary()) {
+		if (link.isPrimaryLink()) {
 			repository.updatePrimary(link.getUniqueId(), link.getProviderId(), true);
 		}
 

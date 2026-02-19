@@ -199,7 +199,7 @@ public class SelectProvidersRule implements JourneyRule {
 			return null;
 
 		return providerLinkPersistenceService.findByUniqueId(context.getIdenticaUniqueId()).stream()
-				.filter(AccountProviderLink::isPrimary)
+				.filter(AccountProviderLink::isPrimaryLink)
 				.map(AccountProviderLink::getProviderId)
 				.findFirst()
 				.orElse(null);

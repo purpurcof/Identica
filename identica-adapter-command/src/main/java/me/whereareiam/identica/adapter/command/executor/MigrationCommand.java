@@ -193,7 +193,7 @@ public class MigrationCommand {
 			return;
 		}
 
-		if (link.isPrimary()) {
+		if (link.isPrimaryLink()) {
 			sendMessage(sender, messages.getPrimary().getAlreadyPrimary(), Map.of(
 					"target", resolved.display(),
 					"provider", providerId
@@ -235,7 +235,7 @@ public class MigrationCommand {
 			return;
 		}
 
-		if (link.isPrimary()) {
+		if (link.isPrimaryLink()) {
 			sendMessage(sender, messages.getDrop().getPrimaryDenied(), Map.of());
 			return;
 		}
@@ -311,7 +311,7 @@ public class MigrationCommand {
 	) {
 		String providerId = link.getProviderId();
 		String providerName = providerNames.get(providerId);
-		String primary = link.isPrimary() ? "<green>primary</green>" : "";
+		String primary = link.isPrimaryLink() ? "<green>primary</green>" : "";
 
 		Map<String, String> placeholders = new HashMap<>();
 		placeholders.put("providerId", providerId);

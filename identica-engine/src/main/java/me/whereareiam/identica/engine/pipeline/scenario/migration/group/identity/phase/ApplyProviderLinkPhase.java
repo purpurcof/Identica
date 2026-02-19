@@ -74,7 +74,7 @@ public class ApplyProviderLinkPhase implements PipelinePhase<IdentityState> {
 				.uniqueId(account.getUniqueId())
 				.providerId(providerId)
 				.providerSubject(providerSubject)
-				.primary(true)
+				.primaryLink(true)
 				.linkedAt(now)
 				.lastSeenAt(now)
 				.build();
@@ -83,7 +83,7 @@ public class ApplyProviderLinkPhase implements PipelinePhase<IdentityState> {
 		providerProfilePersistenceService.upsert(profile);
 		providerLinkPersistenceService.setPrimaryExclusive(account.getUniqueId(), providerId);
 
-		state.setLink(stored.toBuilder().primary(true).build());
+		state.setLink(stored.toBuilder().primaryLink(true).build());
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}
 

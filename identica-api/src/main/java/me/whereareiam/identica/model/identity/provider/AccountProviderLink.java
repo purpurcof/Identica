@@ -28,7 +28,7 @@ public class AccountProviderLink {
 	private @NotNull String providerId;
 	private @NotNull String providerSubject;
 
-	private boolean primary;
+	private boolean primaryLink;
 	private long linkedAt;
 	private long lastSeenAt;
 }

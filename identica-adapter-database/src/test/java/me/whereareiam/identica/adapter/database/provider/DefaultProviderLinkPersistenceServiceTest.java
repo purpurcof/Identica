@@ -78,7 +78,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 				.uniqueId(uniqueId)
 				.providerId("provider")
 				.providerSubject("subject")
-				.primary(false)
+				.primaryLink(false)
 				.linkedAt(TestDataFactory.LINKED_AT)
 				.lastSeenAt(123L)
 				.build();
@@ -88,7 +88,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 
 		verify(repository).update("provider", "subject", true, 999L);
 		verify(repository).updatePrimary(uniqueId, "provider", true);
-		assertTrue(result.isPrimary());
+		assertTrue(result.isPrimaryLink());
 		assertEquals(999L, result.getLastSeenAt());
 	}
 

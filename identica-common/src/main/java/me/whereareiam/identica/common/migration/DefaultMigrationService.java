@@ -82,7 +82,8 @@ public class DefaultMigrationService implements MigrationService {
 		AccountProviderLink link = providerLinkPersistenceService
 				.findByUniqueIdAndProviderId(identicaUniqueId, targetProviderId)
 				.orElse(null);
-		if (link != null && link.isPrimary()) return result(MigrationResultStatus.ALREADY_PRIMARY, null);
+		System.out.println(link);
+		if (link != null && link.isPrimaryLink()) return result(MigrationResultStatus.ALREADY_PRIMARY, null);
 
 		PendingMigration pendingMigration = new PendingMigration(
 				connectionUniqueId,
@@ -132,7 +133,7 @@ public class DefaultMigrationService implements MigrationService {
 		AccountProviderLink link = providerLinkPersistenceService
 				.findByUniqueIdAndProviderId(identicaUniqueId, targetProviderId)
 				.orElse(null);
-		if (link != null && link.isPrimary()) {
+		if (link != null && link.isPrimaryLink()) {
 			pending.remove(connectionUniqueId);
 			return result(MigrationResultStatus.ALREADY_PRIMARY, null);
 		}
@@ -187,7 +188,7 @@ public class DefaultMigrationService implements MigrationService {
 		AccountProviderLink link = providerLinkPersistenceService
 				.findByUniqueIdAndProviderId(identicaUniqueId, targetProviderId)
 				.orElse(null);
-		if (link != null && link.isPrimary())
+		if (link != null && link.isPrimaryLink())
 			return result(MigrationResultStatus.ALREADY_PRIMARY, null);
 
 		String kickMessage = resolveKickMessage(start.getKickMessage(), precheck);

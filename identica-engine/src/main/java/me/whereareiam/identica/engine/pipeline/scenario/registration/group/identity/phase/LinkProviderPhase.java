@@ -73,7 +73,7 @@ public class LinkProviderPhase implements PipelinePhase<IdentityState> {
 				.uniqueId(account.getUniqueId())
 				.providerId(providerId)
 				.providerSubject(providerSubject)
-				.primary(primary)
+				.primaryLink(primary)
 				.linkedAt(now)
 				.lastSeenAt(now)
 				.build();

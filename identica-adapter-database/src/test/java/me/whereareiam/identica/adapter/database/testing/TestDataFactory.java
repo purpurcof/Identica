@@ -32,7 +32,7 @@ public final class TestDataFactory {
 				.uniqueId(uniqueId)
 				.providerId(providerId)
 				.providerSubject(subject)
-				.primary(primary)
+				.primaryLink(primary)
 				.linkedAt(LINKED_AT)
 				.lastSeenAt(LAST_SEEN_AT)
 				.build();

@@ -89,7 +89,7 @@ public class ValidateTargetPhase implements PipelinePhase<IdentityState> {
 		AccountProviderLink existing = providerLinkPersistenceService
 				.findByUniqueIdAndProviderId(accountId, targetProviderId)
 				.orElse(null);
-		if (existing != null && existing.isPrimary()) {
+		if (existing != null && existing.isPrimaryLink()) {
 			state.setResult(PipelineResult.denied(migrationFailedMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}

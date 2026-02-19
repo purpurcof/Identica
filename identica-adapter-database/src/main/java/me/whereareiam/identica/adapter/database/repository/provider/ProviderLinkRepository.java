@@ -16,7 +16,7 @@ public interface ProviderLinkRepository {
 			SELECT unique_id AS uniqueId,
 			       provider_id AS providerId,
 			       provider_subject AS providerSubject,
-			       is_primary AS primary_flag,
+			       is_primary AS primaryLink,
 			       linked_at AS linkedAt,
 			       last_seen_at AS lastSeenAt
 			  FROM identica_provider_links
@@ -32,7 +32,7 @@ public interface ProviderLinkRepository {
 			SELECT unique_id AS uniqueId,
 			       provider_id AS providerId,
 			       provider_subject AS providerSubject,
-			       is_primary AS primary_flag,
+			       is_primary AS primaryLink,
 			       linked_at AS linkedAt,
 			       last_seen_at AS lastSeenAt
 			  FROM identica_provider_links
@@ -48,7 +48,7 @@ public interface ProviderLinkRepository {
 			SELECT unique_id AS uniqueId,
 			       provider_id AS providerId,
 			       provider_subject AS providerSubject,
-			       is_primary AS primary_flag,
+			       is_primary AS primaryLink,
 			       linked_at AS linkedAt,
 			       last_seen_at AS lastSeenAt
 			  FROM identica_provider_links

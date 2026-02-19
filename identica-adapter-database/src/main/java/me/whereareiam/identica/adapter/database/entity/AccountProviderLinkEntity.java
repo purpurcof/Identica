@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import me.whereareiam.dialectica.EntitySchemaProvider;
 import me.whereareiam.dialectica.annotation.Entity;
-import org.jdbi.v3.core.mapper.reflect.ColumnName;
 
 import java.util.UUID;
 
@@ -23,8 +22,7 @@ public class AccountProviderLinkEntity implements EntitySchemaProvider {
 	private String providerId;
 	private String providerSubject;
 
-	@ColumnName("primary_flag")
-	private boolean primary;
+	private boolean primaryLink;
 	private long linkedAt;
 	private long lastSeenAt;
 

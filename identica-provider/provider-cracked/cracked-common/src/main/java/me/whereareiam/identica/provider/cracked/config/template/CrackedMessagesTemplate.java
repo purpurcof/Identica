@@ -101,7 +101,6 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 		cracked.setConfirm(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
-				" ",
 				"  <white>You are about to switch to a <gold>cracked account</gold>.</white>",
 				"  <white>After this, you will log in using a password.</white>",
 				" ",

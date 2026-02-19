@@ -36,7 +36,6 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 		premium.setConfirm(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
-				" ",
 				"  <white>You are about to switch to a <gold>licensed Minecraft account</gold>.</white>",
 				"  <white>After this, you will log in with that licensed account.</white>",
 				" ",

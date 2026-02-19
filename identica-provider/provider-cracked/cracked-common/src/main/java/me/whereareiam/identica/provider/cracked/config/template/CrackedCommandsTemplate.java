@@ -25,6 +25,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<CrackedCommands
 						.build()
 				)
 				.arguments(Map.of("password", "Password"))
+				.hide(true)
 				.build();
 
 		CommandDefinition registerConfirm = CommandDefinition.builder()
@@ -40,6 +41,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<CrackedCommands
 						.build()
 				)
 				.arguments(Map.of("password", "Repeat"))
+				.hide(true)
 				.build();
 
 		CommandDefinition login = CommandDefinition.builder()
@@ -55,6 +57,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<CrackedCommands
 						.build()
 				)
 				.arguments(Map.of("password", "Password"))
+				.hide(true)
 				.build();
 
 		CommandDefinition changePassword = CommandDefinition.builder()

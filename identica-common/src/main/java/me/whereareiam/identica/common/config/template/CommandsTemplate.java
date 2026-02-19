@@ -44,6 +44,7 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 						.duration(2)
 						.group("global")
 						.build())
+				.hide(true)
 				.build();
 
 		CommandDefinition reload = CommandDefinition.builder()

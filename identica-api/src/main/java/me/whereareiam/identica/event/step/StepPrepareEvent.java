@@ -8,6 +8,7 @@ import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +24,7 @@ public class StepPrepareEvent implements Event, SynchronousEvent {
 	private final @Nullable IdenticaProvider provider;
 	private final @NotNull Step step;
 	private final @NotNull ScenarioContext context;
-	private final @NotNull JourneyType flow;
+	private final @NotNull PipelineType pipelineType;
+	private final @NotNull JourneyType journeyType;
 	private final @NotNull StageType phase;
 }

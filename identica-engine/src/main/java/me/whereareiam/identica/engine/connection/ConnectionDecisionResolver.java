@@ -3,16 +3,16 @@ package me.whereareiam.identica.engine.connection;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.ScenarioRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.connection.ConnectionDecisionEvent;
-import me.whereareiam.identica.event.pipeline.attempt.FlowAttemptFinishedEvent;
+import me.whereareiam.identica.event.pipeline.attempt.PipelineAttemptFinishedEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,14 +37,13 @@ public class ConnectionDecisionResolver {
 		if (result == null)
 			return failureDecision(runner);
 
-		AuthContext authContext = resolveAuthContext(result, pipelineType, runner);
-		if (authContext != null)
-			eventManager.call(new FlowAttemptFinishedEvent(authContext, result));
+		ScenarioContext scenarioContext = resolveScenarioContext(result, runner);
+		if (scenarioContext != null) eventManager.call(new PipelineAttemptFinishedEvent(scenarioContext, pipelineType, result));
 
 		ConnectionDecision decision = runner != null
 				? runner.mapDecision(result)
 				: ConnectionDecision.deny("Connection failed");
-		if (authContext == null)
+		if (!(scenarioContext instanceof AuthContext authContext))
 			return decision;
 
 		ConnectionDecisionEvent decisionEvent = new ConnectionDecisionEvent(authContext, decision);
@@ -53,16 +52,13 @@ public class ConnectionDecisionResolver {
 		return finalDecision != null ? finalDecision : decision;
 	}
 
-	private @Nullable AuthContext resolveAuthContext(
+	private @Nullable ScenarioContext resolveScenarioContext(
 			@NotNull PipelineResult result,
-			@NotNull PipelineType pipelineType,
 			@Nullable AbstractScenarioPipeline runner
 	) {
-		if (pipelineType != PipelineType.AUTHENTICATION)
-			return null;
-		if (runner instanceof AuthenticationPipeline authenticationPipeline)
-			return authenticationPipeline.resolveAuthContext(result);
-		return null;
+		if (runner == null) return null;
+
+		return runner.resolveContext(result);
 	}
 
 	private @NotNull ConnectionDecision failureDecision(@Nullable AbstractScenarioPipeline runner) {

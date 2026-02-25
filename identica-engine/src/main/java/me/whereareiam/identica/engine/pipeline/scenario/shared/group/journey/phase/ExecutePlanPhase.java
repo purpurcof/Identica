@@ -466,6 +466,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				provider != null ? provider.getProvider() : null,
 				journeyStep.getStep(),
 				context,
+				pipelineType,
 				flow,
 				stage.getType()
 		));
@@ -488,6 +489,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				provider != null ? provider.getProvider() : null,
 				journeyStep.getStep(),
 				context,
+				pipelineType,
 				result,
 				stage.getType()
 		));

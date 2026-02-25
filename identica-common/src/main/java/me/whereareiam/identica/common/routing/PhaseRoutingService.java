@@ -10,7 +10,9 @@ import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.routing.RoutingDecision;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.type.RoutingTargetType;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -28,7 +30,8 @@ public class PhaseRoutingService implements RoutingService {
 		StepResult result = decision.getResult();
 		Settings.Routing routing = settingsProvider.get().getConnection().getRouting();
 		String target = switch (result.getStatus()) {
-			case COMPLETE, WAITING -> resolveStepTarget(routing, decision);
+			case COMPLETE -> resolveCompletionTarget(routing, decision);
+			case WAITING -> resolveStepTarget(routing, decision);
 			default -> null;
 		};
 
@@ -47,19 +50,47 @@ public class PhaseRoutingService implements RoutingService {
 		return Optional.of(new RoutingTarget(type, target.trim(), providerId, stepName));
 	}
 
-	private String resolveStepTarget(Settings.Routing routing, RoutingDecision decision) {
-		String target = routing.getTargets().getStep();
+	private String resolveCompletionTarget(Settings.Routing routing, RoutingDecision decision) {
+		if (routing == null) return null;
 
-		Settings.Routing.Targets.Overrides overrides = routing.getTargets().getOverrides();
-		String stageOverride = resolveStageOverride(overrides, decision.getPhase().id());
+		Settings.Routing.Targets scenarioTargets = resolveScenarioTargets(routing, decision.getPipelineType());
+		String target = scenarioTargets != null ? scenarioTargets.getComplete() : null;
+		if (!isBlank(target)) return target;
+
+		return resolveStepTarget(routing, decision);
+	}
+
+	private String resolveStepTarget(Settings.Routing routing, RoutingDecision decision) {
+		if (routing == null) return null;
+
+		Settings.Routing.Targets scenarioTargets = resolveScenarioTargets(routing, decision.getPipelineType());
+		if (scenarioTargets == null) return null;
+
+		String target = scenarioTargets.getStep();
+
+		Settings.Routing.Targets.Overrides scenarioOverrides = scenarioTargets.getOverrides();
+		String stageOverride = resolveStageOverride(scenarioOverrides, decision.getPhase().id());
 		if (!isBlank(stageOverride))
 			target = stageOverride;
 
-		String override = resolveOverride(overrides, decision.getStep() != null ? decision.getStep().getName() : null);
+		String override = resolveOverride(scenarioOverrides, decision.getStep() != null ? decision.getStep().getName() : null);
 		if (!isBlank(override))
 			target = override;
 
 		return target;
+	}
+
+	private Settings.Routing.Targets resolveScenarioTargets(Settings.Routing routing, PipelineType pipelineType) {
+		if (routing == null || pipelineType == null) return null;
+
+		String scenarioId = pipelineType.name().toLowerCase(Locale.ROOT);
+		for (Map.Entry<String, Settings.Routing.Targets> entry : routing.getScenarios().entrySet()) {
+			if (entry.getKey() == null || entry.getValue() == null) continue;
+			if (entry.getKey().equalsIgnoreCase(scenarioId))
+				return entry.getValue();
+		}
+
+		return null;
 	}
 
 	private String resolveOverride(Settings.Routing.Targets.Overrides overrides, String stepName) {

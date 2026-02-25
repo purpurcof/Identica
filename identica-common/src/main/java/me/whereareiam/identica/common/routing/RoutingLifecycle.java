@@ -7,6 +7,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.connection.ConnectionPendingClearedEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.routing.RoutingTargetUpdatedEvent;
+import me.whereareiam.identica.event.pipeline.attempt.PipelineAttemptFinishedEvent;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
 import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.model.RoutingTarget;
@@ -16,7 +17,10 @@ import me.whereareiam.identica.routing.RoutingDecision;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.routing.RoutingStateStore;
 import me.whereareiam.identica.routing.RoutingTargetApplier;
+import me.whereareiam.identica.type.pipeline.PipelineStatus;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.StageType;
 
 import java.util.UUID;
 
@@ -46,12 +50,13 @@ public class RoutingLifecycle implements EventListener {
 		if (event == null)
 			return;
 
-		JourneyType flow = event.getFlow();
+		JourneyType flow = event.getJourneyType();
 		if (flow == JourneyType.SEAMLESS)
 			return;
 
 		RoutingDecision decision = new RoutingDecision(
 				event.getContext(),
+				event.getPipelineType(),
 				event.getPhase(),
 				event.getStep(),
 				StepResult.waiting("")
@@ -71,19 +76,33 @@ public class RoutingLifecycle implements EventListener {
 		if (event == null) return;
 
 		StepResult result = event.getResult();
-		if (result.getStatus() == StepResult.StepStatus.WAITING)
+		if (result.getStatus() == StepResult.StepStatus.WAITING) return;
+		if (result.getStatus() == StepResult.StepStatus.COMPLETE) return;
+
+		clear(event.getContext());
+	}
+
+	@IdenticEvent
+	public void onFlowAttemptFinished(PipelineAttemptFinishedEvent event) {
+		if (event == null || event.getContext() == null || event.getResult() == null)
 			return;
 
-		if (result.getStatus() != StepResult.StepStatus.COMPLETE) {
+		PipelineStatus status = event.getResult().getStatus();
+		if (status == PipelineStatus.WAITING) return;
+
+		if (status != PipelineStatus.COMPLETE) {
 			clear(event.getContext());
 			return;
 		}
 
+		StepResult completion = StepResult.complete(event.getContext());
+		PipelineType pipelineType = event.getPipelineType();
 		RoutingDecision decision = new RoutingDecision(
 				event.getContext(),
-				event.getPhase(),
-				event.getStep(),
-				result
+				pipelineType,
+				StageType.END,
+				null,
+				completion
 		);
 		RoutingTarget target = routingService.resolve(decision).orElse(null);
 		if (target == null) {

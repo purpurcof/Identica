@@ -102,6 +102,10 @@ public abstract class AbstractScenarioPipeline {
 		return registry;
 	}
 
+	public @Nullable ScenarioContext resolveContext(@NotNull PipelineResult result) {
+		return resolveScenarioContext(result);
+	}
+
 	public boolean matchesNewFlow(@Nullable ConnectionRequest request) {
 		return false;
 	}

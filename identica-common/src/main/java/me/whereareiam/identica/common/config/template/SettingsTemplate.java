@@ -21,17 +21,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		settings.setLevel(2);
 
 		Settings.Routing routing = new Settings.Routing();
-		Settings.Routing.Targets targets = new Settings.Routing.Targets();
-		targets.setStep("lobby");
-		Settings.Routing.Targets.Overrides overrides = new Settings.Routing.Targets.Overrides();
-		overrides.setStages(new HashMap<>(Map.of(
-				"pre", "auth",
-				"provider", "auth",
-				"end", "lobby"
-		)));
-		overrides.setSteps(new HashMap<>());
-		targets.setOverrides(overrides);
-		routing.setTargets(targets);
+		routing.setScenarios(defaultScenarioRoutingTargets());
 
 		Settings.Listeners listeners = new Settings.Listeners();
 		listeners.setEvents(defaultListenerEvents());
@@ -109,6 +99,26 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		sentinels.setResumeSpam(resumeSpam);
 
 		return sentinels;
+	}
+
+	private Map<String, Settings.Routing.Targets> defaultScenarioRoutingTargets() {
+		Map<String, Settings.Routing.Targets> scenarios = new HashMap<>();
+		scenarios.put("authentication", createScenarioTargets("auth", "survival"));
+		scenarios.put("registration", createScenarioTargets("register", "tutorial"));
+		scenarios.put("migration", createScenarioTargets("migrate", "survival"));
+		return scenarios;
+	}
+
+	private Settings.Routing.Targets createScenarioTargets(String step, String complete) {
+		Settings.Routing.Targets targets = new Settings.Routing.Targets();
+		targets.setStep(step);
+		targets.setComplete(complete);
+
+		Settings.Routing.Targets.Overrides overrides = new Settings.Routing.Targets.Overrides();
+		overrides.setStages(new HashMap<>());
+		overrides.setSteps(new HashMap<>());
+		targets.setOverrides(overrides);
+		return targets;
 	}
 
 	private Map<String, Event> defaultListenerEvents() {

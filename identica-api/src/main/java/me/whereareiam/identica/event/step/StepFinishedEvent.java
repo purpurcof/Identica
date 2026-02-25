@@ -9,6 +9,7 @@ import me.whereareiam.identica.event.base.SynchronousEvent;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +24,7 @@ public class StepFinishedEvent implements Event, SynchronousEvent {
 	private final @Nullable IdenticaProvider provider;
 	private final @NotNull Step step;
 	private final @NotNull ScenarioContext context;
+	private final @NotNull PipelineType pipelineType;
 	private final @NotNull StepResult result;
 	private final @NotNull StageType phase;
 }

@@ -7,11 +7,13 @@ import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 
 @Getter
 @ToString
 @RequiredArgsConstructor
-public class FlowAttemptFinishedEvent implements Event, SynchronousEvent {
+public class PipelineAttemptFinishedEvent implements Event, SynchronousEvent {
 	private final ScenarioContext context;
+	private final PipelineType pipelineType;
 	private final PipelineResult result;
 }

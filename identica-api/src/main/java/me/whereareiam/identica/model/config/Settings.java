@@ -92,7 +92,11 @@ public class Settings {
 	@Setter
 	@ToString
 	public static class Routing {
-		private @NotNull Targets targets;
+		/**
+		 * Scenario-specific routing targets keyed by scenario id.
+		 * Supported ids: authentication, registration, migration.
+		 */
+		private @NotNull Map<String, Targets> scenarios = new HashMap<>();
 
 		/**
 		 * Routing targets by phase.
@@ -101,7 +105,11 @@ public class Settings {
 		@Setter
 		@ToString
 		public static class Targets {
-			private @NotNull String step;
+			private @NotNull String step = "";
+			/**
+			 * Routing target used when a scenario flow fully completes.
+			 */
+			private @NotNull String complete = "";
 			private @NotNull Overrides overrides = new Overrides();
 
 			/**

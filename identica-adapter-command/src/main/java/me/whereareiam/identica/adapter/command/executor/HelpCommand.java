@@ -82,7 +82,7 @@ public class HelpCommand implements Reloadable {
 				.collect(Collectors.toMap(
 						Map.Entry::getKey,
 						Map.Entry::getValue,
-						(_, replacement) -> replacement
+						(existing, replacement) -> replacement
 				));
 	}
 

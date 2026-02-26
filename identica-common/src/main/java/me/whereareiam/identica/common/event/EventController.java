@@ -34,7 +34,7 @@ public class EventController implements EventManager {
 			Class<?> eventType = method.getParameterTypes()[0];
 			EventOrder order = method.getAnnotation(IdenticEvent.class).value();
 
-			listeners.computeIfAbsent(eventType, _ -> new ArrayList<>())
+			listeners.computeIfAbsent(eventType, ignored -> new ArrayList<>())
 					.add(new RegisteredListener(listener, method, order));
 			listeners.get(eventType).sort(Comparator.comparing(RegisteredListener::getOrder));
 		}
@@ -42,7 +42,7 @@ public class EventController implements EventManager {
 
 	@Override
 	public <T extends Event> void registerListener(Class<T> event, Object listener, Method method, EventOrder order) {
-		listeners.computeIfAbsent(event, _ -> new ArrayList<>())
+		listeners.computeIfAbsent(event, ignored -> new ArrayList<>())
 				.add(new RegisteredListener((EventListener) listener, method, order));
 		listeners.get(event).sort(Comparator.comparing(RegisteredListener::getOrder));
 	}

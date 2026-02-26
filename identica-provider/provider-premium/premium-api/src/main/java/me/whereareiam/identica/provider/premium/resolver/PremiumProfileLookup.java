@@ -83,7 +83,7 @@ public class PremiumProfileLookup {
 
 		return httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding())
 				.thenApply(response -> response.statusCode() == 200)
-				.exceptionally(_ -> false);
+				.exceptionally(ignored -> false);
 	}
 
 	private CompletableFuture<Boolean> resolveProfile(String key, String username, PremiumSettings.Lookup lookup, long ttlMs) {
@@ -103,7 +103,7 @@ public class PremiumProfileLookup {
 
 		return httpClient.sendAsync(request, HttpResponse.BodyHandlers.discarding())
 				.thenApply(response -> response.statusCode() == 200)
-				.exceptionally(_ -> false)
+					.exceptionally(ignored -> false)
 				.thenCompose(hasProfile -> cache.put(key, hasProfile, ttlMs)
 						.thenApply(ignored -> hasProfile));
 	}

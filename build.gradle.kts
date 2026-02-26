@@ -8,8 +8,8 @@ allprojects {
     apply(plugin = "maven-publish")
 
     tasks.withType<JavaCompile> {
-        sourceCompatibility = JavaVersion.VERSION_25.toString()
-        targetCompatibility = JavaVersion.VERSION_25.toString()
+        sourceCompatibility = JavaVersion.VERSION_21.toString()
+        targetCompatibility = JavaVersion.VERSION_21.toString()
     }
 }
 

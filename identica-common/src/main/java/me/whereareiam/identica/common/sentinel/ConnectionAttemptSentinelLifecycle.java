@@ -48,9 +48,9 @@ public class ConnectionAttemptSentinelLifecycle implements EventListener {
 
 	private SentinelScope toScope(@NotNull ConnectionAttemptEvent event) {
 		return switch (event) {
-			case ConnectionProcessAttemptEvent _ -> SentinelScope.PROCESS;
-			case ConnectionResumeAttemptEvent _ -> SentinelScope.RESUME;
-			case ConnectionAdvanceAttemptEvent _ -> SentinelScope.ADVANCE;
+			case ConnectionProcessAttemptEvent ignored -> SentinelScope.PROCESS;
+			case ConnectionResumeAttemptEvent ignored -> SentinelScope.RESUME;
+			case ConnectionAdvanceAttemptEvent ignored -> SentinelScope.ADVANCE;
 			default -> null;
 		};
 	}

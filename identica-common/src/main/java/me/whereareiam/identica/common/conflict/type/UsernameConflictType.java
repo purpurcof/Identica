@@ -171,7 +171,7 @@ public class UsernameConflictType implements ConflictType {
 					Session session = found.get();
 					session.setEffectiveUsername(overrideValue);
 
-					return sessionService.open(session).thenApply(_ -> null);
+					return sessionService.open(session).thenApply(ignored -> null);
 				}).join();
 	}
 

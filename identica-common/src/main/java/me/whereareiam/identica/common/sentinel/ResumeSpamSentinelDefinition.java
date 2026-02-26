@@ -49,7 +49,7 @@ public class ResumeSpamSentinelDefinition implements SentinelDefinition {
 			policy.setLockout(new SentinelPolicy.Lockout());
 		}
 
-		policy.getLockout().setMessageSupplier((_, remainingSeconds) -> buildMessage(remainingSeconds));
+		policy.getLockout().setMessageSupplier((ignored, remainingSeconds) -> buildMessage(remainingSeconds));
 
 		return policy;
 	}

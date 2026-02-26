@@ -70,7 +70,7 @@ public class BruteForceSentinelDefinition implements SentinelDefinition {
 
 		policyLockout.setEnabled(lockout == null || lockout.isEnabled());
 		policyLockout.setDuration(lockout != null ? lockout.getDuration() : null);
-		policyLockout.setMessageSupplier((_, remainingSeconds) -> buildLockoutMessage(remainingSeconds));
+		policyLockout.setMessageSupplier((ignored, remainingSeconds) -> buildLockoutMessage(remainingSeconds));
 
 		CrackedSettings.Scenario.Authentication.Bruteforce.Warning warning = bruteForce != null
 				? bruteForce.getWarning()
@@ -84,7 +84,7 @@ public class BruteForceSentinelDefinition implements SentinelDefinition {
 
 		policyWarning.setEnabled(warning != null && warning.isEnabled());
 		policyWarning.setThresholdPercentage(warning != null ? warning.getThresholdPercentage() : 0);
-		policyWarning.setMessageSupplier((_, remainingAttempts) -> buildWarningMessage(remainingAttempts));
+		policyWarning.setMessageSupplier((ignored, remainingAttempts) -> buildWarningMessage(remainingAttempts));
 
 		return policy;
 	}

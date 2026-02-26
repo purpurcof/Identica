@@ -33,7 +33,7 @@ public class ManagementCommand {
 	public void forceRegister(
 			@NotNull Actor sender,
 			@Argument("username") String username,
-			@Argument("password") String password
+			@Argument(value = "password", parser = "password") String password
 	) {
 		CrackedMessages.Commands.Admin messages = messagesProvider.get().getCommands().getAdmin();
 		String providerSubject = resolveProviderSubject(username);
@@ -78,7 +78,7 @@ public class ManagementCommand {
 	public void setPassword(
 			@NotNull Actor sender,
 			@Argument("username") String username,
-			@Argument("password") String password
+			@Argument(value = "password", parser = "password") String password
 	) {
 		CrackedMessages.Commands.Admin messages = messagesProvider.get().getCommands().getAdmin();
 		String providerSubject = resolveProviderSubject(username);

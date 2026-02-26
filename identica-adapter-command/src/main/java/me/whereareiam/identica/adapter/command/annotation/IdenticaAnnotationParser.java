@@ -6,27 +6,36 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.commandant.CommandantKeys;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.annotation.Description;
+import me.whereareiam.identica.annotation.Parser;
 import me.whereareiam.identica.annotation.Permission;
 import me.whereareiam.identica.annotation.Range;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.CommandManager;
 import org.incendo.cloud.annotations.AnnotationParser;
+import org.incendo.cloud.annotations.parser.MethodArgumentParserFactory;
 import org.incendo.cloud.execution.ExecutionCoordinator;
 import org.incendo.cloud.internal.CommandRegistrationHandler;
+import org.incendo.cloud.parser.ParserDescriptor;
 import org.incendo.cloud.parser.ParserParameters;
 import org.incendo.cloud.parser.ParserRegistry;
 import org.incendo.cloud.parser.StandardParameters;
+import org.incendo.cloud.suggestion.SuggestionProvider;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 @RequiredArgsConstructor
 public class IdenticaAnnotationParser<C> {
 	private final AnnotationParser<C> cloudParser;
+	private final MethodArgumentParserFactory<C> methodArgumentParserFactory = MethodArgumentParserFactory.defaultFactory();
+	private final Set<String> registeredParserNames = new HashSet<>();
 
 	public static <C> IdenticaAnnotationParser<C> create(
 			@NotNull CommandManager<C> commandManager,
@@ -88,7 +97,44 @@ public class IdenticaAnnotationParser<C> {
 	}
 
 	public @NotNull Collection<@NotNull Command<C>> parse(@NotNull Object @NotNull... instances) {
+		registerCommandantParsers(instances);
 		return cloudParser.parse(instances);
+	}
+
+	private void registerCommandantParsers(@NotNull Object @NotNull... instances) {
+		CommandManager<C> commandManager = cloudParser.manager();
+		for (Object instance : instances) {
+			for (Method method : instance.getClass().getMethods()) {
+				Parser parser = method.getAnnotation(Parser.class);
+				if (parser == null) continue;
+
+				String suggestions = cloudParser.processString(parser.suggestions());
+				SuggestionProvider<C> suggestionProvider;
+				if (suggestions.isEmpty()) {
+					suggestionProvider = SuggestionProvider.noSuggestions();
+				} else {
+					suggestionProvider = commandManager.parserRegistry()
+							.getSuggestionProvider(suggestions)
+							.orElseThrow(() -> new NullPointerException(
+									String.format("Cannot find the suggestion provider with name '%s'", suggestions)
+							));
+				}
+
+				ParserDescriptor<C, ?> parserDescriptor = methodArgumentParserFactory.createArgumentParser(
+						suggestionProvider,
+						instance,
+						method,
+						commandManager.parameterInjectorRegistry()
+				);
+
+				String name = cloudParser.processString(parser.name());
+				if (name.isEmpty()) {
+					commandManager.parserRegistry().registerParser(parserDescriptor);
+				} else if (registeredParserNames.add(name)) {
+					commandManager.parserRegistry().registerNamedParser(name, parserDescriptor);
+				}
+			}
+		}
 	}
 
 	private static final class RecordingCommandManager<C> extends CommandManager<C> {

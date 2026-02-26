@@ -32,7 +32,7 @@ public class PassCommand {
 
 	@Definition("pass")
 	@Command("pass <password>")
-	public void pass(@NotNull Actor sender, @Argument("password") String password) {
+	public void pass(@NotNull Actor sender, @Argument(value = "password", parser = "password") String password) {
 		if (!(sender instanceof Identity identity))
 			return;
 
@@ -50,7 +50,7 @@ public class PassCommand {
 
 	@Definition("passconfirm")
 	@Command("passconfirm <password>")
-	public void passConfirm(@NotNull Actor sender, @Argument("password") String repeat) {
+	public void passConfirm(@NotNull Actor sender, @Argument(value = "password", parser = "password") String repeat) {
 		if (!(sender instanceof Identity identity))
 			return;
 

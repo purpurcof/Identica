@@ -83,6 +83,7 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 		CrackedMessages.Password password = new CrackedMessages.Password();
 		password.setTooShort("{prefix}<white>Password is too <red>short</red>.</white>");
 		password.setTooLong("{prefix}<white>Password is too <red>long</red>.</white>");
+		password.setNoSpaces("{prefix}<white>Password cannot contain <red>spaces</red>.</white>");
 		password.setMissingUpper("{prefix}<white>Password needs an <red>uppercase</red> letter.</white>");
 		password.setMissingLower("{prefix}<white>Password needs a <red>lowercase</red> letter.</white>");
 		password.setMissingNumber("{prefix}<white>Password needs a <red>number</red>.</white>");

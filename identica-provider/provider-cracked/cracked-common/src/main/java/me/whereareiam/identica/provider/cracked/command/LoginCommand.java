@@ -32,7 +32,7 @@ public class LoginCommand {
 
 	@Definition("login")
 	@Command("login <password>")
-	public void login(@NotNull Actor sender, @Argument("password") String password) {
+	public void login(@NotNull Actor sender, @Argument(value = "password", parser = "password") String password) {
 		if (!(sender instanceof Identity identity))
 			return;
 

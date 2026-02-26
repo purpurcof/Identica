@@ -76,6 +76,7 @@ public class CrackedMessages {
 	public static class Password {
 		private String tooShort;
 		private String tooLong;
+		private String noSpaces;
 		private String missingUpper;
 		private String missingLower;
 		private String missingNumber;

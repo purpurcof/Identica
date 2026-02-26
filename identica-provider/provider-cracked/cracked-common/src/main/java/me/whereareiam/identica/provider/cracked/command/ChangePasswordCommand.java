@@ -37,9 +37,9 @@ public class ChangePasswordCommand {
 	@Command("changepassword <current> <new> <repeat>")
 	public void changePassword(
 			@NotNull Actor sender,
-			@Argument("current") String current,
-			@Argument("new") String next,
-			@Argument("repeat") String repeat
+			@Argument(value = "current", parser = "password") String current,
+			@Argument(value = "new", parser = "password") String next,
+			@Argument(value = "repeat", parser = "password") String repeat
 	) {
 		if (!(sender instanceof Identity identity))
 			return;

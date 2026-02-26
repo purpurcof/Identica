@@ -32,6 +32,9 @@ public class PasswordRules {
 		if (maxLength > 0 && length > maxLength)
 			return messages.getTooLong();
 
+		if (containsWhitespace(value))
+			return messages.getNoSpaces();
+
 		int minUpper = passwordSettings.getMinUpper();
 		if (minUpper > 0 && countUpper(value) < minUpper)
 			return messages.getMissingUpper();
@@ -49,6 +52,14 @@ public class PasswordRules {
 			return messages.getMissingSpecial();
 
 		return null;
+	}
+
+	private boolean containsWhitespace(String value) {
+		for (int i = 0; i < value.length(); i++) {
+			if (Character.isWhitespace(value.charAt(i)))
+				return true;
+		}
+		return false;
 	}
 
 	private int countUpper(String value) {

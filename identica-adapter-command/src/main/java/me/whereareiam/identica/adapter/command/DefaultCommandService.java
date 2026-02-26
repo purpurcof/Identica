@@ -19,6 +19,7 @@ import me.whereareiam.identica.adapter.command.executor.MigrationCommand;
 import me.whereareiam.identica.adapter.command.executor.ReloadCommand;
 import me.whereareiam.identica.adapter.command.executor.ClearCommand;
 import me.whereareiam.identica.adapter.command.executor.SessionsCommand;
+import me.whereareiam.identica.adapter.command.parser.PasswordParser;
 import me.whereareiam.identica.adapter.command.serializer.ScopedSerializerEngine;
 import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.command.CommandService;
@@ -64,8 +65,10 @@ public class DefaultCommandService implements CommandService {
 	}
 
 	private void initialize() {
-		registerSuggestions(commandManagerProvider.get());
+		CommandManager<Actor> commandManager = commandManagerProvider.get();
+		registerSuggestions(commandManager);
 		registerInternal(
+				injector.getInstance(PasswordParser.class),
 				injector.getInstance(MainCommand.class),
 				injector.getInstance(HelpCommand.class),
 				injector.getInstance(ReloadCommand.class),
@@ -75,7 +78,7 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(MigrationCommand.class)
 		);
 
-		registerExceptionHandlers(commandManagerProvider.get());
+		registerExceptionHandlers(commandManager);
 	}
 
 	@Override

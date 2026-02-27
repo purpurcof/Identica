@@ -39,8 +39,8 @@ import java.util.concurrent.CompletionStage;
 public class DefaultConnectionCoordinator implements ConnectionCoordinator {
 	// Identity/account lifecycle
 	private final RegistrationAccountService registrationAccountService;
-	private final ScenarioRegistry scenarioRegistry;
 	private final ConnectionDecisionResolver decisionResolver;
+	private final ScenarioRegistry scenarioRegistry;
 
 	// Persistence/state
 	private final PipelineStateStore pipelineStateStore;

@@ -38,6 +38,7 @@ import me.whereareiam.identica.common.listener.SessionReplacedListener;
 import me.whereareiam.identica.common.identity.DefaultIdentityService;
 import me.whereareiam.identica.common.provider.DefaultProviderManager;
 import me.whereareiam.identica.common.provider.DefaultProviderOperations;
+import me.whereareiam.identica.common.provider.ProviderEntrypointSelectionLifecycle;
 import me.whereareiam.identica.common.provider.SerializerEngineProvider;
 import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
@@ -162,6 +163,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(AccountClearSessionListener.class).asEagerSingleton();
 		bind(SessionReplacedListener.class).asEagerSingleton();
 		bind(ConflictPrepareLifecycle.class).asEagerSingleton();
+		bind(ProviderEntrypointSelectionLifecycle.class).asEagerSingleton();
 		bind(ConnectionAttemptSentinelLifecycle.class).asEagerSingleton();
 		bind(DynamicListenerRegistry.class).to(DefaultDynamicListenerRegistry.class).asEagerSingleton();
 

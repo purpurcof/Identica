@@ -99,6 +99,16 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		authentication.setConflictEntrypointRequired(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Username conflict detected.</white>",
+				"<white>Please join using the correct entrypoint:</white>",
+				"<white><gold>{incomingProvider}</gold>: <green>{incomingHost}</green></white>",
+				"<white><gold>{existingProvider}</gold>: <green>{existingHost}</green></white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
 		return authentication;
 	}
 

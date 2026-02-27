@@ -10,6 +10,7 @@ import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.AccountDecision;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,6 +38,10 @@ public class AccountPrepareEvent implements Event, SynchronousEvent {
 	 */
 	private @Nullable String effectiveUsername;
 	private @Nullable AccountDecision decision;
+	/**
+	 * Provider context associated with this account preparation.
+	 */
+	private @Nullable ProviderContext provider;
 
 	private final @NotNull Account account;
 	private final @NotNull AccountProviderLink link;

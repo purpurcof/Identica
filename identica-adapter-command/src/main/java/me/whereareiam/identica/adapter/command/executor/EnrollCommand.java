@@ -21,6 +21,7 @@ import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
+import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.keystone.Actor;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -109,9 +110,11 @@ public class EnrollCommand {
 			context.setProvider(ProviderContext.builder()
 					.providerId(providerId)
 					.providerUsername(username)
+					.source(ProviderOrigin.MANUAL)
 					.build());
 		} else {
 			provider.setProviderId(providerId);
+			provider.setSource(ProviderOrigin.MANUAL);
 			String providerUsername = provider.getProviderUsername();
 			if (providerUsername.isBlank())
 				provider.setProviderUsername(username);

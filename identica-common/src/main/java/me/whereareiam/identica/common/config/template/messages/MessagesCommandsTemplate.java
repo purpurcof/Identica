@@ -15,6 +15,7 @@ public class MessagesCommandsTemplate {
 		applyPagination(commands);
 		applyHelp(commands);
 		applyEnroll(commands);
+		applyAvailability(commands);
 		applyMigration(commands);
 		applySessions(commands);
 		applyReload(commands);
@@ -74,6 +75,17 @@ public class MessagesCommandsTemplate {
 		commands.setEnroll(enroll);
 	}
 
+	private void applyAvailability(Messages.Commands commands) {
+		Messages.Commands.Availability availability = new Messages.Commands.Availability();
+
+		Messages.Commands.Availability.Username username = new Messages.Commands.Availability.Username();
+		username.setFree("{prefix}<white>Username <gray>{username}</gray> is available.</white>");
+		username.setTaken("{prefix}<white>Username <gray>{username}</gray> is already taken.</white>");
+		availability.setUsername(username);
+
+		commands.setAvailability(availability);
+	}
+
 	private void applyMigration(Messages.Commands commands) {
 		Messages.Commands.Migration migration = new Messages.Commands.Migration();
 		Messages.Commands.Migration.Listing migrationList = new Messages.Commands.Migration.Listing();
@@ -119,6 +131,7 @@ public class MessagesCommandsTemplate {
 		migration.setDrop(migrationDrop);
 
 		migration.setTargetNotFound("{prefix}<white>No account found for <gray>{target}</gray>.</white>");
+		migration.setLocked("{prefix}<white>Username is not available. Migration is locked.</white>");
 		commands.setMigration(migration);
 	}
 

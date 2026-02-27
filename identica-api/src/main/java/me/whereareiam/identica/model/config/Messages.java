@@ -58,6 +58,7 @@ public class Messages {
 		private @NotNull PaginationMessages pagination;
 		private @NotNull HelpMessages help;
 		private @NotNull Enroll enroll;
+		private @NotNull Availability availability;
 
 		private @NotNull Migration migration;
 		private @NotNull Sessions sessions;
@@ -83,6 +84,37 @@ public class Messages {
 		}
 
 		/**
+		 * Configuration for username availability command messages.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Availability {
+			/**
+			 * Username availability messages.
+			 */
+			private @NotNull Username username;
+
+			/**
+			 * Configuration for username availability responses.
+			 */
+			@Getter
+			@Setter
+			@ToString
+			public static class Username {
+				/**
+				 * Message shown when the username is available.
+				 */
+				private @NotNull String free;
+
+				/**
+				 * Message shown when the username is already taken.
+				 */
+				private @NotNull String taken;
+			}
+		}
+
+		/**
 		 * Configuration for migration command messages.
 		 */
 		@Getter
@@ -96,6 +128,10 @@ public class Messages {
 			private @NotNull Primary primary;
 			private @NotNull Drop drop;
 			private @NotNull String targetNotFound;
+			/**
+			 * Message shown when migration is locked due to a username conflict.
+			 */
+			private @NotNull String locked;
 
 			@Getter
 			@Setter
@@ -432,6 +468,10 @@ public class Messages {
 		public static class Authentication extends Scenario {
 			private @NotNull List<String> authenticationFailed;
 			private @NotNull List<String> sessionBuildFailed;
+			/**
+			 * Message shown when entrypoint selection is required for conflicts.
+			 */
+			private @NotNull List<String> conflictEntrypointRequired;
 		}
 
 		@Getter

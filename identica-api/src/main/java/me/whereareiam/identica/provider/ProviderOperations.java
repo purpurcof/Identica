@@ -1,6 +1,7 @@
 package me.whereareiam.identica.provider;
 
 import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.provider.profile.ProfileResolveContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
@@ -15,6 +16,31 @@ import java.util.List;
  * Runtime provider operations used during authentication and resolver resolution.
  */
 public interface ProviderOperations {
+	/**
+	 * Resolves the entrypoint hostname to a provider id.
+	 *
+	 * @param host entrypoint host
+	 * @param port entrypoint port or {@code -1} when unknown
+	 * @return resolved entrypoint or {@code null} when not found
+	 */
+	@Nullable ResolvedEntrypoint resolveEntrypoint(@Nullable String host, int port);
+
+	/**
+	 * Returns the first configured entrypoint for the provider.
+	 *
+	 * @param providerId provider id to look up
+	 * @return entrypoint string or {@code null} when missing
+	 */
+	@Nullable String displayEntrypoint(@Nullable String providerId);
+
+	/**
+	 * Checks whether the provider has entrypoints configured.
+	 *
+	 * @param providerId provider id to look up
+	 * @return {@code true} if entrypoints exist
+	 */
+	boolean hasEntrypoints(@Nullable String providerId);
+
 	/**
 	 * Returns eligible providers for the context and flow.
 	 *

@@ -18,6 +18,7 @@ import me.whereareiam.identica.migration.MigrationResult;
 import me.whereareiam.identica.migration.MigrationService;
 import me.whereareiam.identica.migration.MigrationStart;
 import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
@@ -56,6 +57,7 @@ public class DefaultMigrationService implements MigrationService {
 	private final IdentityService identityService;
 	private final Provider<Settings> settingsProvider;
 	private final Provider<Commands> commandsProvider;
+	private final Provider<Messages> messagesProvider;
 
 	private final Map<UUID, PendingMigration> pending = new ConcurrentHashMap<>();
 
@@ -117,6 +119,11 @@ public class DefaultMigrationService implements MigrationService {
 		if (hasPendingMigration(connectionUniqueId)) {
 			pending.remove(connectionUniqueId);
 			return result(MigrationResultStatus.PENDING_EXISTS, null);
+		}
+
+		if (!isUsernameFree(pendingMigration.username(), pendingMigration.uniqueId())) {
+			pending.remove(connectionUniqueId);
+			return result(MigrationResultStatus.PRECHECK_DENIED, migrationLockedMessage());
 		}
 
 		MigrationPrecheckResult precheck = runPrechecks(pendingMigration);
@@ -181,6 +188,10 @@ public class DefaultMigrationService implements MigrationService {
 				System.currentTimeMillis()
 		);
 
+		if (!isUsernameFree(pendingMigration.username(), pendingMigration.uniqueId())) {
+			return result(MigrationResultStatus.PRECHECK_DENIED, migrationLockedMessage());
+		}
+
 		MigrationPrecheckResult precheck = runPrechecks(pendingMigration);
 		if (precheck != null && !precheck.isAllowed())
 			return result(MigrationResultStatus.PRECHECK_DENIED, precheck.getMessage());
@@ -212,8 +223,7 @@ public class DefaultMigrationService implements MigrationService {
 	@Override
 	public @NotNull MigrationResult cancel(@NotNull MigrationCancel cancel) {
 		UUID connectionUniqueId = cancel.getConnectionUniqueId();
-		if (connectionUniqueId == null)
-			return result(MigrationResultStatus.FAILED, null);
+		if (connectionUniqueId == null) return result(MigrationResultStatus.FAILED, null);
 
 		MigrationCancelScope scope = cancel.getScope() != null ? cancel.getScope() : MigrationCancelScope.CONFIRMATION;
 		boolean removed = false;
@@ -357,14 +367,24 @@ public class DefaultMigrationService implements MigrationService {
 		return ttlMs > 0 && pendingMigration.requestedAt() + ttlMs < System.currentTimeMillis();
 	}
 
-	private @Nullable String normalize(@Nullable String value) {
-		if (value == null) return null;
-		String trimmed = value.trim();
-		return trimmed.isBlank() ? null : trimmed;
+	private boolean isUsernameFree(@Nullable String username, @Nullable UUID currentUniqueId) {
+		String normalized = normalize(username);
+		if (normalized == null) return true;
+
+		for (Account account : accountPersistenceService.findByUsername(normalized)) {
+			if (account == null) continue;
+			if (currentUniqueId != null && currentUniqueId.equals(account.getUniqueId()))
+				continue;
+
+			String existing = account.getUsername();
+			if (normalized.equalsIgnoreCase(existing)) return false;
+		}
+
+		return true;
 	}
 
-	private @NotNull String nonNull(@Nullable String value) {
-		return value == null ? "" : value;
+	private @NotNull String migrationLockedMessage() {
+		return messagesProvider.get().getCommands().getMigration().getLocked();
 	}
 
 	private @Nullable String resolveUsername(@Nullable String username, @NotNull UUID identicaUniqueId) {
@@ -382,6 +402,16 @@ public class DefaultMigrationService implements MigrationService {
 			return precheck.getKickMessage();
 
 		return normalize(requested);
+	}
+
+	private @Nullable String normalize(@Nullable String value) {
+		if (value == null) return null;
+		String trimmed = value.trim();
+		return trimmed.isBlank() ? null : trimmed;
+	}
+
+	private @NotNull String nonNull(@Nullable String value) {
+		return value == null ? "" : value;
 	}
 
 	private record PendingMigration(

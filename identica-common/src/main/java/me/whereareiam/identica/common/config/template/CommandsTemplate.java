@@ -187,6 +187,20 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 				.hide(true)
 				.build();
 
+		CommandDefinition availabilityUsername = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("availability username"))
+				.permission("")
+				.description("Check username availability")
+				.usage("{command} {alias} <username>")
+				.arguments(Map.of("username", "Username"))
+				.cooldown(CommandDefinition.Cooldown.builder()
+						.enabled(true)
+						.duration(2)
+						.group("global")
+						.build())
+				.build();
+
 		CommandDefinition migrationList = CommandDefinition.builder()
 				.enabled(true)
 				.aliases(List.of("migration list"))
@@ -273,6 +287,7 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 		definitions.put("session-end", sessionEnd);
 
 		definitions.put("enroll", enroll);
+		definitions.put("availability-username", availabilityUsername);
 
 		definitions.put("migration-list", migrationList);
 		definitions.put("migration-start", migrationStart);

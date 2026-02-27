@@ -66,6 +66,7 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 				.identity(request.getIdentity())
 				.intendedServer(request.getIntendedServer())
 				.build();
+		context.setProvider(request.getProvider());
 
 		EventUtil.callEvent(new AuthenticationContextBuiltEvent(context));
 		emitScenarioBuilt(context);

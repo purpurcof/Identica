@@ -57,6 +57,7 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 				.connectionUniqueId(request.getConnectionUniqueId())
 				.identity(request.getIdentity())
 				.intendedServer(request.getIntendedServer())
+				.provider(request.getProvider())
 				.build();
 
 		emitScenarioBuilt(context);

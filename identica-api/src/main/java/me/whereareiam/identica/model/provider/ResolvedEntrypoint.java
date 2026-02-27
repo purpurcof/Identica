@@ -6,22 +6,29 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.identica.type.provider.ProviderOrigin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Resolved entrypoint mapping for a provider.
+ */
 @Getter
 @Setter
 @ToString
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)
-public class ProviderContext {
-	private @Nullable String providerId;
-	private @Nullable String providerSubject;
-	private @NotNull String providerUsername;
+public class ResolvedEntrypoint {
 	/**
-	 * Source of provider selection for this context.
+	 * Provider id matched by the entrypoint.
 	 */
-	private @Nullable ProviderOrigin source;
+	private @NotNull String providerId;
+	/**
+	 * Normalized host name.
+	 */
+	private @NotNull String host;
+	/**
+	 * Port when specified, otherwise {@code null}.
+	 */
+	private @Nullable Integer port;
 }

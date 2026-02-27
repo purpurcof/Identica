@@ -17,6 +17,8 @@ import me.whereareiam.identica.identity.IdentityService;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.InetSocketAddress;
+
 @Singleton
 public class VelocityResumeDecisionAdapter extends ConnectionDecisionAdapter implements DynamicListener<ServerConnectedEvent> {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
@@ -43,9 +45,12 @@ public class VelocityResumeDecisionAdapter extends ConnectionDecisionAdapter imp
 				.map(server -> server.getServerInfo().getName())
 				.orElse(null);
 
+		ConnectionIdentity identity = new ConnectionIdentity(player.getUniqueId(), player.getUsername(), ip);
+		applyOrigin(identity, player);
+
 		ResumeRequest request = ResumeRequest.builder()
 				.connectionUniqueId(player.getUniqueId())
-				.identity(new ConnectionIdentity(player.getUniqueId(), player.getUsername(), ip))
+				.identity(identity)
 				.intendedServer(intendedServer)
 				.build();
 
@@ -85,5 +90,15 @@ public class VelocityResumeDecisionAdapter extends ConnectionDecisionAdapter imp
 				player.disconnect(message);
 			}
 		};
+	}
+
+	private void applyOrigin(@NotNull ConnectionIdentity identity, @NotNull Player player) {
+		InetSocketAddress virtualHost = player.getVirtualHost().orElse(null);
+		if (virtualHost == null) return;
+
+		identity.setOrigin(new ConnectionIdentity.Origin(
+				virtualHost.getHostString(),
+				virtualHost.getPort()
+		));
 	}
 }

@@ -58,5 +58,10 @@ public class Providers {
 		private @NotNull String id;
 		private boolean enabled;
 		private int priority;
+		/**
+		 * Hostnames (optionally with port) that map to this provider.
+		 * Entries must use the format {@code host} or {@code host:port}.
+		 */
+		private @NotNull List<String> entrypoints = new ArrayList<>();
 	}
 }

@@ -33,6 +33,7 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import org.jetbrains.annotations.NotNull;
@@ -628,6 +629,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			context.setProvider(ProviderContext.builder()
 					.providerId(providerId)
 					.providerUsername(username)
+					.source(ProviderOrigin.AUTO)
 					.build());
 			return;
 		}
@@ -635,6 +637,8 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		provider.setProviderId(providerId);
 		if (provider.getProviderUsername().isBlank())
 			provider.setProviderUsername(username);
+		if (provider.getSource() == null)
+			provider.setSource(ProviderOrigin.AUTO);
 	}
 
 	private boolean matchesProvider(@Nullable String expected, @Nullable String actual) {

@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,6 +21,10 @@ public class ConnectionRequest {
 	private final @Nullable UUID connectionUniqueId;
 	private final @NotNull ConnectionIdentity identity;
 	private final @Nullable String intendedServer;
+	/**
+	 * Provider context selected for this connection, if known.
+	 */
+	private final @Nullable ProviderContext provider;
 
 	/**
 	 * Returns the connection identity for this connection request.

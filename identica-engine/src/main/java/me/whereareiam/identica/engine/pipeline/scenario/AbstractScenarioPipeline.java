@@ -512,7 +512,17 @@ public abstract class AbstractScenarioPipeline {
 			return null;
 
 		String ip = request.getIp() != null ? request.getIp() : base.getIp();
-		return new ConnectionIdentity(connectionId, username, ip);
+		ConnectionIdentity merged = new ConnectionIdentity(connectionId, username, ip);
+
+		ConnectionIdentity requestIdentity = request.getIdentityInfo();
+		if (requestIdentity != null) {
+			merged.setOrigin(requestIdentity.getOrigin());
+			return merged;
+		}
+
+		merged.setOrigin(base.getIdentity().getOrigin());
+
+		return merged;
 	}
 
 	protected void emitScenarioBuilt(@NotNull ScenarioContext context) {

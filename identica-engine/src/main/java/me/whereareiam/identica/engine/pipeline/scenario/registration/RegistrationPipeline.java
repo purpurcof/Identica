@@ -65,6 +65,7 @@ public class RegistrationPipeline extends AbstractScenarioPipeline {
 				.identity(request.getIdentity())
 				.intendedServer(request.getIntendedServer())
 				.build();
+		context.setProvider(request.getProvider());
 
 		EventUtil.callEvent(new RegistrationContextBuiltEvent(context));
 		emitScenarioBuilt(context);

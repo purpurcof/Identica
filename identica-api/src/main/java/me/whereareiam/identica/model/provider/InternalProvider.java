@@ -8,26 +8,61 @@ import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.type.provider.ProviderState;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Set;
 
+/**
+ * Runtime representation of a loaded provider and its resolved metadata.
+ */
 @Getter
 @Setter
 @Builder
 public class InternalProvider {
-	private Path path;
+	/**
+	 * Provider JAR path on disk.
+	 */
+	private @Nullable Path path;
 
-	private ProviderDescriptor descriptor;
-	private IdenticaProvider provider;
+	/**
+	 * Provider descriptor loaded from metadata.
+	 */
+	private @Nullable ProviderDescriptor descriptor;
+	/**
+	 * Provider implementation instance.
+	 */
+	private @Nullable IdenticaProvider provider;
 
-	private ClassLoader classLoader;
-	private Path workingPath;
+	/**
+	 * Dedicated class loader for the provider.
+	 */
+	private @Nullable ClassLoader classLoader;
+	/**
+	 * Working directory for the provider runtime.
+	 */
+	private @Nullable Path workingPath;
 
+	/**
+	 * Resolved provider priority for ordering.
+	 */
 	private int priority;
-	private ProviderState state;
+	/**
+	 * Current lifecycle state.
+	 */
+	private @NotNull ProviderState state;
 
-	private Set<ProviderEligibilityResolver> eligibilityResolvers;
-	private Set<ProfileSubjectResolver> profileSubjectResolvers;
-	private Set<ProviderMigrationPrecheck> migrationPrechecks;
+	/**
+	 * Eligibility resolvers registered for this provider.
+	 */
+	private @Nullable Set<ProviderEligibilityResolver> eligibilityResolvers;
+	/**
+	 * Profile resolvers registered for this provider.
+	 */
+	private @Nullable Set<ProfileSubjectResolver> profileSubjectResolvers;
+	/**
+	 * Migration prechecks registered for this provider.
+	 */
+	private @Nullable Set<ProviderMigrationPrecheck> migrationPrechecks;
 }

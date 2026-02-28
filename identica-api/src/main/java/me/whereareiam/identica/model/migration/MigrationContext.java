@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateItem;
@@ -28,6 +29,9 @@ public class MigrationContext implements ScenarioContext, PipelineStateItem {
 
 	@Setter
 	private @Nullable ProviderContext provider;
+
+	@Setter
+	private @Nullable ScenarioTransitionItem transition;
 
 	@Setter
 	private @Nullable String targetProviderId;

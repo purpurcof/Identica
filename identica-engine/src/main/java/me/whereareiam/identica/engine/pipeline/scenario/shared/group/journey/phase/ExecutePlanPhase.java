@@ -15,6 +15,7 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
@@ -97,9 +98,44 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		}
 
 		JourneyStateItem pending = state.getPending();
+		PipelineResult transitionResult = applyTransitionContract(pipelineState, context, pipelineType);
+		if (transitionResult != null) {
+			state.setResult(transitionResult);
+			return CompletableFuture.completedFuture(PhaseResult.pass(state));
+		}
+
 		PipelineResult result = executePlan(pipelineState, context, pipelineType, flow, pending, plan);
 		state.setResult(result != null ? result : PipelineResult.complete());
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
+	}
+
+	private @Nullable PipelineResult applyTransitionContract(
+			@NotNull PipelineState pipelineState,
+			@NotNull ScenarioContext context,
+			@NotNull PipelineType pipelineType
+	) {
+		ScenarioTransitionItem resolved = context.getTransition();
+		if (resolved == null || resolved.getTargetPipeline() != pipelineType)
+			return null;
+
+		applyProviderPolicy(context, resolved.getProviderPolicy());
+
+		if (resolved.isConsumeOnce()) context.setTransition(null);
+		pipelineState.setScenario(context);
+
+		return resolved.getJourneyPolicy() == ScenarioTransitionItem.JourneyPolicy.SKIP
+				? PipelineResult.complete()
+				: null;
+	}
+
+	private void applyProviderPolicy(
+			@NotNull ScenarioContext context,
+			@Nullable ScenarioTransitionItem.ProviderPolicy providerPolicy
+	) {
+		if (providerPolicy == ScenarioTransitionItem.ProviderPolicy.CLEAR
+				|| providerPolicy == ScenarioTransitionItem.ProviderPolicy.RESELECT) {
+			clearProvider(context);
+		}
 	}
 
 	private @Nullable PipelineResult executePlan(

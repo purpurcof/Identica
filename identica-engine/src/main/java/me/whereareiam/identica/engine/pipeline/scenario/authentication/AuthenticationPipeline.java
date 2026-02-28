@@ -15,7 +15,6 @@ import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
@@ -67,6 +66,7 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 				.intendedServer(request.getIntendedServer())
 				.build();
 		context.setProvider(request.getProvider());
+		context.setTransition(request.getTransition());
 
 		EventUtil.callEvent(new AuthenticationContextBuiltEvent(context));
 		emitScenarioBuilt(context);
@@ -84,14 +84,13 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 				: base.getIntendedServer();
 
 		if (base instanceof AuthContext authContext) {
-			AuthContext merged = AuthContext.builder()
+			return AuthContext.builder()
 					.connectionUniqueId(identity.getUniqueId())
 					.identity(identity)
 					.intendedServer(intendedServer)
+					.provider(authContext.getProvider())
+					.transition(authContext.getTransition())
 					.build();
-
-			merged.setProvider(authContext.getProvider());
-			return merged;
 		}
 
 		return base;
@@ -118,10 +117,5 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 		if (uniqueId == null) return false;
 
 		return !providerLinkPersistenceService.findByUniqueId(uniqueId).isEmpty();
-	}
-
-	public @Nullable AuthContext resolveAuthContext(@NotNull PipelineResult result) {
-		ScenarioContext scenario = resolveScenarioContext(result);
-		return scenario instanceof AuthContext authContext ? authContext : null;
 	}
 }

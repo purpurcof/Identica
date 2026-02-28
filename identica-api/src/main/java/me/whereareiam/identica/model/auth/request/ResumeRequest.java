@@ -86,4 +86,20 @@ public class ResumeRequest {
 	public @Nullable String getIntendedServer() {
 		return intendedServer;
 	}
+
+	/**
+	 * Converts this resume request into a connection request when identity is present.
+	 *
+	 * @return converted connection request or {@code null}
+	 */
+	public @Nullable ConnectionRequest toConnectionRequest() {
+		if (identity == null)
+			return null;
+
+		return ConnectionRequest.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.identity(identity)
+				.intendedServer(intendedServer)
+				.build();
+	}
 }

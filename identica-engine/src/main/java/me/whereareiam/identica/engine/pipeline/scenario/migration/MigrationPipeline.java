@@ -58,6 +58,7 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 				.identity(request.getIdentity())
 				.intendedServer(request.getIntendedServer())
 				.provider(request.getProvider())
+				.transition(request.getTransition())
 				.build();
 
 		emitScenarioBuilt(context);
@@ -83,6 +84,7 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 					.build();
 
 			merged.setProvider(migration.getProvider());
+			merged.setTransition(migration.getTransition());
 			return merged;
 		}
 

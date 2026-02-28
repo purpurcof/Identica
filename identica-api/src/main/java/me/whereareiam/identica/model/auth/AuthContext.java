@@ -4,6 +4,7 @@ import lombok.*;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateItem;
+import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,6 +25,9 @@ public class AuthContext implements ScenarioContext, PipelineStateItem {
 
 	@Setter
 	private @Nullable ProviderContext provider;
+
+	@Setter
+	private @Nullable ScenarioTransitionItem transition;
 
 	/**
 	 * Returns the connection identity attached to this context.

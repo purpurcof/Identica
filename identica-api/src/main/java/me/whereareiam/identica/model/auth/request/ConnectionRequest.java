@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +26,10 @@ public class ConnectionRequest {
 	 * Provider context selected for this connection, if known.
 	 */
 	private final @Nullable ProviderContext provider;
+	/**
+	 * Scenario transition contract propagated across pipeline reroutes.
+	 */
+	private final @Nullable ScenarioTransitionItem transition;
 
 	/**
 	 * Returns the connection identity for this connection request.

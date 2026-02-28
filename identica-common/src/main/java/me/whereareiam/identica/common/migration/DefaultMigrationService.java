@@ -84,7 +84,6 @@ public class DefaultMigrationService implements MigrationService {
 		AccountProviderLink link = providerLinkPersistenceService
 				.findByUniqueIdAndProviderId(identicaUniqueId, targetProviderId)
 				.orElse(null);
-		System.out.println(link);
 		if (link != null && link.isPrimaryLink()) return result(MigrationResultStatus.ALREADY_PRIMARY, null);
 
 		PendingMigration pendingMigration = new PendingMigration(

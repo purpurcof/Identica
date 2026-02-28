@@ -8,12 +8,16 @@ import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityState;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.identity.Account;
+import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.phase.PipelinePhase;
 import me.whereareiam.identica.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,8 +69,33 @@ public class EnsureNewAccountPhase implements PipelinePhase<IdentityState> {
 			state.setResult(PipelineResult.failed(ensureNewAccountMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
-		if (providerLinkPersistenceService.findBySubject(provider.getProviderId(), provider.getProviderSubject()).isPresent()) {
-			state.setResult(PipelineResult.denied(accountAlreadyExistsMessage()));
+
+		AccountProviderLink existingLink = providerLinkPersistenceService
+				.findBySubject(provider.getProviderId(), provider.getProviderSubject())
+				.orElse(null);
+		if (existingLink != null) {
+			UUID linkedUniqueId = existingLink.getUniqueId();
+
+			pipelineState.setScenario(context);
+			context.setIdenticaUniqueId(linkedUniqueId);
+			Account linkedAccount = accountPersistenceService.findByUniqueId(linkedUniqueId).orElse(null);
+			if (linkedAccount == null) {
+				state.setResult(PipelineResult.denied(accountAlreadyExistsMessage()));
+				return CompletableFuture.completedFuture(PhaseResult.pass(state));
+			}
+
+			state.setLink(existingLink);
+			state.setAccount(linkedAccount);
+			state.setResult(PipelineResult.noPending());
+			context.setTransition(ScenarioTransitionItem.builder()
+					.targetPipeline(PipelineType.AUTHENTICATION)
+					.reason("existing-provider-link")
+					.mode(ScenarioTransitionItem.TransitionMode.RESTART)
+					.journeyPolicy(ScenarioTransitionItem.JourneyPolicy.SKIP)
+					.providerPolicy(ScenarioTransitionItem.ProviderPolicy.PRESERVE)
+					.consumeOnce(true)
+					.build());
+			pipelineState.setScenario(context);
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 

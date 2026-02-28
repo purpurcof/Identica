@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.IdentityGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.LoadIdentityProfilePhase;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.RefreshProviderProfilePhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.ResolveIdentityPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.UsernameReplicationPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.PolicyGroup;
@@ -42,6 +43,7 @@ public class AuthenticationPipelineRegistry extends AbstractPipelineGroupRegistr
 			ExecutePlanPhase executePlanPhase,
 			ResolveIdentityPhase resolveIdentityPhase,
 			LoadIdentityProfilePhase loadIdentityProfilePhase,
+			RefreshProviderProfilePhase refreshProviderProfilePhase,
 			UsernameReplicationPhase usernameReplicationPhase,
 			AccountReviewPhase accountReviewPhase,
 			PersistUsernameChangePhase persistUsernameChangePhase,
@@ -63,6 +65,7 @@ public class AuthenticationPipelineRegistry extends AbstractPipelineGroupRegistr
 
 		registerPhase(identityGroup.id(), resolveIdentityPhase, PhasePlacement.first());
 		registerPhase(identityGroup.id(), loadIdentityProfilePhase, PhasePlacement.after(resolveIdentityPhase.id()));
+		registerPhase(identityGroup.id(), refreshProviderProfilePhase, PhasePlacement.after(loadIdentityProfilePhase.id()));
 		registerPhase(identityGroup.id(), usernameReplicationPhase, PhasePlacement.last());
 
 		registerPhase(policyGroup.id(), accountReviewPhase, PhasePlacement.first());

@@ -8,6 +8,7 @@ import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
+import me.whereareiam.identica.provider.cracked.pipeline.scenario.authentication.CrackedSessionReuseStep;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.authentication.CrackedAuthenticationPasswordStep;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.migration.CrackedMigrationAuthenticationStep;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.migration.CrackedMigrationConfirmStep;
@@ -27,6 +28,7 @@ public class CrackedPipelineExtension implements PipelineExtension {
 	private final @NotNull AccountPresenceStep accountPresenceStep;
 	private final @NotNull RegistrationStep registrationStep;
 	private final @NotNull RegistrationConfirmStep registrationConfirmStep;
+	private final @NotNull CrackedSessionReuseStep sessionReuseStep;
 	private final @NotNull CrackedAuthenticationPasswordStep authenticationPasswordStep;
 	private final @NotNull CrackedMigrationAuthenticationStep migrationAuthenticationStep;
 	private final @NotNull CrackedMigrationRegistrationStep migrationRegistrationStep;
@@ -78,6 +80,14 @@ public class CrackedPipelineExtension implements PipelineExtension {
 					registrationConfirmStep
 			);
 		}
+
+		registerForBothFlows(
+				builder,
+				PipelineScope.AUTHENTICATION,
+				providerId,
+				PipelineType.AUTHENTICATION,
+				sessionReuseStep
+		);
 
 		registerForBothFlows(
 				builder,

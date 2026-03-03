@@ -2,9 +2,11 @@ package me.whereareiam.identica.common.conflict.type;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.common.conflict.guard.UsernameEntrypointConflictGuard;
 import me.whereareiam.identica.common.conflict.resolver.username.FormatUsernameConflictResolver;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.conflict.ConflictType;
+import me.whereareiam.identica.conflict.ConflictGuard;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
@@ -18,6 +20,8 @@ import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.identica.type.ConflictHook;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,6 +40,7 @@ public class UsernameConflictType implements ConflictType {
 	private final ProviderProfilePersistenceService providerProfilePersistenceService;
 	private final SessionService sessionService;
 	private final FormatUsernameConflictResolver formatResolver;
+	private final UsernameEntrypointConflictGuard entrypointGuard;
 
 	@Inject
 	public UsernameConflictType(
@@ -44,6 +49,7 @@ public class UsernameConflictType implements ConflictType {
 			ProviderProfilePersistenceService providerProfilePersistenceService,
 			SessionService sessionService,
 			FormatUsernameConflictResolver formatResolver,
+			UsernameEntrypointConflictGuard entrypointGuard,
 			ConflictService conflictService
 	) {
 		this.accountPersistenceService = accountPersistenceService;
@@ -51,6 +57,7 @@ public class UsernameConflictType implements ConflictType {
 		this.providerProfilePersistenceService = providerProfilePersistenceService;
 		this.sessionService = sessionService;
 		this.formatResolver = formatResolver;
+		this.entrypointGuard = entrypointGuard;
 
 		conflictService.register(this);
 	}
@@ -71,6 +78,11 @@ public class UsernameConflictType implements ConflictType {
 	}
 
 	@Override
+	public @NotNull List<ConflictGuard> getGuards() {
+		return List.of(entrypointGuard);
+	}
+
+	@Override
 	public @Nullable ConflictContext createContext(@NotNull AccountPrepareEvent event) {
 		String candidate = event.getEffectiveUsername();
 		if (candidate == null || candidate.isBlank())
@@ -80,17 +92,10 @@ public class UsernameConflictType implements ConflictType {
 		AccountProviderLink incomingLink = event.getLink();
 
 		candidate = candidate.trim();
-		String currentUsername = account.getUsername();
-		if (candidate.equals(currentUsername))
-			return null;
+		Account conflictAccount = resolveActiveConflict(account.getUniqueId(), candidate).orElse(null);
+		if (conflictAccount == null) return null;
 
-		Account conflictAccount = resolveActiveConflict(account.getUniqueId(), candidate)
-				.orElse(null);
-		if (conflictAccount == null)
-			return null;
-
-		AccountProviderLink existingLink = resolvePrimaryLink(conflictAccount.getUniqueId())
-				.orElse(null);
+		AccountProviderLink existingLink = resolvePrimaryLink(conflictAccount.getUniqueId()).orElse(null);
 		AccountProviderProfile existingProfile = existingLink != null
 				? providerProfilePersistenceService.findBySubject(
 						existingLink.getProviderId(),
@@ -101,7 +106,7 @@ public class UsernameConflictType implements ConflictType {
 		if (existingLink == null)
 			return null;
 
-		return ConflictContext.builder()
+		ConflictContext context = ConflictContext.builder()
 				.key(KEY)
 				.candidate(candidate)
 				.incomingAccount(account)
@@ -110,6 +115,16 @@ public class UsernameConflictType implements ConflictType {
 				.existingLink(existingLink)
 				.existingProfile(existingProfile)
 				.build();
+
+		ProviderContext providerContext = event.getProvider();
+		ProviderOrigin source = providerContext != null ? providerContext.getSource() : null;
+		if (source != null) context.putExtra("entrypointSource", source);
+
+		resolvePrimaryLink(account.getUniqueId()).ifPresent(primaryIncoming ->
+				context.putExtra("incomingPrimaryProviderId", primaryIncoming.getProviderId())
+		);
+
+		return context;
 	}
 
 	@Override

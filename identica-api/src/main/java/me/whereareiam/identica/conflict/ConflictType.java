@@ -49,6 +49,22 @@ public interface ConflictType {
 	}
 
 	/**
+	 * Return guards owned by this conflict type.
+	 *
+	 * <pre>{@code
+	 * @Override
+	 * public List<ConflictGuard> getGuards() {
+	 *     return List.of(entrypointGuard);
+	 * }
+	 * }</pre>
+	 *
+	 * @return guards owned by the type
+	 */
+	default @NotNull List<ConflictGuard> getGuards() {
+		return List.of();
+	}
+
+	/**
 	 * Build a conflict context during account preparation.
 	 *
 	 * <pre>{@code

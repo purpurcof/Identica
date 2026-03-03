@@ -4,10 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.common.uuid.UniqueIdResolutionSupport;
+import me.whereareiam.identica.conflict.ConflictGuard;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.config.Providers.ConflictRule;
+import me.whereareiam.identica.model.config.Providers.ResolverEntry;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickActiveConflictResolver;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickBothConflictResolver;
@@ -17,6 +19,7 @@ import me.whereareiam.configura.node.ObjectNode;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.conflict.ConflictType;
+import me.whereareiam.identica.logging.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,17 +31,20 @@ import java.util.Set;
 @Singleton
 public class DefaultConflictService implements ConflictService {
 	private final Provider<Providers> providersConfig;
+	private final Set<ConflictGuard> globalGuards;
 	private final Map<String, ConflictResolver> resolvers = new ConcurrentHashMap<>();
 	private final Map<String, ConflictType> types = new ConcurrentHashMap<>();
 
 	@Inject
 	public DefaultConflictService(
 			Provider<Providers> providersConfig,
+			Set<ConflictGuard> globalGuards,
 			KickJoinerConflictResolver kickJoinerResolver,
 			KickActiveConflictResolver kickActiveResolver,
 			KickBothConflictResolver kickBothResolver
 	) {
 		this.providersConfig = providersConfig;
+		this.globalGuards = globalGuards;
 
 		register(kickJoinerResolver);
 		register(kickActiveResolver);
@@ -98,37 +104,48 @@ public class DefaultConflictService implements ConflictService {
 
 	@Override
 	public @Nullable ConflictResolution resolve(@NotNull ConflictContext context) {
-		ConflictRule rule = resolveRule(context);
-		if (rule == null) return null;
+		Providers.ConflictRules rules = resolveRules(context);
+		if (rules == null) return null;
 
-		String resolverId = resolveResolverId(rule);
-		if (resolverId == null) return null;
+		ConflictType type = getType(context.getKey());
+		ConflictResolution guardResolution = applyGuards(context, type);
+		if (guardResolution != null) return guardResolution;
 
-		ConflictResolver resolver = getResolver(resolverId);
-		if (resolver == null) return null;
-		if (!rule.isForce() && !resolver.supports(context.getKey()))
-			return null;
+		ConflictRule pairRule = resolvePairRule(rules, context);
+		if (pairRule != null) {
+			ConflictResolution resolution = resolveRule(context, pairRule);
+			if (resolution.getAction() != ConflictResolution.Action.PASS) return resolution;
+		}
 
-		Node params = resolveParams(rule);
-		return resolver.resolve(context, params);
+		ConflictRule defaultRule = rules.getDefaultRule();
+		ConflictResolution resolution = resolveRule(context, defaultRule);
+		if (resolution.getAction() == ConflictResolution.Action.PASS) {
+			Logger.warn("Conflict resolution passed for key: %s", context.getKey());
+			return ConflictResolution.allow();
+		}
+
+		return resolution;
 	}
 
-	private ConflictRule resolveRule(ConflictContext context) {
+	private @Nullable Providers.ConflictRules resolveRules(ConflictContext context) {
 		Map<String, Providers.ConflictRules> conflicts = providersConfig.get().getConflicts();
 		if (conflicts.isEmpty()) return null;
 
-		Providers.ConflictRules rules = conflicts.get(context.getKey());
-		if (rules == null) return null;
+		return conflicts.get(context.getKey());
+	}
 
+	private @Nullable ConflictRule resolvePairRule(
+			@NotNull Providers.ConflictRules rules,
+			@NotNull ConflictContext context
+	) {
 		List<ConflictRule> pairs = rules.getPairs();
-		if (!pairs.isEmpty()) {
-			for (ConflictRule rule : pairs) {
-				if (matchesProviders(rule, context))
-					return rule;
-			}
-		}
+		if (pairs.isEmpty()) return null;
 
-		return rules.getDefaultRule();
+		for (ConflictRule rule : pairs) {
+			if (matchesProviders(rule, context))
+				return rule;
+		}
+		return null;
 	}
 
 	private boolean matchesProviders(ConflictRule rule, ConflictContext context) {
@@ -153,17 +170,69 @@ public class DefaultConflictService implements ConflictService {
 		return hasIncoming && hasExisting;
 	}
 
-	private @Nullable String resolveResolverId(ConflictRule rule) {
-		if (rule == null) return null;
+	private @Nullable ConflictResolution applyGuards(
+			@NotNull ConflictContext context,
+			@Nullable ConflictType type
+	) {
+		for (ConflictGuard guard : globalGuards) {
+			if (guard == null) continue;
+			ConflictResolution resolution = guard.guard(context);
+			if (resolution != null) return resolution;
+		}
 
-		String resolver = rule.getResolver();
+		if (type == null) return null;
+		for (ConflictGuard guard : type.getGuards()) {
+			if (guard == null) continue;
+			ConflictResolution resolution = guard.guard(context);
+			if (resolution != null) return resolution;
+		}
+
+		return null;
+	}
+
+	private @NotNull ConflictResolution resolveRule(
+			@NotNull ConflictContext context,
+			@NotNull ConflictRule rule
+	) {
+		List<ResolverEntry> entries = rule.getResolvers();
+		if (entries.isEmpty()) return ConflictResolution.pass();
+
+		for (ResolverEntry entry : entries) {
+			if (entry == null) continue;
+			String resolverId = resolveResolverId(entry);
+			if (resolverId == null) continue;
+
+			ConflictResolver resolver = getResolver(resolverId);
+			if (resolver == null) {
+				Logger.warn("Conflict resolver not found: %s", resolverId);
+				continue;
+			}
+
+			if (!rule.isForce() && !resolver.supports(context.getKey()))
+				continue;
+
+			Node params = resolveParams(entry);
+			ConflictResolution resolution = resolver.resolve(context, params);
+			if (resolution.getAction() == ConflictResolution.Action.PASS)
+				continue;
+
+			return resolution;
+		}
+
+		return ConflictResolution.pass();
+	}
+
+	private @Nullable String resolveResolverId(ResolverEntry entry) {
+		if (entry == null) return null;
+
+		String resolver = entry.getId();
 		return resolver.isBlank() ? null : resolver;
 	}
 
-	private @NotNull Node resolveParams(ConflictRule rule) {
-		if (rule == null) return new ObjectNode();
+	private @NotNull Node resolveParams(ResolverEntry entry) {
+		if (entry == null) return new ObjectNode();
 
-		return rule.getParameters() instanceof ObjectNode objectNode
+		return entry.getParameters() instanceof ObjectNode objectNode
 				? new ObjectNode(objectNode.getValues())
 				: new ObjectNode();
 	}

@@ -14,14 +14,12 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 	public Providers supply(Providers config) {
 		Providers.ConflictRules usernameRules = new Providers.ConflictRules();
 		Providers.ConflictRule defaultRule = new Providers.ConflictRule();
-		defaultRule.setResolver("format_display");
-		defaultRule.setParameters(formatParams("{username}*"));
+		defaultRule.setResolvers(List.of(formatResolver("{username}*", "joiner")));
 		usernameRules.setDefaultRule(defaultRule);
 
 		Providers.ConflictRule premiumVsCracked = new Providers.ConflictRule();
 		premiumVsCracked.setProviders(List.of("premium", "cracked"));
-		premiumVsCracked.setResolver("format_display");
-		premiumVsCracked.setParameters(formatParams("{username} [{incomingProvider}]#{random:2}"));
+		premiumVsCracked.setResolvers(List.of(formatResolver("{username} [{incomingProvider}]#{random:2}", "joiner")));
 		usernameRules.setPairs(List.of(premiumVsCracked));
 
 		config.getConflicts().put("username", usernameRules);
@@ -30,23 +28,28 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 		cracked.setId("cracked");
 		cracked.setEnabled(true);
 		cracked.setPriority(50);
+		cracked.setEntrypoints(List.of("cracked.arcadeya.com"));
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
 		premium.setId("premium");
 		premium.setEnabled(true);
 		premium.setPriority(100);
+		premium.setEntrypoints(List.of("premium.arcadeya.com"));
 
 		config.setProviders(List.of(cracked, premium));
 		return config;
 	}
 
-	private ObjectNode formatParams(String pattern) {
+	private Providers.ResolverEntry formatResolver(String pattern, String target) {
 		ObjectNode format = new ObjectNode();
 		format.getValues().put("pattern", new StringNode(pattern));
 
 		ObjectNode node = new ObjectNode();
 		node.getValues().put("format", format);
-		node.getValues().put("target", new StringNode("joiner"));
-		return node;
+		node.getValues().put("target", new StringNode(target));
+		Providers.ResolverEntry entry = new Providers.ResolverEntry();
+		entry.setId("format_display");
+		entry.setParameters(node);
+		return entry;
 	}
 }

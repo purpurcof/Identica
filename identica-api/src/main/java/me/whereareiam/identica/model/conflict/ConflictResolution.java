@@ -24,6 +24,7 @@ public class ConflictResolution {
 	 */
 	public enum Action {
 		ALLOW,
+		PASS,
 		DENY,
 		KICK_EXISTING,
 		KICK_BOTH
@@ -45,6 +46,15 @@ public class ConflictResolution {
 	 */
 	public static ConflictResolution allow() {
 		return new ConflictResolution(Action.ALLOW, null, OverrideTarget.INCOMING, null);
+	}
+
+	/**
+	 * Pass to the next resolver.
+	 *
+	 * @return pass resolution
+	 */
+	public static ConflictResolution pass() {
+		return new ConflictResolution(Action.PASS, null, OverrideTarget.INCOMING, null);
 	}
 
 	/**

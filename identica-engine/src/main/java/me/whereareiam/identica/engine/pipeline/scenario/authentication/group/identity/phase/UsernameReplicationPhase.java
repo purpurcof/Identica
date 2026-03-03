@@ -106,21 +106,13 @@ public class UsernameReplicationPhase implements PipelinePhase<IdentityState> {
 			@NotNull AccountProviderProfile profile
 	) {
 		String providerUsername = profile.getProviderUsername();
-		if (providerUsername.isBlank())
-			return false;
-
-		if (account.getSource() == UsernameSource.MANUAL)
-			return false;
-
-		if (!link.isPrimaryLink())
-			return false;
-
-		if (!isProviderAuthoritative(link.getProviderId()))
-			return false;
+		if (providerUsername.isBlank()) return false;
+		if (account.getSource() == UsernameSource.MANUAL) return false;
+		if (!link.isPrimaryLink()) return false;
+		if (!isProviderAuthoritative(link.getProviderId())) return false;
 
 		String candidate = providerUsername.trim();
-		if (candidate.equals(account.getUsername()))
-			return false;
+		if (candidate.equals(account.getUsername())) return false;
 
 		account.setUsername(candidate);
 		account.setSource(UsernameSource.PROVIDER);

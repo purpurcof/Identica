@@ -1,6 +1,7 @@
 package me.whereareiam.identica.common;
 
 import com.google.inject.*;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
@@ -28,6 +29,7 @@ import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTyp
 import me.whereareiam.identica.common.conflict.ConflictPrepareLifecycle;
 import me.whereareiam.identica.common.conflict.DefaultConflictService;
 import me.whereareiam.identica.common.conflict.type.UsernameConflictType;
+import me.whereareiam.identica.conflict.ConflictGuard;
 import me.whereareiam.identica.common.provider.DefaultProviderAttemptStore;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
@@ -155,6 +157,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(RoutingTargetMissingListener.class).asEagerSingleton();
 
 		// Conflict resolution
+		Multibinder.newSetBinder(binder(), ConflictGuard.class);
 		bind(ConflictService.class).to(DefaultConflictService.class).asEagerSingleton();
 		bind(UsernameConflictType.class).asEagerSingleton();
 

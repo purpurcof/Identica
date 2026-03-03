@@ -43,8 +43,18 @@ public class Providers {
 	@ToString
 	public static class ConflictRule {
 		private @NotNull List<String> providers = new ArrayList<>();
-		private @NotNull String resolver;
 		private boolean force;
+		private @NotNull List<ResolverEntry> resolvers = new ArrayList<>();
+	}
+
+	/**
+	 * Resolver entry for conflict rules.
+	 */
+	@Getter
+	@Setter
+	@ToString
+	public static class ResolverEntry {
+		private @NotNull String id;
 		private @NotNull Node parameters = new ObjectNode();
 	}
 

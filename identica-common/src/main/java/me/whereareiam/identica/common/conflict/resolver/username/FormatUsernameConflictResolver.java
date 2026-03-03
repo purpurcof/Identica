@@ -3,10 +3,11 @@ package me.whereareiam.identica.common.conflict.resolver.username;
 import com.google.inject.Singleton;
 import lombok.Getter;
 import lombok.Setter;
+import me.whereareiam.identica.conflict.resolver.typed.TypedConflictResolver;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
-import me.whereareiam.identica.conflict.resolver.typed.TypedConflictResolver;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
@@ -16,6 +17,7 @@ import java.util.regex.Pattern;
 @Singleton
 public class FormatUsernameConflictResolver implements TypedConflictResolver<FormatUsernameConflictResolver.Config> {
 	private static final Pattern RANDOM_PATTERN = Pattern.compile("\\{random(?::(\\d+))?}");
+
 	@Override
 	public @NotNull String getId() {
 		return "format_display";
@@ -68,7 +70,7 @@ public class FormatUsernameConflictResolver implements TypedConflictResolver<For
 		return ConflictResolution.allowWithOverride(display, target);
 	}
 
-	private ConflictResolution.OverrideTarget resolveTarget(String raw) {
+	private ConflictResolution.OverrideTarget resolveTarget(@Nullable String raw) {
 		if (raw == null || raw.isBlank())
 			return ConflictResolution.OverrideTarget.INCOMING;
 

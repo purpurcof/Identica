@@ -42,9 +42,9 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 		if (resolved == null)
 			resolved = resolveFromProviderLink(providerId, providerSubject);
 		if (resolved == null)
-			resolved = resolveFromReservation(providerId, providerSubject, username, request.getIp());
+			resolved = resolveFromReservation(providerId, providerSubject);
 		if (resolved == null)
-			resolved = reserveNewAccountId(providerId, providerSubject, username, request.getIp());
+			resolved = reserveNewAccountId(providerId, providerSubject);
 
 		return resolved;
 	}
@@ -53,16 +53,10 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 	public void clearReservation(@NotNull ProfileRequest request) {
 		String providerId = request.getProviderId();
 		String providerSubject = request.getProviderSubject();
-		String username = request.getUsername();
-		String ip = request.getIp();
 
 		String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(providerId, providerSubject);
 		if (subjectKey != null)
 			reservationCache.invalidate(subjectKey).join();
-
-		String bridgeKey = UniqueIdResolutionSupport.buildBridgeKey(username, ip);
-		if (bridgeKey != null)
-			reservationCache.invalidate(bridgeKey).join();
 	}
 
 	@Nullable
@@ -79,30 +73,20 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 	}
 
 	@Nullable
-	private UUID resolveFromReservation(String providerId, String providerSubject, String username, String ip) {
+	private UUID resolveFromReservation(String providerId, String providerSubject) {
 		String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(providerId, providerSubject);
 		if (subjectKey != null) {
-			UUID subjectMatch = reservationCache.get(subjectKey)
+			return reservationCache.get(subjectKey)
 					.thenApply(opt -> opt.orElse(null))
 					.join();
-			if (subjectMatch != null) return subjectMatch;
 		}
 
-		String bridgeKey = UniqueIdResolutionSupport.buildBridgeKey(username, ip);
-		if (bridgeKey == null) return null;
-
-		return reservationCache.get(bridgeKey)
-				.thenApply(opt -> opt.orElse(null))
-				.join();
+		return null;
 	}
 
-	private UUID reserveNewAccountId(String providerId, String providerSubject, String username, String ip) {
+	private UUID reserveNewAccountId(String providerId, String providerSubject) {
 		UUID generated = UniqueIdGenerator.newIdenticaUniqueId();
 		long ttlMs = pendingTtlMillis();
-
-		String bridgeKey = UniqueIdResolutionSupport.buildBridgeKey(username, ip);
-		if (bridgeKey != null)
-			reservationCache.put(bridgeKey, generated, ttlMs).join();
 
 		String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(providerId, providerSubject);
 		if (subjectKey != null)

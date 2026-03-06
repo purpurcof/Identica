@@ -18,13 +18,10 @@ import java.util.UUID;
 public final class PipelineStateReference {
 	private final @Nullable UUID connectionUniqueId;
 	private final @Nullable UUID identityUniqueId;
-	private final @Nullable String username;
-	private final @Nullable String ip;
 
 	public boolean isEmpty() {
 		return connectionUniqueId == null
-				&& identityUniqueId == null
-				&& (username == null || username.isBlank());
+				&& identityUniqueId == null;
 	}
 
 	public static @NotNull PipelineStateReference from(@NotNull ScenarioContext context) {
@@ -32,8 +29,6 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(context.getConnectionUniqueId())
 				.identityUniqueId(identity.getUniqueId())
-				.username(identity.getUsername())
-				.ip(identity.getIp())
 				.build();
 	}
 
@@ -42,8 +37,6 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(request.getConnectionUniqueId())
 				.identityUniqueId(identity != null ? identity.getUniqueId() : null)
-				.username(identity != null ? identity.getUsername() : null)
-				.ip(identity != null ? identity.getIp() : null)
 				.build();
 	}
 
@@ -52,8 +45,6 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(request.getConnectionUniqueId())
 				.identityUniqueId(identity != null ? identity.getUniqueId() : null)
-				.username(identity != null ? identity.getUsername() : null)
-				.ip(identity != null ? identity.getIp() : null)
 				.build();
 	}
 }

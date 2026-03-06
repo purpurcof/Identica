@@ -79,20 +79,14 @@ public class EnrollCommand {
 	private void updatePendingSelection(@NotNull Actor sender, @NotNull String providerId) {
 		UUID connectionUniqueId = sender.getUniqueId();
 
-		String username = null;
-		String ip = null;
 		UUID identityUniqueId = null;
 		if (sender instanceof Identity identity) {
-			username = identity.getUsername();
-			ip = identity.getIp();
 			identityUniqueId = identity.getUniqueId();
 		}
 
 		PipelineStateReference reference = PipelineStateReference.builder()
 				.connectionUniqueId(connectionUniqueId)
 				.identityUniqueId(identityUniqueId)
-				.username(username)
-				.ip(ip)
 				.build();
 
 		PipelineState stored = pipelineStateStore.find(reference).orElse(null);
@@ -104,7 +98,7 @@ public class EnrollCommand {
 		ScenarioContext context = stored.getScenario(PipelineType.REGISTRATION);
 		if (context == null) return;
 
-		username = context.getUsername() != null ? context.getUsername() : "";
+		String username = context.getUsername() != null ? context.getUsername() : "";
 		ProviderContext provider = context.getProvider();
 		if (provider == null) {
 			context.setProvider(ProviderContext.builder()

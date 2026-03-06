@@ -38,18 +38,14 @@ public class AccountClearPipelineListener implements EventListener {
 	@IdenticEvent(EventOrder.LOW)
 	public void onAccountClear(@NotNull AccountClearEvent event) {
 		UUID connectionUniqueId = resolveConnectionUniqueId(event);
-		String username = event.getIdentity().getUsername();
+		if (connectionUniqueId == null) return;
 
 		PipelineStateReference reference = PipelineStateReference.builder()
 				.connectionUniqueId(connectionUniqueId)
-				.username(username)
 				.build();
-		if (reference.isEmpty()) return;
 
 		boolean removed = pipelineStateStore.consume(reference).isPresent();
-		if (connectionUniqueId != null) {
-			eventManager.call(new ConnectionPendingClearedEvent(connectionUniqueId, removed));
-		}
+		eventManager.call(new ConnectionPendingClearedEvent(connectionUniqueId, removed));
 	}
 
 	private @Nullable UUID resolveConnectionUniqueId(@NotNull AccountClearEvent event) {

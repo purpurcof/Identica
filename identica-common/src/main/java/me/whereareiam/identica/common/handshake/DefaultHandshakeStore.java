@@ -69,32 +69,29 @@ public final class DefaultHandshakeStore implements HandshakeStore, EventListene
 		HandshakeInstruction stored = event.getInstruction();
 		String username = stored.getIdentity().getUsername();
 		if (username.isBlank()) return;
-		String ip = stored.getIdentity().getIp();
-		if (ip == null || ip.isBlank()) return;
 
-		String key = resolveKey(username, ip);
+		String key = resolveKey(username);
 		long ttlMs = Math.max(1, stored.getExpiresAt() - System.currentTimeMillis());
 		cache.put(key, stored, ttlMs).join();
 	}
 
 	@Override
 	public @NotNull Optional<HandshakeInstruction> consumeInstruction(@NotNull String username, @NotNull String ip) {
-		if (username.isBlank() || ip.isBlank()) return Optional.empty();
-		return readByKey(resolveKey(username, ip));
+		if (username.isBlank()) return Optional.empty();
+		return readByKey(resolveKey(username));
 	}
 
 	@Override
 	public void invalidateInstruction(@NotNull String username, @NotNull String ip) {
-		if (username.isBlank() || ip.isBlank()) return;
-		cache.invalidate(resolveKey(username, ip)).join();
+		if (username.isBlank()) return;
+		cache.invalidate(resolveKey(username)).join();
 	}
 
 	@IdenticEvent(EventOrder.LOWEST)
 	public void onAccountClear(@NotNull AccountClearEvent event) {
 		String username = event.getIdentity().getUsername();
-		String ip = event.getIdentity().getIp();
-		if (username.isBlank() || ip == null || ip.isBlank()) return;
-		invalidateInstruction(username, ip);
+		if (username.isBlank()) return;
+		invalidateInstruction(username, "");
 	}
 
 	private Optional<HandshakeInstruction> readByKey(@NotNull String key) {
@@ -109,8 +106,8 @@ public final class DefaultHandshakeStore implements HandshakeStore, EventListene
 		return Optional.of(instruction);
 	}
 
-	private @NotNull String resolveKey(@NotNull String username, @NotNull String ip) {
-		return normalize(username) + "|" + normalize(ip);
+	private @NotNull String resolveKey(@NotNull String username) {
+		return normalize(username);
 	}
 
 	private @NotNull String normalize(@NotNull String value) {

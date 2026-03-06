@@ -11,14 +11,6 @@ public final class UniqueIdResolutionSupport {
 		return value.trim().toLowerCase();
 	}
 
-	public static @Nullable String buildBridgeKey(@Nullable String username, @Nullable String ip) {
-		String normalized = normalize(username);
-		if (normalized == null) return null;
-
-		String address = normalize(ip);
-		return "bridge:" + normalized + "|" + (address == null ? "" : address);
-	}
-
 	public static @Nullable String buildSubjectKey(@Nullable String providerId, @Nullable String providerSubject) {
 		String id = normalize(providerId);
 		String subject = normalize(providerSubject);

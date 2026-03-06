@@ -94,9 +94,7 @@ public class PendingPipelineKickCoordinator implements EventListener {
 		DelayedRunnableTask task = DelayedRunnableTask.builder()
 				.key(key)
 				.delay(delayMs)
-				.runnable(() -> {
-					disconnectExpired(reference, type);
-				})
+				.runnable(() -> disconnectExpired(reference, type))
 				.build();
 
 		scheduler.schedule(task);
@@ -120,12 +118,7 @@ public class PendingPipelineKickCoordinator implements EventListener {
 			return identityService.find(connectionUniqueId).orElse(null);
 
 		UUID identityUniqueId = reference.getIdentityUniqueId();
-		if (identityUniqueId != null) return identityService.find(identityUniqueId).orElse(null);
-
-		String username = reference.getUsername();
-		if (username != null && !username.isBlank()) return identityService.find(username).orElse(null);
-
-		return null;
+		return identityUniqueId != null ? identityService.find(identityUniqueId).orElse(null) : null;
 	}
 
 	private @NotNull String resolveExpiredMessage(@NotNull PipelineType pipelineType) {
@@ -147,16 +140,9 @@ public class PendingPipelineKickCoordinator implements EventListener {
 	private @NotNull JobKey jobKey(@NotNull PipelineType type, @NotNull PipelineStateReference reference) {
 		String correlation = "pending:" + type.name() +
 				"|c=" + reference.getConnectionUniqueId() +
-				"|i=" + reference.getIdentityUniqueId() +
-				"|u=" + normalize(reference.getUsername()) +
-				"|ip=" + normalize(reference.getIp());
+				"|i=" + reference.getIdentityUniqueId();
 
 		return JobKey.of(ORIGIN, PURPOSE, correlation);
-	}
-
-	private @NotNull String normalize(@Nullable String value) {
-		if (value == null || value.isBlank()) return "";
-		return value.trim().toLowerCase();
 	}
 
 	private boolean isPending(@NotNull PipelineState state) {

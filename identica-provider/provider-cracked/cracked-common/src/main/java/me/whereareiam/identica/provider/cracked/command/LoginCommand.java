@@ -103,8 +103,6 @@ public class LoginCommand {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(identity.getUniqueId())
 				.identityUniqueId(identity.getUniqueId())
-				.username(identity.getUsername())
-				.ip(identity.getIp())
 				.build();
 	}
 

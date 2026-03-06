@@ -52,7 +52,7 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 		if (username == null || username.isBlank() || ip == null || ip.isBlank())
 			return CompletableFuture.completedFuture(failed(verification));
 
-		String providerSubject = readProfileId(username, ip);
+		String providerSubject = readProfileId(username);
 		if (providerSubject == null || providerSubject.isBlank()) {
 			return CompletableFuture.completedFuture(failed(verification));
 		}
@@ -64,7 +64,7 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 				return CompletableFuture.completedFuture(requireReconnect(verification, username, ip));
 			}
 
-			clearProfileItem(username, ip);
+			clearProfileItem(username);
 			handshakeStore.invalidateInstruction(username, ip);
 			return CompletableFuture.completedFuture(StepResult.failed(joinLines(verification.getInvalidSession())));
 		}

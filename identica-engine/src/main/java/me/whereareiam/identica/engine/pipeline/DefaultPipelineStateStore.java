@@ -20,15 +20,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Singleton
 public class DefaultPipelineStateStore implements PipelineStateStore {
 	private static final String KEY_CONNECTION_PREFIX = "c:";
 	private static final String KEY_IDENTITY_PREFIX = "i:";
-	private static final String KEY_USERNAME_PREFIX = "u:";
-	private static final String KEY_USERNAME_IP_PREFIX = "uip:";
 
 	private final ReplicatedCache<PipelineStateSnapshot> stateCache;
 
@@ -130,7 +127,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 	}
 
 	private @NotNull List<String> resolveKeys(@NotNull PipelineStateReference reference) {
-		List<String> keys = new ArrayList<>(4);
+		List<String> keys = new ArrayList<>(2);
 
 		if (reference.getConnectionUniqueId() != null)
 			keys.add(KEY_CONNECTION_PREFIX + reference.getConnectionUniqueId());
@@ -138,20 +135,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 		if (reference.getIdentityUniqueId() != null)
 			keys.add(KEY_IDENTITY_PREFIX + reference.getIdentityUniqueId());
 
-		String username = normalize(reference.getUsername());
-		String ip = normalize(reference.getIp());
-		if (username != null && ip != null)
-			keys.add(KEY_USERNAME_IP_PREFIX + username + "|" + ip);
-		if (username != null)
-			keys.add(KEY_USERNAME_PREFIX + username);
-
 		return keys;
-	}
-
-	private @Nullable String normalize(@Nullable String value) {
-		if (value == null || value.isBlank())
-			return null;
-		return value.trim().toLowerCase(Locale.ROOT);
 	}
 
 	private static @NotNull String resolveNamespace(@NotNull Provider<Replication> replicationProvider) {

@@ -57,7 +57,7 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 
-		if (hasPremiumLinkByProfileId(username, ip) || hasPremiumLinkByUsername(username)) {
+		if (hasPremiumLinkByProfileId(username) || hasPremiumLinkByUsername(username)) {
 			requestForceOnline(username, ip, "linked");
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
@@ -100,16 +100,14 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		handshakeStore.putInstruction(instruction);
 	}
 
-	private boolean hasPremiumLinkByProfileId(String username, String ip) {
-		PremiumProfileSnapshot snapshot = profileStore.find(username, ip);
-		String profileId = snapshot != null ? snapshot.getProfileId() : null;
+	private boolean hasPremiumLinkByProfileId(String username) {
+		PremiumProfileSnapshot snapshot = profileStore.find(username);
 
-		if (profileId == null || profileId.isBlank())
-			return false;
+		String profileId = snapshot != null ? snapshot.getProfileId() : null;
+		if (profileId == null || profileId.isBlank()) return false;
 
 		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		if (offlineUuid != null && profileId.equalsIgnoreCase(offlineUuid.toString()))
-			return false;
+		if (offlineUuid != null && profileId.equalsIgnoreCase(offlineUuid.toString())) return false;
 
 		return providerLinkPersistenceService.findBySubject(PremiumConstants.PROVIDER_ID, profileId).isPresent();
 	}

@@ -32,7 +32,7 @@ public class PremiumGameProfileRequestListener implements DynamicListener<GamePr
 			attemptStore.clearAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
 		}
 
-		profileStore.save(username, ip, profileId.toString());
+		profileStore.save(username, profileId.toString());
 	}
 
 	private String resolveIp(GameProfileRequestEvent event) {

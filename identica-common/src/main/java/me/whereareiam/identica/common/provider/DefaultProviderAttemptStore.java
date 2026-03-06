@@ -42,7 +42,7 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 			@Nullable String username,
 			@Nullable String ip
 	) {
-		String key = resolveKey(providerId, scope, username, ip);
+		String key = resolveKey(providerId, scope, username);
 		if (key == null) return false;
 
 		Optional<ProviderAttemptSnapshot> snapshot = cache.get(key).join();
@@ -56,7 +56,7 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 			@Nullable String username,
 			@Nullable String ip
 	) {
-		String key = resolveKey(providerId, scope, username, ip);
+		String key = resolveKey(providerId, scope, username);
 		if (key == null) return;
 
 		long ttlMs = settingsProvider.get().getConnection().attemptTtlMillis();
@@ -72,7 +72,7 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 			@Nullable String username,
 			@Nullable String ip
 	) {
-		String key = resolveKey(providerId, scope, username, ip);
+		String key = resolveKey(providerId, scope, username);
 		if (key == null) return;
 		cache.invalidate(key).join();
 	}
@@ -80,8 +80,7 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 	private @Nullable String resolveKey(
 			@NotNull String providerId,
 			@NotNull String scope,
-			@Nullable String username,
-			@Nullable String ip
+			@Nullable String username
 	) {
 		String normalizedProvider = normalize(providerId);
 		String normalizedScope = normalize(scope);
@@ -89,12 +88,7 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 		if (normalizedProvider == null || normalizedScope == null || normalizedUsername == null)
 			return null;
 
-		String normalizedIp = normalize(ip);
-		if (normalizedIp == null) {
-			return KEY_PREFIX + normalizedProvider + "|" + normalizedScope + "|" + normalizedUsername;
-		}
-
-		return KEY_PREFIX + normalizedProvider + "|" + normalizedScope + "|" + normalizedUsername + "|" + normalizedIp;
+		return KEY_PREFIX + normalizedProvider + "|" + normalizedScope + "|" + normalizedUsername;
 	}
 
 	private @Nullable String normalize(@Nullable String value) {

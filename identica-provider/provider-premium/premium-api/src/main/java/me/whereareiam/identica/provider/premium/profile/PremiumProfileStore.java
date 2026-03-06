@@ -15,14 +15,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 @Singleton
 public class PremiumProfileStore implements EventListener {
 	private static final String KEY_USERNAME_PREFIX = "u:";
-	private static final String KEY_USERNAME_IP_PREFIX = "uip:";
 
 	private final @NotNull Provider<PremiumSettings> settingsProvider;
 	private final @NotNull ReplicatedCache<PremiumProfileSnapshot> cache;
@@ -40,38 +37,27 @@ public class PremiumProfileStore implements EventListener {
 		eventManager.register(this);
 	}
 
-	public void save(@Nullable String username, @Nullable String ip, @NotNull String profileId) {
-		List<String> keys = resolveKeys(username, ip);
-		if (keys.isEmpty()) return;
+	public void save(@Nullable String username, @NotNull String profileId) {
+		String key = resolveKey(username);
+		if (key == null) return;
 
 		long ttlMs = resolveTtlMs(settingsProvider.get().getProfileSnapshotTtl());
 		if (ttlMs <= 0) return;
 
 		PremiumProfileSnapshot snapshot = new PremiumProfileSnapshot(profileId, System.currentTimeMillis());
-		for (String key : keys) {
-			cache.put(key, snapshot, ttlMs).join();
-		}
+		cache.put(key, snapshot, ttlMs).join();
 	}
 
-	public @Nullable PremiumProfileSnapshot find(@Nullable String username, @Nullable String ip) {
-		String normalizedUsername = normalize(username);
-		if (normalizedUsername == null) return null;
-
-		String normalizedIp = normalize(ip);
-		if (normalizedIp != null) {
-			String key = KEY_USERNAME_IP_PREFIX + normalizedUsername + "|" + normalizedIp;
-			PremiumProfileSnapshot snapshot = cache.get(key).join().orElse(null);
-			if (snapshot != null) return snapshot;
-		}
-
-		String key = KEY_USERNAME_PREFIX + normalizedUsername;
+	public @Nullable PremiumProfileSnapshot find(@Nullable String username) {
+		String key = resolveKey(username);
+		if (key == null) return null;
 		return cache.get(key).join().orElse(null);
 	}
 
-	public void clear(@Nullable String username, @Nullable String ip) {
-		for (String key : resolveKeys(username, ip)) {
-			cache.invalidate(key).join();
-		}
+	public void clear(@Nullable String username) {
+		String key = resolveKey(username);
+		if (key == null) return;
+		cache.invalidate(key).join();
 	}
 
 	@IdenticEvent
@@ -79,51 +65,13 @@ public class PremiumProfileStore implements EventListener {
 		String username = event.getIdentity().getUsername();
 		if (username.isBlank()) return;
 
-		clear(username, null);
-		clearHostnameScoped(username);
+		clear(username);
 	}
 
-	private @NotNull List<String> resolveKeys(@Nullable String username, @Nullable String ip) {
-		List<String> keys = new ArrayList<>(2);
-
+	private @Nullable String resolveKey(@Nullable String username) {
 		String normalizedUsername = normalize(username);
-		String normalizedIp = normalize(ip);
-		if (normalizedUsername == null) return keys;
-
-		if (normalizedIp != null) keys.add(KEY_USERNAME_IP_PREFIX + normalizedUsername + "|" + normalizedIp);
-		keys.add(KEY_USERNAME_PREFIX + normalizedUsername);
-		return keys;
-	}
-
-	private void clearHostnameScoped(@Nullable String username) {
-		String normalizedUsername = normalize(username);
-		if (normalizedUsername == null) return;
-
-		String prefix = KEY_USERNAME_IP_PREFIX + normalizedUsername + "|";
-		List<String> keysToInvalidate = new ArrayList<>();
-		int page = 1;
-		int pageSize = 200;
-		while (true) {
-			var result = cache.listKeys(page, pageSize).join();
-			if (result == null || result.getEntries().isEmpty())
-				break;
-
-			for (String key : result.getEntries()) {
-				if (key != null && key.startsWith(prefix))
-					keysToInvalidate.add(key);
-			}
-
-			boolean hasMoreByTotal = result.getTotal() > (page * pageSize);
-			boolean hasMoreByPageSize = result.getEntries().size() >= pageSize;
-			if (!hasMoreByTotal && !hasMoreByPageSize)
-				break;
-
-			page++;
-		}
-
-		for (String key : keysToInvalidate) {
-			cache.invalidate(key).join();
-		}
+		if (normalizedUsername == null) return null;
+		return KEY_USERNAME_PREFIX + normalizedUsername;
 	}
 
 	private @Nullable String normalize(@Nullable String value) {

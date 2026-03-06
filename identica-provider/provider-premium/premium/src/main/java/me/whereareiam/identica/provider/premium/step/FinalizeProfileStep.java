@@ -8,7 +8,6 @@ import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
@@ -43,13 +42,12 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 		if (username == null || username.isBlank() || ip == null || ip.isBlank())
 			return CompletableFuture.completedFuture(failed(verification));
 
-		PipelineStateReference reference = referenceFor(username, ip);
-		String providerSubject = readProfileId(username, ip);
+		String providerSubject = readProfileId(username);
 		if (providerSubject == null || providerSubject.isBlank()) {
 			return CompletableFuture.completedFuture(failed(verification));
 		}
 
-		if (hasAttempt(reference)) clearAttempt(reference);
+		if (hasAttempt(context)) clearAttempt(context);
 		ProviderContext provider = ProviderContext.builder()
 				.providerId(PremiumConstants.PROVIDER_ID)
 				.providerSubject(providerSubject)
@@ -57,7 +55,7 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 				.build();
 
 		context.setProvider(provider);
-		clearProfileItem(username, ip);
+		clearProfileItem(username);
 
 		return CompletableFuture.completedFuture(StepResult.complete(context));
 	}

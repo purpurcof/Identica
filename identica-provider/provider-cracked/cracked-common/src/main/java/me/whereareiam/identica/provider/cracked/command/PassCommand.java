@@ -94,8 +94,7 @@ public class PassCommand {
 
 	private boolean hasPending(@NotNull Identity identity) {
 		PipelineState state = pipelineStateStore.find(reference(identity)).orElse(null);
-		if (state == null)
-			return false;
+		if (state == null) return false;
 		return state.item(JourneyStateItem.class).isPresent();
 	}
 
@@ -107,13 +106,14 @@ public class PassCommand {
 
 	private long resolveTtl(@NotNull PipelineType pipelineType) {
 		Settings settings = settingsProvider.get();
-		if (settings == null)
-			return 0L;
+		if (settings == null) return 0L;
+
 		Settings.Connection connection = settings.getConnection();
 		if (pipelineType == PipelineType.MIGRATION)
 			return connection.getMigration().pipelineTtlMillis();
 		if (pipelineType == PipelineType.AUTHENTICATION)
 			return connection.getAuthentication().pipelineTtlMillis();
+
 		return connection.getRegistration().pipelineTtlMillis();
 	}
 
@@ -121,8 +121,6 @@ public class PassCommand {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(identity.getUniqueId())
 				.identityUniqueId(identity.getUniqueId())
-				.username(identity.getUsername())
-				.ip(identity.getIp())
 				.build();
 	}
 
@@ -141,8 +139,7 @@ public class PassCommand {
 	}
 
 	private void sendMessage(@NotNull Identity identity, String message) {
-		if (message == null || message.isBlank())
-			return;
+		if (message == null || message.isBlank()) return;
 		SerializerContent content = SerializerContent.builder()
 				.receiver(identity)
 				.message(message)

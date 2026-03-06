@@ -43,17 +43,14 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 
 	private @Nullable String readObservation(@NotNull ProfileResolveContext context) {
 		String username = context.getUsername();
-		if (username == null || username.isBlank())
-			return null;
+		if (username == null || username.isBlank()) return null;
 
-		PremiumProfileSnapshot snapshot = profileStore.find(username, context.getIp());
+		PremiumProfileSnapshot snapshot = profileStore.find(username);
 		String profileUniqueId = snapshot != null ? snapshot.getProfileId() : null;
-		if (profileUniqueId == null || profileUniqueId.isBlank())
-			return null;
+		if (profileUniqueId == null || profileUniqueId.isBlank()) return null;
 
 		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		if (offlineUuid != null && profileUniqueId.equalsIgnoreCase(offlineUuid.toString()))
-			return null;
+		if (offlineUuid != null && profileUniqueId.equalsIgnoreCase(offlineUuid.toString())) return null;
 
 		return profileUniqueId.trim();
 	}

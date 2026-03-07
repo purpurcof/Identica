@@ -1,26 +1,27 @@
 package me.whereareiam.identica.platform.velocity.adapter.profile;
 
+import me.whereareiam.identica.adapter.ProfileRewriteAdapter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.util.GameProfile;
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.adapter.ProfileRewriteAdapter;
+import me.whereareiam.identica.connection.prepare.PrepareStateStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.listener.DynamicListener;
-import me.whereareiam.identica.provider.ProviderOperations;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.UUID;
+import java.net.InetSocketAddress;
 
 @Singleton
 public class VelocityProfileRewriteAdapter extends ProfileRewriteAdapter implements DynamicListener<GameProfileRequestEvent> {
 	@Inject
 	public VelocityProfileRewriteAdapter(
-			@NotNull ProviderOperations providerOperations,
-			@NotNull ConnectionCoordinator connectionCoordinator
+			@NotNull ConnectionCoordinator connectionCoordinator,
+			@NotNull PrepareStateStore prepareStateStore
 	) {
-		super(providerOperations, connectionCoordinator);
+		super(connectionCoordinator, prepareStateStore);
 	}
 
 	@Override
@@ -28,18 +29,51 @@ public class VelocityProfileRewriteAdapter extends ProfileRewriteAdapter impleme
 		GameProfile current = event.getGameProfile();
 		if (current == null) return;
 
-		String ip = null;
-		if (event.getConnection().getRemoteAddress() != null
-				&& event.getConnection().getRemoteAddress().getAddress() != null) {
-			ip = event.getConnection().getRemoteAddress().getAddress().getHostAddress();
-		}
-		ConnectionIdentity identity = new ConnectionIdentity(event.getUsername(), ip);
-
-		UUID identicaUuid = resolveIdenticaUniqueId(identity);
-		if (identicaUuid == null) return;
-		if (current.getId() != null && current.getId().equals(identicaUuid)) return;
-
-		event.setGameProfile(current.withId(identicaUuid));
+		adapt(request(event, current), target(event, current))
+				.toCompletableFuture()
+				.join();
 	}
 
+	private void applyOrigin(@NotNull ConnectionIdentity identity, @NotNull GameProfileRequestEvent event) {
+		InetSocketAddress virtualHost = event.getConnection().getVirtualHost().orElse(null);
+		if (virtualHost == null) return;
+
+		identity.setOrigin(new ConnectionIdentity.Origin(
+				virtualHost.getHostString(),
+				virtualHost.getPort()
+		));
+	}
+
+	private @NotNull ProfileRewriteRequest request(@NotNull GameProfileRequestEvent event, @NotNull GameProfile current) {
+		ConnectionIdentity identity = new ConnectionIdentity(event.getUsername(), resolveIp(event));
+		identity.setObservedUniqueId(current.getId());
+		applyOrigin(identity, event);
+		return new ProfileRewriteRequest(
+				identity,
+				current.getId(),
+				current.getName()
+		);
+	}
+
+	private @NotNull ProfileRewriteTarget target(@NotNull GameProfileRequestEvent event, @NotNull GameProfile current) {
+		return rewrite -> {
+			GameProfile rewritten = current;
+			if (rewrite.uniqueId() != null && !rewrite.uniqueId().equals(rewritten.getId()))
+				rewritten = rewritten.withId(rewrite.uniqueId());
+
+			if (!rewrite.username().isBlank() && !rewrite.username().equals(rewritten.getName()))
+				rewritten = rewritten.withName(rewrite.username());
+
+			if (rewritten != current)
+				event.setGameProfile(rewritten);
+		};
+	}
+
+	private @Nullable String resolveIp(@NotNull GameProfileRequestEvent event) {
+		if (event.getConnection().getRemoteAddress() == null) return null;
+		if (event.getConnection().getRemoteAddress().getAddress() != null)
+			return event.getConnection().getRemoteAddress().getAddress().getHostAddress();
+
+		return event.getConnection().getRemoteAddress().getHostString();
+	}
 }

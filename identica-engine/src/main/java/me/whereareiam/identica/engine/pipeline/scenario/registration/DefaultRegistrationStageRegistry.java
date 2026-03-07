@@ -2,7 +2,7 @@ package me.whereareiam.identica.engine.pipeline.scenario.registration;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.engine.pipeline.journey.AbstractJourneyRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractJourneyRegistry;
 import me.whereareiam.identica.engine.step.EnrollmentStep;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;

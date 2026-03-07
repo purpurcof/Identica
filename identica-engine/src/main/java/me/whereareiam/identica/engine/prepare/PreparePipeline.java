@@ -1,0 +1,78 @@
+package me.whereareiam.identica.engine.prepare;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
+import me.whereareiam.identica.engine.prepare.group.PrepareGroupState;
+import me.whereareiam.identica.logging.Logger;
+import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.prepare.PrepareDecisionItem;
+import me.whereareiam.identica.model.prepare.PrepareDecision;
+import me.whereareiam.identica.model.prepare.PrepareRequest;
+import me.whereareiam.identica.pipeline.group.GroupOutcome;
+import me.whereareiam.identica.pipeline.group.PipelineGroup;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
+/**
+ * Generic connection preparation flow that runs before the scenario pipelines.
+ */
+@Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public class PreparePipeline {
+	private final PreparePipelineRegistry registry;
+	private final PipelineExecutor executor;
+
+	public @NotNull CompletionStage<PrepareDecision> execute(@Nullable PrepareRequest request) {
+		if (request == null) return CompletableFuture.completedFuture(PrepareDecision.allow());
+
+		try {
+			Logger.debug("Prepare started stage=%s username=%s key=%s",
+					request.getStage(),
+					request.getIdentity().getUsername(),
+					request.getConnectionKey());
+
+			PipelineState pipelineState = PipelineState.initial();
+
+			return executor.execute(registry, pipelineState, new PipelineExecutor.ExecutionObserver() {
+						@Override
+						public @NotNull <S> S initializeState(
+								@NotNull PipelineGroup<S> group,
+								@NotNull PipelineState pipelineState,
+								PipelineResult currentResult
+						) {
+							S state = group.initializeState(pipelineState, currentResult);
+							if (state instanceof PrepareGroupState prepareState)
+								prepareState.setRequest(request);
+							return state;
+						}
+
+						@Override
+						public <S> void onGroupCompleted(
+								@NotNull PipelineGroup<S> group,
+								@NotNull S ignoredState,
+								@NotNull GroupOutcome outcome,
+								PipelineResult currentResult
+						) {
+						}
+					})
+					.thenApply(ignored -> {
+						PrepareDecisionItem decisionItem = pipelineState.item(PrepareDecisionItem.class).orElse(null);
+						return decisionItem != null ? decisionItem.toDecision() : null;
+					})
+					.thenApply(decision -> decision != null ? decision : PrepareDecision.allow())
+					.toCompletableFuture();
+		} catch (Exception e) {
+			Logger.severe("Prepare failed stage=%s username=%s error=%s",
+					request.getStage(),
+					request.getIdentity().getUsername(),
+					e.getMessage());
+			return CompletableFuture.completedFuture(PrepareDecision.deny("Connection failed"));
+		}
+	}
+}

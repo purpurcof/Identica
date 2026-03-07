@@ -71,7 +71,7 @@ public class LoginCommand {
 				.connectionUniqueId(identity.getUniqueId())
 				.identity(identity)
 				.build();
-		return connectionCoordinator.advanceFlow(request).toCompletableFuture().join();
+		return connectionCoordinator.advance(request).toCompletableFuture().join();
 	}
 
 	private boolean hasPending(@NotNull Identity identity) {

@@ -1,0 +1,31 @@
+package me.whereareiam.identica.provider.cracked.pipeline.scenario;
+
+import com.google.inject.Singleton;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
+import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.provider.cracked.CrackedConstants;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.CompletableFuture;
+
+@Singleton
+public class CrackedValidationStep extends AbstractCrackedStep {
+	public CrackedValidationStep() {
+		super("cracked-validation");
+	}
+
+	@Override
+	public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
+		ProviderContext provider = context.getProvider();
+		if (provider == null) return CompletableFuture.completedFuture(StepResult.failed(""));
+		if (!CrackedConstants.PROVIDER_ID.equalsIgnoreCase(provider.getProviderId()))
+			return CompletableFuture.completedFuture(StepResult.failed(""));
+
+		String providerSubject = provider.getProviderSubject();
+		if (providerSubject == null || providerSubject.isBlank())
+			return CompletableFuture.completedFuture(StepResult.failed(""));
+
+		return CompletableFuture.completedFuture(StepResult.proceed(context));
+	}
+}

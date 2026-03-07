@@ -11,7 +11,7 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
-import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.event.player.ServerPreConnectEvent;
 import me.whereareiam.identica.common.CommonListenerRegistrar;
 import me.whereareiam.identica.listener.DynamicListener;
@@ -23,6 +23,7 @@ import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityHandshakeD
 import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityLoginDecisionAdapter;
 import me.whereareiam.identica.platform.velocity.adapter.profile.VelocityProfileRewriteAdapter;
 import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityResumeDecisionAdapter;
+import me.whereareiam.identica.platform.velocity.adapter.routing.VelocityRoutingEnforcementAdapter;
 import me.whereareiam.identica.platform.velocity.listener.connection.DisconnectListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.PlayerChooseInitialServerListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.ServerPreConnectListener;
@@ -33,6 +34,7 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 	private final Injector injector;
 	private final VelocityIdentica plugin;
 	private final EventManager eventManager;
+	private final me.whereareiam.identica.event.EventManager identicaEventManager;
 	private final DynamicListenerRegistry listenerRegistry;
 
 	@Inject
@@ -41,12 +43,14 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 			Provider<Settings> settingsProvider,
 			VelocityIdentica plugin,
 			EventManager eventManager,
+			me.whereareiam.identica.event.EventManager identicaEventManager,
 			DynamicListenerRegistry listenerRegistry
 	) {
 		super(settingsProvider);
 		this.injector = injector;
 		this.plugin = plugin;
 		this.eventManager = eventManager;
+		this.identicaEventManager = identicaEventManager;
 		this.listenerRegistry = listenerRegistry;
 	}
 
@@ -55,15 +59,16 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 		listenerRegistry.attachRegistrar(this);
 
 		DynamicListener<LoginEvent> loginListener = injector.getInstance(VelocityLoginDecisionAdapter.class);
-		DynamicListener<ServerConnectedEvent> connectedListener = injector.getInstance(VelocityResumeDecisionAdapter.class);
+		DynamicListener<ServerPostConnectEvent> connectedListener = injector.getInstance(VelocityResumeDecisionAdapter.class);
 
 		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(VelocityHandshakeDecisionAdapter.class));
 		registerListener(GameProfileRequestEvent.class, injector.getInstance(VelocityProfileRewriteAdapter.class));
 		registerListener(LoginEvent.class, loginListener);
-		registerListener(ServerConnectedEvent.class, connectedListener);
+		registerListener(ServerPostConnectEvent.class, connectedListener);
 		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(PlayerChooseInitialServerListener.class));
 		registerListener(ServerPreConnectEvent.class, injector.getInstance(ServerPreConnectListener.class));
 		registerListener(DisconnectEvent.class, injector.getInstance(DisconnectListener.class));
+		identicaEventManager.register(injector.getInstance(VelocityRoutingEnforcementAdapter.class));
 	}
 
 	@Override
@@ -74,6 +79,7 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 		eventManager.register(plugin, eventClass, VelocityUtil.of(determinePriority(eventClass)), listener::onEvent);
 	}
 
+	@SuppressWarnings("SameParameterValue")
 	private <T> void registerAwaitingListener(Class<T> eventClass, AwaitingEventExecutor<T> listener) {
 		if (shouldRegister(eventClass)) return;
 		Logger.debug("Registering listener for event " + eventClass.getName());

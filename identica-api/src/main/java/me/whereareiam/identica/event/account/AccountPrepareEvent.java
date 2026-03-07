@@ -37,7 +37,6 @@ public class AccountPrepareEvent implements Event, SynchronousEvent {
 	 * Defaults to the account username at the time of preparation.
 	 */
 	private @Nullable String effectiveUsername;
-	private @Nullable AccountDecision decision;
 	/**
 	 * Provider context associated with this account preparation.
 	 */
@@ -46,6 +45,7 @@ public class AccountPrepareEvent implements Event, SynchronousEvent {
 	private final @NotNull Account account;
 	private final @NotNull AccountProviderLink link;
 	private final @NotNull AccountProviderProfile profile;
+	private @Nullable AccountDecision decision;
 
 	private final boolean created;
 }

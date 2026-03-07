@@ -13,7 +13,6 @@ import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
-import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.util.UniqueIdGenerator;
@@ -90,8 +89,7 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 				new ConnectionIdentity(username, ip),
 				ttlMillis
 		);
-		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE,
-				new PremiumForceOnlineInstruction("verify"));
+		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE, true);
 		handshakeStore.putInstruction(instruction);
 	}
 

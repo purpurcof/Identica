@@ -9,17 +9,14 @@ import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.routing.RoutingTargetUpdatedEvent;
 import me.whereareiam.identica.event.pipeline.attempt.PipelineAttemptFinishedEvent;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
-import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.model.RoutingTarget;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.routing.RoutingDecision;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.routing.RoutingStateStore;
-import me.whereareiam.identica.routing.RoutingTargetApplier;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 
 import java.util.UUID;
@@ -29,46 +26,17 @@ public class RoutingLifecycle implements EventListener {
 	private final RoutingService routingService;
 	private final RoutingStateStore routingStateStore;
 	private final EventManager eventManager;
-	private final RoutingTargetApplier routingTargetApplier;
 
 	@Inject
 	public RoutingLifecycle(
 			RoutingService routingService,
 			RoutingStateStore routingStateStore,
-			EventManager eventManager,
-			RoutingTargetApplier routingTargetApplier
+			EventManager eventManager
 	) {
 		this.routingService = routingService;
 		this.routingStateStore = routingStateStore;
 		this.eventManager = eventManager;
-		this.routingTargetApplier = routingTargetApplier;
 		eventManager.register(this);
-	}
-
-	@IdenticEvent
-	public void onStepPrepare(StepPrepareEvent event) {
-		if (event == null)
-			return;
-
-		JourneyType flow = event.getJourneyType();
-		if (flow == JourneyType.SEAMLESS)
-			return;
-
-		RoutingDecision decision = new RoutingDecision(
-				event.getContext(),
-				event.getPipelineType(),
-				event.getPhase(),
-				event.getStep(),
-				StepResult.waiting("")
-		);
-
-		RoutingTarget target = routingService.resolve(decision).orElse(null);
-		if (target == null) {
-			clear(event.getContext());
-			return;
-		}
-
-		store(event.getContext(), target);
 	}
 
 	@IdenticEvent
@@ -76,7 +44,24 @@ public class RoutingLifecycle implements EventListener {
 		if (event == null) return;
 
 		StepResult result = event.getResult();
-		if (result.getStatus() == StepResult.StepStatus.WAITING) return;
+		if (result.getStatus() == StepResult.StepStatus.WAITING) {
+			RoutingDecision decision = new RoutingDecision(
+					event.getContext(),
+					event.getPipelineType(),
+					event.getPhase(),
+					event.getStep(),
+					result
+			);
+
+			RoutingTarget target = routingService.resolve(decision).orElse(null);
+			if (target == null) {
+				clear(event.getContext());
+				return;
+			}
+
+			store(event.getContext(), target);
+			return;
+		}
 		if (result.getStatus() == StepResult.StepStatus.COMPLETE) return;
 
 		clear(event.getContext());
@@ -124,7 +109,6 @@ public class RoutingLifecycle implements EventListener {
 		if (connectionId == null || target == null) return;
 
 		routingStateStore.put(connectionId, target);
-		routingTargetApplier.apply(target, context);
 		eventManager.call(new RoutingTargetUpdatedEvent(connectionId, target, context));
 	}
 

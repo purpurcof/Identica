@@ -105,6 +105,7 @@ public class ChangePasswordCommand {
 	}
 
 	private String resolveProviderSubject(String username) {
+		if (username == null) return null;
 		UUID uuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
 		return uuid != null ? uuid.toString() : null;
 	}

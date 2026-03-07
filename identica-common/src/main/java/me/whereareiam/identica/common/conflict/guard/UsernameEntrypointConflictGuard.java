@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.conflict.ConflictGuard;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
@@ -37,12 +38,20 @@ public class UsernameEntrypointConflictGuard implements ConflictGuard {
 		if (incomingProvider.equalsIgnoreCase(existingProvider)) return null;
 
 		ProviderOrigin source = context.getExtra("entrypointSource", ProviderOrigin.class);
-		if (source == ProviderOrigin.ENTRYPOINT) return null;
+		if (source == ProviderOrigin.ENTRYPOINT) {
+			Logger.debug("Username conflict accepted by entrypoint incoming=%s existing=%s",
+					incomingProvider,
+					existingProvider);
+			return null;
+		}
 
 		if (!providerOperations.hasEntrypoints(incomingProvider)
 				|| !providerOperations.hasEntrypoints(existingProvider))
 			return null;
 
+		Logger.debug("Username conflict requires entrypoint incoming=%s existing=%s",
+				incomingProvider,
+				existingProvider);
 		String message = resolveEntrypointMessage(incomingProvider, existingProvider);
 		return ConflictResolution.deny(message);
 	}
@@ -64,20 +73,15 @@ public class UsernameEntrypointConflictGuard implements ConflictGuard {
 				"incomingHost", safe(providerOperations.displayEntrypoint(incomingProvider)),
 				"existingHost", safe(providerOperations.displayEntrypoint(existingProvider))
 		);
-		return applyPlaceholders(message, placeholders);
-	}
 
-	private String safe(@Nullable String value) {
-		return value == null ? "" : value;
-	}
-
-	private String applyPlaceholders(@NotNull String message, @NotNull Map<String, String> placeholders) {
 		String resolved = message;
-		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-			String key = entry.getKey();
-			String value = entry.getValue() == null ? "" : entry.getValue();
-			resolved = resolved.replace("{" + key + "}", value);
-		}
+		for (Map.Entry<String, String> entry : placeholders.entrySet())
+			resolved = resolved.replace("{" + entry.getKey() + "}", entry.getValue());
+
 		return resolved;
+	}
+
+	private @NotNull String safe(@Nullable String value) {
+		return value == null ? "" : value;
 	}
 }

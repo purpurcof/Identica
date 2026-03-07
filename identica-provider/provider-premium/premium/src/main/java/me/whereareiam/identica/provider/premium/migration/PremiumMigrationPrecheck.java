@@ -12,7 +12,6 @@ import me.whereareiam.identica.provider.migration.MigrationPrecheckContext;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckResult;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
-import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,10 +45,7 @@ public class PremiumMigrationPrecheck implements ProviderMigrationPrecheck {
 				new ConnectionIdentity(username, ip),
 				ttlMs
 		);
-		instruction.setAttribute(
-				PremiumHandshakeAttributes.FORCE_ONLINE,
-				new PremiumForceOnlineInstruction("migration-confirm")
-		);
+		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE, true);
 
 		handshakeStore.putInstruction(instruction);
 	}

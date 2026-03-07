@@ -5,6 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
+import me.whereareiam.identica.type.RoutingEnforcementMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
@@ -44,6 +45,10 @@ public class Settings {
 		 * Time-to-live for reserved account identities.
 		 */
 		private @NotNull Duration reservationTtl;
+		/**
+		 * Time-to-live for transient prepare-state bridge entries.
+		 */
+		private @NotNull Duration prepareStateTtl;
 		private @NotNull Routing routing;
 		private @NotNull Sessions sessions;
 		private @NotNull AuthenticationScenario authentication;
@@ -76,6 +81,19 @@ public class Settings {
 
 			return attemptTtl.toMillis();
 		}
+
+		/**
+		 * Returns prepare-state TTL in milliseconds with validation.
+		 *
+		 * @return prepare-state TTL in milliseconds
+		 */
+		public long prepareStateTtlMillis() {
+			if (prepareStateTtl.isZero() || prepareStateTtl.isNegative()) {
+				throw new IllegalStateException("settings.connection.prepareStateTtl must be positive");
+			}
+
+			return prepareStateTtl.toMillis();
+		}
 	}
 
 	@Getter
@@ -97,6 +115,10 @@ public class Settings {
 		 * Supported ids: authentication, registration, migration.
 		 */
 		private @NotNull Map<String, Targets> scenarios = new HashMap<>();
+		/**
+		 * Strategy used when external proxy plugins override Identica's resolved target.
+		 */
+		private @NotNull RoutingEnforcementMode enforcementMode = RoutingEnforcementMode.FIRST_CONNECT;
 
 		/**
 		 * Routing targets by phase.

@@ -118,11 +118,11 @@ public class AccountReviewPhase implements PipelinePhase<PolicyState> {
 
 		AccountPrepareEvent preparedEvent = new AccountPrepareEvent(
 				account.getUsername(),
-				null,
 				provider,
 				account,
 				link,
 				profile,
+				null,
 				true
 		);
 		EventUtil.callEvent(preparedEvent);

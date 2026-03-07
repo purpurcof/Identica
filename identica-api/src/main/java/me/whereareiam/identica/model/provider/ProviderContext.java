@@ -24,4 +24,20 @@ public class ProviderContext {
 	 * Source of provider selection for this context.
 	 */
 	private @Nullable ProviderOrigin source;
+
+	public static @Nullable ProviderContext of(
+			@Nullable String providerId,
+			@Nullable String providerSubject,
+			@Nullable String providerUsername,
+			@Nullable ProviderOrigin source
+	) {
+		if (providerId == null || providerId.isBlank()) return null;
+
+		return ProviderContext.builder()
+				.providerId(providerId)
+				.providerSubject(providerSubject)
+				.providerUsername(providerUsername == null ? "" : providerUsername)
+				.source(source)
+				.build();
+	}
 }

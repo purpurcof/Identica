@@ -48,10 +48,12 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 		}
 
 		if (hasAttempt(context)) clearAttempt(context);
+		ProviderContext existing = context.getProvider();
 		ProviderContext provider = ProviderContext.builder()
 				.providerId(PremiumConstants.PROVIDER_ID)
 				.providerSubject(providerSubject)
 				.providerUsername(username)
+				.source(existing != null ? existing.getSource() : null)
 				.build();
 
 		context.setProvider(provider);

@@ -15,9 +15,9 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
-import me.whereareiam.identica.provider.premium.handshake.PremiumForceOnlineInstruction;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
@@ -53,12 +53,18 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		if (username == null || username.isBlank())
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
+		ProviderContext provider = request.getProvider();
+		if (provider != null && PremiumConstants.PROVIDER_ID.equalsIgnoreCase(provider.getProviderId())) {
+			requestForceOnline(username, ip);
+			return CompletableFuture.completedFuture(HandshakeDecision.allow());
+		}
+
 		if (attemptStore.hasAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip)) {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 
 		if (hasPremiumLinkByProfileId(username) || hasPremiumLinkByUsername(username)) {
-			requestForceOnline(username, ip, "linked");
+			requestForceOnline(username, ip);
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 
@@ -81,22 +87,22 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 	}
 
 	private HandshakeDecision requestAndAllow(String username, String ip) {
-		requestForceOnline(username, ip, "profile");
+		requestForceOnline(username, ip);
 		return HandshakeDecision.allow();
 	}
 
-	private void requestForceOnline(String username, String ip, String reason) {
+	private void requestForceOnline(String username, String ip) {
 		if (username == null || username.isBlank() || ip == null || ip.isBlank()) return;
 
 		long ttlMillis = settingsProvider.get()
 				.getConnection()
 				.handshakeInstructionTtlMillis();
+
 		HandshakeInstruction instruction = HandshakeInstruction.create(
 				new ConnectionIdentity(username, ip),
 				ttlMillis
 		);
-		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE,
-				new PremiumForceOnlineInstruction(reason));
+		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE, true);
 		handshakeStore.putInstruction(instruction);
 	}
 
@@ -115,6 +121,7 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 	private boolean hasPremiumLinkByUsername(String username) {
 		List<Account> accounts = accountPersistenceService.findByUsername(username);
 		if (accounts.isEmpty()) return false;
+		if (accounts.size() > 1) return false;
 
 		for (Account account : accounts) {
 			if (account == null) continue;

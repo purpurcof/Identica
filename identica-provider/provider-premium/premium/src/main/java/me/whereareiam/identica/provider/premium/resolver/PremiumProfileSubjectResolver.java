@@ -45,11 +45,17 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 		String username = context.getUsername();
 		if (username == null || username.isBlank()) return null;
 
+		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
+		UUID observedUniqueId = context.getIdentity().getObservedUniqueId();
+		if (observedUniqueId != null) {
+			if (observedUniqueId.equals(offlineUuid)) return null;
+			return observedUniqueId.toString();
+		}
+
 		PremiumProfileSnapshot snapshot = profileStore.find(username);
 		String profileUniqueId = snapshot != null ? snapshot.getProfileId() : null;
 		if (profileUniqueId == null || profileUniqueId.isBlank()) return null;
 
-		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
 		if (offlineUuid != null && profileUniqueId.equalsIgnoreCase(offlineUuid.toString())) return null;
 
 		return profileUniqueId.trim();

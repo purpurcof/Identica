@@ -7,12 +7,9 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
-import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.account.CrackedAccountService;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 import me.whereareiam.identica.provider.cracked.cryptography.CryptographyService;
@@ -22,16 +19,15 @@ import me.whereareiam.identica.provider.cracked.event.authentication.Authenticat
 import me.whereareiam.identica.provider.cracked.model.CrackedAccount;
 import me.whereareiam.identica.provider.cracked.model.authentication.AuthenticationAttemptContext;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedAuthenticationAttempt;
-import me.whereareiam.identica.util.UniqueIdGenerator;
+import me.whereareiam.identica.provider.cracked.pipeline.scenario.AbstractCrackedStep;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
-public class CrackedAuthenticationPasswordStep extends InteractiveStep {
+public class CrackedAuthenticationPasswordStep extends AbstractCrackedStep {
 	private final Provider<CrackedMessages> messagesProvider;
 	private final Provider<Settings> coreSettingsProvider;
 	private final CrackedAccountService accountService;
@@ -64,30 +60,24 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 
 	@Override
 	public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
-		String username = context.getUsername();
-		String providerSubject = resolveProviderSubject(username);
-		if (providerSubject == null)
-			return CompletableFuture.completedFuture(StepResult.failed(""));
+		String providerSubject = requireProviderSubject(context);
 
 		CrackedMessages messages = messagesProvider.get();
 		CrackedAccount account = accountService.find(providerSubject).orElse(null);
-		if (account == null)
-			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getAuthentication().getStatus().getNotRegistered()));
+		if (account == null) return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getAuthentication().getStatus().getNotRegistered()));
 
 		long ttlMs = authenticationTtlMs();
 		CrackedAuthenticationAttempt input = consumeAuthenticationAttempt(context, ttlMs);
-		if (input == null)
-			return CompletableFuture.completedFuture(StepResult.waiting(joinLines(messages.getScenario().getAuthentication().getPrompt())));
+		if (input == null) return CompletableFuture.completedFuture(StepResult.waiting(joinLines(messages.getScenario().getAuthentication().getPrompt())));
 
 		if (!cryptographyService.verify(account, input.getPassword())) {
 			AuthenticationAttemptDecision decision = recordBruteForceDecision(account, context);
-			if (decision.isDeny())
-				return CompletableFuture.completedFuture(StepResult.denied(decision.getDenyMessage()));
+			if (decision.isDeny()) return CompletableFuture.completedFuture(StepResult.denied(decision.getDenyMessage()));
 			return CompletableFuture.completedFuture(invalidWithWarning(messages, decision.getWarningMessage()));
 		}
 
 		clearBruteForce(account, context);
-		return CompletableFuture.completedFuture(complete(context, providerSubject, username));
+		return CompletableFuture.completedFuture(StepResult.complete(context));
 	}
 
 	private @NotNull AuthenticationAttemptDecision recordBruteForceDecision(
@@ -123,21 +113,6 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 		);
 	}
 
-	private StepResult complete(ScenarioContext context, String providerSubject, String username) {
-		ProviderContext provider = ProviderContext.builder()
-				.providerId(CrackedConstants.PROVIDER_ID)
-				.providerSubject(providerSubject)
-				.providerUsername(username == null ? "" : username)
-				.build();
-		context.setProvider(provider);
-		return StepResult.complete(context);
-	}
-
-	private String resolveProviderSubject(String username) {
-		UUID uuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		return uuid != null ? uuid.toString() : null;
-	}
-
 	private long authenticationTtlMs() {
 		Settings settings = coreSettingsProvider.get();
 		if (settings == null)
@@ -168,18 +143,15 @@ public class CrackedAuthenticationPasswordStep extends InteractiveStep {
 	}
 
 	private static @NotNull String joinLines(@Nullable List<String> lines) {
-		if (lines == null || lines.isEmpty())
-			return "";
+		if (lines == null || lines.isEmpty()) return "";
 		return String.join("\n", lines);
 	}
 
 	private StepResult invalidWithWarning(CrackedMessages messages, String warning) {
 		String invalid = messages.getScenario().getAuthentication().getStatus().getInvalid();
-		if (warning == null || warning.isBlank())
-			return StepResult.waiting(invalid);
-		if (invalid == null || invalid.isBlank())
-			return StepResult.waiting(warning);
+		if (warning == null || warning.isBlank()) return StepResult.waiting(invalid);
+		if (invalid == null || invalid.isBlank()) return StepResult.waiting(warning);
+
 		return StepResult.waiting(invalid + "\n" + warning);
 	}
-
 }

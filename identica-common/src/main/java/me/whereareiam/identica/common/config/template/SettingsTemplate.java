@@ -6,6 +6,7 @@ import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.event.EventPriority;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
+import me.whereareiam.identica.type.RoutingEnforcementMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
@@ -22,6 +23,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 
 		Settings.Routing routing = new Settings.Routing();
 		routing.setScenarios(defaultScenarioRoutingTargets());
+		routing.setEnforcementMode(RoutingEnforcementMode.FIRST_CONNECT);
 
 		Settings.Listeners listeners = new Settings.Listeners();
 		listeners.setEvents(defaultListenerEvents());
@@ -42,6 +44,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		connection.setHandshakeInstructionTtl(Duration.ofMinutes(10));
 		connection.setAttemptTtl(Duration.ofMinutes(10));
 		connection.setReservationTtl(Duration.ofMinutes(15));
+		connection.setPrepareStateTtl(Duration.ofMinutes(10));
 		connection.setAuthentication(defaultAuthenticationScenario());
 		connection.setRegistration(defaultRegistrationScenario());
 		connection.setMigration(defaultMigrationScenario());
@@ -126,17 +129,21 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		events.put("com.velocitypowered.api.event.connection.PreLoginEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.connection.LoginEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.player.GameProfileRequestEvent", defaultEvent());
-		events.put("com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent", defaultEvent());
-		events.put("com.velocitypowered.api.event.player.ServerPreConnectEvent", defaultEvent());
+		events.put("com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent", defaultEvent(EventPriority.HIGH));
+		events.put("com.velocitypowered.api.event.player.ServerPreConnectEvent", defaultEvent(EventPriority.HIGH));
 		events.put("com.velocitypowered.api.event.connection.DisconnectEvent", defaultEvent());
 
 		return events;
 	}
 
 	private Event defaultEvent() {
+		return defaultEvent(EventPriority.NORMAL);
+	}
+
+	private Event defaultEvent(EventPriority priority) {
 		return Event.builder()
 				.register(true)
-				.priority(EventPriority.NORMAL)
+				.priority(priority)
 				.build();
 	}
 }

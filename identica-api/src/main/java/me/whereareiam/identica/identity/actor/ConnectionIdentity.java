@@ -1,9 +1,11 @@
 package me.whereareiam.identica.identity.actor;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,6 +20,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ConnectionIdentity {
 	private @Nullable UUID uniqueId;
+	private @Nullable UUID observedUniqueId;
 	private @NotNull String username;
 	private @Nullable String ip;
 	/**
@@ -31,10 +34,15 @@ public class ConnectionIdentity {
 	 * @param host host name used by the client
 	 * @param port port used by the client, if provided
 	 */
-	public record Origin(
-			@NotNull String host,
-			@Nullable Integer port
-	) {
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@EqualsAndHashCode
+	@ToString
+	public static class Origin {
+		private @NotNull String host;
+		private @Nullable Integer port;
 	}
 
 	/**
@@ -44,7 +52,7 @@ public class ConnectionIdentity {
 	 * @param ip optional IP address
 	 */
 	public ConnectionIdentity(@NotNull String username, @Nullable String ip) {
-		this(null, username, ip, null);
+		this(null, null, username, ip, null);
 	}
 
 	/**
@@ -55,6 +63,15 @@ public class ConnectionIdentity {
 	 * @param ip optional IP address
 	 */
 	public ConnectionIdentity(@Nullable UUID uniqueId, @NotNull String username, @Nullable String ip) {
-		this(uniqueId, username, ip, null);
+		this(uniqueId, null, username, ip, null);
+	}
+
+	public ConnectionIdentity(
+			@Nullable UUID uniqueId,
+			@Nullable UUID observedUniqueId,
+			@NotNull String username,
+			@Nullable String ip
+	) {
+		this(uniqueId, observedUniqueId, username, ip, null);
 	}
 }

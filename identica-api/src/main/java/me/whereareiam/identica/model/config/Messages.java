@@ -458,9 +458,25 @@ public class Messages {
 		 */
 		private @NotNull List<String> resumeSentineled;
 		private @NotNull Journey journey;
+		private @NotNull Prepare prepare;
 		private @NotNull Authentication authentication;
 		private @NotNull Registration registration;
 		private @NotNull Migration migration;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Prepare {
+			private @NotNull List<String> handshakeDenied;
+			private @NotNull Errors errors;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Errors {
+				private @NotNull List<String> preparePolicyMissing;
+			}
+		}
 
 		@Getter
 		@Setter
@@ -493,7 +509,6 @@ public class Messages {
 		@Setter
 		@ToString
 		public static class Scenario {
-			private @NotNull List<String> handshakeDenied;
 			/**
 			 * Message shown when a pipeline attempt is rejected due to concurrency.
 			 */

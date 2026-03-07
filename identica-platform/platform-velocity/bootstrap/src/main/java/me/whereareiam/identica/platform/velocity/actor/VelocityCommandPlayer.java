@@ -12,7 +12,11 @@ public class VelocityCommandPlayer extends Identity {
 	private final Player player;
 
 	public VelocityCommandPlayer(@NotNull Player player) {
-		super(player.getUniqueId(), player.getUsername(), resolveIp(player));
+		this(player, player.getUsername());
+	}
+
+	public VelocityCommandPlayer(@NotNull Player player, @NotNull String username) {
+		super(player.getUniqueId(), username, resolveIp(player));
 		this.player = player;
 	}
 
@@ -38,7 +42,9 @@ public class VelocityCommandPlayer extends Identity {
 
 	@Override
 	public @NotNull Locale getLocale() {
-		return player.getEffectiveLocale();
+		return player.getEffectiveLocale() == null
+				? Locale.ENGLISH
+				: player.getEffectiveLocale();
 	}
 
 	@Override

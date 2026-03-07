@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class PremiumHandshakeApplier implements HandshakeApplier<VelocityHandshakeContext> {
 	@Override
 	public void apply(@NotNull VelocityHandshakeContext context, @NotNull HandshakeInstruction instruction) {
-		if (instruction.getAttribute(PremiumHandshakeAttributes.FORCE_ONLINE).isEmpty())
+		if (!instruction.getAttribute(PremiumHandshakeAttributes.FORCE_ONLINE).orElse(false))
 			return;
 
 		PreLoginEvent event = context.event();

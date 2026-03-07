@@ -1,5 +1,6 @@
 package me.whereareiam.identica.util;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.charset.StandardCharsets;
@@ -33,8 +34,8 @@ public final class UniqueIdGenerator {
 	 * @param username player username
 	 * @return derived UUID or {@code null} when the username is blank
 	 */
-	public static @Nullable UUID offlinePlayerUniqueId(@Nullable String username) {
-		if (username == null || username.isBlank()) return null;
+	public static @Nullable UUID offlinePlayerUniqueId(@NotNull String username) {
+		if (username.isBlank()) return null;
 		return UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
 	}
 }

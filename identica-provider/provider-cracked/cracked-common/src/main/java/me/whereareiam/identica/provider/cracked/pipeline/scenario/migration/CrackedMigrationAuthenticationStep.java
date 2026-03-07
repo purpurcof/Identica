@@ -7,12 +7,9 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
-import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.account.CrackedAccountService;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 import me.whereareiam.identica.provider.cracked.cryptography.CryptographyService;
@@ -22,16 +19,15 @@ import me.whereareiam.identica.provider.cracked.event.authentication.Authenticat
 import me.whereareiam.identica.provider.cracked.model.CrackedAccount;
 import me.whereareiam.identica.provider.cracked.model.authentication.AuthenticationAttemptContext;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedAuthenticationAttempt;
-import me.whereareiam.identica.util.UniqueIdGenerator;
+import me.whereareiam.identica.provider.cracked.pipeline.scenario.AbstractCrackedStep;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
-public class CrackedMigrationAuthenticationStep extends InteractiveStep {
+public class CrackedMigrationAuthenticationStep extends AbstractCrackedStep {
 	private final Provider<CrackedMessages> messagesProvider;
 	private final Provider<Settings> coreSettingsProvider;
 	private final CrackedAccountService accountService;
@@ -64,10 +60,7 @@ public class CrackedMigrationAuthenticationStep extends InteractiveStep {
 
 	@Override
 	public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
-		String username = context.getUsername();
-		String providerSubject = resolveProviderSubject(username);
-		if (providerSubject == null)
-			return CompletableFuture.completedFuture(StepResult.failed(""));
+		String providerSubject = requireProviderSubject(context);
 
 		CrackedAccount account = accountService.find(providerSubject).orElse(null);
 		if (account == null)
@@ -87,7 +80,7 @@ public class CrackedMigrationAuthenticationStep extends InteractiveStep {
 		}
 
 		clearBruteForce(account, context);
-		return CompletableFuture.completedFuture(complete(context, account.getProviderSubject(), username));
+		return CompletableFuture.completedFuture(StepResult.complete(context));
 	}
 
 	private @NotNull AuthenticationAttemptDecision recordBruteForceDecision(
@@ -121,21 +114,6 @@ public class CrackedMigrationAuthenticationStep extends InteractiveStep {
 				context.getUsername(),
 				context.getIp()
 		);
-	}
-
-	private StepResult complete(ScenarioContext context, String providerSubject, String username) {
-		ProviderContext provider = ProviderContext.builder()
-				.providerId(CrackedConstants.PROVIDER_ID)
-				.providerSubject(providerSubject)
-				.providerUsername(username == null ? "" : username)
-				.build();
-		context.setProvider(provider);
-		return StepResult.complete(context);
-	}
-
-	private String resolveProviderSubject(String username) {
-		UUID uuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		return uuid != null ? uuid.toString() : null;
 	}
 
 	private long migrationTtlMs() {

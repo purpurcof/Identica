@@ -12,11 +12,9 @@ import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.platform.velocity.listener.VelocityListenerRegistrar;
 import me.whereareiam.identica.platform.velocity.logging.VelocityLoggingHelper;
 import me.whereareiam.identica.platform.velocity.mapper.CommandSourceMapper;
-import me.whereareiam.identica.platform.velocity.adapter.VelocityRoutingTargetApplier;
 import me.whereareiam.identica.handshake.HandshakeApplierRegistry;
 import me.whereareiam.identica.platform.velocity.api.handshake.VelocityHandshakeContext;
 import me.whereareiam.identica.platform.velocity.adapter.VelocityHandshakeApplierRegistry;
-import me.whereareiam.identica.routing.RoutingTargetApplier;
 import me.whereareiam.identica.service.Scheduler;
 import me.whereareiam.keystone.Actor;
 import org.incendo.cloud.CommandManager;
@@ -43,7 +41,6 @@ public class VelocityConfiguration extends AbstractModule {
 				.asEagerSingleton();
 
 		bind(CommandSourceMapper.class).asEagerSingleton();
-		bind(RoutingTargetApplier.class).to(VelocityRoutingTargetApplier.class).asEagerSingleton();
 		OptionalBinder.newOptionalBinder(binder(), Scheduler.class)
 				.setBinding()
 				.to(VelocityScheduler.class)

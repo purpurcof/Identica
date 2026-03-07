@@ -42,6 +42,7 @@ import me.whereareiam.identica.common.provider.DefaultProviderManager;
 import me.whereareiam.identica.common.provider.DefaultProviderOperations;
 import me.whereareiam.identica.common.provider.ProviderEntrypointSelectionLifecycle;
 import me.whereareiam.identica.common.provider.SerializerEngineProvider;
+import me.whereareiam.identica.common.prepare.DefaultPrepareStateStore;
 import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
 import me.whereareiam.identica.common.sentinel.DefaultSentinelService;
@@ -57,6 +58,7 @@ import me.whereareiam.identica.common.identity.session.SessionRefreshCoordinator
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
+import me.whereareiam.identica.connection.prepare.PrepareStateStore;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.ReservationCache;
@@ -127,6 +129,7 @@ public class CommonConfiguration extends AbstractModule {
 				.asEagerSingleton();
 		bind(HandshakeStore.class).to(DefaultHandshakeStore.class).asEagerSingleton();
 		bind(ProviderAttemptStore.class).to(DefaultProviderAttemptStore.class).asEagerSingleton();
+		bind(PrepareStateStore.class).to(DefaultPrepareStateStore.class).asEagerSingleton();
 
 		// Replication
 		OptionalBinder.newOptionalBinder(binder(), Key.get(ReplicationAdapter.class, Names.named("replicationAdapter")))

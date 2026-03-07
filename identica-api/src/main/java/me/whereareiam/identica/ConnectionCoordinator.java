@@ -1,12 +1,11 @@
 package me.whereareiam.identica;
 
 import me.whereareiam.identica.model.auth.ConnectionDecision;
-import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
-import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
-import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.prepare.PrepareDecision;
+import me.whereareiam.identica.model.prepare.PrepareRequest;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,28 +31,23 @@ import java.util.concurrent.CompletionStage;
 @SuppressWarnings("unused")
 public interface ConnectionCoordinator {
 	/**
-	 * Evaluates a handshake request and returns the decision asynchronously.
+	 * Prepares a connection before the main scenario pipelines run.
 	 *
-	 * @param request handshake request details, or {@code null} when unavailable
-	 * @return a completion journey that resolves to the handshake decision
+	 * <p>This generic preparation flow may include early handshake evaluation,
+	 * provider resolution, profile rewriting, and conflict handling depending on
+	 * the requested stage.</p>
+	 *
+	 * @param request preparation request details, or {@code null} when unavailable
+	 * @return a completion stage that resolves to the preparation decision
 	 */
 	@NotNull
-	CompletionStage<HandshakeDecision> handshake(@Nullable HandshakeRequest request);
-
-	/**
-	 * Prepares a resolver UUID for a connection using the provided request data.
-	 *
-	 * @param request resolver rewrite request details, or {@code null} when unavailable
-	 * @return the resolved Identica UUID, or {@code null} when it cannot be resolved
-	 */
-	@Nullable
-	UUID prepareProfile(@Nullable ProfileRequest request);
+	CompletionStage<PrepareDecision> prepare(@Nullable PrepareRequest request);
 
 	/**
 	 * Processes a connection using the provided request asynchronously.
 	 *
 	 * @param request connection request details, or {@code null} when unavailable
-	 * @return a completion journey that resolves to the connection decision
+	 * @return a completion stage that resolves to the connection decision
 	 */
 	@NotNull
 	CompletionStage<ConnectionDecision> process(@Nullable ConnectionRequest request);
@@ -65,7 +59,7 @@ public interface ConnectionCoordinator {
 	 * platform-specific handshake requirements can be evaluated correctly.</p>
 	 *
 	 * @param request resume request details
-	 * @return a completion journey that resolves to the connection decision
+	 * @return a completion stage that resolves to the connection decision
 	 */
 	@NotNull
 	CompletionStage<ConnectionDecision> resume(
@@ -76,10 +70,10 @@ public interface ConnectionCoordinator {
 	 * Advances a pending connection flow within the same session.
 	 *
 	 * @param request advance request details
-	 * @return a completion journey that resolves to the connection decision
+	 * @return a completion stage that resolves to the connection decision
 	 */
 	@NotNull
-	CompletionStage<ConnectionDecision> advanceFlow(
+	CompletionStage<ConnectionDecision> advance(
 			@NotNull AdvanceRequest request
 	);
 

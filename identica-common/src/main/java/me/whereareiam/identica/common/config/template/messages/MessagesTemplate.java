@@ -74,10 +74,34 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 				"<dark_gray>discord.arcadeya.com"
 		));
 		connection.setJourney(buildJourneyMessages());
+		connection.setPrepare(buildPrepare());
 		connection.setAuthentication(buildAuthentication());
 		connection.setRegistration(buildRegistration());
 		connection.setMigration(buildMigration());
 		messages.setConnection(connection);
+	}
+
+	private Messages.Connection.Prepare buildPrepare() {
+		Messages.Connection.Prepare prepare = new Messages.Connection.Prepare();
+		prepare.setHandshakeDenied(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Connection handshake was denied.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		Messages.Connection.Prepare.Errors errors = new Messages.Connection.Prepare.Errors();
+		errors.setPreparePolicyMissing(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Unable to evaluate prepare policy.</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		prepare.setErrors(errors);
+		return prepare;
 	}
 
 	private Messages.Connection.Authentication buildAuthentication() {
@@ -152,14 +176,6 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 			Messages.Connection.Scenario scenario,
 			String label
 	) {
-		scenario.setHandshakeDenied(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Connection handshake was denied.</white>",
-				"<white>Please contact a server administrator.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
 		scenario.setPipelineKick(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",

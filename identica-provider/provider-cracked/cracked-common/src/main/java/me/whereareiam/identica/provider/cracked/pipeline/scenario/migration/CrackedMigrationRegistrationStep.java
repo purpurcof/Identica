@@ -6,12 +6,9 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
-import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.account.CrackedAccountService;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
@@ -20,18 +17,17 @@ import me.whereareiam.identica.provider.cracked.cryptography.PasswordCandidate;
 import me.whereareiam.identica.provider.cracked.model.CrackedAccount;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedRegisterStateItem;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedRegistrationAttempt;
+import me.whereareiam.identica.provider.cracked.pipeline.scenario.AbstractCrackedStep;
 import me.whereareiam.identica.provider.cracked.type.PasswordChangeReason;
 import me.whereareiam.identica.provider.cracked.util.PasswordRules;
-import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
-public class CrackedMigrationRegistrationStep extends InteractiveStep {
+public class CrackedMigrationRegistrationStep extends AbstractCrackedStep {
 	private final Provider<CrackedMessages> messagesProvider;
 	private final Provider<CrackedSettings> settingsProvider;
 	private final Provider<Settings> coreSettingsProvider;
@@ -67,10 +63,7 @@ public class CrackedMigrationRegistrationStep extends InteractiveStep {
 
 	@Override
 	public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
-		String username = context.getUsername();
-		String providerSubject = resolveProviderSubject(username);
-		if (providerSubject == null)
-			return CompletableFuture.completedFuture(StepResult.failed(""));
+		String providerSubject = requireProviderSubject(context);
 
 		CrackedAccount account = accountService.find(providerSubject).orElse(null);
 		if (account != null)
@@ -129,22 +122,7 @@ public class CrackedMigrationRegistrationStep extends InteractiveStep {
 			return CompletableFuture.completedFuture(StepResult.failed(""));
 		}
 
-		return CompletableFuture.completedFuture(complete(context, providerSubject, username));
-	}
-
-	private StepResult complete(ScenarioContext context, String providerSubject, String username) {
-		ProviderContext provider = ProviderContext.builder()
-				.providerId(CrackedConstants.PROVIDER_ID)
-				.providerSubject(providerSubject)
-				.providerUsername(username == null ? "" : username)
-				.build();
-		context.setProvider(provider);
-		return StepResult.complete(context);
-	}
-
-	private String resolveProviderSubject(String username) {
-		UUID uuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		return uuid != null ? uuid.toString() : null;
+		return CompletableFuture.completedFuture(StepResult.complete(context));
 	}
 
 	private long migrationTtlMs() {

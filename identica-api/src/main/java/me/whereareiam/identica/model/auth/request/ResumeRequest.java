@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class ResumeRequest {
 	private final @Nullable UUID connectionUniqueId;
 	private final @Nullable ConnectionIdentity identity;
+	private final @Nullable ProviderContext provider;
 	private final @Nullable String intendedServer;
 
 	/**
@@ -78,6 +80,10 @@ public class ResumeRequest {
 		return identity;
 	}
 
+	public @Nullable ProviderContext getProvider() {
+		return provider;
+	}
+
 	/**
 	 * Returns the intended server name for this request.
 	 *
@@ -93,12 +99,12 @@ public class ResumeRequest {
 	 * @return converted connection request or {@code null}
 	 */
 	public @Nullable ConnectionRequest toConnectionRequest() {
-		if (identity == null)
-			return null;
+		if (identity == null) return null;
 
 		return ConnectionRequest.builder()
 				.connectionUniqueId(connectionUniqueId)
 				.identity(identity)
+				.provider(provider)
 				.intendedServer(intendedServer)
 				.build();
 	}

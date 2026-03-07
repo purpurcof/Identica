@@ -38,12 +38,12 @@ public class ProviderEntrypointSelectionLifecycle implements EventListener {
 		if (provider != null && isPresent(provider.getProviderId())) return;
 
 		ConnectionIdentity.Origin origin = context.getIdentity().getOrigin();
-		if (origin == null || !isPresent(origin.host())) return;
+		if (origin == null || !isPresent(origin.getHost())) return;
 
-		Integer port = origin.port();
+		Integer port = origin.getPort();
 		int resolvedPort = port != null ? port : -1;
 
-		ResolvedEntrypoint resolved = providerOperations.resolveEntrypoint(origin.host(), resolvedPort);
+		ResolvedEntrypoint resolved = providerOperations.resolveEntrypoint(origin.getHost(), resolvedPort);
 		if (resolved == null) return;
 
 		String username = context.getUsername();

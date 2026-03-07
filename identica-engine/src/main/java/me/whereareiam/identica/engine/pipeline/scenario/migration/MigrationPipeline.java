@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
@@ -32,17 +33,19 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 			@Named("migrationPipelineRegistry") PipelineRegistry registry,
 			Provider<Messages> messagesProvider,
 			Provider<Settings> settingsProvider,
-			PipelineStateStore pipelineStateStore
+			PipelineStateStore pipelineStateStore,
+			PipelineExecutor executor
 	) {
-		super(registry, messagesProvider, settingsProvider, pipelineStateStore, PipelineType.MIGRATION);
+		super(registry, messagesProvider, settingsProvider, pipelineStateStore, executor, PipelineType.MIGRATION);
 	}
 
 	@Override
 	protected @Nullable ScenarioContext buildContext(@NotNull ConnectionRequest request) {
 		if (request.getIdentity().getUniqueId() == null) {
 			UUID fallbackUniqueId = request.getConnectionUniqueId();
-			if (fallbackUniqueId == null)
-				fallbackUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(request.getUsername());
+			String username = request.getUsername();
+			if (fallbackUniqueId == null && username != null)
+				fallbackUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(username);
 
 			if (fallbackUniqueId == null) {
 				Logger.severe("%s request missing Identica UUID and fallback UUID", type());

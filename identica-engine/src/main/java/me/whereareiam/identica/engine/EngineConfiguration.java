@@ -3,21 +3,16 @@ package me.whereareiam.identica.engine;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.engine.connection.ConnectionDecisionResolver;
 import me.whereareiam.identica.engine.pipeline.AccountClearPipelineListener;
 import me.whereareiam.identica.engine.pipeline.DefaultPipelineExtensionRegistry;
 import me.whereareiam.identica.engine.pipeline.DefaultPipelineStateStore;
 import me.whereareiam.identica.engine.pipeline.PendingPipelineKickCoordinator;
-import me.whereareiam.identica.engine.pipeline.handshake.HandshakePipeline;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.DefaultAuthenticationStageRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.ScenarioRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.DefaultMigrationStageRegistry;
-import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.DefaultRegistrationStageRegistry;
-import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.rule.DefaultJourneyRuleRegistry;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
@@ -47,11 +42,6 @@ public class EngineConfiguration extends AbstractModule {
 		bind(PipelineExtensionRegistry.class).to(DefaultPipelineExtensionRegistry.class).asEagerSingleton();
 
 		bind(ScenarioRegistry.class).asEagerSingleton();
-		bind(RegistrationPipeline.class).asEagerSingleton();
-		bind(AuthenticationPipeline.class).asEagerSingleton();
-		bind(MigrationPipeline.class).asEagerSingleton();
-		bind(HandshakePipeline.class).asEagerSingleton();
-		bind(ConnectionDecisionResolver.class).asEagerSingleton();
 		bind(ConnectionCoordinator.class).to(DefaultConnectionCoordinator.class).asEagerSingleton();
 		bind(PendingPipelineKickCoordinator.class).asEagerSingleton();
 

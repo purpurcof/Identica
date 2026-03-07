@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
+import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
 import me.whereareiam.identica.event.pipeline.scenario.authentication.AuthenticationContextBuiltEvent;
@@ -38,9 +39,10 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 			Provider<Messages> messagesProvider,
 			Provider<Settings> settingsProvider,
 			PipelineStateStore pipelineStateStore,
+			PipelineExecutor executor,
 			ProviderLinkPersistenceService providerLinkPersistenceService
 	) {
-		super(registry, messagesProvider, settingsProvider, pipelineStateStore, PipelineType.AUTHENTICATION);
+		super(registry, messagesProvider, settingsProvider, pipelineStateStore, executor, PipelineType.AUTHENTICATION);
 		this.providerLinkPersistenceService = providerLinkPersistenceService;
 	}
 
@@ -48,8 +50,9 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 	protected @Nullable ScenarioContext buildContext(@NotNull ConnectionRequest request) {
 		if (request.getIdentity().getUniqueId() == null) {
 			UUID fallbackUniqueId = request.getConnectionUniqueId();
-			if (fallbackUniqueId == null)
-				fallbackUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(request.getUsername());
+			String username = request.getUsername();
+			if (fallbackUniqueId == null && username != null)
+				fallbackUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(username);
 
 			if (fallbackUniqueId == null) {
 				Logger.severe("%s request missing Identica UUID and fallback UUID", type());

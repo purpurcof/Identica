@@ -3,27 +3,20 @@ package me.whereareiam.identica.provider.cracked.pipeline.scenario.registration;
 import com.google.inject.Provider;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineState;
-import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
-import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.provider.cracked.CrackedConstants;
+import me.whereareiam.identica.provider.cracked.pipeline.scenario.AbstractCrackedStep;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedAuthenticationAttempt;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedRegistrationAttempt;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedRegisterStateItem;
-import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
-abstract class AbstractCrackedRegistrationStep extends InteractiveStep {
+abstract class AbstractCrackedRegistrationStep extends AbstractCrackedStep {
 	protected final Provider<CrackedMessages> messagesProvider;
 	protected final Provider<Settings> coreSettingsProvider;
 	protected final PipelineStateStore pipelineStateStore;
@@ -38,21 +31,6 @@ abstract class AbstractCrackedRegistrationStep extends InteractiveStep {
 		this.messagesProvider = messagesProvider;
 		this.coreSettingsProvider = coreSettingsProvider;
 		this.pipelineStateStore = pipelineStateStore;
-	}
-
-	protected StepResult complete(@NotNull ScenarioContext context, @NotNull String providerSubject, @Nullable String username) {
-		ProviderContext provider = ProviderContext.builder()
-				.providerId(CrackedConstants.PROVIDER_ID)
-				.providerSubject(providerSubject)
-				.providerUsername(username == null ? "" : username)
-				.build();
-		context.setProvider(provider);
-		return StepResult.complete(context);
-	}
-
-	protected @Nullable String resolveProviderSubject(@Nullable String username) {
-		UUID uuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		return uuid != null ? uuid.toString() : null;
 	}
 
 	protected long registrationTtlMs() {
@@ -136,24 +114,5 @@ abstract class AbstractCrackedRegistrationStep extends InteractiveStep {
 		if (lines == null || lines.isEmpty())
 			return "";
 		return String.join("\n", lines);
-	}
-
-	protected static @NotNull String replaceTokens(
-			@Nullable List<String> lines,
-			@NotNull Map<String, String> placeholders
-	) {
-		if (lines == null || lines.isEmpty())
-			return "";
-
-		List<String> rendered = new ArrayList<>(lines.size());
-		for (String line : lines) {
-			String out = line == null ? "" : line;
-			for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-				String value = entry.getValue();
-				out = out.replace("{" + entry.getKey() + "}", value == null ? "" : value);
-			}
-			rendered.add(out);
-		}
-		return String.join("\n", rendered);
 	}
 }

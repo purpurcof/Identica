@@ -66,6 +66,11 @@ public class Providers {
 	@ToString
 	public static class ProviderEntry {
 		private @NotNull String id;
+		/**
+		 * Optional user-facing label for this provider.
+		 * Falls back to the provider descriptor name and then the raw id.
+		 */
+		private @NotNull String displayName = "";
 		private boolean enabled;
 		private int priority;
 		/**

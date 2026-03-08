@@ -68,8 +68,10 @@ public class UsernameEntrypointConflictGuard implements ConflictGuard {
 
 		String message = String.join("\n", lines);
 		Map<String, String> placeholders = Map.of(
-				"incomingProvider", safe(incomingProvider),
-				"existingProvider", safe(existingProvider),
+				"incomingProvider", safe(providerOperations.displayProviderName(incomingProvider)),
+				"existingProvider", safe(providerOperations.displayProviderName(existingProvider)),
+				"incomingProviderId", safe(incomingProvider),
+				"existingProviderId", safe(existingProvider),
 				"incomingHost", safe(providerOperations.displayEntrypoint(incomingProvider)),
 				"existingHost", safe(providerOperations.displayEntrypoint(existingProvider))
 		);

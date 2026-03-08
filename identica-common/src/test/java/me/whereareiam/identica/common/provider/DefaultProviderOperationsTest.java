@@ -2,12 +2,15 @@ package me.whereareiam.identica.common.provider;
 
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.pipeline.journey.registry.AuthenticationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.MigrationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.RegistrationJourneyRegistry;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
 import me.whereareiam.identica.provider.ProviderOperations;
+import me.whereareiam.identica.type.provider.ProviderState;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -18,6 +21,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultProviderOperationsTest {
@@ -73,6 +77,36 @@ class DefaultProviderOperationsTest {
 
 		assertNotNull(resolved);
 		assertEquals("alpha", resolved.getProviderId());
+	}
+
+	@Test
+	void resolvesConfiguredProviderDisplayName() {
+		Providers providers = new Providers();
+		Providers.ProviderEntry entry = entry("alpha", 10, List.of("play.example.com"));
+		entry.setDisplayName("Alpha Network");
+		providers.setProviders(List.of(entry));
+
+		ProviderOperations operations = operations(providers);
+		assertEquals("Alpha Network", operations.displayProviderName("alpha"));
+	}
+
+	@Test
+	void fallsBackToDescriptorNameWhenConfiguredDisplayNameMissing() {
+		Providers providers = new Providers();
+		providers.setProviders(List.of(entry("alpha", 10, List.of("play.example.com"))));
+
+		ProviderDescriptor descriptor = new ProviderDescriptor();
+		descriptor.setId("alpha");
+		descriptor.setName("Alpha Provider");
+
+		InternalProvider provider = InternalProvider.builder()
+				.descriptor(descriptor)
+				.state(ProviderState.ENABLED)
+				.build();
+		when(providerManager.getProviders()).thenReturn(List.of(provider));
+
+		ProviderOperations operations = operations(providers);
+		assertEquals("Alpha Provider", operations.displayProviderName("alpha"));
 	}
 
 	private ProviderOperations operations(Providers providers) {

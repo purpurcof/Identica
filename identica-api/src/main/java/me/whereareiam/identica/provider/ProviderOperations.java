@@ -34,6 +34,14 @@ public interface ProviderOperations {
 	@Nullable String displayEntrypoint(@Nullable String providerId);
 
 	/**
+	 * Returns the configured or resolved display name for the provider.
+	 *
+	 * @param providerId provider id to look up
+	 * @return display name or the raw provider id when no better label exists
+	 */
+	@Nullable String displayProviderName(@Nullable String providerId);
+
+	/**
 	 * Checks whether the provider has entrypoints configured.
 	 *
 	 * @param providerId provider id to look up

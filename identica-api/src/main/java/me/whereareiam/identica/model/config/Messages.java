@@ -486,6 +486,13 @@ public class Messages {
 			private @NotNull List<String> sessionBuildFailed;
 			/**
 			 * Message shown when entrypoint selection is required for conflicts.
+			 * Placeholders:
+			 * - {incomingProvider}
+			 * - {existingProvider}
+			 * - {incomingProviderId}
+			 * - {existingProviderId}
+			 * - {incomingHost}
+			 * - {existingHost}
 			 */
 			private @NotNull List<String> conflictEntrypointRequired;
 		}

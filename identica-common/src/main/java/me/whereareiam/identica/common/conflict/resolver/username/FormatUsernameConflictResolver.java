@@ -1,11 +1,14 @@
 package me.whereareiam.identica.common.conflict.resolver.username;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.whereareiam.identica.conflict.resolver.typed.TypedConflictResolver;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
+import me.whereareiam.identica.provider.ProviderOperations;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,8 +18,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class FormatUsernameConflictResolver implements TypedConflictResolver<FormatUsernameConflictResolver.Config> {
 	private static final Pattern RANDOM_PATTERN = Pattern.compile("\\{random(?::(\\d+))?}");
+	private final ProviderOperations providerOperations;
 
 	@Override
 	public @NotNull String getId() {
@@ -53,12 +58,16 @@ public class FormatUsernameConflictResolver implements TypedConflictResolver<For
 		String existingProvider = context.getExistingLink() != null
 				? context.getExistingLink().getProviderId()
 				: null;
+		String incomingProviderName = providerOperations.displayProviderName(incomingProvider);
+		String existingProviderName = providerOperations.displayProviderName(existingProvider);
 
 		String display = format
 				.replace("{username}", requested)
 				.replace("{requested}", requested)
-				.replace("{incomingProvider}", incomingProvider == null ? "" : incomingProvider)
-				.replace("{existingProvider}", existingProvider == null ? "" : existingProvider);
+				.replace("{incomingProvider}", incomingProviderName == null ? "" : incomingProviderName)
+				.replace("{existingProvider}", existingProviderName == null ? "" : existingProviderName)
+				.replace("{incomingProviderId}", incomingProvider == null ? "" : incomingProvider)
+				.replace("{existingProviderId}", existingProvider == null ? "" : existingProvider);
 
 		display = replaceRandom(display);
 		if (formatConfig.isUppercase())

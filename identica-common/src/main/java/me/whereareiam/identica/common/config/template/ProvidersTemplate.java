@@ -19,19 +19,21 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 
 		Providers.ConflictRule premiumVsCracked = new Providers.ConflictRule();
 		premiumVsCracked.setProviders(List.of("premium", "cracked"));
-		premiumVsCracked.setResolvers(List.of(formatResolver("{username} [{incomingProvider}]#{random:2}", "joiner")));
+		premiumVsCracked.setResolvers(List.of(formatResolver("{username}_{incomingProvider}", "joiner")));
 		usernameRules.setPairs(List.of(premiumVsCracked));
 
 		config.getConflicts().put("username", usernameRules);
 
 		Providers.ProviderEntry cracked = new Providers.ProviderEntry();
 		cracked.setId("cracked");
+		cracked.setDisplayName("CR");
 		cracked.setEnabled(true);
 		cracked.setPriority(50);
 		cracked.setEntrypoints(List.of("cracked.arcadeya.com"));
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
 		premium.setId("premium");
+		premium.setDisplayName("PR");
 		premium.setEnabled(true);
 		premium.setPriority(100);
 		premium.setEntrypoints(List.of("premium.arcadeya.com"));

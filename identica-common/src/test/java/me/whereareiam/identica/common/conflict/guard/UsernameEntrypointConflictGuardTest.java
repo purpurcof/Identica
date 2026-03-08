@@ -44,8 +44,8 @@ class UsernameEntrypointConflictGuardTest {
 	void deniesWhenEntrypointAmbiguous() {
 		Providers providers = new Providers();
 		providers.setProviders(List.of(
-				entry("premium", 100, List.of("premium.example.com")),
-				entry("cracked", 50, List.of("cracked.example.com"))
+				entry("premium", "Premium Network", 100, List.of("premium.example.com")),
+				entry("cracked", "Offline Network", 50, List.of("cracked.example.com"))
 		));
 		Messages messages = new MessagesTemplate().supply(new Messages());
 
@@ -67,6 +67,8 @@ class UsernameEntrypointConflictGuardTest {
 		assertNotNull(resolution);
 		assertEquals(ConflictResolution.Action.DENY, resolution.getAction());
 		assertNotNull(resolution.getMessage());
+		assertTrue(resolution.getMessage().contains("Premium Network"));
+		assertTrue(resolution.getMessage().contains("Offline Network"));
 		assertTrue(resolution.getMessage().contains("premium.example.com"));
 		assertTrue(resolution.getMessage().contains("cracked.example.com"));
 	}
@@ -75,8 +77,8 @@ class UsernameEntrypointConflictGuardTest {
 	void allowsWhenEntrypointSelected() {
 		Providers providers = new Providers();
 		providers.setProviders(List.of(
-				entry("premium", 100, List.of("premium.example.com")),
-				entry("cracked", 50, List.of("cracked.example.com"))
+				entry("premium", "Premium Network", 100, List.of("premium.example.com")),
+				entry("cracked", "Offline Network", 50, List.of("cracked.example.com"))
 		));
 
 		ProviderOperations providerOperations = providerOperations(providers);
@@ -96,9 +98,10 @@ class UsernameEntrypointConflictGuardTest {
 		assertNull(guard.guard(context));
 	}
 
-	private Providers.ProviderEntry entry(String id, int priority, List<String> entrypoints) {
+	private Providers.ProviderEntry entry(String id, String displayName, int priority, List<String> entrypoints) {
 		Providers.ProviderEntry entry = new Providers.ProviderEntry();
 		entry.setId(id);
+		entry.setDisplayName(displayName);
 		entry.setPriority(priority);
 		entry.setEntrypoints(entrypoints);
 		return entry;

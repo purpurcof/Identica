@@ -115,6 +115,39 @@ public class DefaultProviderOperations implements ProviderOperations {
 	}
 
 	@Override
+	public @Nullable String displayProviderName(@Nullable String providerId) {
+		String normalizedProviderId = normalizeProviderId(providerId);
+		if (normalizedProviderId == null) return null;
+
+		String configured = streamEntries(providersProvider.get())
+				.filter(entry -> normalizedProviderId.equalsIgnoreCase(normalizeProviderId(entry.getId())))
+				.map(Providers.ProviderEntry::getDisplayName)
+				.map(String::trim)
+				.filter(value -> !value.isBlank())
+				.findFirst()
+				.orElse(null);
+
+		if (configured != null) return configured;
+
+		List<InternalProvider> providers = providerManager.getProviders();
+		if (providers != null) {
+			for (InternalProvider provider : providers) {
+				if (provider == null) continue;
+				ProviderDescriptor descriptor = provider.getDescriptor();
+				if (descriptor == null) continue;
+				if (!normalizedProviderId.equalsIgnoreCase(normalizeProviderId(descriptor.getId())))
+					continue;
+
+				String name = descriptor.getName();
+				if (!name.isBlank())
+					return name.trim();
+			}
+		}
+
+		return normalizedProviderId;
+	}
+
+	@Override
 	public boolean hasEntrypoints(@Nullable String providerId) {
 		return displayEntrypoint(providerId) != null;
 	}

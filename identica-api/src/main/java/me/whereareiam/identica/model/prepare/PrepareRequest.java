@@ -35,30 +35,6 @@ public class PrepareRequest {
 	}
 
 	/**
-	 * Returns the canonical staged-prepare connection key.
-	 *
-	 * <p>If an explicit key was provided, it is used as-is. Otherwise the key is
-	 * derived from the connection identity so the prepare pipeline can restore
-	 * and persist staged state consistently without requiring platforms to build
-	 * the key themselves.</p>
-	 *
-	 * @return resolved connection key
-	 */
-	public @Nullable String getConnectionKey() {
-		if (connectionKey != null && !connectionKey.isBlank())
-			return connectionKey;
-
-		ConnectionIdentity.Origin origin = identity.getOrigin();
-		String host = origin != null ? origin.getHost() : "";
-		Integer port = origin != null ? origin.getPort() : null;
-		return String.join("|",
-				identity.getUsername(),
-				identity.getIp() == null ? "" : identity.getIp(),
-				host,
-				port == null ? "" : Integer.toString(port));
-	}
-
-	/**
 	 * Returns the username from the connection identity.
 	 *
 	 * @return username or {@code null}

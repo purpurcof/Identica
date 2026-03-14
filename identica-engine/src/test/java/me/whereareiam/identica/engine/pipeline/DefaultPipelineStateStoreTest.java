@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 
 class DefaultPipelineStateStoreTest {
 	@Test
-	void emptyReferenceRequiresConnectionOrIdentityId() {
+	void emptyReferenceRequiresKey() {
 		PipelineStateReference reference = PipelineStateReference.builder().build();
 		assertTrue(reference.isEmpty());
 	}
@@ -35,6 +35,24 @@ class DefaultPipelineStateStoreTest {
 		UUID connectionId = UUID.randomUUID();
 		PipelineStateReference reference = PipelineStateReference.builder()
 				.connectionUniqueId(connectionId)
+				.build();
+		PipelineState state = PipelineState.initial();
+
+		store.save(reference, state, 1_000L);
+
+		assertEquals(Optional.of(state), store.find(reference));
+	}
+
+	@Test
+	void saveAndFindByConnectionKey() {
+		EventUtil.initialize(mock(EventManager.class));
+		ReplicationAdapter adapter = localOnlyAdapter();
+		DefaultPipelineStateStore store = new DefaultPipelineStateStore(
+				new DefaultReplicationSystem(adapter),
+				this::replication
+		);
+		PipelineStateReference reference = PipelineStateReference.builder()
+				.connectionKey("user|127.0.0.1|example.com|25565")
 				.build();
 		PipelineState state = PipelineState.initial();
 

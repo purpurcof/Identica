@@ -18,10 +18,12 @@ import java.util.UUID;
 public final class PipelineStateReference {
 	private final @Nullable UUID connectionUniqueId;
 	private final @Nullable UUID identityUniqueId;
+	private final @Nullable String connectionKey;
 
 	public boolean isEmpty() {
 		return connectionUniqueId == null
-				&& identityUniqueId == null;
+				&& identityUniqueId == null
+				&& (connectionKey == null || connectionKey.isBlank());
 	}
 
 	public static @NotNull PipelineStateReference from(@NotNull ScenarioContext context) {
@@ -29,6 +31,7 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(context.getConnectionUniqueId())
 				.identityUniqueId(identity.getUniqueId())
+				.connectionKey(resolveConnectionKey(identity))
 				.build();
 	}
 
@@ -37,6 +40,7 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(request.getConnectionUniqueId())
 				.identityUniqueId(identity != null ? identity.getUniqueId() : null)
+				.connectionKey(resolveConnectionKey(identity))
 				.build();
 	}
 
@@ -45,6 +49,12 @@ public final class PipelineStateReference {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(request.getConnectionUniqueId())
 				.identityUniqueId(identity != null ? identity.getUniqueId() : null)
+				.connectionKey(resolveConnectionKey(identity))
 				.build();
+	}
+
+	private static @Nullable String resolveConnectionKey(@Nullable ConnectionIdentity identity) {
+		if (identity == null) return null;
+		return identity.connectionKey();
 	}
 }

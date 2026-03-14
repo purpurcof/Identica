@@ -24,8 +24,9 @@ import java.util.Optional;
 
 @Singleton
 public class DefaultPipelineStateStore implements PipelineStateStore {
-	private static final String KEY_CONNECTION_PREFIX = "c:";
-	private static final String KEY_IDENTITY_PREFIX = "i:";
+	private static final String KEY_CONNECTION_ID_PREFIX = "c:";
+	private static final String KEY_IDENTITY_ID_PREFIX = "i:";
+	private static final String KEY_CONNECTION_KEY_PREFIX = "k:";
 
 	private final ReplicatedCache<PipelineStateSnapshot> stateCache;
 
@@ -127,13 +128,17 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 	}
 
 	private @NotNull List<String> resolveKeys(@NotNull PipelineStateReference reference) {
-		List<String> keys = new ArrayList<>(2);
+		List<String> keys = new ArrayList<>(3);
 
 		if (reference.getConnectionUniqueId() != null)
-			keys.add(KEY_CONNECTION_PREFIX + reference.getConnectionUniqueId());
+			keys.add(KEY_CONNECTION_ID_PREFIX + reference.getConnectionUniqueId());
 
 		if (reference.getIdentityUniqueId() != null)
-			keys.add(KEY_IDENTITY_PREFIX + reference.getIdentityUniqueId());
+			keys.add(KEY_IDENTITY_ID_PREFIX + reference.getIdentityUniqueId());
+
+		String connectionKey = reference.getConnectionKey();
+		if (connectionKey != null && !connectionKey.isBlank())
+			keys.add(KEY_CONNECTION_KEY_PREFIX + connectionKey);
 
 		return keys;
 	}

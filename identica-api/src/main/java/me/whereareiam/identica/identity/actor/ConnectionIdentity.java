@@ -28,12 +28,6 @@ public class ConnectionIdentity {
 	 */
 	private @Nullable Origin origin;
 
-	/**
-	 * Origin address used by the client to connect.
-	 *
-	 * @param host host name used by the client
-	 * @param port port used by the client, if provided
-	 */
 	@Getter
 	@Setter
 	@NoArgsConstructor
@@ -73,5 +67,24 @@ public class ConnectionIdentity {
 			@Nullable String ip
 	) {
 		this(uniqueId, observedUniqueId, username, ip, null);
+	}
+
+	/**
+	 * Builds the canonical connection key for staged prepare/pipeline resume.
+	 *
+	 * @return connection key or {@code null} when username is missing
+	 */
+	public @Nullable String connectionKey() {
+		if (username.isBlank()) return null;
+
+		Origin origin = this.origin;
+		String host = origin != null ? origin.getHost() : "";
+		Integer port = origin != null ? origin.getPort() : null;
+
+		return String.join("|",
+				username,
+				ip == null ? "" : ip,
+				host,
+				port == null ? "" : Integer.toString(port));
 	}
 }

@@ -42,7 +42,7 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 			@Nullable String username,
 			@Nullable String ip
 	) {
-		String key = resolveKey(providerId, scope, username);
+		String key = resolveKey(providerId, scope, username, ip);
 		if (key == null) return false;
 
 		Optional<ProviderAttemptSnapshot> snapshot = cache.get(key).join();
@@ -56,7 +56,7 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 			@Nullable String username,
 			@Nullable String ip
 	) {
-		String key = resolveKey(providerId, scope, username);
+		String key = resolveKey(providerId, scope, username, ip);
 		if (key == null) return;
 
 		long ttlMs = settingsProvider.get().getConnection().attemptTtlMillis();
@@ -72,7 +72,7 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 			@Nullable String username,
 			@Nullable String ip
 	) {
-		String key = resolveKey(providerId, scope, username);
+		String key = resolveKey(providerId, scope, username, ip);
 		if (key == null) return;
 		cache.invalidate(key).join();
 	}
@@ -80,15 +80,17 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 	private @Nullable String resolveKey(
 			@NotNull String providerId,
 			@NotNull String scope,
-			@Nullable String username
+			@Nullable String username,
+			@Nullable String ip
 	) {
 		String normalizedProvider = normalize(providerId);
 		String normalizedScope = normalize(scope);
 		String normalizedUsername = normalize(username);
-		if (normalizedProvider == null || normalizedScope == null || normalizedUsername == null)
+		String normalizedIp = normalize(ip);
+		if (normalizedProvider == null || normalizedScope == null || normalizedUsername == null || normalizedIp == null)
 			return null;
 
-		return KEY_PREFIX + normalizedProvider + "|" + normalizedScope + "|" + normalizedUsername;
+		return KEY_PREFIX + normalizedProvider + "|" + normalizedScope + "|" + normalizedUsername + "|" + normalizedIp;
 	}
 
 	private @Nullable String normalize(@Nullable String value) {

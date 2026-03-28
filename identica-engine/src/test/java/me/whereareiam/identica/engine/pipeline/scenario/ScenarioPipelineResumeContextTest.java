@@ -1,0 +1,142 @@
+package me.whereareiam.identica.engine.pipeline.scenario;
+
+import me.whereareiam.identica.database.ProviderLinkPersistenceService;
+import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipeline;
+import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
+import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.auth.AuthContext;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.migration.MigrationContext;
+import me.whereareiam.identica.model.registration.RegistrationContext;
+import me.whereareiam.identica.pipeline.PipelineRegistry;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import org.junit.jupiter.api.Test;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+
+class ScenarioPipelineResumeContextTest {
+	@Test
+	void registrationResumePreservesIdenticaUniqueId() {
+		UUID connectionId = UUID.randomUUID();
+		UUID identicaUniqueId = UUID.randomUUID();
+		TestRegistrationPipeline pipeline = new TestRegistrationPipeline();
+
+		RegistrationContext base = RegistrationContext.builder()
+				.connectionUniqueId(connectionId)
+				.identity(new ConnectionIdentity(identicaUniqueId, "PlayerOne", "1.1.1.1"))
+				.intendedServer("lobby")
+				.build();
+
+		RegistrationContext merged = (RegistrationContext) pipeline.merge(base, ResumeRequest.builder()
+				.connectionUniqueId(connectionId)
+				.identity(new ConnectionIdentity(connectionId, "PlayerOne", "2.2.2.2"))
+				.intendedServer("auth")
+				.build());
+
+		assertEquals(connectionId, merged.getConnectionUniqueId());
+		assertEquals(identicaUniqueId, merged.getIdenticaUniqueId(), "resume should keep the account UUID");
+	}
+
+	@Test
+	void authenticationResumePreservesIdenticaUniqueId() {
+		UUID connectionId = UUID.randomUUID();
+		UUID identicaUniqueId = UUID.randomUUID();
+		TestAuthenticationPipeline pipeline = new TestAuthenticationPipeline();
+
+		AuthContext base = AuthContext.builder()
+				.connectionUniqueId(connectionId)
+				.identity(new ConnectionIdentity(identicaUniqueId, "PlayerOne", "1.1.1.1"))
+				.intendedServer("lobby")
+				.build();
+
+		AuthContext merged = (AuthContext) pipeline.merge(base, ResumeRequest.builder()
+				.connectionUniqueId(connectionId)
+				.identity(new ConnectionIdentity(connectionId, "PlayerOne", "2.2.2.2"))
+				.intendedServer("auth")
+				.build());
+
+		assertEquals(connectionId, merged.getConnectionUniqueId());
+		assertEquals(identicaUniqueId, merged.getIdenticaUniqueId(), "resume should keep the account UUID");
+	}
+
+	@Test
+	void migrationResumePreservesIdenticaUniqueId() {
+		UUID connectionId = UUID.randomUUID();
+		UUID identicaUniqueId = UUID.randomUUID();
+		TestMigrationPipeline pipeline = new TestMigrationPipeline();
+
+		MigrationContext base = MigrationContext.builder()
+				.connectionUniqueId(connectionId)
+				.identity(new ConnectionIdentity(identicaUniqueId, "PlayerOne", "1.1.1.1"))
+				.intendedServer("lobby")
+				.targetProviderId("premium")
+				.build();
+
+		MigrationContext merged = (MigrationContext) pipeline.merge(base, ResumeRequest.builder()
+				.connectionUniqueId(connectionId)
+				.identity(new ConnectionIdentity(connectionId, "PlayerOne", "2.2.2.2"))
+				.intendedServer("auth")
+				.build());
+
+		assertEquals(connectionId, merged.getConnectionUniqueId());
+		assertEquals(identicaUniqueId, merged.getIdenticaUniqueId(), "resume should keep the account UUID");
+	}
+
+	private static final class TestRegistrationPipeline extends RegistrationPipeline {
+		private TestRegistrationPipeline() {
+			super(
+					mock(PipelineRegistry.class),
+					Messages::new,
+					Settings::new,
+					mock(PipelineStateStore.class),
+					mock(PipelineExecutor.class),
+					mock(ProviderLinkPersistenceService.class)
+			);
+		}
+
+		private ScenarioContext merge(ScenarioContext base, ResumeRequest request) {
+			return super.mergeContext(base, request);
+		}
+	}
+
+	private static final class TestAuthenticationPipeline extends AuthenticationPipeline {
+		private TestAuthenticationPipeline() {
+			super(
+					mock(PipelineRegistry.class),
+					Messages::new,
+					Settings::new,
+					mock(PipelineStateStore.class),
+					mock(PipelineExecutor.class),
+					mock(ProviderLinkPersistenceService.class)
+			);
+		}
+
+		private ScenarioContext merge(ScenarioContext base, ResumeRequest request) {
+			return super.mergeContext(base, request);
+		}
+	}
+
+	private static final class TestMigrationPipeline extends MigrationPipeline {
+		private TestMigrationPipeline() {
+			super(
+					mock(PipelineRegistry.class),
+					Messages::new,
+					Settings::new,
+					mock(PipelineStateStore.class),
+					mock(PipelineExecutor.class)
+			);
+		}
+
+		private ScenarioContext merge(ScenarioContext base, ResumeRequest request) {
+			return super.mergeContext(base, request);
+		}
+	}
+}

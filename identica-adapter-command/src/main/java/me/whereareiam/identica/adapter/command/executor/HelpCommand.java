@@ -16,7 +16,7 @@ import me.whereareiam.identica.annotation.Range;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerOptions;
 import net.kyori.adventure.text.Component;

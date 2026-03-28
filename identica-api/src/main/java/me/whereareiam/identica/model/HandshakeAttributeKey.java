@@ -1,4 +1,4 @@
-package me.whereareiam.identica.handshake;
+package me.whereareiam.identica.model;
 
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import org.jetbrains.annotations.NotNull;

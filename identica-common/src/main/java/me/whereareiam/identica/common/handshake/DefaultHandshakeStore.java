@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.model.replication.ReplicationPage;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
@@ -27,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 @Singleton
 public final class DefaultHandshakeStore implements HandshakeStore, EventListener {
+	private static final String KEY_SEPARATOR = "|";
 	private final Set<HandshakePolicy> policies = new CopyOnWriteArraySet<>();
 	private final ReplicatedCache<HandshakeInstruction> cache;
 	private final EventManager eventManager;
@@ -68,23 +70,29 @@ public final class DefaultHandshakeStore implements HandshakeStore, EventListene
 
 		HandshakeInstruction stored = event.getInstruction();
 		String username = stored.getIdentity().getUsername();
-		if (username.isBlank()) return;
+		String ip = stored.getIdentity().getIp();
+		if (username.isBlank() || ip == null || ip.isBlank()) return;
 
-		String key = resolveKey(username);
+		String key = resolveKey(username, ip);
 		long ttlMs = Math.max(1, stored.getExpiresAt() - System.currentTimeMillis());
 		cache.put(key, stored, ttlMs).join();
 	}
 
 	@Override
 	public @NotNull Optional<HandshakeInstruction> consumeInstruction(@NotNull String username, @NotNull String ip) {
-		if (username.isBlank()) return Optional.empty();
-		return readByKey(resolveKey(username));
+		if (username.isBlank() || ip.isBlank()) return Optional.empty();
+		return readByKey(resolveKey(username, ip));
 	}
 
 	@Override
 	public void invalidateInstruction(@NotNull String username, @NotNull String ip) {
 		if (username.isBlank()) return;
-		cache.invalidate(resolveKey(username)).join();
+		if (ip.isBlank()) {
+			invalidateByUsername(username);
+			return;
+		}
+
+		cache.invalidate(resolveKey(username, ip)).join();
 	}
 
 	@IdenticEvent(EventOrder.LOWEST)
@@ -106,8 +114,27 @@ public final class DefaultHandshakeStore implements HandshakeStore, EventListene
 		return Optional.of(instruction);
 	}
 
-	private @NotNull String resolveKey(@NotNull String username) {
-		return normalize(username);
+	private void invalidateByUsername(@NotNull String username) {
+		String prefix = normalize(username) + KEY_SEPARATOR;
+		int page = 1;
+		int pageSize = 100;
+
+		while (true) {
+			ReplicationPage resolved = cache.listKeys(page, pageSize).join();
+			for (String key : resolved.getEntries()) {
+				if (key != null && key.startsWith(prefix))
+					cache.invalidate(key).join();
+			}
+
+			if (resolved.getEntries().isEmpty()) return;
+			if (resolved.getTotal() <= page * resolved.getPageSize()) return;
+
+			page++;
+		}
+	}
+
+	private @NotNull String resolveKey(@NotNull String username, @NotNull String ip) {
+		return normalize(username) + KEY_SEPARATOR + normalize(ip);
 	}
 
 	private @NotNull String normalize(@NotNull String value) {

@@ -3,7 +3,7 @@ package me.whereareiam.identica.provider.cracked.config.provider;
 import com.google.inject.Provider;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.config.ConfigProvider;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 
 import java.nio.file.Path;
 

@@ -2,7 +2,7 @@ package me.whereareiam.identica.adapter;
 
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.connection.prepare.PrepareStateStore;
+import me.whereareiam.identica.pipeline.state.PrepareStateStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.prepare.PrepareDecision;

@@ -10,7 +10,7 @@ import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.migration.MigrationService;
+import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.identity.session.SessionService;

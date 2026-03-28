@@ -2,7 +2,6 @@ package me.whereareiam.identica.adapter.database.provider;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.adapter.database.entity.AccountProviderLinkEntity;
 import me.whereareiam.identica.adapter.database.mapper.AccountProviderLinkMapper;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderLinkRepository;
@@ -21,13 +20,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor = @__(@Inject))
 public class DefaultProviderLinkPersistenceService implements ProviderLinkPersistenceService, EventListener {
 	private final ProviderLinkRepository repository;
-	private final EventManager eventManager;
 
 	@Inject
-	void registerListeners() {
+	public DefaultProviderLinkPersistenceService(
+			ProviderLinkRepository repository,
+			EventManager eventManager
+	) {
+		this.repository = repository;
 		eventManager.register(this);
 	}
 

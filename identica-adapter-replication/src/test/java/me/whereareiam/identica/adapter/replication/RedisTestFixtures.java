@@ -2,7 +2,7 @@ package me.whereareiam.identica.adapter.replication;
 
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 
 import java.util.Collections;
 import java.util.HashSet;

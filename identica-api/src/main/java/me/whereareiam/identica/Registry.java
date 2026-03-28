@@ -1,4 +1,4 @@
-package me.whereareiam.identica.registry;
+package me.whereareiam.identica;
 
 import java.util.Set;
 

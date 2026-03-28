@@ -88,7 +88,7 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 
 		if (base instanceof AuthContext authContext) {
 			return AuthContext.builder()
-					.connectionUniqueId(identity.getUniqueId())
+					.connectionUniqueId(resolveConnectionUniqueId(base, request))
 					.identity(identity)
 					.intendedServer(intendedServer)
 					.provider(authContext.getProvider())

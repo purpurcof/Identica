@@ -12,12 +12,34 @@ import java.time.Duration;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class DefaultHandshakeStoreTest {
 	@Test
-	void consumeUsesUsernameOnlyKey() {
+	void consumeUsesMatchingUsernameAndIp() {
+		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
+		adapter.available = false;
+		DefaultHandshakeStore store = new DefaultHandshakeStore(
+				new DefaultReplicationSystem(adapter),
+				this::replication,
+				mock(EventManager.class)
+		);
+		HandshakeInstruction instruction = HandshakeInstruction.create(
+				new ConnectionIdentity("PlayerOne", "1.1.1.1"),
+				Duration.ofMinutes(1).toMillis()
+		);
+
+		store.putInstruction(instruction);
+
+		Optional<HandshakeInstruction> resolved = store.consumeInstruction("PlayerOne", "1.1.1.1");
+		assertTrue(resolved.isPresent());
+		assertEquals("PlayerOne", resolved.get().getIdentity().getUsername());
+	}
+
+	@Test
+	void consumeRequiresMatchingIp() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
 		adapter.available = false;
 		DefaultHandshakeStore store = new DefaultHandshakeStore(
@@ -33,8 +55,7 @@ class DefaultHandshakeStoreTest {
 		store.putInstruction(instruction);
 
 		Optional<HandshakeInstruction> resolved = store.consumeInstruction("PlayerOne", "2.2.2.2");
-		assertTrue(resolved.isPresent());
-		assertEquals("PlayerOne", resolved.get().getIdentity().getUsername());
+		assertFalse(resolved.isPresent(), "handshake instructions should not bleed across IPs for the same username");
 	}
 
 	private Replication replication() {

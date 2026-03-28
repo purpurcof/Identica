@@ -18,7 +18,7 @@ import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.sentinel.SentinelDefinition;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.common.sentinel.ResumeSpamSentinelDefinition;
 

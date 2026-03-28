@@ -8,11 +8,12 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DefaultProviderAttemptStoreTest {
 	@Test
-	void attemptKeyIgnoresIp() {
+	void attemptKeyIncludesIp() {
 		DefaultProviderAttemptStore store = new DefaultProviderAttemptStore(
 				new DefaultReplicationSystem(new ReplicationTestFixtures.TestReplicationAdapter()),
 				this::replication,
@@ -21,7 +22,23 @@ class DefaultProviderAttemptStoreTest {
 
 		store.markAttempt("premium", "verify", "SharedName", "1.1.1.1");
 
-		assertTrue(store.hasAttempt("premium", "verify", "SharedName", "2.2.2.2"));
+		assertTrue(store.hasAttempt("premium", "verify", "SharedName", "1.1.1.1"));
+	}
+
+	@Test
+	void attemptLookupRequiresMatchingIp() {
+		DefaultProviderAttemptStore store = new DefaultProviderAttemptStore(
+				new DefaultReplicationSystem(new ReplicationTestFixtures.TestReplicationAdapter()),
+				this::replication,
+				this::settings
+		);
+
+		store.markAttempt("premium", "verify", "SharedName", "1.1.1.1");
+
+		assertFalse(
+				store.hasAttempt("premium", "verify", "SharedName", "2.2.2.2"),
+				"provider attempts should be isolated per IP for the same username"
+		);
 	}
 
 	private Settings settings() {

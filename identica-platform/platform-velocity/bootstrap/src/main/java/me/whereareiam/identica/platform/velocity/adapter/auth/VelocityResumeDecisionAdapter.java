@@ -7,7 +7,7 @@ import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.adapter.ConnectionDecisionAdapter;
-import me.whereareiam.identica.connection.prepare.PrepareStateStore;
+import me.whereareiam.identica.pipeline.state.PrepareStateStore;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.listener.DynamicListener;

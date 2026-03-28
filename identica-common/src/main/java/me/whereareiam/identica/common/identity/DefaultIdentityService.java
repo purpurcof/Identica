@@ -3,7 +3,6 @@ package me.whereareiam.identica.common.identity;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
@@ -29,14 +28,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultIdentityService implements IdentityService, EventListener {
 	private final Provider<Messages> messagesProvider;
-	private final EventManager eventManager;
 	private final Map<UUID, Identity> identities = new ConcurrentHashMap<>();
 
 	@Inject
-	void registerListeners() {
+	public DefaultIdentityService(
+			Provider<Messages> messagesProvider,
+			EventManager eventManager
+	) {
+		this.messagesProvider = messagesProvider;
 		eventManager.register(this);
 	}
 

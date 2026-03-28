@@ -3,7 +3,7 @@ package me.whereareiam.identica.engine.prepare.group.finalize.phase;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.connection.prepare.PrepareStateStore;
+import me.whereareiam.identica.pipeline.state.PrepareStateStore;
 import me.whereareiam.identica.engine.prepare.group.PrepareGroupState;
 import me.whereareiam.identica.model.prepare.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.PipelineState;

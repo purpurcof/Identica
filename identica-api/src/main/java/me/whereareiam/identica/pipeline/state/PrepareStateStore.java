@@ -1,4 +1,4 @@
-package me.whereareiam.identica.connection.prepare;
+package me.whereareiam.identica.pipeline.state;
 
 import me.whereareiam.identica.model.prepare.PrepareDecision;
 import org.jetbrains.annotations.NotNull;

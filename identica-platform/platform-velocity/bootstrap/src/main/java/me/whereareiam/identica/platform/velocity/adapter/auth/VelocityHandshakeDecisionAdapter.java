@@ -7,7 +7,7 @@ import com.velocitypowered.api.event.AwaitingEventExecutor;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.connection.prepare.PrepareStateStore;
+import me.whereareiam.identica.pipeline.state.PrepareStateStore;
 import me.whereareiam.identica.handshake.HandshakeDecisionAdapter;
 import me.whereareiam.identica.handshake.HandshakeApplierRegistry;
 import me.whereareiam.identica.handshake.HandshakeStore;

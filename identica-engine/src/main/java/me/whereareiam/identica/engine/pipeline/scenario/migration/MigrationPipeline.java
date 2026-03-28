@@ -80,7 +80,7 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 
 		if (base instanceof MigrationContext migration) {
 			MigrationContext merged = MigrationContext.builder()
-					.connectionUniqueId(identity.getUniqueId())
+					.connectionUniqueId(resolveConnectionUniqueId(base, request))
 					.identity(identity)
 					.intendedServer(intendedServer)
 					.targetProviderId(migration.getTargetProviderId())

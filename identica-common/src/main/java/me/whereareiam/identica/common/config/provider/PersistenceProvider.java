@@ -8,7 +8,7 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.common.config.template.PersistenceTemplate;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.model.config.persistence.SqlitePersistence;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 
 import java.nio.file.Path;
 

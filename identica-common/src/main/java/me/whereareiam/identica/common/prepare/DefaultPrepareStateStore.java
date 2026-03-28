@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.prepare;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.connection.prepare.PrepareStateStore;
+import me.whereareiam.identica.pipeline.state.PrepareStateStore;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.prepare.PrepareDecision;
 import me.whereareiam.identica.replication.ReplicationSystem;

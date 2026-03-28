@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.connection.prepare.PrepareStateStore;
+import me.whereareiam.identica.pipeline.state.PrepareStateStore;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.routing.RoutingStateStore;
 import me.whereareiam.identica.listener.DynamicListener;

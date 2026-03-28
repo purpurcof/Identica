@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 import me.whereareiam.keystone.Serializers;
 import me.whereareiam.keystone.model.SerializerOptions;
 import me.whereareiam.keystone.serializer.SerializerEngine;

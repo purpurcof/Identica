@@ -1,6 +1,6 @@
 package me.whereareiam.identica.engine.prepare;
 
-import me.whereareiam.identica.connection.prepare.PrepareStateStore;
+import me.whereareiam.identica.pipeline.state.PrepareStateStore;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.ProviderProfilePersistenceService;
@@ -29,10 +29,14 @@ import me.whereareiam.identica.model.prepare.PrepareDecision;
 import me.whereareiam.identica.model.prepare.PrepareRequest;
 import me.whereareiam.identica.type.PrepareStage;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.AccountDecision;
+import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
+import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
+import me.whereareiam.identica.type.UsernameSource;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -148,6 +152,62 @@ class PreparePipelineTest {
 		assertNotNull(decision);
 		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
 		assertNotNull(decision.getHandshake());
+	}
+
+	@Test
+	void profileStageReusesExistingLinkedUuidForPremiumJoin() {
+		UUID identicaUniqueId = UUID.randomUUID();
+		ConnectionIdentity identity = identity("MigratedPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratedPlayer|127.0.0.1|premium.example.com|25565";
+
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of());
+		when(providerOperations.resolveProfile(any()))
+				.thenReturn(ProfileResolution.builder()
+						.providerId("premium")
+						.providerSubject("premium-subject")
+						.build());
+		when(providerOperations.resolveEntrypoint("premium.example.com", 25565))
+				.thenReturn(ResolvedEntrypoint.builder()
+						.providerId("premium")
+						.host("premium.example.com")
+						.port(25565)
+						.build());
+		when(registrationAccountService.reserve(any())).thenReturn(identicaUniqueId);
+		when(providerLinkPersistenceService.findBySubject("premium", "premium-subject"))
+				.thenReturn(Optional.of(AccountProviderLink.builder()
+						.uniqueId(identicaUniqueId)
+						.providerId("premium")
+						.providerSubject("premium-subject")
+						.primaryLink(true)
+						.build()));
+		when(accountPersistenceService.findByUniqueId(identicaUniqueId))
+				.thenReturn(Optional.of(Account.builder()
+						.uniqueId(identicaUniqueId)
+						.username("MigratedPlayer")
+						.source(UsernameSource.PROVIDER)
+						.build()));
+		when(providerProfilePersistenceService.findBySubject("premium", "premium-subject"))
+				.thenReturn(Optional.of(AccountProviderProfile.builder()
+						.providerId("premium")
+						.providerSubject("premium-subject")
+						.providerUsername("MigratedPlayer")
+						.build()));
+
+		PrepareDecision decision = pipeline.execute(PrepareRequest.builder()
+						.stage(PrepareStage.PROFILE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(identicaUniqueId, decision.getUniqueId());
+		assertEquals("MigratedPlayer", decision.getEffectiveUsername());
+		assertNotNull(prepareStateStore.peek(identicaUniqueId).orElse(null));
 	}
 
 	private @NotNull PreparePipeline pipeline(@NotNull PrepareStateStore prepareStateStore) {

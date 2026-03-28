@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisConnectionException;

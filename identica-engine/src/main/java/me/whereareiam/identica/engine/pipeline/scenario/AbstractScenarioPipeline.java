@@ -431,16 +431,16 @@ public abstract class AbstractScenarioPipeline {
 			@NotNull ResumeRequest request
 	) {
 		if (base == null) return null;
-		UUID connectionId = request.getConnectionUniqueId() != null
-				? request.getConnectionUniqueId()
-				: base.getConnectionUniqueId();
-
 		String username = request.getUsername() != null ? request.getUsername() : base.getUsername();
 		if (username == null || username.isBlank())
 			return null;
 
 		String ip = request.getIp() != null ? request.getIp() : base.getIp();
-		ConnectionIdentity merged = new ConnectionIdentity(connectionId, username, ip);
+		UUID identicaUniqueId = base.getIdenticaUniqueId();
+		UUID observedUniqueId = request.getIdentityInfo() != null && request.getIdentityInfo().getObservedUniqueId() != null
+				? request.getIdentityInfo().getObservedUniqueId()
+				: base.getIdentity().getObservedUniqueId();
+		ConnectionIdentity merged = new ConnectionIdentity(identicaUniqueId, observedUniqueId, username, ip);
 
 		ConnectionIdentity requestIdentity = request.getIdentityInfo();
 		if (requestIdentity != null) {
@@ -451,6 +451,15 @@ public abstract class AbstractScenarioPipeline {
 		merged.setOrigin(base.getIdentity().getOrigin());
 
 		return merged;
+	}
+
+	protected @Nullable UUID resolveConnectionUniqueId(
+			@Nullable ScenarioContext base,
+			@NotNull ResumeRequest request
+	) {
+		if (request.getConnectionUniqueId() != null)
+			return request.getConnectionUniqueId();
+		return base != null ? base.getConnectionUniqueId() : null;
 	}
 
 	protected void emitScenarioBuilt(@NotNull ScenarioContext context) {

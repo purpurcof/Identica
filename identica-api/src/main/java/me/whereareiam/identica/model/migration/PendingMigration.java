@@ -1,4 +1,4 @@
-package me.whereareiam.identica.migration;
+package me.whereareiam.identica.model.migration;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -11,13 +11,17 @@ import java.util.UUID;
 @Getter
 @Builder
 @ToString
-public class MigrationStart {
+public class PendingMigration {
 	private @Nullable UUID uniqueId;
 	private @Nullable UUID connectionUniqueId;
 	private @Nullable String targetProviderId;
-	private @Nullable String username;
-	private @Nullable String ip;
-	private @Nullable String kickMessage;
+	private long requestedAt;
 	private @Nullable MigrationInitiator initiator;
 	private @Nullable UUID initiatorUniqueId;
+	private Phase phase;
+
+	public enum Phase {
+		CONFIRMATION,
+		STARTED
+	}
 }

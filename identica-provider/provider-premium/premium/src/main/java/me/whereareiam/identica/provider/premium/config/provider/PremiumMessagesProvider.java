@@ -7,7 +7,7 @@ import me.whereareiam.configura.Config;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.config.template.PremiumMessagesTemplate;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 
 import java.nio.file.Path;
 

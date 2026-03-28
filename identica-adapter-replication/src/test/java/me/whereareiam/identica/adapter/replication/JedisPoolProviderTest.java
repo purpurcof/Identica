@@ -3,7 +3,7 @@ package me.whereareiam.identica.adapter.replication;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.adapter.replication.provider.JedisPoolProvider;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;

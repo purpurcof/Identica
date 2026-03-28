@@ -14,7 +14,7 @@ import me.whereareiam.identica.sentinel.SentinelService;
 import me.whereareiam.identica.sentinel.SentinelDefinition;
 import me.whereareiam.identica.type.sentinel.SentinelMode;
 import me.whereareiam.identica.type.sentinel.SentinelScope;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.replication.cache.ReplicatedCache;
 

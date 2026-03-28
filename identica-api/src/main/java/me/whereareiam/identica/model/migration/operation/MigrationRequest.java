@@ -1,4 +1,4 @@
-package me.whereareiam.identica.migration;
+package me.whereareiam.identica.model.migration.operation;
 
 import lombok.Builder;
 import lombok.Getter;

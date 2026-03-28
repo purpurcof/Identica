@@ -7,7 +7,7 @@ import me.whereareiam.configura.Config;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 import me.whereareiam.identica.provider.cracked.config.template.CrackedMessagesTemplate;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 
 import java.nio.file.Path;
 

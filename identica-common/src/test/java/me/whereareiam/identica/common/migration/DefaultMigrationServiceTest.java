@@ -3,29 +3,38 @@ package me.whereareiam.identica.common.migration;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.migration.PendingMigration;
 import me.whereareiam.identica.identity.session.SessionService;
-import me.whereareiam.identica.migration.MigrationResult;
-import me.whereareiam.identica.migration.MigrationStart;
+import me.whereareiam.identica.model.migration.operation.MigrationRequest;
+import me.whereareiam.identica.model.migration.operation.MigrationResult;
+import me.whereareiam.identica.model.migration.operation.MigrationStart;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
+import me.whereareiam.identica.model.migration.MigrationContext;
+import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.type.UsernameSource;
+import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -94,5 +103,90 @@ class DefaultMigrationServiceTest {
 
 		assertEquals(MigrationResultStatus.PRECHECK_DENIED, result.getStatus());
 		assertEquals("locked", result.getMessage());
+	}
+
+	@Test
+	void requestStoresAccountAndConnectionIdsInTheirOwnFields() {
+		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());
+		when(providerLinkPersistenceService.findByUniqueIdAndProviderId(any(UUID.class), any(String.class)))
+				.thenReturn(Optional.empty());
+
+		DefaultMigrationService service = new DefaultMigrationService(
+				providerManager,
+				providerLinkPersistenceService,
+				accountPersistenceService,
+				pipelineStateStore,
+				sessionService,
+				identityService,
+				Settings::new,
+				Commands::new,
+				Messages::new
+		);
+
+		UUID connectionUniqueId = UUID.randomUUID();
+		UUID identicaUniqueId = UUID.randomUUID();
+		MigrationResult result = service.request(MigrationRequest.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.identicaUniqueId(identicaUniqueId)
+				.targetProviderId("premium")
+				.username("PlayerOne")
+				.ip("127.0.0.1")
+				.build());
+
+		assertEquals(MigrationResultStatus.PENDING_CONFIRMATION, result.getStatus());
+
+		PendingMigration pendingMigration = service.findPendingMigration(connectionUniqueId).orElse(null);
+
+		assertNotNull(pendingMigration);
+		assertEquals(identicaUniqueId, pendingMigration.getUniqueId(), "pending migration should store the account UUID separately");
+		assertEquals(connectionUniqueId, pendingMigration.getConnectionUniqueId(), "pending migration should store the connection UUID separately");
+		assertEquals("premium", pendingMigration.getTargetProviderId());
+		assertEquals(PendingMigration.Phase.CONFIRMATION, pendingMigration.getPhase());
+	}
+
+	@Test
+	void findPendingMigrationReturnsStartedMigrationFromPipelineState() {
+		UUID connectionUniqueId = UUID.randomUUID();
+		UUID identicaUniqueId = UUID.randomUUID();
+		UUID initiatorUniqueId = UUID.randomUUID();
+
+		PipelineState pipelineState = PipelineState.initial();
+		pipelineState.setPipelineType(PipelineType.MIGRATION);
+		pipelineState.setScenario(MigrationContext.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.identity(new ConnectionIdentity(identicaUniqueId, "PlayerOne", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build());
+		pipelineState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.ADMIN,
+				initiatorUniqueId
+		), Duration.ofMinutes(5).toMillis());
+
+		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.of(pipelineState));
+
+		DefaultMigrationService service = new DefaultMigrationService(
+				providerManager,
+				providerLinkPersistenceService,
+				accountPersistenceService,
+				pipelineStateStore,
+				sessionService,
+				identityService,
+				Settings::new,
+				Commands::new,
+				Messages::new
+		);
+
+		PendingMigration pendingMigration = service.findPendingMigration(connectionUniqueId).orElse(null);
+
+		assertNotNull(pendingMigration);
+		assertEquals(identicaUniqueId, pendingMigration.getUniqueId());
+		assertEquals(connectionUniqueId, pendingMigration.getConnectionUniqueId());
+		assertEquals("premium", pendingMigration.getTargetProviderId());
+		assertEquals(1234L, pendingMigration.getRequestedAt());
+		assertEquals(MigrationInitiator.ADMIN, pendingMigration.getInitiator());
+		assertEquals(initiatorUniqueId, pendingMigration.getInitiatorUniqueId());
+		assertEquals(PendingMigration.Phase.STARTED, pendingMigration.getPhase());
 	}
 }

@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.identica.handshake.HandshakeAttributeKey;
+import me.whereareiam.identica.model.HandshakeAttributeKey;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

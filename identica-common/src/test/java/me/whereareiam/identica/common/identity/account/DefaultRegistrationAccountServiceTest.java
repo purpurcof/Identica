@@ -6,6 +6,7 @@ import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -42,12 +43,47 @@ class DefaultRegistrationAccountServiceTest {
 		assertNotEquals(first, second);
 	}
 
+	@Test
+	void reserveReusesExistingProviderLinkUniqueId() {
+		TestReservationCache reservationCache = new TestReservationCache();
+		ProviderLinkPersistenceService providerLinkPersistenceService = mock(ProviderLinkPersistenceService.class);
+		SessionService sessionService = mock(SessionService.class);
+		UUID existingUniqueId = UUID.randomUUID();
+
+		when(sessionService.findByProviderSubject(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
+				.thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+		when(providerLinkPersistenceService.findBySubject("premium", "subject-linked"))
+				.thenReturn(Optional.of(AccountProviderLink.builder()
+						.uniqueId(existingUniqueId)
+						.providerId("premium")
+						.providerSubject("subject-linked")
+						.primaryLink(true)
+						.build()));
+
+		DefaultRegistrationAccountService service = service(
+				reservationCache,
+				providerLinkPersistenceService,
+				sessionService
+		);
+
+		UUID reserved = service.reserve(request("MigratedPlayer", "1.1.1.1", "subject-linked"));
+
+		assertEquals(existingUniqueId, reserved);
+	}
+
 	private DefaultRegistrationAccountService service(ReservationCache reservationCache) {
 		ProviderLinkPersistenceService providerLinkPersistenceService = mock(ProviderLinkPersistenceService.class);
 		SessionService sessionService = mock(SessionService.class);
 		when(sessionService.findByProviderSubject(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
 				.thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+		return service(reservationCache, providerLinkPersistenceService, sessionService);
+	}
 
+	private DefaultRegistrationAccountService service(
+			ReservationCache reservationCache,
+			ProviderLinkPersistenceService providerLinkPersistenceService,
+			SessionService sessionService
+	) {
 		Settings settings = new Settings();
 		Settings.Connection connection = new Settings.Connection();
 		connection.setReservationTtl(Duration.ofMinutes(1));

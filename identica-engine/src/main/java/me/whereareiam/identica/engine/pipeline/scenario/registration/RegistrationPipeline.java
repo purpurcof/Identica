@@ -88,7 +88,7 @@ public class RegistrationPipeline extends AbstractScenarioPipeline {
 
 		if (base instanceof RegistrationContext registration) {
 			RegistrationContext merged = RegistrationContext.builder()
-					.connectionUniqueId(identity.getUniqueId())
+					.connectionUniqueId(resolveConnectionUniqueId(base, request))
 					.identity(identity)
 					.intendedServer(intendedServer)
 					.build();

@@ -2,7 +2,7 @@ package me.whereareiam.identica.common.registry;
 
 import com.google.inject.Provider;
 import me.whereareiam.identica.Reloadable;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 
 import java.util.Collections;
 import java.util.HashSet;

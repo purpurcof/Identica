@@ -3,7 +3,6 @@ package me.whereareiam.identica.engine.pipeline;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
@@ -30,7 +29,6 @@ import java.util.List;
 import java.util.UUID;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PendingPipelineKickCoordinator implements EventListener {
 	private static final Origin ORIGIN = Origin.core(PendingPipelineKickCoordinator.class);
 	private static final Purpose PURPOSE = Purpose.of("pipeline-expiry");
@@ -38,10 +36,17 @@ public class PendingPipelineKickCoordinator implements EventListener {
 	private final Provider<Messages> messagesProvider;
 	private final IdentityService identityService;
 	private final Scheduler scheduler;
-	private final EventManager eventManager;
 
 	@Inject
-	void registerListeners() {
+	public PendingPipelineKickCoordinator(
+			Provider<Messages> messagesProvider,
+			IdentityService identityService,
+			Scheduler scheduler,
+			EventManager eventManager
+	) {
+		this.messagesProvider = messagesProvider;
+		this.identityService = identityService;
+		this.scheduler = scheduler;
 		eventManager.register(this);
 	}
 

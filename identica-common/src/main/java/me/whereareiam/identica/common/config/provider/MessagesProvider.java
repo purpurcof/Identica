@@ -7,7 +7,7 @@ import me.whereareiam.configura.Config;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.common.config.template.messages.MessagesTemplate;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 
 import java.nio.file.Path;
 

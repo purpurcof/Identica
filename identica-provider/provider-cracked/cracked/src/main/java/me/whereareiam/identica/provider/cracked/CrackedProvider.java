@@ -17,7 +17,7 @@ import me.whereareiam.identica.provider.cracked.database.DatabaseModule;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedPipelineExtension;
 import me.whereareiam.identica.provider.cracked.sentinel.BruteForceSentinelDefinition;
 import me.whereareiam.identica.sentinel.SentinelDefinition;
-import me.whereareiam.identica.registry.Registry;
+import me.whereareiam.identica.Registry;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

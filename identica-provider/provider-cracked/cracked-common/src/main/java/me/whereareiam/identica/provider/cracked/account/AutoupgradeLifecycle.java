@@ -3,7 +3,6 @@ package me.whereareiam.identica.provider.cracked.account;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
@@ -18,15 +17,21 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Locale;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class AutoupgradeLifecycle implements EventListener {
 	private final Provider<CrackedSettings> settingsProvider;
 	private final CryptographyService cryptographyService;
 	private final CrackedAccountService accountService;
-	private final EventManager eventManager;
 
 	@Inject
-	void registerListeners() {
+	public AutoupgradeLifecycle(
+			Provider<CrackedSettings> settingsProvider,
+			CryptographyService cryptographyService,
+			CrackedAccountService accountService,
+			EventManager eventManager
+	) {
+		this.settingsProvider = settingsProvider;
+		this.cryptographyService = cryptographyService;
+		this.accountService = accountService;
 		eventManager.register(this);
 	}
 

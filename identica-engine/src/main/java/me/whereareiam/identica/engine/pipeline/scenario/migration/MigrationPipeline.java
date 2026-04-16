@@ -88,6 +88,16 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 
 			merged.setProvider(migration.getProvider());
 			merged.setTransition(migration.getTransition());
+			Logger.debug(
+					"Migration resume merged connection=%s identica=%s username=%s ip=%s target=%s provider=%s subject=%s",
+					merged.getConnectionUniqueId(),
+					merged.getIdenticaUniqueId(),
+					merged.getUsername(),
+					merged.getIp(),
+					merged.getTargetProviderId(),
+					merged.getProvider() != null ? merged.getProvider().getProviderId() : null,
+					merged.getProvider() != null ? merged.getProvider().getProviderSubject() : null
+			);
 			return merged;
 		}
 

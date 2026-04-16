@@ -28,9 +28,11 @@ import me.whereareiam.identica.model.pipeline.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
 import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckContext;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckResult;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
@@ -39,6 +41,9 @@ import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.ProviderOrigin;
+import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -263,6 +268,10 @@ public class DefaultMigrationService implements MigrationService {
 				))
 				.targetProviderId(pendingMigration.targetProviderId())
 				.build();
+		context.setProvider(resolvePendingProviderContext(
+				pendingMigration.targetProviderId(),
+				pendingMigration.username()
+		));
 
 		PipelineState pipelineState = PipelineState.initial();
 		pipelineState.setPipelineType(PipelineType.MIGRATION);
@@ -277,8 +286,52 @@ public class DefaultMigrationService implements MigrationService {
 
 		PipelineStateReference reference = PipelineStateReference.from(context);
 		pipelineStateStore.save(reference, pipelineState, ttlMs);
+		Logger.debug(
+				"Stored migration pending connection=%s identica=%s target=%s username=%s ip=%s flow=%s",
+				pendingMigration.connectionUniqueId(),
+				identicaUniqueId,
+				pendingMigration.targetProviderId(),
+				pendingMigration.username(),
+				pendingMigration.ip(),
+				flow
+		);
 
 		return true;
+	}
+
+	private @Nullable ProviderContext resolvePendingProviderContext(
+			@Nullable String targetProviderId,
+			@Nullable String username
+	) {
+		String normalizedProviderId = normalize(targetProviderId);
+		String normalizedUsername = normalize(username);
+		if (normalizedProviderId == null || normalizedUsername == null)
+			return null;
+
+		InternalProvider targetProvider = resolveProvider(normalizedProviderId);
+		if (targetProvider == null || targetProvider.getDescriptor() == null)
+			return null;
+
+		if (!targetProvider.getDescriptor().hasCapability(ProviderCapability.OFFLINE_MODE))
+			return null;
+
+		UUID offlineUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(normalizedUsername);
+		if (offlineUniqueId == null)
+			return null;
+
+		ProviderContext provider = ProviderContext.builder()
+				.providerId(normalizedProviderId)
+				.providerSubject(offlineUniqueId.toString())
+				.providerUsername(normalizedUsername)
+				.source(ProviderOrigin.AUTO)
+				.build();
+		Logger.debug(
+				"Prepared offline migration provider context target=%s username=%s subject=%s",
+				normalizedProviderId,
+				normalizedUsername,
+				offlineUniqueId
+		);
+		return provider;
 	}
 
 	private boolean hasPendingMigration(@NotNull UUID connectionUniqueId) {

@@ -1,6 +1,7 @@
 package me.whereareiam.identica.provider.cracked.pipeline.scenario;
 
 import com.google.inject.Singleton;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
@@ -18,13 +19,34 @@ public class CrackedValidationStep extends AbstractCrackedStep {
 	@Override
 	public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
 		ProviderContext provider = context.getProvider();
-		if (provider == null) return CompletableFuture.completedFuture(StepResult.failed(""));
-		if (!CrackedConstants.PROVIDER_ID.equalsIgnoreCase(provider.getProviderId()))
+		if (provider == null) {
+			Logger.debug("Cracked validation missing provider context connection=%s username=%s ip=%s",
+					context.getConnectionUniqueId(),
+					context.getUsername(),
+					context.getIp());
 			return CompletableFuture.completedFuture(StepResult.failed(""));
+		}
+		if (!CrackedConstants.PROVIDER_ID.equalsIgnoreCase(provider.getProviderId())) {
+			Logger.debug("Cracked validation provider mismatch connection=%s expected=%s actual=%s subject=%s",
+					context.getConnectionUniqueId(),
+					CrackedConstants.PROVIDER_ID,
+					provider.getProviderId(),
+					provider.getProviderSubject());
+			return CompletableFuture.completedFuture(StepResult.failed(""));
+		}
 
 		String providerSubject = provider.getProviderSubject();
-		if (providerSubject == null || providerSubject.isBlank())
+		if (providerSubject == null || providerSubject.isBlank()) {
+			Logger.debug("Cracked validation missing provider subject connection=%s username=%s provider=%s",
+					context.getConnectionUniqueId(),
+					context.getUsername(),
+					provider.getProviderId());
 			return CompletableFuture.completedFuture(StepResult.failed(""));
+		}
+		Logger.debug("Cracked validation accepted connection=%s username=%s subject=%s",
+				context.getConnectionUniqueId(),
+				context.getUsername(),
+				providerSubject);
 
 		return CompletableFuture.completedFuture(StepResult.proceed(context));
 	}

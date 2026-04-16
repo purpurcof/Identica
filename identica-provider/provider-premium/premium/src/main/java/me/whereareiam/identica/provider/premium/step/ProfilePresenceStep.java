@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
@@ -42,8 +43,10 @@ public class ProfilePresenceStep extends AbstractProfileVerificationStep {
 
 		String providerSubject = readProfileId(username);
 		if (providerSubject == null || providerSubject.isBlank()) {
+			Logger.debug("Premium profile verification missing snapshot username=%s ip=%s", username, ip);
 			return CompletableFuture.completedFuture(failed(verification));
 		}
+		Logger.debug("Premium profile verification found snapshot username=%s ip=%s subject=%s", username, ip, providerSubject);
 
 		return CompletableFuture.completedFuture(StepResult.proceed(context));
 	}

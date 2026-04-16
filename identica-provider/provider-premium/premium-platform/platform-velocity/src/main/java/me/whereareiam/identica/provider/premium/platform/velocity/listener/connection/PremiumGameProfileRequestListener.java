@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListener;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
@@ -30,9 +31,22 @@ public class PremiumGameProfileRequestListener implements DynamicListener<GamePr
 		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
 		if (offlineUuid != null && !profileId.equals(offlineUuid)) {
 			attemptStore.clearAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
+			Logger.debug(
+					"Premium profile request cleared offline verify attempt username=%s ip=%s profile=%s",
+					username,
+					ip,
+					profileId
+			);
 		}
 
 		profileStore.save(username, profileId.toString());
+		Logger.debug(
+				"Premium profile request stored snapshot username=%s ip=%s profile=%s offline=%s",
+				username,
+				ip,
+				profileId,
+				offlineUuid
+		);
 	}
 
 	private String resolveIp(GameProfileRequestEvent event) {

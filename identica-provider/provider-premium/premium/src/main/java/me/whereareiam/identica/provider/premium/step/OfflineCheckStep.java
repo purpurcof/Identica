@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
@@ -60,13 +61,34 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 		if (offlineUuid != null && providerSubject.equalsIgnoreCase(offlineUuid.toString())) {
 			if (!hasHandshakeAttempt(username, ip)) {
 				markHandshakeAttempt(username, ip);
+				Logger.debug(
+						"Premium offline verification requires reconnect username=%s ip=%s subject=%s offline=%s",
+						username,
+						ip,
+						providerSubject,
+						offlineUuid
+				);
 				return CompletableFuture.completedFuture(requireReconnect(verification, username, ip));
 			}
 
 			clearProfileItem(username);
 			handshakeStore.invalidateInstruction(username, ip);
+			Logger.debug(
+					"Premium offline verification rejected offline session username=%s ip=%s subject=%s offline=%s",
+					username,
+					ip,
+					providerSubject,
+					offlineUuid
+			);
 			return CompletableFuture.completedFuture(StepResult.failed(joinLines(verification.getInvalidSession())));
 		}
+		Logger.debug(
+				"Premium offline verification accepted online session username=%s ip=%s subject=%s offline=%s",
+				username,
+				ip,
+				providerSubject,
+				offlineUuid
+		);
 
 		return CompletableFuture.completedFuture(StepResult.proceed(context));
 	}

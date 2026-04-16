@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityState;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.migration.MigrationContext;
@@ -52,6 +53,7 @@ public class ValidateProviderPhase implements PipelinePhase<IdentityState> {
 
 		MigrationContext context = resolveContext(pipelineState);
 		if (context == null) {
+			Logger.debug("Migration validate provider missing migration context");
 			state.setResult(PipelineResult.failed(providerValidationMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
@@ -61,6 +63,15 @@ public class ValidateProviderPhase implements PipelinePhase<IdentityState> {
 				|| isBlank(provider.getProviderId())
 				|| isBlank(provider.getProviderSubject())
 				|| isBlank(provider.getProviderUsername())) {
+			Logger.debug(
+					"Migration validate provider failed connection=%s identica=%s target=%s provider=%s subject=%s username=%s",
+					context.getConnectionUniqueId(),
+					context.getIdenticaUniqueId(),
+					context.getTargetProviderId(),
+					provider != null ? provider.getProviderId() : null,
+					provider != null ? provider.getProviderSubject() : null,
+					provider != null ? provider.getProviderUsername() : null
+			);
 			state.setResult(PipelineResult.denied(providerValidationMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
@@ -68,9 +79,24 @@ public class ValidateProviderPhase implements PipelinePhase<IdentityState> {
 		String targetProviderId = context.getTargetProviderId();
 		if (targetProviderId != null && !targetProviderId.isBlank()
 				&& !targetProviderId.equalsIgnoreCase(provider.getProviderId())) {
+			Logger.debug(
+					"Migration validate provider target mismatch connection=%s target=%s actual=%s subject=%s",
+					context.getConnectionUniqueId(),
+					targetProviderId,
+					provider.getProviderId(),
+					provider.getProviderSubject()
+			);
 			state.setResult(PipelineResult.denied(providerValidationMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
+		Logger.debug(
+				"Migration validate provider accepted connection=%s target=%s provider=%s subject=%s username=%s",
+				context.getConnectionUniqueId(),
+				targetProviderId,
+				provider.getProviderId(),
+				provider.getProviderSubject(),
+				provider.getProviderUsername()
+		);
 
 		AccountProviderProfile profile = AccountProviderProfile.builder()
 				.providerId(provider.getProviderId())

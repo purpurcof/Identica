@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
@@ -58,6 +59,13 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 
 		context.setProvider(provider);
 		clearProfileItem(username);
+		Logger.debug(
+				"Premium finalize applied provider context connection=%s username=%s ip=%s subject=%s",
+				context.getConnectionUniqueId(),
+				username,
+				ip,
+				providerSubject
+		);
 
 		return CompletableFuture.completedFuture(StepResult.complete(context));
 	}

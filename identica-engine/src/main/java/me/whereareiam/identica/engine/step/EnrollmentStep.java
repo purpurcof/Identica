@@ -9,13 +9,16 @@ import me.whereareiam.identica.event.pipeline.scenario.registration.EnrollmentOp
 import me.whereareiam.identica.model.auth.EnrollmentEntry;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.keystone.model.SerializerOptions;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,17 +30,20 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 public class EnrollmentStep extends InteractiveStep {
 	private final ProviderOperations providerOperations;
+	private final Provider<Settings> settingsProvider;
 	private final Provider<Messages> messagesProvider;
 	private final EventManager eventManager;
 
 	@Inject
 	public EnrollmentStep(
 			ProviderOperations providerOperations,
+			Provider<Settings> settingsProvider,
 			Provider<Messages> messagesProvider,
 			EventManager eventManager
 	) {
 		super("enrollment");
 		this.providerOperations = providerOperations;
+		this.settingsProvider = settingsProvider;
 		this.messagesProvider = messagesProvider;
 		this.eventManager = eventManager;
 	}
@@ -66,8 +72,39 @@ public class EnrollmentStep extends InteractiveStep {
 		if (entries.isEmpty())
 			return CompletableFuture.completedFuture(StepResult.failed(joinLines(enrollment.getEmpty())));
 
+		if (shouldAutoSelectSingleProvider() && entries.size() == 1) {
+			applyProviderSelection(context, entries.getFirst().getProviderId());
+			return CompletableFuture.completedFuture(StepResult.complete(context));
+		}
+
 		String message = buildMessage(enrollment, entries);
 		return CompletableFuture.completedFuture(StepResult.waiting(message));
+	}
+
+	private boolean shouldAutoSelectSingleProvider() {
+		return settingsProvider.get()
+				.getConnection()
+				.getRegistration()
+				.isAutoSelectSingleProvider();
+	}
+
+	private void applyProviderSelection(@NotNull ScenarioContext context, @NotNull String providerId) {
+		ProviderContext provider = context.getProvider();
+		String username = context.getUsername() != null ? context.getUsername() : "";
+		if (provider == null) {
+			context.setProvider(ProviderContext.builder()
+					.providerId(providerId)
+					.providerUsername(username)
+					.source(ProviderOrigin.AUTO)
+					.build());
+			return;
+		}
+
+		provider.setProviderId(providerId);
+		if (provider.getProviderUsername().isBlank())
+			provider.setProviderUsername(username);
+		if (provider.getSource() == null)
+			provider.setSource(ProviderOrigin.AUTO);
 	}
 
 	private List<EnrollmentEntry> buildEntries(

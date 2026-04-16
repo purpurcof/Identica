@@ -234,6 +234,10 @@ public class Settings {
 		 * Policy for concurrent in-flight pipelines for the same identity.
 		 */
 		private @NotNull PipelineConcurrencyPolicy pipelineConcurrencyPolicy;
+		/**
+		 * Whether interactive registration should auto-select the only available provider.
+		 */
+		private boolean autoSelectSingleProvider;
 	}
 
 	@Getter

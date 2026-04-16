@@ -71,6 +71,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
+		scenario.setAutoSelectSingleProvider(false);
 		scenario.setFlow(JourneyType.SEAMLESS);
 		return scenario;
 	}

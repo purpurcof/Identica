@@ -24,7 +24,7 @@ public class PremiumCompletionStep extends AbstractMessageCompletionStep {
 
 	@Override
 	protected @Nullable AbstractMessageCompletionStep.TitleContent title(@NotNull CompletionContext context) {
-		PremiumMessages.Completion.Pipeline messages = resolve(context.getPipelineType());
+		PremiumMessages.Completion.Pipeline messages = resolve(context);
 		if (messages.getTitle() == null) return null;
 
 		return title(
@@ -35,15 +35,19 @@ public class PremiumCompletionStep extends AbstractMessageCompletionStep {
 
 	@Override
 	protected @Nullable List<String> messageLines(@NotNull CompletionContext context) {
-		PremiumMessages.Completion.Pipeline messages = resolve(context.getPipelineType());
+		PremiumMessages.Completion.Pipeline messages = resolve(context);
 		return messages.getBody();
 	}
 
-	private PremiumMessages.Completion.@NotNull Pipeline resolve(@NotNull PipelineType pipelineType) {
+	private PremiumMessages.Completion.@NotNull Pipeline resolve(@NotNull CompletionContext context) {
 		PremiumMessages.Completion completion = messagesProvider.get().getCompletion();
 
-        return pipelineType == PipelineType.MIGRATION
-				? completion.getMigration()
-				: completion.getAuthentication();
+		if (context.getPipelineType() == PipelineType.MIGRATION)
+			return completion.getMigration();
+
+		if (context.isSessionReused() && completion.getSession() != null)
+			return completion.getSession();
+
+		return completion.getAuthentication();
 	}
 }

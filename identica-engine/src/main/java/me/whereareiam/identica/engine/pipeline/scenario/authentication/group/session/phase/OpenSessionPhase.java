@@ -22,6 +22,7 @@ import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -74,33 +75,47 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 		Settings.AuthenticationScenario scenario = settingsProvider.get()
 				.getConnection()
 				.getAuthentication();
-		return sessionService.open(session, scenario.getSessionConcurrencyPolicy())
-				.thenApply(openedSession -> {
-					if (openedSession == null) {
-						state.setResult(PipelineResult.denied(authenticationFailedMessage()));
-						return PhaseResult.pass(state);
-					}
+		return sessionService.findByUniqueId(session.getUniqueId())
+				.thenCompose(existingOptional -> sessionService.open(session, scenario.getSessionConcurrencyPolicy())
+						.thenApply(openedSession -> {
+							if (openedSession == null) {
+								state.setResult(PipelineResult.denied(authenticationFailedMessage()));
+								return PhaseResult.pass(state);
+							}
 
-					authContext.setIdenticaUniqueId(openedSession.getUniqueId());
-					pipelineState.setScenario(authContext);
-					pipelineState.removeItem(IdentityMetaItem.class);
-					publishSessionOpened(pipelineType, authContext.getConnectionUniqueId(), openedSession);
-					state.setResult(result);
-					return PhaseResult.pass(state);
-				});
+							authContext.setIdenticaUniqueId(openedSession.getUniqueId());
+							pipelineState.setScenario(authContext);
+							pipelineState.removeItem(IdentityMetaItem.class);
+							publishSessionOpened(
+									pipelineType,
+									authContext.getConnectionUniqueId(),
+									openedSession,
+									isSessionReused(existingOptional, session)
+							);
+							state.setResult(result);
+							return PhaseResult.pass(state);
+						}));
 	}
 
 	private void publishSessionOpened(
 			@NotNull PipelineType pipelineType,
 			UUID connectionUniqueId,
-			@NotNull Session session
+			@NotNull Session session,
+			boolean sessionReused
 	) {
 		if (connectionUniqueId == null) return;
 		eventManager.call(new SessionOpenedEvent(
 				connectionUniqueId,
 				pipelineType,
-				session
+				session,
+				sessionReused
 		));
+	}
+
+	private boolean isSessionReused(@NotNull Optional<Session> existingOptional, @NotNull Session incomingSession) {
+		return existingOptional
+				.map(existingSession -> existingSession.matchesProviderSubject(incomingSession))
+				.orElse(false);
 	}
 
 	private @NotNull String authenticationFailedMessage() {

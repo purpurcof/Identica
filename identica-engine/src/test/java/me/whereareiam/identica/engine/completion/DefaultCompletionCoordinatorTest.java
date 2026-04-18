@@ -51,6 +51,7 @@ class DefaultCompletionCoordinatorTest {
 				.pipelineType(PipelineType.MIGRATION)
 				.connectionUniqueId(connectionUniqueId)
 				.identicaUniqueId(identicaUniqueId)
+				.sessionReused(true)
 				.build();
 		Session session = Session.builder()
 				.uniqueId(identicaUniqueId)
@@ -81,6 +82,7 @@ class DefaultCompletionCoordinatorTest {
 						&& context.getPipelineType() == PipelineType.MIGRATION
 						&& context.getSession().getProviderId().equals("cracked")
 						&& context.getProvider() == provider
+						&& context.isSessionReused()
 		));
 	}
 

@@ -36,7 +36,7 @@ public class CompletionPendingLifecycle implements EventListener {
 	public void onSessionOpened(@NotNull SessionOpenedEvent event) {
 		var identity = identityService.find(event.getConnectionUniqueId()).orElse(null);
 		if (identity != null) {
-			completionCoordinator.execute(identity, event.getPipelineType(), event.getSession());
+			completionCoordinator.execute(identity, event.getPipelineType(), event.getSession(), event.isSessionReused());
 			return;
 		}
 
@@ -44,6 +44,7 @@ public class CompletionPendingLifecycle implements EventListener {
 				.pipelineType(event.getPipelineType())
 				.connectionUniqueId(event.getConnectionUniqueId())
 				.identicaUniqueId(event.getSession().getUniqueId())
+				.sessionReused(event.isSessionReused())
 				.build());
 	}
 

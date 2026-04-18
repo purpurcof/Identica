@@ -60,6 +60,8 @@ class OpenSessionCompletionPendingTest {
 
 		when(sessionService.open(session, SessionConcurrencyPolicy.REPLACE_EXISTING))
 				.thenReturn(CompletableFuture.completedFuture(session));
+		when(sessionService.findByUniqueId(identicaUniqueId))
+				.thenReturn(CompletableFuture.completedFuture(java.util.Optional.empty()));
 
 		phase.execute(pipelineState, state).toCompletableFuture().join();
 
@@ -68,6 +70,7 @@ class OpenSessionCompletionPendingTest {
 				&& requested.getPipelineType() == PipelineType.AUTHENTICATION
 				&& identicaUniqueId.equals(requested.getSession().getUniqueId())
 				&& "cracked".equals(requested.getSession().getProviderId())
+				&& !requested.isSessionReused()
 		));
 	}
 

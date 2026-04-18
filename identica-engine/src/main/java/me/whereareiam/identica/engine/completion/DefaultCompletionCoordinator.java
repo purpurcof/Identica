@@ -46,14 +46,15 @@ public class DefaultCompletionCoordinator implements CompletionCoordinator {
 		Session session = sessionService.findByUniqueId(identicaUniqueId).join().orElse(null);
 		if (session == null) return;
 
-		execute(identity, pendingState.getPipelineType(), session);
+		execute(identity, pendingState.getPipelineType(), session, pendingState.isSessionReused());
 	}
 
 	@Override
 	public void execute(
 			@NotNull Identity identity,
 			@NotNull PipelineType pipelineType,
-			@NotNull Session session
+			@NotNull Session session,
+			boolean sessionReused
 	) {
 		String providerId = session.getProviderId();
 		if (providerId == null || providerId.isBlank())
@@ -65,6 +66,7 @@ public class DefaultCompletionCoordinator implements CompletionCoordinator {
 				.pipelineType(pipelineType)
 				.session(session)
 				.provider(provider)
+				.sessionReused(sessionReused)
 				.build();
 
 		List<CompletionStep> steps = completionExtensionRegistry.resolve(providerId, pipelineType);

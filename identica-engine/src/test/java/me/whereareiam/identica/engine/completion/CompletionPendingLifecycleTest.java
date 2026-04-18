@@ -50,10 +50,11 @@ class CompletionPendingLifecycleTest {
 		lifecycle.onSessionOpened(new SessionOpenedEvent(
 				identity.getUniqueId(),
 				PipelineType.AUTHENTICATION,
-				session
+				session,
+				true
 		));
 
-		verify(completionCoordinator).execute(identity, PipelineType.AUTHENTICATION, session);
+		verify(completionCoordinator).execute(identity, PipelineType.AUTHENTICATION, session, true);
 		verify(pendingStore, never()).put(any(), any());
 	}
 

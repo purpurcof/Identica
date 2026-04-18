@@ -18,4 +18,5 @@ public class SessionOpenedEvent implements Event, SynchronousEvent {
 	private final @NotNull UUID connectionUniqueId;
 	private final @NotNull PipelineType pipelineType;
 	private final @NotNull Session session;
+	private final boolean sessionReused;
 }

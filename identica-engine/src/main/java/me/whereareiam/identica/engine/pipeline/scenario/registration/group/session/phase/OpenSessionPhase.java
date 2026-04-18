@@ -86,7 +86,8 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 		eventManager.call(new SessionOpenedEvent(
 				connectionUniqueId,
 				PipelineType.REGISTRATION,
-				session
+				session,
+				false
 		));
 	}
 

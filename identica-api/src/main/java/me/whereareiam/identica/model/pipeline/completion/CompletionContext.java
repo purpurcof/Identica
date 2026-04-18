@@ -24,6 +24,7 @@ public class CompletionContext {
 	private @NotNull PipelineType pipelineType;
 	private @NotNull Session session;
 	private @Nullable InternalProvider provider;
+	private boolean sessionReused;
 
 	public @Nullable UUID getIdenticaUniqueId() {
 		return session.getUniqueId();

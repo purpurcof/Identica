@@ -20,4 +20,5 @@ public class CompletionPendingState {
 	private @NotNull PipelineType pipelineType;
 	private @Nullable UUID connectionUniqueId;
 	private @Nullable UUID identicaUniqueId;
+	private boolean sessionReused;
 }

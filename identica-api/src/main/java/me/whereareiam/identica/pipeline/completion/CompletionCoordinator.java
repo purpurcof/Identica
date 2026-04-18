@@ -11,9 +11,18 @@ public interface CompletionCoordinator {
 
 	void execute(@NotNull Identity identity, @NotNull CompletionPendingState pendingState);
 
-	void execute(
+	default void execute(
 			@NotNull Identity identity,
 			@NotNull PipelineType pipelineType,
 			@NotNull Session session
+	) {
+		execute(identity, pipelineType, session, false);
+	}
+
+	void execute(
+			@NotNull Identity identity,
+			@NotNull PipelineType pipelineType,
+			@NotNull Session session,
+			boolean sessionReused
 	);
 }

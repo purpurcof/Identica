@@ -70,8 +70,8 @@ public abstract class AbstractMessageCompletionStep extends AbstractCompletionSt
 	) {
 		if (titleContent == null) return;
 
-		String resolvedTitle = render(titleContent.title(), placeholders, format);
-		String resolvedSubtitle = render(titleContent.subtitle(), placeholders, format);
+		String resolvedTitle = renderTitle(titleContent.title(), placeholders, format);
+		String resolvedSubtitle = renderTitle(titleContent.subtitle(), placeholders, format);
 		if (resolvedTitle == null && resolvedSubtitle == null) return;
 
 		Component titleComponent = Serializer.serialize(identity, resolvedTitle == null ? "" : resolvedTitle);
@@ -85,7 +85,7 @@ public abstract class AbstractMessageCompletionStep extends AbstractCompletionSt
 			@NotNull Map<String, String> placeholders,
 			@NotNull SerializerOptions.PlaceholderFormat format
 	) {
-		String body = render(joinLines(bodyLines), placeholders, format);
+		String body = applyPlaceholders(joinLines(bodyLines), placeholders, format);
 		if (body == null)
 			return;
 
@@ -109,10 +109,9 @@ public abstract class AbstractMessageCompletionStep extends AbstractCompletionSt
 	private static @Nullable String joinLines(@Nullable List<String> lines) {
 		if (lines == null || lines.isEmpty()) return null;
 
-		String joined = String.join("\n", lines.stream()
+		return String.join("\n", lines.stream()
 				.map(line -> line == null ? "" : line)
 				.toList());
-		return joined.isBlank() ? null : joined;
 	}
 
 	private static @Nullable String applyPlaceholders(
@@ -132,7 +131,7 @@ public abstract class AbstractMessageCompletionStep extends AbstractCompletionSt
 		return resolved;
 	}
 
-	private static @Nullable String render(
+	private static @Nullable String renderTitle(
 			@Nullable String value,
 			@NotNull Map<String, String> placeholders,
 			@NotNull SerializerOptions.PlaceholderFormat format

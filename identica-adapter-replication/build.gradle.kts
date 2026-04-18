@@ -1,7 +1,11 @@
-dependencies {
-    "compileOnly"(rootProject.libs.jedis)
+plugins {
+    id("identica.java-common")
+}
 
-    "testImplementation"(rootProject.libs.jedis)
-    "testImplementation"(rootProject.libs.testcontainers.junit)
-    "testImplementation"(rootProject.libs.testcontainers.redis)
+dependencies {
+    compileOnly(libs.jedis)
+
+    testImplementation(libs.jedis)
+    testImplementation(libs.testcontainers.junit)
+    testImplementation(libs.testcontainers.redis)
 }

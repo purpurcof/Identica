@@ -1,4 +1,11 @@
+plugins {
+    id("identica.java-common")
+}
+
 dependencies {
-    "compileOnly"(rootProject.libs.bcrypt)
-    "testImplementation"(rootProject.libs.bcrypt)
+    compileOnly(projects.providerCrackedApi)
+    testImplementation(projects.providerCrackedApi)
+
+    compileOnly(libs.bcrypt)
+    testImplementation(libs.bcrypt)
 }

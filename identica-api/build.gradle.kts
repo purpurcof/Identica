@@ -1,4 +1,7 @@
+import org.gradle.api.artifacts.VersionCatalogsExtension
+
 plugins {
+    id("identica.java-common")
     alias(libs.plugins.buildconfig)
 }
 

@@ -1,5 +1,9 @@
+plugins {
+    id("identica.java-common")
+}
+
 dependencies {
-    "implementation"(rootProject.libs.attache.standalone)
-    "testImplementation"(rootProject.libs.keystone)
-    "testImplementation"(rootProject.libs.commandant)
+    implementation(libs.attache.standalone)
+    testImplementation(libs.keystone)
+    testImplementation(libs.commandant)
 }

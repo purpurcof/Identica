@@ -1,4 +1,8 @@
+plugins {
+    id("identica.java-common")
+}
+
 dependencies {
-	testImplementation(project(":identica-common"))
-	testImplementation(rootProject.libs.keystone)
+    testImplementation(projects.identicaCommon)
+    testImplementation(libs.keystone)
 }

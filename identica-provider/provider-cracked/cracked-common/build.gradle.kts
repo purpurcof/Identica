@@ -1,4 +1,8 @@
+plugins {
+    id("identica.java-common")
+}
+
 dependencies {
-    "compileOnly"(project(":identica-provider:provider-cracked:cracked-api"))
-    "testImplementation"(project(":identica-provider:provider-cracked:cracked-api"))
+    compileOnly(projects.providerCrackedApi)
+    testImplementation(projects.providerCrackedApi)
 }

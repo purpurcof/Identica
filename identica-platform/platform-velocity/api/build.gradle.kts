@@ -1,3 +1,7 @@
+plugins {
+    id("identica.java-common")
+}
+
 java {
     withSourcesJar()
     withJavadocJar()
@@ -6,8 +10,8 @@ java {
 group = "me.whereareiam.identica.platform.velocity"
 
 dependencies {
-    api(project(":identica-api"))
-    "compileOnly"(rootProject.libs.velocity)
+    api(projects.identicaApi)
+    compileOnly(libs.velocity)
 }
 
 publishing {
@@ -23,7 +27,7 @@ publishing {
     }
 }
 
-tasks.withType<Javadoc> {
+tasks.withType<Javadoc>().configureEach {
     (options as StandardJavadocDocletOptions).apply {
         addStringOption("Xdoclint:none", "-quiet")
         title = "Identica Velocity API"

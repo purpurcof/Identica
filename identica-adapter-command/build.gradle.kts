@@ -1,3 +1,7 @@
+plugins {
+    id("identica.java-common")
+}
+
 dependencies {
-    "compileOnly"(rootProject.libs.bundles.cloud)
+    compileOnly(libs.bundles.cloud)
 }

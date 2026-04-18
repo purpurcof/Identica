@@ -1,12 +1,16 @@
+plugins {
+    id("identica.java-common")
+}
+
 dependencies {
-    "compileOnly"(project(":identica-provider:provider-cracked:cracked-api"))
-    "testImplementation"(project(":identica-provider:provider-cracked:cracked-api"))
+    compileOnly(projects.providerCrackedApi)
+    testImplementation(projects.providerCrackedApi)
 
-    "compileOnly"(rootProject.libs.jdbi.core)
-    "compileOnly"(rootProject.libs.jdbi.sqlobject)
-    "compileOnly"(rootProject.libs.dialectica)
+    compileOnly(libs.jdbi.core)
+    compileOnly(libs.jdbi.sqlobject)
+    compileOnly(libs.dialectica)
 
-    "testImplementation"(rootProject.libs.jdbi.core)
-    "testImplementation"(rootProject.libs.jdbi.sqlobject)
-    "testImplementation"(rootProject.libs.dialectica)
+    testImplementation(libs.jdbi.core)
+    testImplementation(libs.jdbi.sqlobject)
+    testImplementation(libs.dialectica)
 }

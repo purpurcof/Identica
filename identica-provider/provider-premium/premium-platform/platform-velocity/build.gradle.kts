@@ -1,4 +1,11 @@
+plugins {
+    id("identica.java-common")
+}
+
 dependencies {
-    "compileOnly"(project(":identica-platform:platform-velocity:api"))
-    "compileOnly"(rootProject.libs.velocity)
+    compileOnly(projects.providerPremiumApi)
+    testImplementation(projects.providerPremiumApi)
+
+    compileOnly(projects.platformVelocityApi)
+    compileOnly(libs.velocity)
 }

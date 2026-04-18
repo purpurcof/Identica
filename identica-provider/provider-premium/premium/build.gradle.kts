@@ -1,19 +1,17 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.jvm.tasks.Jar
 
 plugins {
-    alias(libs.plugins.shadow)
+    id("identica.shadow-runtime")
 }
 
 dependencies {
-    "implementation"(project(":identica-provider:provider-premium:premium-api"))
-    "implementation"(project(":identica-provider:provider-premium:premium-platform:platform-velocity"))
-    "testImplementation"(project(":identica-provider:provider-premium:premium-api"))
-    "testImplementation"(project(":identica-provider:provider-premium:premium-platform:platform-velocity"))
+    implementation(projects.providerPremiumApi)
+    implementation(projects.providerPremiumPlatformVelocity)
+    testImplementation(projects.providerPremiumApi)
+    testImplementation(projects.providerPremiumPlatformVelocity)
 }
 
-tasks.named<ShadowJar>("shadowJar") {
+tasks.named<Jar>("shadowJar").configure {
     archiveBaseName.set("Premium")
     archiveClassifier.set("")
-    relocate("org.jdbi", "me.whereareiam.identica.library.jdbi")
-    relocate("me.whereareiam.dialectica", "me.whereareiam.identica.library.dialectica")
 }

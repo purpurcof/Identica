@@ -1,9 +1,13 @@
-dependencies {
-    "compileOnly"(rootProject.libs.bundles.database)
+plugins {
+    id("identica.java-common")
+}
 
-    "testImplementation"(rootProject.libs.bundles.database)
-    "testImplementation"(rootProject.libs.dialectica)
-    "testImplementation"(rootProject.libs.testcontainers.junit)
-    "testImplementation"(rootProject.libs.testcontainers.postgresql)
-    "testImplementation"(rootProject.libs.testcontainers.mariadb)
+dependencies {
+    compileOnly(libs.bundles.database)
+
+    testImplementation(libs.bundles.database)
+    testImplementation(libs.dialectica)
+    testImplementation(libs.testcontainers.junit)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.mariadb)
 }

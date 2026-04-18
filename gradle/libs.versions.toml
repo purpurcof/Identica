@@ -54,6 +54,7 @@ bcrypt = "0.10.2"
 
 # compile time processing
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
+shadow-gradle-plugin = { group = "com.gradleup.shadow", name = "shadow-gradle-plugin", version.ref = "shadow" }
 
 # general
 attache-common = { group = "me.whereareiam", name = "attache-common", version.ref = "attache" }

@@ -1,5 +1,6 @@
 package me.whereareiam.identica.engine.completion;
 
+import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
 import me.whereareiam.identica.pipeline.completion.CompletionCoordinator;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.event.EventManager;

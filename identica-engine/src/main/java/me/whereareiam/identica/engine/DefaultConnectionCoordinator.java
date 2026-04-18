@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.engine.prepare.PreparePipeline;
+import me.whereareiam.identica.engine.pipeline.prepare.PreparePipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.ScenarioPipeline;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;

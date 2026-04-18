@@ -41,6 +41,12 @@ public final class VelocityLoggingHelper implements LoggingHelper {
 			logger.info(format(message, objects));
 	}
 
+	@Override
+	public void trace(String message, Object... objects) {
+		if (logger != null && settings.get().getLevel() >= 4)
+			logger.info(format(message, objects));
+	}
+
 	private String format(String message, Object... objects) {
 		if (message == null) return "null";
 		return objects == null || objects.length == 0 ? message : String.format(message, objects);

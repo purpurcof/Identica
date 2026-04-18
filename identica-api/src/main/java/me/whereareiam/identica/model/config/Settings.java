@@ -23,7 +23,7 @@ import java.util.Map;
 @ToString
 public class Settings {
 	/**
-	 * Debug level for logging.
+	 * Verbosity level for logging.
 	 */
 	private int level;
 	private @NotNull Connection connection;

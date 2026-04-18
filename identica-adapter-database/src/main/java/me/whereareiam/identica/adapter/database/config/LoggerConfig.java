@@ -23,12 +23,12 @@ public final class LoggerConfig {
 		jdbi.getConfig(SqlStatements.class).setSqlLogger(new SqlLogger() {
 			@Override
 			public void logBeforeExecution(StatementContext context) {
-				Logger.debug("Executing SQL: %s", context.getRenderedSql());
+				Logger.trace("Executing SQL: %s", context.getRenderedSql());
 			}
 
 			@Override
 			public void logAfterExecution(StatementContext context) {
-				Logger.debug("SQL completed: %s", context.getRenderedSql());
+				Logger.trace("SQL completed: %s", context.getRenderedSql());
 			}
 
 			@Override
@@ -38,4 +38,3 @@ public final class LoggerConfig {
 		});
 	}
 }
-

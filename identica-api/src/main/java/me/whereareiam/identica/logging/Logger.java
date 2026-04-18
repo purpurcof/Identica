@@ -22,4 +22,8 @@ public final class Logger {
 	public static void debug(String message, Object... objects) {
 		if (loggingHelper != null) loggingHelper.debug(message, objects);
 	}
+
+	public static void trace(String message, Object... objects) {
+		if (loggingHelper != null) loggingHelper.trace(message, objects);
+	}
 }

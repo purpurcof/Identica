@@ -42,4 +42,13 @@ public interface LoggingHelper {
 	 * @param objects optional objects to format into the message
 	 */
 	void debug(String message, Object... objects);
+
+	/**
+	 * Logs a trace message.
+	 * These messages are intended for the most verbose diagnostics.
+	 *
+	 * @param message the message template to log
+	 * @param objects optional objects to format into the message
+	 */
+	void trace(String message, Object... objects);
 }

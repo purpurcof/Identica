@@ -17,7 +17,7 @@ import me.whereareiam.identica.engine.prepare.group.profile.ProfileGroup;
 import me.whereareiam.identica.engine.prepare.group.profile.phase.LoadPrepareAccountPhase;
 import me.whereareiam.identica.engine.prepare.group.profile.phase.ResolveProfilePhase;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
-import me.whereareiam.identica.pipeline.phase.PhasePlacement;
+import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton

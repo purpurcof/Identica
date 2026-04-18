@@ -14,6 +14,8 @@ import me.whereareiam.configura.writer.ConfigWriter;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
+import me.whereareiam.identica.common.completion.DefaultCompletionPendingStore;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.common.handshake.DefaultHandshakeStore;
 import me.whereareiam.identica.common.identity.account.DefaultRegistrationAccountService;
@@ -56,7 +58,7 @@ import me.whereareiam.identica.common.routing.RoutingLifecycle;
 import me.whereareiam.identica.common.routing.RoutingTargetMissingListener;
 import me.whereareiam.identica.common.identity.session.DefaultSessionService;
 import me.whereareiam.identica.common.identity.session.SessionRefreshCoordinator;
-import me.whereareiam.identica.pipeline.state.PrepareStateStore;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
@@ -130,6 +132,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(HandshakeStore.class).to(DefaultHandshakeStore.class).asEagerSingleton();
 		bind(ProviderAttemptStore.class).to(DefaultProviderAttemptStore.class).asEagerSingleton();
 		bind(PrepareStateStore.class).to(DefaultPrepareStateStore.class).asEagerSingleton();
+		bind(CompletionPendingStore.class).to(DefaultCompletionPendingStore.class).asEagerSingleton();
 
 		// Replication
 		OptionalBinder.newOptionalBinder(binder(), Key.get(ReplicationAdapter.class, Names.named("replicationAdapter")))

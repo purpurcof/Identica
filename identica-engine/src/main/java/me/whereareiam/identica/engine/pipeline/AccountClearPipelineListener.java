@@ -9,7 +9,7 @@ import me.whereareiam.identica.event.connection.ConnectionPendingClearedEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;

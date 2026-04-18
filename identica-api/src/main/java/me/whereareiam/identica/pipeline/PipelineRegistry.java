@@ -1,9 +1,7 @@
 package me.whereareiam.identica.pipeline;
 
-import me.whereareiam.identica.pipeline.group.PipelineGroup;
-import me.whereareiam.identica.model.pipeline.PipelineState;
-import me.whereareiam.identica.pipeline.phase.PhasePlacement;
-import me.whereareiam.identica.pipeline.phase.PipelinePhase;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

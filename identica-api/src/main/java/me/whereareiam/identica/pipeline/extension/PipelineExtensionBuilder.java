@@ -1,8 +1,8 @@
 package me.whereareiam.identica.pipeline.extension;
 
-import me.whereareiam.identica.pipeline.group.PipelineGroup;
-import me.whereareiam.identica.pipeline.phase.PhasePlacement;
-import me.whereareiam.identica.pipeline.phase.PipelinePhase;
+import me.whereareiam.identica.pipeline.PipelineGroup;
+import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
+import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.pipeline.journey.step.Step;

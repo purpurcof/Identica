@@ -2,7 +2,6 @@ package me.whereareiam.identica.engine.step;
 
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.common.config.template.SettingsTemplate;
-import me.whereareiam.identica.common.config.template.messages.MessagesTemplate;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.config.Messages;
@@ -148,7 +147,39 @@ class EnrollmentStepTest {
 	}
 
 	private Messages messages() {
-		return new MessagesTemplate().supply(new Messages());
+		Messages messages = new Messages();
+		Messages.Connection connection = new Messages.Connection();
+		Messages.Connection.Journey journey = new Messages.Connection.Journey();
+		Messages.Connection.Journey.Stage stage = new Messages.Connection.Journey.Stage();
+		stage.setNoCompletion(List.of("no-completion"));
+		journey.setStage(stage);
+
+		Messages.Connection.Journey.Step step = new Messages.Connection.Journey.Step();
+		step.setNoStatus(List.of("no-status"));
+		Messages.Connection.Journey.Step.Enrollment enrollment = new Messages.Connection.Journey.Step.Enrollment();
+		enrollment.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Select an authentication method for account</white>",
+				"  <white>It can be changed later on.</white>",
+				" ",
+				"  <gray>Available providers:</gray>",
+				"{entries}",
+				" "
+		));
+		Messages.Connection.Journey.Step.Enrollment.EntryFormat entryFormat =
+				new Messages.Connection.Journey.Step.Enrollment.EntryFormat();
+		entryFormat.setFormat("   <dark_gray><click:run_command:/identica enroll {providerId}>▪ <gray>[{providerName}]:</gray> <white>{description}</click>");
+		entryFormat.setEmptyFormat("   <dark_gray><click:run_command:/identica enroll {providerId}>▪ <gray>[{providerName}]:</gray></click>");
+		enrollment.setEntryFormat(entryFormat);
+		enrollment.setEmpty(List.of("empty"));
+		enrollment.setDescriptions(java.util.Map.of());
+		step.setEnrollment(enrollment);
+		journey.setStep(step);
+		connection.setJourney(journey);
+		messages.setConnection(connection);
+		return messages;
 	}
 
 	private RegistrationContext context(String username) {

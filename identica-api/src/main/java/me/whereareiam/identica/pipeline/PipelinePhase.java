@@ -1,6 +1,7 @@
-package me.whereareiam.identica.pipeline.phase;
+package me.whereareiam.identica.pipeline;
 
-import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletionStage;

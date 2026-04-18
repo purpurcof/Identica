@@ -7,7 +7,7 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.type.SeamlessStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.provider.premium.PremiumVerifyAttemptItem;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;

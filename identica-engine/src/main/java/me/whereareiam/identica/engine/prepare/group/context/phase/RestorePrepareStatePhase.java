@@ -3,13 +3,13 @@ package me.whereareiam.identica.engine.prepare.group.context.phase;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.pipeline.state.PrepareStateStore;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.engine.prepare.group.PrepareGroupState;
-import me.whereareiam.identica.model.prepare.PrepareDecision;
-import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.pipeline.phase.PhaseResult;
-import me.whereareiam.identica.pipeline.phase.PipelinePhase;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.pipeline.PipelinePhase;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;

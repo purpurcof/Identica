@@ -3,7 +3,7 @@ package me.whereareiam.identica.engine.pipeline.scenario.authentication;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractJourneyRegistry;
-import me.whereareiam.identica.pipeline.journey.registry.AuthenticationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;

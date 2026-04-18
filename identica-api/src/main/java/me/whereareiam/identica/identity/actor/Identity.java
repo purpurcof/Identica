@@ -3,6 +3,7 @@ package me.whereareiam.identica.identity.actor;
 import me.whereareiam.keystone.Actor;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -43,6 +44,13 @@ public abstract class Identity extends ConnectionIdentity implements Actor {
 	 */
 	@Override
 	public abstract void sendMessage(@NotNull Component message);
+
+	/**
+	 * Sends a title to this identity.
+	 *
+	 * @param title title payload
+	 */
+	public abstract void sendTitle(@NotNull Title title);
 
 	/**
 	 * Checks whether this identity has the specified permission.

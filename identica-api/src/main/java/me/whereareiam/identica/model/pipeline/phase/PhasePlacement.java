@@ -1,4 +1,4 @@
-package me.whereareiam.identica.pipeline.phase;
+package me.whereareiam.identica.model.pipeline.phase;
 
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;

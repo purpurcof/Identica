@@ -1,4 +1,4 @@
-package me.whereareiam.identica.pipeline.state;
+package me.whereareiam.identica.model.pipeline.state;
 
 import lombok.Builder;
 import lombok.Getter;

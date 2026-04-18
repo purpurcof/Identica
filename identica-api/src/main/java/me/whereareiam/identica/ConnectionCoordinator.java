@@ -4,8 +4,8 @@ import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.prepare.PrepareDecision;
-import me.whereareiam.identica.model.prepare.PrepareRequest;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
+import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

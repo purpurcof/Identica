@@ -6,18 +6,22 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.group.session.SessionState;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.PipelineState;
-import me.whereareiam.identica.pipeline.phase.PipelinePhase;
-import me.whereareiam.identica.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -26,6 +30,7 @@ import java.util.concurrent.CompletionStage;
 public class OpenSessionPhase implements PipelinePhase<SessionState> {
 	private final SessionService sessionService;
 	private final Provider<Messages> messagesProvider;
+	private final EventManager eventManager;
 
 	@Override
 	public @NotNull String id() {
@@ -68,9 +73,22 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 					context.setIdenticaUniqueId(openedSession.getUniqueId());
 					pipelineState.setScenario(context);
 					pipelineState.removeItem(IdentityMetaItem.class);
+					publishSessionOpened(context.getConnectionUniqueId(), openedSession);
 					state.setResult(result);
 					return PhaseResult.pass(state);
 				});
+	}
+
+	private void publishSessionOpened(
+			UUID connectionUniqueId,
+			@NotNull Session session
+	) {
+		if (connectionUniqueId == null) return;
+		eventManager.call(new SessionOpenedEvent(
+				connectionUniqueId,
+				PipelineType.MIGRATION,
+				session
+		));
 	}
 
 	private @NotNull String migrationFailedMessage() {

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.model.prepare;
+package me.whereareiam.identica.model.pipeline.prepare;
 
 import lombok.Builder;
 import lombok.Getter;

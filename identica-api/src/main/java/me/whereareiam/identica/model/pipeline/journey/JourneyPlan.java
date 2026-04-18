@@ -1,4 +1,4 @@
-package me.whereareiam.identica.pipeline.journey;
+package me.whereareiam.identica.model.pipeline.journey;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

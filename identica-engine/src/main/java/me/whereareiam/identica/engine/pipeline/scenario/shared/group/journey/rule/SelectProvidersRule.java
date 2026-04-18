@@ -12,12 +12,12 @@ import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecution
 import me.whereareiam.identica.pipeline.journey.rule.JourneyRule;
 import me.whereareiam.identica.model.pipeline.journey.JourneyRuleContext;
 import me.whereareiam.identica.pipeline.journey.rule.JourneyRuleScope;
-import me.whereareiam.identica.pipeline.journey.registry.AuthenticationJourneyRegistry;
-import me.whereareiam.identica.pipeline.journey.JourneyPlan;
+import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
+import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
-import me.whereareiam.identica.pipeline.journey.registry.RegistrationJourneyRegistry;
-import me.whereareiam.identica.pipeline.journey.registry.MigrationJourneyRegistry;
-import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
@@ -29,7 +29,7 @@ import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
-package me.whereareiam.identica.pipeline.state;
+package me.whereareiam.identica.pipeline.prepare;
 
-import me.whereareiam.identica.model.prepare.PrepareDecision;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

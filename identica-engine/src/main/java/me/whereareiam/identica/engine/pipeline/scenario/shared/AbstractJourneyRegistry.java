@@ -2,7 +2,7 @@ package me.whereareiam.identica.engine.pipeline.scenario.shared;
 
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.JourneyPlan;
+import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;

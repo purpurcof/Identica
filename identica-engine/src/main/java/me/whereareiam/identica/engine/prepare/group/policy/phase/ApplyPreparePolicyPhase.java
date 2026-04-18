@@ -11,12 +11,12 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.AccountDecision;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.prepare.PrepareDecisionItem;
-import me.whereareiam.identica.pipeline.phase.PhaseResult;
-import me.whereareiam.identica.pipeline.phase.PipelinePhase;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.pipeline.PipelinePhase;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;

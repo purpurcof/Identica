@@ -1,7 +1,7 @@
 package me.whereareiam.identica.pipeline.journey.registry;
 
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.JourneyPlan;
+import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.pipeline.journey.step.Step;

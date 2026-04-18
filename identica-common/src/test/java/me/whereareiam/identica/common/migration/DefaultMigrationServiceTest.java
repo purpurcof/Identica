@@ -14,10 +14,10 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.migration.MigrationContext;
-import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
@@ -119,7 +119,7 @@ class DefaultMigrationServiceTest {
 				sessionService,
 				identityService,
 				Settings::new,
-				Commands::new,
+				this::commands,
 				Messages::new
 		);
 
@@ -174,7 +174,7 @@ class DefaultMigrationServiceTest {
 				sessionService,
 				identityService,
 				Settings::new,
-				Commands::new,
+				this::commands,
 				Messages::new
 		);
 
@@ -188,5 +188,18 @@ class DefaultMigrationServiceTest {
 		assertEquals(MigrationInitiator.ADMIN, pendingMigration.getInitiator());
 		assertEquals(initiatorUniqueId, pendingMigration.getInitiatorUniqueId());
 		assertEquals(PendingMigration.Phase.STARTED, pendingMigration.getPhase());
+	}
+
+	private Commands commands() {
+		Commands commands = new Commands();
+		Commands.Behavior behavior = new Commands.Behavior();
+		Commands.Behavior.Migration migration = new Commands.Behavior.Migration();
+		migration.setConfirmTtl(Duration.ofSeconds(60));
+		behavior.setMigration(migration);
+		behavior.setSuggestions(new Commands.Behavior.Suggestions());
+		behavior.setClear(new Commands.Behavior.Clear());
+		behavior.setSessions(new Commands.Behavior.Sessions());
+		commands.setBehavior(behavior);
+		return commands;
 	}
 }

@@ -8,7 +8,7 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.Player;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.adapter.ConnectionDecisionAdapter;
-import me.whereareiam.identica.pipeline.state.PrepareStateStore;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
@@ -17,7 +17,7 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.model.prepare.PrepareDecision;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 

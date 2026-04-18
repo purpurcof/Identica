@@ -6,7 +6,7 @@ import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractJourneyRe
 import me.whereareiam.identica.engine.step.EnrollmentStep;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
-import me.whereareiam.identica.pipeline.journey.registry.RegistrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import me.whereareiam.identica.type.pipeline.journey.StageType;

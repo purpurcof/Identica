@@ -4,6 +4,7 @@ import com.velocitypowered.api.proxy.Player;
 import me.whereareiam.identica.identity.actor.Identity;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
@@ -27,6 +28,11 @@ public class VelocityCommandPlayer extends Identity {
 	@Override
 	public void sendMessage(@NotNull Component message) {
 		player.sendMessage(message);
+	}
+
+	@Override
+	public void sendTitle(@NotNull Title title) {
+		player.showTitle(title);
 	}
 
 	@Override

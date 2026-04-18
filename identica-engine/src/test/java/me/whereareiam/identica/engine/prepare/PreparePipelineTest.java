@@ -1,6 +1,6 @@
 package me.whereareiam.identica.engine.prepare;
 
-import me.whereareiam.identica.pipeline.state.PrepareStateStore;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.ProviderProfilePersistenceService;
@@ -25,8 +25,8 @@ import me.whereareiam.identica.engine.prepare.group.profile.phase.LoadPrepareAcc
 import me.whereareiam.identica.engine.prepare.group.profile.phase.ResolveProfilePhase;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
-import me.whereareiam.identica.model.prepare.PrepareDecision;
-import me.whereareiam.identica.model.prepare.PrepareRequest;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
+import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
 import me.whereareiam.identica.type.PrepareStage;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;

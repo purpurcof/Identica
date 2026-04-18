@@ -1,8 +1,9 @@
-package me.whereareiam.identica.model.pipeline;
+package me.whereareiam.identica.model.pipeline.state;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import me.whereareiam.identica.model.pipeline.PipelineCursor;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.migration.MigrationContext;

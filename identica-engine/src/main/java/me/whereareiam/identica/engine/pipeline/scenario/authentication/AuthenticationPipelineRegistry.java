@@ -23,7 +23,7 @@ import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.pha
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.LoadContextPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.ResolveFlowPhase;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
-import me.whereareiam.identica.pipeline.phase.PhasePlacement;
+import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton

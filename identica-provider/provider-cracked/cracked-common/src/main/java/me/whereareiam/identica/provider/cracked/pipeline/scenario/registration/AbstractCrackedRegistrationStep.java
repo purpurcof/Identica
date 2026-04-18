@@ -2,9 +2,9 @@ package me.whereareiam.identica.provider.cracked.pipeline.scenario.registration;
 
 import com.google.inject.Provider;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.AbstractCrackedStep;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;

@@ -3,12 +3,12 @@ package me.whereareiam.identica.engine.pipeline;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.model.pipeline.PipelineCursor;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
-import me.whereareiam.identica.pipeline.group.GroupOutcome;
-import me.whereareiam.identica.pipeline.group.PipelineGroup;
-import me.whereareiam.identica.pipeline.phase.PhaseResult;
-import me.whereareiam.identica.pipeline.phase.PipelinePhase;
+import me.whereareiam.identica.model.pipeline.GroupOutcome;
+import me.whereareiam.identica.pipeline.PipelineGroup;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.pipeline.PipelinePhase;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

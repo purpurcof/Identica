@@ -7,14 +7,14 @@ import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.adapter.ConnectionDecisionAdapter;
-import me.whereareiam.identica.pipeline.state.PrepareStateStore;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.prepare.PrepareDecision;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import net.kyori.adventure.text.Component;
@@ -69,16 +69,18 @@ public class VelocityResumeDecisionAdapter extends ConnectionDecisionAdapter imp
 		ConnectionDecision decision = connectionCoordinator.resume(request)
 				.toCompletableFuture()
 				.join();
+
+		VelocityCommandPlayer liveIdentity = new VelocityCommandPlayer(player, identity.getUsername());
 		if (decision == null || decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
 			return;
 
-		apply(decision, new VelocityCommandPlayer(player), resumeTarget(player));
+		apply(decision, liveIdentity, resumeTarget(player));
 		ConnectionDecision.Status status = decision.getStatus();
 		if (status == ConnectionDecision.Status.DENY || status == ConnectionDecision.Status.REQUIRE_RECONNECT)
 			return;
 
 		if (status == ConnectionDecision.Status.ALLOW || status == ConnectionDecision.Status.WAIT)
-			identityService.attach(new VelocityCommandPlayer(player, identity.getUsername()));
+			identityService.attach(liveIdentity);
 	}
 
 	private String resolveIp(@NotNull Player player) {

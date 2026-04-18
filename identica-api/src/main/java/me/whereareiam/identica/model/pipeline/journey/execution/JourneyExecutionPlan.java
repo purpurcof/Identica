@@ -3,7 +3,7 @@ package me.whereareiam.identica.model.pipeline.journey.execution;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
-import me.whereareiam.identica.pipeline.journey.JourneyPlan;
+import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.pipeline.journey.rule.JourneyRuleScope;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;

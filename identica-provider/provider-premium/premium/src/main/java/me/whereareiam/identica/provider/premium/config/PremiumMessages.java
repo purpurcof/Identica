@@ -12,7 +12,32 @@ import java.util.List;
 @ToString
 public class PremiumMessages {
 	private @NotNull Verification verification;
+	private @NotNull Completion completion;
 	private @NotNull Commands commands;
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Completion {
+		private @NotNull Pipeline authentication;
+		private @NotNull Pipeline migration;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Pipeline {
+			private Title title;
+			private List<String> body;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Title {
+				private String title;
+				private String subtitle;
+			}
+		}
+	}
 
 	@Getter
 	@Setter

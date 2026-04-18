@@ -80,6 +80,60 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 		scenario.setAuthentication(authentication);
 		messages.setScenario(scenario);
 
+		CrackedMessages.Completion completion = new CrackedMessages.Completion();
+		CrackedMessages.Completion.Pipeline authenticationCompletion = new CrackedMessages.Completion.Pipeline();
+		CrackedMessages.Completion.Pipeline.Title authenticationTitle = new CrackedMessages.Completion.Pipeline.Title();
+		authenticationTitle.setTitle("<gold><bold>Signed In</bold></gold>");
+		authenticationTitle.setSubtitle("<dark_gray>You were authenticated.</dark_gray>");
+		authenticationCompletion.setTitle(authenticationTitle);
+		authenticationCompletion.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Welcome back, <green>{player}</green>.</white>",
+				"  <white>You were authenticated <gold>via password</gold>.</white>",
+				" ",
+				"  <gray>Enjoy your stay.</gray>",
+				" "
+		));
+		completion.setAuthentication(authenticationCompletion);
+
+		CrackedMessages.Completion.Pipeline registrationCompletion = new CrackedMessages.Completion.Pipeline();
+		CrackedMessages.Completion.Pipeline.Title registrationTitle = new CrackedMessages.Completion.Pipeline.Title();
+		registrationTitle.setTitle("<gold><bold>Registered</bold></gold>");
+		registrationTitle.setSubtitle("<dark_gray>You were registered.</dark_gray>");
+		registrationCompletion.setTitle(registrationTitle);
+		registrationCompletion.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Welcome, <green>{player}</green>.</white>",
+				"  <white>You just registered <gold>via cracked provider</gold>.</white>",
+				"  <white>Please take a moment to read the server rules.</white>",
+				" ",
+				"  <gray>We hope you enjoy your stay.</gray>",
+				" "
+		));
+		completion.setRegistration(registrationCompletion);
+
+		CrackedMessages.Completion.Pipeline migrationCompletion = new CrackedMessages.Completion.Pipeline();
+		CrackedMessages.Completion.Pipeline.Title migrationTitle = new CrackedMessages.Completion.Pipeline.Title();
+		migrationTitle.setTitle("<gold><bold>Migrated</bold></gold>");
+		migrationTitle.setSubtitle("<dark_gray>You were migrated to cracked.</dark_gray>");
+		migrationCompletion.setTitle(migrationTitle);
+		migrationCompletion.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Welcome back, <green>{player}</green>.</white>",
+				"  <white>Your account now authenticates <gold>via cracked provider</gold>.</white>",
+				" ",
+				"  <gray>You can continue using password login.</gray>",
+				" "
+		));
+		completion.setMigration(migrationCompletion);
+		messages.setCompletion(completion);
+
 		CrackedMessages.Password password = new CrackedMessages.Password();
 		password.setTooShort("{prefix}<white>Password is too <red>short</red>.</white>");
 		password.setTooLong("{prefix}<white>Password is too <red>long</red>.</white>");

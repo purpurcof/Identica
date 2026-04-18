@@ -3,7 +3,7 @@ package me.whereareiam.identica.engine.prepare.group;
 import lombok.Getter;
 import lombok.Setter;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.AbstractGroupState;
-import me.whereareiam.identica.model.prepare.PrepareRequest;
+import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
 import org.jetbrains.annotations.Nullable;
 
 @Getter

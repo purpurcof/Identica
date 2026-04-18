@@ -1,10 +1,10 @@
-package me.whereareiam.identica.model.pipeline.prepare;
+package me.whereareiam.identica.model.pipeline.prepare.decision;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import me.whereareiam.identica.model.prepare.PrepareDecision;
+import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.pipeline.state.PipelineStateItem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

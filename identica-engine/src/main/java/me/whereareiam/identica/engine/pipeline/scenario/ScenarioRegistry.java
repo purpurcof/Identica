@@ -8,8 +8,8 @@ import me.whereareiam.identica.engine.pipeline.scenario.registration.Registratio
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.pipeline.PipelineState;
-import me.whereareiam.identica.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;

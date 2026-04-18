@@ -1,8 +1,7 @@
-package me.whereareiam.identica.pipeline.group;
+package me.whereareiam.identica.model.pipeline;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.model.pipeline.PipelineResult;
 import org.jetbrains.annotations.Nullable;
 
 /**

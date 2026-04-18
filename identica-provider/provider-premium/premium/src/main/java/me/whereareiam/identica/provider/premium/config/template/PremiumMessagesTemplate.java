@@ -31,6 +31,42 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 		));
 		messages.setVerification(verification);
 
+		PremiumMessages.Completion completion = new PremiumMessages.Completion();
+		PremiumMessages.Completion.Pipeline authenticationCompletion = new PremiumMessages.Completion.Pipeline();
+		PremiumMessages.Completion.Pipeline.Title authenticationTitle = new PremiumMessages.Completion.Pipeline.Title();
+		authenticationTitle.setTitle("<gold><bold>Verified</bold></gold>");
+		authenticationTitle.setSubtitle("<dark_gray>You were authenticated.</dark_gray>");
+		authenticationCompletion.setTitle(authenticationTitle);
+		authenticationCompletion.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Welcome back, <green>{player}</green>.</white>",
+				"  <white>You were authenticated <gold>via premium provider</gold>.</white>",
+				" ",
+				"  <gray>Enjoy your session.</gray>",
+				" "
+		));
+		completion.setAuthentication(authenticationCompletion);
+
+		PremiumMessages.Completion.Pipeline migrationCompletion = new PremiumMessages.Completion.Pipeline();
+		PremiumMessages.Completion.Pipeline.Title migrationTitle = new PremiumMessages.Completion.Pipeline.Title();
+		migrationTitle.setTitle("<gold><bold>Migrated</bold></gold>");
+		migrationTitle.setSubtitle("<dark_gray>You were migrated to premium.</dark_gray>");
+		migrationCompletion.setTitle(migrationTitle);
+		migrationCompletion.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Welcome back, <green>{player}</green>.</white>",
+				"  <white>Your account now authenticates <gold>via premium provider</gold>.</white>",
+				" ",
+				"  <gray>Rejoin with your licensed Minecraft account from now on.</gray>",
+				" "
+		));
+		completion.setMigration(migrationCompletion);
+		messages.setCompletion(completion);
+
 		PremiumMessages.Commands commands = new PremiumMessages.Commands();
 		PremiumMessages.Commands.Premium premium = new PremiumMessages.Commands.Premium();
 		premium.setConfirm(List.of(

@@ -1,10 +1,10 @@
 package me.whereareiam.identica.engine.pipeline.scenario.shared;
 
-import me.whereareiam.identica.model.pipeline.PipelineState;
-import me.whereareiam.identica.pipeline.group.PipelineGroup;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.PipelineGroup;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
-import me.whereareiam.identica.pipeline.phase.PipelinePhase;
-import me.whereareiam.identica.pipeline.phase.PhasePlacement;
+import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import me.whereareiam.identica.logging.Logger;
 import org.jetbrains.annotations.NotNull;
 

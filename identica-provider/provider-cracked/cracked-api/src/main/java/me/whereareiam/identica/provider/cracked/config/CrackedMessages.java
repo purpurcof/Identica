@@ -11,9 +11,35 @@ import java.util.List;
 @ToString
 public class CrackedMessages {
 	private Scenario scenario;
+	private Completion completion;
 	private Password password;
 	private ChangePassword changePassword;
 	private Commands commands;
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Completion {
+		private Pipeline authentication;
+		private Pipeline registration;
+		private Pipeline migration;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Pipeline {
+			private Title title;
+			private List<String> body;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Title {
+				private String title;
+				private String subtitle;
+			}
+		}
+	}
 
 	@Getter
 	@Setter

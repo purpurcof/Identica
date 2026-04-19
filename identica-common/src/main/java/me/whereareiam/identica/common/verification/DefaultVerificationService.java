@@ -14,7 +14,7 @@ import me.whereareiam.identica.event.verification.VerificationMethodDisabledEven
 import me.whereareiam.identica.event.verification.VerificationResetEvent;
 import me.whereareiam.identica.event.verification.VerificationSelectionEvent;
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
 import me.whereareiam.identica.model.verification.VerificationActionResult;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
@@ -63,7 +63,7 @@ public class DefaultVerificationService implements VerificationService {
 	}
 
 	@Override
-	public @NotNull Optional<PendingVerificationEnrollment> findPendingEnrollment(@NotNull UUID uniqueId) {
+	public @NotNull Optional<VerificationEnrollmentSession> findPendingEnrollment(@NotNull UUID uniqueId) {
 		return enrollmentWorkflow.findPendingEnrollment(uniqueId);
 	}
 

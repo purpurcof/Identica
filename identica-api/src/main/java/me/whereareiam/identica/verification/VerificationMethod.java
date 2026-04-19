@@ -1,7 +1,7 @@
 package me.whereareiam.identica.verification;
 
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
 import me.whereareiam.identica.model.verification.VerificationActionResult;
 import me.whereareiam.identica.type.verification.VerificationActionStatus;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +43,7 @@ public interface VerificationMethod {
 	 * @param config shared verification configuration
 	 * @return pending enrollment state
 	 */
-	@NotNull PendingVerificationEnrollment beginEnrollment(
+	@NotNull VerificationEnrollmentSession beginEnrollment(
 			@NotNull UUID uniqueId,
 			@NotNull String username,
 			@Nullable String providerId,
@@ -59,7 +59,7 @@ public interface VerificationMethod {
 	 * @return {@code true} when the enrollment confirmation is valid
 	 */
 	boolean verifyEnrollment(
-			@NotNull PendingVerificationEnrollment pending,
+			@NotNull VerificationEnrollmentSession pending,
 			@NotNull String input,
 			@NotNull Verification config
 	);

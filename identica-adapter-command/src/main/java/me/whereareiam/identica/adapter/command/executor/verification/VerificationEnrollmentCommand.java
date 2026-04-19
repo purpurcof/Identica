@@ -21,7 +21,7 @@ import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
-import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeAttempt;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.verification.VerificationService;
@@ -72,7 +72,7 @@ public class VerificationEnrollmentCommand {
 		Identity identity = requireIdentity(sender);
 		if (identity == null) return;
 
-		PendingVerificationEnrollment pendingEnrollment = verificationService.findPendingEnrollment(identity.getUniqueId()).orElse(null);
+		VerificationEnrollmentSession pendingEnrollment = verificationService.findPendingEnrollment(identity.getUniqueId()).orElse(null);
 		if (pendingEnrollment != null) {
 			messagePresenter.presentActionResult(sender, verificationService.confirmEnrollment(identity.getUniqueId(), input));
 			return;

@@ -1,6 +1,6 @@
 package me.whereareiam.identica.verification;
 
-import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
 import me.whereareiam.identica.model.verification.VerificationActionResult;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
@@ -66,7 +66,7 @@ public interface VerificationService {
 	 * @param uniqueId Identica identity id
 	 * @return pending enrollment, or empty when none exists
 	 */
-	@NotNull Optional<PendingVerificationEnrollment> findPendingEnrollment(@NotNull UUID uniqueId);
+	@NotNull Optional<VerificationEnrollmentSession> findPendingEnrollment(@NotNull UUID uniqueId);
 
 	/**
 	 * Returns all enrolled verification methods for the identity.

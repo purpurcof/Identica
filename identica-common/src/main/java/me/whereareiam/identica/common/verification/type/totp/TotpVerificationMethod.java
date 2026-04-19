@@ -2,7 +2,7 @@ package me.whereareiam.identica.common.verification.type.totp;
 
 import com.google.inject.Singleton;
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
 import me.whereareiam.identica.verification.VerificationMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +28,7 @@ public class TotpVerificationMethod implements VerificationMethod {
 	}
 
 	@Override
-	public @NotNull PendingVerificationEnrollment beginEnrollment(
+	public @NotNull VerificationEnrollmentSession beginEnrollment(
 			@NotNull UUID uniqueId,
 			@NotNull String username,
 			@Nullable String providerId,
@@ -49,7 +49,7 @@ public class TotpVerificationMethod implements VerificationMethod {
 				totp.periodSeconds()
 		);
 
-		return PendingVerificationEnrollment.builder()
+		return VerificationEnrollmentSession.builder()
 				.uniqueId(uniqueId)
 				.username(username)
 				.providerId(resolvedProviderId)
@@ -63,7 +63,7 @@ public class TotpVerificationMethod implements VerificationMethod {
 
 	@Override
 	public boolean verifyEnrollment(
-			@NotNull PendingVerificationEnrollment pending,
+			@NotNull VerificationEnrollmentSession pending,
 			@NotNull String input,
 			@NotNull Verification config
 	) {

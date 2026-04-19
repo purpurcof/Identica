@@ -10,7 +10,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.verification.enroll.VerificationEnrollEvent;
 import me.whereareiam.identica.event.verification.enroll.VerificationEnrollmentConfirmedEvent;
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
 import me.whereareiam.identica.model.verification.VerificationActionResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.VerificationRecoveryCode;
@@ -76,7 +76,7 @@ public class VerificationEnrollmentWorkflow {
 					.build();
 		}
 
-		PendingVerificationEnrollment pending = handler.beginEnrollment(
+		VerificationEnrollmentSession pending = handler.beginEnrollment(
 				uniqueId,
 				username,
 				providerId,
@@ -94,7 +94,7 @@ public class VerificationEnrollmentWorkflow {
 	}
 
 	public @NotNull VerificationActionResult confirmEnrollment(@NotNull UUID uniqueId, @NotNull String value) {
-		PendingVerificationEnrollment pending = pendingEnrollmentStore.peek(uniqueId).orElse(null);
+		VerificationEnrollmentSession pending = pendingEnrollmentStore.peek(uniqueId).orElse(null);
 		if (pending == null) {
 			return VerificationActionResult.builder()
 					.status(VerificationActionStatus.NO_PENDING)
@@ -111,13 +111,13 @@ public class VerificationEnrollmentWorkflow {
 		return pendingEnrollmentStore.clear(uniqueId);
 	}
 
-	public @NotNull Optional<PendingVerificationEnrollment> findPendingEnrollment(@NotNull UUID uniqueId) {
+	public @NotNull Optional<VerificationEnrollmentSession> findPendingEnrollment(@NotNull UUID uniqueId) {
 		return pendingEnrollmentStore.peek(uniqueId);
 	}
 
 	private @NotNull VerificationActionResult confirmSaved(
 			@NotNull UUID uniqueId,
-			@NotNull PendingVerificationEnrollment pending,
+			@NotNull VerificationEnrollmentSession pending,
 			@NotNull String value
 	) {
 		if (!"saved".equalsIgnoreCase(value.trim())) {
@@ -164,7 +164,7 @@ public class VerificationEnrollmentWorkflow {
 
 	private @NotNull VerificationActionResult confirmCode(
 			@NotNull UUID uniqueId,
-			@NotNull PendingVerificationEnrollment pending,
+			@NotNull VerificationEnrollmentSession pending,
 			@NotNull String value
 	) {
 		VerificationMethod handler = methodRegistry.find(pending.getMethodId()).orElse(null);

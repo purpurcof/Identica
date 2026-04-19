@@ -1,6 +1,6 @@
 package me.whereareiam.identica.database;
 
-import me.whereareiam.identica.model.verification.VerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.VerificationRecoveryCode;
 import me.whereareiam.identica.model.verification.VerificationSelection;
 import org.jetbrains.annotations.NotNull;

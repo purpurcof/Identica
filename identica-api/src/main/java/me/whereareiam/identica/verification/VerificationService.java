@@ -1,9 +1,9 @@
 package me.whereareiam.identica.verification;
 
-import me.whereareiam.identica.model.verification.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
 import me.whereareiam.identica.model.verification.VerificationActionResult;
-import me.whereareiam.identica.model.verification.VerificationChallengeResult;
-import me.whereareiam.identica.model.verification.VerificationEnrollment;
+import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.VerificationSelection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

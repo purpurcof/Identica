@@ -1,10 +1,10 @@
-package me.whereareiam.identica.common.verification;
+package me.whereareiam.identica.common.verification.enrollment;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.replication.cache.LocalCache;
 import org.jetbrains.annotations.NotNull;

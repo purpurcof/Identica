@@ -1,7 +1,7 @@
 package me.whereareiam.identica.adapter.database.mapper.verification;
 
 import me.whereareiam.identica.adapter.database.entity.verification.VerificationEnrollmentEntity;
-import me.whereareiam.identica.model.verification.VerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 
 public final class VerificationEnrollmentMapper {
 	public static VerificationEnrollment toModel(VerificationEnrollmentEntity entity) {

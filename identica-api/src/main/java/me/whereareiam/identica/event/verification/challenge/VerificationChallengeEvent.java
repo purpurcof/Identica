@@ -6,7 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
-import me.whereareiam.identica.model.verification.VerificationChallengeResult;
+import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

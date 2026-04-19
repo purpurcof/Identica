@@ -1,7 +1,7 @@
 package me.whereareiam.identica.verification;
 
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
 import me.whereareiam.identica.model.verification.VerificationActionResult;
 import me.whereareiam.identica.type.verification.VerificationActionStatus;
 import org.jetbrains.annotations.NotNull;

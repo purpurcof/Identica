@@ -153,14 +153,6 @@ public class DefaultMigrationService implements MigrationService {
 
 		String kickMessage = resolveKickMessage(confirm.getKickMessage(), precheck);
 
-		if (link != null) {
-			providerLinkPersistenceService.setPrimaryExclusive(identicaUniqueId, targetProviderId);
-			closeSession(identicaUniqueId);
-			disconnect(connectionUniqueId, pendingMigration.username(), kickMessage);
-			pending.remove(connectionUniqueId);
-			return result(MigrationResultStatus.PRIMARY_SET, null);
-		}
-
 		boolean stored = storePendingMigration(pendingMigration, identicaUniqueId);
 		if (!stored) return result(MigrationResultStatus.FAILED, null);
 
@@ -209,13 +201,6 @@ public class DefaultMigrationService implements MigrationService {
 			return result(MigrationResultStatus.ALREADY_PRIMARY, null);
 
 		String kickMessage = resolveKickMessage(start.getKickMessage(), precheck);
-
-		if (link != null) {
-			providerLinkPersistenceService.setPrimaryExclusive(identicaUniqueId, targetProviderId);
-			closeSession(identicaUniqueId);
-			disconnect(connectionUniqueId, pendingMigration.username(), kickMessage);
-			return result(MigrationResultStatus.PRIMARY_SET, null);
-		}
 
 		boolean stored = storePendingMigration(pendingMigration, identicaUniqueId);
 		if (!stored)

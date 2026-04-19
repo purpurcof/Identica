@@ -25,20 +25,28 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.policy.PolicyGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyPreparePolicyPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.ProfileGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.LoadPrepareAccountPhase;
+import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePendingMigrationAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolveProfilePhase;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
+import me.whereareiam.identica.model.migration.MigrationContext;
+import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.type.PrepareStage;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.AccountDecision;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
+import me.whereareiam.identica.type.migration.MigrationInitiator;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.UsernameSource;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -55,7 +63,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -75,6 +85,8 @@ class PreparePipelineTest {
 	private ProviderProfilePersistenceService providerProfilePersistenceService;
 	@Mock
 	private EventManager eventManager;
+	@Mock
+	private PipelineStateStore pipelineStateStore;
 
 	@Test
 	void profileStageBuildsTransientAccountAndHonorsPrepareDecision() {
@@ -213,6 +225,69 @@ class PreparePipelineTest {
 		assertNotNull(prepareStateStore.peek(identicaUniqueId).orElse(null));
 	}
 
+	@Test
+	void profileStageReusesPendingMigrationAccountForTargetProvider() {
+		UUID identicaUniqueId = UUID.randomUUID();
+		ConnectionIdentity identity = identity("MigratingPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratingPlayer|127.0.0.1|premium.example.com|25565";
+		identity.setObservedUniqueId(UUID.randomUUID());
+
+		PipelineState pendingMigrationState = PipelineState.initial();
+		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
+		pendingMigrationState.setScenario(MigrationContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(identicaUniqueId, "MigratingPlayer", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build());
+		pendingMigrationState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.USER,
+				identicaUniqueId
+		), 1_000L);
+
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of());
+		when(providerOperations.resolveProfile(any()))
+				.thenReturn(ProfileResolution.builder()
+						.providerId("premium")
+						.providerSubject("premium-subject")
+						.build());
+		when(providerOperations.resolveEntrypoint("premium.example.com", 25565))
+				.thenReturn(ResolvedEntrypoint.builder()
+						.providerId("premium")
+						.host("premium.example.com")
+						.port(25565)
+						.build());
+		when(pipelineStateStore.find(org.mockito.ArgumentMatchers.<PipelineStateReference>any())).thenReturn(Optional.empty());
+		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
+				.thenReturn(Optional.of(pendingMigrationState));
+		when(providerLinkPersistenceService.findBySubject("premium", "premium-subject"))
+				.thenReturn(Optional.empty());
+		when(accountPersistenceService.findByUniqueId(identicaUniqueId))
+				.thenReturn(Optional.of(Account.builder()
+						.uniqueId(identicaUniqueId)
+						.username("MigratingPlayer")
+						.source(UsernameSource.PROVIDER)
+						.build()));
+		when(providerProfilePersistenceService.findBySubject("premium", "premium-subject"))
+				.thenReturn(Optional.empty());
+
+		PrepareDecision decision = pipeline.execute(PrepareRequest.builder()
+						.stage(PrepareStage.PROFILE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(identicaUniqueId, decision.getUniqueId());
+		verify(registrationAccountService, never()).reserve(any());
+	}
+
 	private @NotNull PreparePipeline pipeline(@NotNull PrepareStateStore prepareStateStore) {
 		ConnectionProviderContextResolver contextResolver = new ConnectionProviderContextResolver(providerOperations);
 		PreparePipelineRegistry registry = new PreparePipelineRegistry(
@@ -226,6 +301,12 @@ class PreparePipelineTest {
 				new EvaluateHandshakePhase(handshakeStore),
 				new FinalizeHandshakePhase(eventManager, Messages::new),
 				new ResolveProfilePhase(providerOperations, contextResolver),
+				new ResolvePendingMigrationAccountPhase(
+						pipelineStateStore,
+						accountPersistenceService,
+						providerLinkPersistenceService,
+						providerProfilePersistenceService
+				),
 				new LoadPrepareAccountPhase(
 						registrationAccountService,
 						accountPersistenceService,

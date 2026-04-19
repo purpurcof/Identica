@@ -1,10 +1,12 @@
 package me.whereareiam.identica.common.migration;
 
+import me.whereareiam.identica.common.config.template.SettingsTemplate;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.migration.PendingMigration;
+import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.migration.operation.MigrationRequest;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
@@ -13,6 +15,7 @@ import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
+import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
@@ -32,10 +35,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -188,6 +195,55 @@ class DefaultMigrationServiceTest {
 		assertEquals(MigrationInitiator.ADMIN, pendingMigration.getInitiator());
 		assertEquals(initiatorUniqueId, pendingMigration.getInitiatorUniqueId());
 		assertEquals(PendingMigration.Phase.STARTED, pendingMigration.getPhase());
+	}
+
+	@Test
+	void confirmStoresPendingMigrationEvenWhenTargetProviderAlreadyLinked() {
+		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());
+		when(accountPersistenceService.findByUsername("PlayerOne")).thenReturn(List.of());
+		when(providerLinkPersistenceService.findByUniqueIdAndProviderId(any(UUID.class), any(String.class)))
+				.thenReturn(Optional.of(AccountProviderLink.builder()
+						.uniqueId(UUID.randomUUID())
+						.providerId("cracked")
+						.providerSubject("existing-subject")
+						.primaryLink(false)
+						.build()));
+		when(sessionService.close(any(UUID.class))).thenReturn(CompletableFuture.completedFuture(null));
+		when(identityService.find(any(UUID.class))).thenReturn(Optional.empty());
+		when(identityService.find(any(String.class))).thenReturn(Optional.empty());
+
+		Settings settings = new SettingsTemplate().supply(new Settings());
+		DefaultMigrationService service = new DefaultMigrationService(
+				providerManager,
+				providerLinkPersistenceService,
+				accountPersistenceService,
+				pipelineStateStore,
+				sessionService,
+				identityService,
+				() -> settings,
+				this::commands,
+				Messages::new
+		);
+
+		UUID connectionUniqueId = UUID.randomUUID();
+		UUID identicaUniqueId = UUID.randomUUID();
+		MigrationResult requested = service.request(MigrationRequest.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.identicaUniqueId(identicaUniqueId)
+				.targetProviderId("cracked")
+				.username("PlayerOne")
+				.ip("127.0.0.1")
+				.build());
+		assertEquals(MigrationResultStatus.PENDING_CONFIRMATION, requested.getStatus());
+
+		MigrationResult confirmed = service.confirm(MigrationConfirm.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.kickMessage("rejoin")
+				.build());
+
+		assertEquals(MigrationResultStatus.STARTED, confirmed.getStatus());
+		verify(pipelineStateStore).save(any(PipelineStateReference.class), any(PipelineState.class), anyLong());
+		verify(providerLinkPersistenceService, never()).setPrimaryExclusive(any(UUID.class), any(String.class));
 	}
 
 	private Commands commands() {

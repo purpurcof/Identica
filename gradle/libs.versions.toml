@@ -3,7 +3,7 @@
 # plugins
 shadow = "9.3.0"
 buildconfig = "6.0.7"
-spawner = "0.0.3"
+spawner = "dev-56440cd"
 
 # compile time processing
 lombok = "1.18.42"

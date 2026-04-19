@@ -1,0 +1,84 @@
+level: 3
+connection:
+  handshakeInstructionTtl: "10m"
+  attemptTtl: "10m"
+  reservationTtl: "15m"
+  prepareStateTtl: "10m"
+  routing:
+    scenarios:
+      migration:
+        step: "migration"
+        complete: "lobby"
+        overrides:
+          stages: {}
+          steps: {}
+      registration:
+        step: "registration"
+        complete: "lobby"
+        overrides:
+          stages: {}
+          steps: {}
+      authentication:
+        step: "auth"
+        complete: "lobby"
+        overrides:
+          stages: {}
+          steps: {}
+    enforcementMode: "FIRST_CONNECT"
+  sessions:
+    defaultTtl: "2h"
+    refreshTtl: "10m"
+    providers:
+      premium: "12h"
+    concurrencyPolicy: "REPLACE_EXISTING"
+    concurrencyOverrides: {}
+  authentication:
+    pipelineTtl: "5m"
+    advanceLockTtl: "5s"
+    allowResume: true
+    flow: "INTERACTIVE"
+    sessionConcurrencyPolicy: "REPLACE_EXISTING"
+    pipelineConcurrencyPolicy: "DENY_NEW"
+  registration:
+    pipelineTtl: "5m"
+    advanceLockTtl: "5s"
+    allowResume: true
+    flow: "INTERACTIVE"
+    pipelineConcurrencyPolicy: "DENY_NEW"
+    autoSelectSingleProvider: false
+  migration:
+    pipelineTtl: "5m"
+    advanceLockTtl: "5s"
+    allowResume: true
+    flow: "INTERACTIVE"
+  sentinels:
+    resumeSpam:
+      enabled: false
+      maxAttempts: 10
+      lockout:
+        enabled: true
+        duration: "30s"
+      warning:
+        enabled: false
+        thresholdPercentage: 0
+      active: false
+listeners:
+  events:
+    com.velocitypowered.api.event.connection.DisconnectEvent:
+      register: true
+      priority: "NORMAL"
+    com.velocitypowered.api.event.player.ServerPreConnectEvent:
+      register: true
+      priority: "HIGH"
+    com.velocitypowered.api.event.connection.PreLoginEvent:
+      register: true
+      priority: "NORMAL"
+    com.velocitypowered.api.event.player.GameProfileRequestEvent:
+      register: true
+      priority: "NORMAL"
+    com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent:
+      register: true
+      priority: "HIGH"
+    com.velocitypowered.api.event.connection.LoginEvent:
+      register: true
+      priority: "NORMAL"

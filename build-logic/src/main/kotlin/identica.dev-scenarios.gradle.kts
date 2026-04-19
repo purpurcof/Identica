@@ -1,0 +1,153 @@
+import org.gradle.api.Action
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.jvm.tasks.Jar
+
+evaluationDependsOn(":platform-velocity-bootstrap")
+evaluationDependsOn(":provider-cracked-runtime")
+evaluationDependsOn(":provider-premium-runtime")
+
+val velocityShadowJar = project(":platform-velocity-bootstrap").tasks.named("shadowJar", Jar::class.java)
+val crackedShadowJar = project(":provider-cracked-runtime").tasks.named("shadowJar", Jar::class.java)
+val premiumShadowJar = project(":provider-premium-runtime").tasks.named("shadowJar", Jar::class.java)
+
+val spawner = extensions.getByName("spawner")
+(spawner.readProperty("serverDir") as DirectoryProperty).set(layout.projectDirectory.dir("dev/server"))
+val scenarios = spawner.readProperty("scenarios")
+
+scenarios.registerScenario("normal") { scenario ->
+    scenario.addVelocity("proxy") { velocity ->
+        velocity.setInt("port", 25565)
+        velocity.setBoolean("onlineMode", false)
+        velocity.setString("forwardingMode", "legacy")
+        velocity.setDirectory("rootOverlayDir", "dev/scenarios/normal/proxy")
+        velocity.addServer("lobby", "127.0.0.1:25566")
+        velocity.setTryServers("lobby")
+        velocity.addInstall("plugins", velocityShadowJar.flatMap { it.archiveFile })
+        velocity.addInstall("plugins/identica/providers", crackedShadowJar.flatMap { it.archiveFile })
+        velocity.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
+    }
+
+    scenario.addPaper("lobby") { paper ->
+        paper.setInt("port", 25566)
+        paper.setBoolean("onlineMode", false)
+    }
+}
+
+scenarios.registerScenario("extended") { scenario ->
+    scenario.addVelocity("proxy") { velocity ->
+        velocity.setInt("port", 25565)
+        velocity.setBoolean("onlineMode", false)
+        velocity.setString("forwardingMode", "legacy")
+        velocity.setDirectory("rootOverlayDir", "dev/scenarios/extended/proxy")
+        velocity.addServer("auth", "127.0.0.1:25566")
+        velocity.addServer("migration", "127.0.0.1:25567")
+        velocity.addServer("registration", "127.0.0.1:25568")
+        velocity.addServer("lobby", "127.0.0.1:25569")
+        velocity.setTryServers("lobby")
+        velocity.addInstall("plugins", velocityShadowJar.flatMap { it.archiveFile })
+        velocity.addInstall("plugins/identica/providers", crackedShadowJar.flatMap { it.archiveFile })
+        velocity.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
+    }
+
+    scenario.addPaper("auth") { paper ->
+        paper.setInt("port", 25566)
+        paper.setBoolean("onlineMode", false)
+    }
+
+    scenario.addPaper("migration") { paper ->
+        paper.setInt("port", 25567)
+        paper.setBoolean("onlineMode", false)
+    }
+
+    scenario.addPaper("registration") { paper ->
+        paper.setInt("port", 25568)
+        paper.setBoolean("onlineMode", false)
+    }
+
+    scenario.addPaper("lobby") { paper ->
+        paper.setInt("port", 25569)
+        paper.setBoolean("onlineMode", false)
+    }
+}
+
+private fun Any.registerScenario(name: String, configure: (Any) -> Unit) {
+    javaClass.getMethod("register", String::class.java, Action::class.java)
+        .invoke(
+            this,
+            name,
+            object : Action<Any> {
+                override fun execute(scenario: Any) = configure(scenario)
+            }
+        )
+}
+
+private fun Any.addVelocity(name: String, configure: (Any) -> Unit) {
+    javaClass.getMethod("velocity", String::class.java, Action::class.java)
+        .invoke(
+            this,
+            name,
+            object : Action<Any> {
+                override fun execute(velocity: Any) = configure(velocity)
+            }
+        )
+}
+
+private fun Any.addPaper(name: String, configure: (Any) -> Unit) {
+    javaClass.getMethod("paper", String::class.java, Action::class.java)
+        .invoke(
+            this,
+            name,
+            object : Action<Any> {
+                override fun execute(paper: Any) = configure(paper)
+            }
+        )
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun Any.addInstall(into: String, source: Any) {
+    javaClass.getMethod("install", Action::class.java)
+        .invoke(
+            this,
+            object : Action<Any> {
+                override fun execute(install: Any) {
+                    install.javaClass.getMethod("from", Array<Any>::class.java).invoke(install, arrayOf(source))
+                    (install.readProperty("into") as Property<String>).set(into)
+                }
+            }
+        )
+}
+
+private fun Any.addServer(name: String, address: String) {
+    javaClass.getMethod("server", String::class.java, String::class.java)
+        .invoke(this, name, address)
+}
+
+private fun Any.setTryServers(vararg names: String) {
+    javaClass.getMethod("tryServers", Array<String>::class.java).invoke(this, names)
+}
+
+private fun Any.setDirectory(propertyName: String, relativePath: String) {
+    @Suppress("UNCHECKED_CAST")
+    (readProperty(propertyName) as DirectoryProperty).set(layout.projectDirectory.dir(relativePath))
+}
+
+private fun Any.setInt(propertyName: String, value: Int) {
+    @Suppress("UNCHECKED_CAST")
+    (readProperty(propertyName) as Property<Int>).set(value)
+}
+
+private fun Any.setBoolean(propertyName: String, value: Boolean) {
+    @Suppress("UNCHECKED_CAST")
+    (readProperty(propertyName) as Property<Boolean>).set(value)
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun Any.setString(propertyName: String, value: String) {
+    (readProperty(propertyName) as Property<String>).set(value)
+}
+
+private fun Any.readProperty(name: String): Any {
+    val methodName = "get" + name.replaceFirstChar { it.uppercase() }
+    return javaClass.getMethod(methodName).invoke(this)
+}

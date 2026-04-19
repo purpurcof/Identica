@@ -1,3 +1,8 @@
+plugins {
+    alias(libs.plugins.spawner)
+    id("identica.dev-scenarios")
+}
+
 defaultTasks("pluginJars")
 
 tasks.register("pluginJars") {

@@ -1,0 +1,43 @@
+conflicts:
+  username:
+    defaultRule:
+      providers: []
+      force: false
+      resolvers:
+        - id: "format_display"
+          parameters:
+            format:
+              pattern: "{username}*"
+            target: "joiner"
+    pairs:
+      - providers:
+          - "premium"
+          - "cracked"
+        force: false
+        resolvers:
+          - id: "format_display"
+            parameters:
+              format:
+                pattern: "{username}_{incomingProvider}"
+              target: "joiner"
+providers:
+  - id: "cracked"
+    displayName: "CR"
+    enabled: true
+    priority: 50
+    verification:
+      enabled: false
+      required: false
+      methods: []
+    entrypoints:
+      - "cracked.arcadeya.com"
+  - id: "premium"
+    displayName: "PR"
+    enabled: true
+    priority: 100
+    verification:
+      enabled: false
+      required: false
+      methods: []
+    entrypoints:
+      - "premium.arcadeya.com"

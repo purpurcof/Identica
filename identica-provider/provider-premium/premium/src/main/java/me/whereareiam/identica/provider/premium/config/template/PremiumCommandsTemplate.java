@@ -29,7 +29,7 @@ public class PremiumCommandsTemplate implements TemplateProvider<PremiumCommands
 				.aliases(List.of("premium confirm"))
 				.permission("")
 				.description("Confirm premium migration")
-				.usage("{alias}")
+				.usage("{alias} [code]")
 				.hide(true)
 				.build();
 

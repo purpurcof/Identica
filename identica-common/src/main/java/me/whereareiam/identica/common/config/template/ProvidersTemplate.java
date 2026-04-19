@@ -62,13 +62,13 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 		Providers.Verification verification = new Providers.Verification();
 		verification.setEnabled(true);
 		verification.setRequired(false);
-		verification.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.CLEAR_SELECTION);
+		verification.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.KEEP_LOCKED);
 
 		Providers.Verification.MethodEntry totp = new Providers.Verification.MethodEntry();
 		totp.setId("totp");
 		totp.setEnabled(true);
 		totp.setPriority(100);
-		totp.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.CLEAR_SELECTION);
+		totp.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.KEEP_LOCKED);
 		verification.setMethods(List.of(totp));
 
 		return verification;
@@ -76,15 +76,15 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 
 	private Providers.Verification premiumVerification() {
 		Providers.Verification verification = new Providers.Verification();
-		verification.setEnabled(false);
+		verification.setEnabled(true);
 		verification.setRequired(false);
-		verification.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.CLEAR_SELECTION);
+		verification.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.KEEP_LOCKED);
 
 		Providers.Verification.MethodEntry totp = new Providers.Verification.MethodEntry();
 		totp.setId("totp");
 		totp.setEnabled(true);
 		totp.setPriority(100);
-		totp.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.CLEAR_SELECTION);
+		totp.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.KEEP_LOCKED);
 		verification.setMethods(List.of(totp));
 
 		return verification;

@@ -53,7 +53,7 @@ public class PremiumProfileLookup {
 		if (username == null || username.isBlank())
 			return CompletableFuture.completedFuture(false);
 
-		String key = normalize(username);
+		String key = username.trim().toLowerCase(Locale.ROOT);
 		PremiumSettings.Lookup lookup = settingsProvider.get().getLookup();
 		long ttlMs = resolveTtlMs(lookup.getCacheTtl());
 
@@ -118,10 +118,6 @@ public class PremiumProfileLookup {
 
 	private String encode(String value) {
 		return URLEncoder.encode(value, StandardCharsets.UTF_8);
-	}
-
-	private String normalize(String username) {
-		return username.trim().toLowerCase(Locale.ROOT);
 	}
 
 	private boolean isUsable(@Nullable Duration duration) {

@@ -2,8 +2,6 @@ package me.whereareiam.identica.verification;
 
 import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
-import me.whereareiam.identica.model.verification.VerificationActionResult;
-import me.whereareiam.identica.type.verification.VerificationActionStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,18 +83,4 @@ public interface VerificationMethod {
 	 * @return generated recovery codes
 	 */
 	@NotNull List<String> generateRecoveryCodes(@NotNull Verification config);
-
-	/**
-	 * Creates a standard unavailable-method action result.
-	 *
-	 * @param providerId optional provider context
-	 * @return unavailable-method action result
-	 */
-	default @NotNull VerificationActionResult unavailableResult(@Nullable String providerId) {
-		return VerificationActionResult.builder()
-				.status(VerificationActionStatus.METHOD_UNAVAILABLE)
-				.providerId(providerId)
-				.methodId(id())
-				.build();
-	}
 }

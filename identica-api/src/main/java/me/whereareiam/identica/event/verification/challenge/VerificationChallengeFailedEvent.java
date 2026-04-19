@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.ToString;
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
-import me.whereareiam.identica.type.verification.VerificationChallengeStatus;
+import me.whereareiam.identica.type.verification.status.VerificationAttemptStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -23,5 +23,5 @@ public class VerificationChallengeFailedEvent implements Event, SynchronousEvent
 	private final @NotNull UUID uniqueId;
 	private final @NotNull String providerId;
 	private final @NotNull String methodId;
-	private final @NotNull VerificationChallengeStatus status;
+	private final @NotNull VerificationAttemptStatus status;
 }

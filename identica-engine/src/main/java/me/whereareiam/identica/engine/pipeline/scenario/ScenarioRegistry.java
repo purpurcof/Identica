@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
@@ -44,11 +45,25 @@ public class ScenarioRegistry {
 		if (resumeRequest != null) {
 			AbstractScenarioPipeline resumeRunner = resolveResumeRunner(resumeRequest);
 			if (resumeRunner != null) {
+				Logger.debug(
+						"Scenario select chose resume pipeline=%s connection=%s identity=%s key=%s",
+						resumeRunner.type(),
+						resumeRequest.getConnectionUniqueId(),
+						resumeRequest.getIdentityUniqueId(),
+						resumeRequest.getIdentity() != null ? resumeRequest.getIdentity().connectionKey() : null
+				);
 				return ScenarioSelection.resume(resumeRunner, resumeRequest);
 			}
 		}
 
 		AbstractScenarioPipeline runner = selectNewFlow(request);
+		Logger.debug(
+				"Scenario select chose new flow pipeline=%s connection=%s identity=%s key=%s",
+				runner.type(),
+				request != null ? request.getConnectionUniqueId() : null,
+                request != null ? request.getIdentity().getUniqueId() : null,
+                request != null ? request.getIdentity().connectionKey() : null
+		);
 		return ScenarioSelection.newFlow(runner);
 	}
 
@@ -99,15 +114,51 @@ public class ScenarioRegistry {
 	}
 
 	private @Nullable AbstractScenarioPipeline resolveResumeRunner(@NotNull ResumeRequest request) {
-		PipelineState stored = pipelineStateStore.find(PipelineStateReference.from(request)).orElse(null);
-		if (stored == null) return null;
+		PipelineStateReference reference = PipelineStateReference.from(request);
+		PipelineState stored = pipelineStateStore.find(reference).orElse(null);
+		if (stored == null) {
+			Logger.debug(
+					"Scenario resume lookup missed connection=%s identity=%s key=%s",
+					reference.getConnectionUniqueId(),
+					reference.getIdentityUniqueId(),
+					reference.getConnectionKey()
+			);
+			return null;
+		}
 
 		PipelineType storedType = stored.getPipelineType();
-		if (storedType == null) return null;
+		if (storedType == null) {
+			Logger.debug(
+					"Scenario resume lookup found state without pipeline type connection=%s identity=%s key=%s",
+					reference.getConnectionUniqueId(),
+					reference.getIdentityUniqueId(),
+					reference.getConnectionKey()
+			);
+			return null;
+		}
 
 		AbstractScenarioPipeline runner = runnersByType.get(storedType);
-		if (runner == null) return null;
-		return runner.isPending(stored) ? runner : null;
+		if (runner == null) {
+			Logger.debug(
+					"Scenario resume lookup found unmapped pipeline type=%s connection=%s identity=%s key=%s",
+					storedType,
+					reference.getConnectionUniqueId(),
+					reference.getIdentityUniqueId(),
+					reference.getConnectionKey()
+			);
+			return null;
+		}
+
+		boolean pending = runner.isPending(stored);
+		Logger.debug(
+				"Scenario resume lookup found pipeline=%s pending=%s connection=%s identity=%s key=%s",
+				storedType,
+				pending,
+				reference.getConnectionUniqueId(),
+				reference.getIdentityUniqueId(),
+				reference.getConnectionKey()
+		);
+		return pending ? runner : null;
 	}
 
 	private @Nullable AbstractScenarioPipeline resolveAdvanceRunner(@NotNull AdvanceRequest request) {

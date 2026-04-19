@@ -28,6 +28,7 @@ public abstract class ProfileRewriteAdapter {
 	) {
 		PrepareRequest prepareRequest = PrepareRequest.builder()
 				.stage(PrepareStage.PROFILE)
+				.connectionKey(request.identity().connectionKey())
 				.identity(request.identity())
 				.build();
 

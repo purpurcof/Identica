@@ -32,7 +32,12 @@ public enum ProviderCapability {
 	/**
 	 * Supports account migration to this provider.
 	 */
-	MIGRATION("migration");
+	MIGRATION("migration"),
+
+	/**
+	 * Supports verification flows such as TOTP.
+	 */
+	VERIFICATION("verification");
 
 	@Getter
 	private final String id;

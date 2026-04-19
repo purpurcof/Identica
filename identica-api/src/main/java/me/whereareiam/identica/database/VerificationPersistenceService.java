@@ -2,7 +2,7 @@ package me.whereareiam.identica.database;
 
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.VerificationRecoveryCode;
-import me.whereareiam.identica.model.verification.VerificationSelection;
+import me.whereareiam.identica.model.verification.selection.VerificationSelection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -8,16 +8,17 @@ import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.Player;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.adapter.ConnectionDecisionAdapter;
-import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
+import me.whereareiam.identica.listener.DynamicListener;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,6 +58,17 @@ public class VelocityLoginDecisionAdapter extends ConnectionDecisionAdapter impl
 				: player.getUsername();
 		ConnectionIdentity identity = new ConnectionIdentity(player.getUniqueId(), providerUsername, ip);
 		applyOrigin(identity, player);
+		Logger.debug(
+				"Velocity login request player=%s username=%s ip=%s key=%s preparedUniqueId=%s preparedProvider=%s preparedSubject=%s preparedEffective=%s",
+				player.getUniqueId(),
+				player.getUsername(),
+				ip,
+				identity.connectionKey(),
+				prepared != null ? prepared.getUniqueId() : null,
+				provider != null ? provider.getProviderId() : null,
+				provider != null ? provider.getProviderSubject() : null,
+				prepared != null ? prepared.getEffectiveUsername() : null
+		);
 
 		ConnectionRequest request = ConnectionRequest.builder()
 				.identity(identity)
@@ -67,6 +79,13 @@ public class VelocityLoginDecisionAdapter extends ConnectionDecisionAdapter impl
 		ConnectionDecision decision = connectionCoordinator.process(request)
 				.toCompletableFuture()
 				.join();
+		Logger.debug(
+				"Velocity login decision player=%s status=%s provider=%s subject=%s",
+				player.getUniqueId(),
+				decision != null ? decision.getStatus() : null,
+				provider != null ? provider.getProviderId() : null,
+				provider != null ? provider.getProviderSubject() : null
+		);
 
 		apply(decision, new VelocityCommandPlayer(player), loginTarget(event));
 		ConnectionDecision.Status status = decision != null ? decision.getStatus() : null;

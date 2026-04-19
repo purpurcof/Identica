@@ -9,8 +9,9 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.verification.VerificationTarget;
+import me.whereareiam.identica.model.verification.VerificationAttemptResult;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeAttempt;
-import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.cracked.CrackedConstants;
@@ -63,7 +64,10 @@ public class CrackedAuthenticationVerificationStep extends AbstractCrackedStep {
 		if (uniqueId == null) return CompletableFuture.completedFuture(StepResult.complete(context));
 
 		String input = consumeAttempt(context, verificationProvider.get().challengeTtlMillis());
-		VerificationChallengeResult result = verificationService.challenge(uniqueId, CrackedConstants.PROVIDER_ID, input);
+		VerificationAttemptResult result = verificationService.verify(
+				VerificationTarget.providerSelection(uniqueId, CrackedConstants.PROVIDER_ID, "authentication"),
+				input
+		);
 		if (result.getStatus() == null) return CompletableFuture.completedFuture(StepResult.complete(context));
 
 		CrackedMessages.Scenario.Authentication.Verification messages = messagesProvider.get()
@@ -72,10 +76,13 @@ public class CrackedAuthenticationVerificationStep extends AbstractCrackedStep {
 				.getVerification();
 
 		return CompletableFuture.completedFuture(switch (result.getStatus()) {
-			case SKIP, ALLOW -> StepResult.complete(context);
-			case WAITING -> StepResult.waiting(joinLines(messages.getPrompt()));
+			case PROVIDER_UNSUPPORTED, PROVIDER_VERIFICATION_DISABLED -> StepResult.complete(context);
+			case METHOD_NOT_SELECTED -> result.isRequired()
+					? StepResult.denied(messages.getRequired())
+					: StepResult.complete(context);
+			case INPUT_REQUIRED -> StepResult.waiting(joinLines(messages.getPrompt()));
+			case VERIFIED -> StepResult.complete(context);
 			case INVALID_INPUT -> StepResult.waiting(joinInvalid(messages));
-			case REQUIRED_MISSING -> StepResult.denied(messages.getRequired());
 			case METHOD_UNAVAILABLE -> StepResult.denied(messages.getUnavailable());
 		});
 	}

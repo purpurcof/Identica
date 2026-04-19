@@ -22,7 +22,7 @@ public final class StageType {
 	}
 
 	public static @NotNull StageType of(@NotNull String id, int order) {
-		String normalized = normalize(id);
+		String normalized = id.trim().toLowerCase(Locale.ROOT);
 		if (normalized.isBlank())
 			throw new IllegalArgumentException("stage type id cannot be blank");
 		return new StageType(normalized, order);
@@ -53,9 +53,5 @@ public final class StageType {
 	@Override
 	public String toString() {
 		return id;
-	}
-
-	private static @NotNull String normalize(@NotNull String value) {
-		return value.trim().toLowerCase(Locale.ROOT);
 	}
 }

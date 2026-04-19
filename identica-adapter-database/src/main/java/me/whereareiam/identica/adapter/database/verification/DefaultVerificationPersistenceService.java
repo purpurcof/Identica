@@ -15,7 +15,7 @@ import me.whereareiam.identica.event.account.AccountClearEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.VerificationRecoveryCode;
-import me.whereareiam.identica.model.verification.VerificationSelection;
+import me.whereareiam.identica.model.verification.selection.VerificationSelection;
 import me.whereareiam.identica.type.ClearScope;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;

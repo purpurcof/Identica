@@ -8,22 +8,33 @@ import me.whereareiam.identica.common.verification.type.totp.TotpCodec;
 import me.whereareiam.identica.common.verification.type.totp.TotpVerificationMethod;
 import me.whereareiam.identica.database.VerificationPersistenceService;
 import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
-import me.whereareiam.identica.model.verification.VerificationActionResult;
-import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
+import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
+import me.whereareiam.identica.model.verification.selection.VerificationSelectionResult;
+import me.whereareiam.identica.model.verification.VerificationTarget;
+import me.whereareiam.identica.model.verification.VerificationAttemptResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
 import me.whereareiam.identica.model.verification.VerificationRecoveryCode;
-import me.whereareiam.identica.model.verification.VerificationSelection;
-import me.whereareiam.identica.type.verification.VerificationActionStatus;
-import me.whereareiam.identica.type.verification.VerificationChallengeStatus;
+import me.whereareiam.identica.model.verification.selection.VerificationSelection;
+import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.ProviderState;
+import me.whereareiam.identica.type.verification.status.VerificationAttemptStatus;
+import me.whereareiam.identica.type.verification.status.VerificationEnrollmentStatus;
+import me.whereareiam.identica.type.verification.status.VerificationSelectionStatus;
 import me.whereareiam.identica.verification.VerificationRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,40 +59,28 @@ class DefaultVerificationServiceTest {
 		Verification verification = new VerificationTemplate().supply(new Verification());
 		Providers providers = new ProvidersTemplate().supply(new Providers());
 		VerificationRegistry registry = new DefaultVerificationRegistry(Set.of(new TotpVerificationMethod()));
-		DefaultVerificationService service = new DefaultVerificationService(
-				persistenceService,
-				new VerificationEnrollmentWorkflow(
-						persistenceService,
-						pendingStore,
-						registry,
-						() -> verification,
-						mock(EventManager.class)
-				),
-				() -> verification,
-				new VerificationPolicyResolver(() -> providers),
-				mock(EventManager.class)
-		);
+		DefaultVerificationService service = service(persistenceService, pendingStore, verification, providers, registry, null);
 
 		UUID uniqueId = UUID.randomUUID();
-		VerificationActionResult started = service.beginEnrollment(uniqueId, "PlayerOne", "cracked", "totp");
-		assertEquals(VerificationActionStatus.STARTED, started.getStatus());
+		VerificationEnrollmentResult started = service.beginEnrollment(uniqueId, "PlayerOne", "cracked", "totp");
+		assertEquals(VerificationEnrollmentStatus.STARTED, started.getStatus());
 		assertTrue(service.findEnrollments(uniqueId).isEmpty());
 
 		VerificationEnrollmentSession pending = service.findPendingEnrollment(uniqueId).orElse(null);
 		assertNotNull(pending);
 		String code = TotpCodec.currentCode(
-				pending.getSecret(),
+				pendingSecret(pending),
 				verification.getTotp().getDigits(),
 				verification.getTotp().periodSeconds()
 		);
 
-		VerificationActionResult recoveryPending = service.confirmEnrollment(uniqueId, code);
-		assertEquals(VerificationActionStatus.PENDING_SAVED_CONFIRMATION, recoveryPending.getStatus());
+		VerificationEnrollmentResult recoveryPending = service.confirmEnrollment(uniqueId, code);
+		assertEquals(VerificationEnrollmentStatus.PENDING_SAVED_CONFIRMATION, recoveryPending.getStatus());
 		assertTrue(service.findEnrollments(uniqueId).isEmpty());
 		assertFalse(recoveryPending.getRecoveryCodes().isEmpty());
 
-		VerificationActionResult activated = service.confirmEnrollment(uniqueId, "saved");
-		assertEquals(VerificationActionStatus.ACTIVATED, activated.getStatus());
+		VerificationEnrollmentResult activated = service.confirmEnrollment(uniqueId, "saved");
+		assertEquals(VerificationEnrollmentStatus.ACTIVATED, activated.getStatus());
 		assertEquals(1, service.findEnrollments(uniqueId).size());
 		assertEquals(verification.getTotp().getRecoveryCodes().getAmount(),
 				persistenceService.findRecoveryCodes(uniqueId, "totp").size());
@@ -95,46 +94,39 @@ class DefaultVerificationServiceTest {
 		Verification verification = new VerificationTemplate().supply(new Verification());
 		Providers providers = new ProvidersTemplate().supply(new Providers());
 		VerificationRegistry registry = new DefaultVerificationRegistry(Set.of(new TotpVerificationMethod()));
-		DefaultVerificationService service = new DefaultVerificationService(
-				persistenceService,
-				new VerificationEnrollmentWorkflow(
-						persistenceService,
-						pendingStore,
-						registry,
-						() -> verification,
-						mock(EventManager.class)
-				),
-				() -> verification,
-				new VerificationPolicyResolver(() -> providers),
-				mock(EventManager.class)
-		);
+		DefaultVerificationService service = service(persistenceService, pendingStore, verification, providers, registry, null);
 
 		UUID uniqueId = UUID.randomUUID();
 		service.beginEnrollment(uniqueId, "PlayerOne", "cracked", "totp");
 		VerificationEnrollmentSession pending = service.findPendingEnrollment(uniqueId).orElseThrow();
 		String code = TotpCodec.currentCode(
-				pending.getSecret(),
+				pendingSecret(pending),
 				verification.getTotp().getDigits(),
 				verification.getTotp().periodSeconds()
 		);
-		VerificationActionResult recoveryPending = service.confirmEnrollment(uniqueId, code);
+		VerificationEnrollmentResult recoveryPending = service.confirmEnrollment(uniqueId, code);
 		String recoveryCode = recoveryPending.getRecoveryCodes().getFirst();
 		service.confirmEnrollment(uniqueId, "saved");
 		service.selectMethod(uniqueId, "cracked", "totp");
 
-		VerificationChallengeResult first = service.challenge(uniqueId, "cracked", recoveryCode);
-		assertEquals(VerificationChallengeStatus.ALLOW, first.getStatus());
+		VerificationAttemptResult first = service.attempt(uniqueId, "cracked", recoveryCode);
+		assertEquals(VerificationAttemptStatus.VERIFIED, first.getStatus());
 		assertTrue(first.isRecoveryCodeUsed());
 
-		VerificationChallengeResult second = service.challenge(uniqueId, "cracked", recoveryCode);
-		assertEquals(VerificationChallengeStatus.INVALID_INPUT, second.getStatus());
+		VerificationAttemptResult second = service.attempt(uniqueId, "cracked", recoveryCode);
+		assertEquals(VerificationAttemptStatus.INVALID_INPUT, second.getStatus());
 	}
 
 	@Test
 	void optionalProviderWithoutSelectionSkipsChallenge() {
 		DefaultVerificationService service = service();
-		VerificationChallengeResult result = service.challenge(UUID.randomUUID(), "cracked", null);
-		assertEquals(VerificationChallengeStatus.SKIP, result.getStatus());
+		UUID uniqueId = UUID.randomUUID();
+		VerificationEnrollmentResult enrollment = service.beginEnrollment(uniqueId, "PlayerOne", "cracked", "totp");
+		assertEquals(VerificationEnrollmentStatus.STARTED, enrollment.getStatus());
+
+		VerificationAttemptResult result = service.attempt(uniqueId, "cracked", null);
+		assertEquals(VerificationAttemptStatus.METHOD_NOT_SELECTED, result.getStatus());
+		assertFalse(result.isRequired());
 	}
 
 	@Test
@@ -151,22 +143,18 @@ class DefaultVerificationServiceTest {
 				.setRequired(true);
 
 		VerificationRegistry registry = new DefaultVerificationRegistry(Set.of(new TotpVerificationMethod()));
-		DefaultVerificationService service = new DefaultVerificationService(
+		DefaultVerificationService service = service(
 				persistenceService,
-				new VerificationEnrollmentWorkflow(
-						persistenceService,
-						pendingStore,
-						registry,
-						() -> verification,
-						mock(EventManager.class)
-				),
-				() -> verification,
-				new VerificationPolicyResolver(() -> providers),
-				mock(EventManager.class)
+				pendingStore,
+				verification,
+				providers,
+				registry,
+				null
 		);
 
-		VerificationChallengeResult result = service.challenge(UUID.randomUUID(), "cracked", null);
-		assertEquals(VerificationChallengeStatus.REQUIRED_MISSING, result.getStatus());
+		VerificationAttemptResult result = service.attempt(UUID.randomUUID(), "cracked", null);
+		assertEquals(VerificationAttemptStatus.METHOD_NOT_SELECTED, result.getStatus());
+		assertTrue(result.isRequired());
 	}
 
 	@Test
@@ -186,21 +174,20 @@ class DefaultVerificationServiceTest {
 				.findFirst()
 				.orElseThrow()
 				.setEnabled(false);
+		providers.getProviders().stream()
+				.filter(entry -> "cracked".equalsIgnoreCase(entry.getId()))
+				.findFirst()
+				.orElseThrow()
+				.getVerification()
+				.getMethods()
+				.stream()
+				.filter(entry -> "totp".equalsIgnoreCase(entry.getId()))
+				.findFirst()
+				.orElseThrow()
+				.setUnavailableSelectionPolicy(me.whereareiam.identica.type.verification.UnavailableSelectionPolicy.CLEAR_SELECTION);
 
 		VerificationRegistry registry = new DefaultVerificationRegistry(Set.of(new TotpVerificationMethod()));
-		DefaultVerificationService service = new DefaultVerificationService(
-				persistenceService,
-				new VerificationEnrollmentWorkflow(
-						persistenceService,
-						pendingStore,
-						registry,
-						() -> verification,
-						mock(EventManager.class)
-				),
-				() -> verification,
-				new VerificationPolicyResolver(() -> providers),
-				mock(EventManager.class)
-		);
+		DefaultVerificationService service = service(persistenceService, pendingStore, verification, providers, registry, null);
 
 		UUID uniqueId = UUID.randomUUID();
 		persistenceService.upsertEnrollment(VerificationEnrollment.builder()
@@ -217,29 +204,230 @@ class DefaultVerificationServiceTest {
 				.selectedAt(3L)
 				.build());
 
-		VerificationChallengeResult result = service.challenge(uniqueId, "cracked", null);
-		assertEquals(VerificationChallengeStatus.SKIP, result.getStatus());
+		VerificationAttemptResult result = service.attempt(uniqueId, "cracked", null);
+		assertEquals(VerificationAttemptStatus.METHOD_NOT_SELECTED, result.getStatus());
 		assertTrue(persistenceService.findSelection(uniqueId, "cracked").isEmpty());
+	}
+
+	@Test
+	void keepLockedPolicyPreservesUnavailableSelection() {
+		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
+		Verification verification = new VerificationTemplate().supply(new Verification());
+		Providers providers = new ProvidersTemplate().supply(new Providers());
+		VerificationRegistry registry = new DefaultVerificationRegistry(Set.of(new TotpVerificationMethod()));
+		DefaultVerificationService service = service(
+				persistenceService,
+				pendingStore(new TestPendingEnrollmentState()),
+				verification,
+				providers,
+				registry,
+				null
+		);
+
+		providers.getProviders().stream()
+				.filter(entry -> "cracked".equalsIgnoreCase(entry.getId()))
+				.findFirst()
+				.orElseThrow()
+				.getVerification()
+				.getMethods()
+				.stream()
+				.filter(entry -> "totp".equalsIgnoreCase(entry.getId()))
+				.findFirst()
+				.orElseThrow()
+				.setEnabled(false);
+
+		UUID uniqueId = UUID.randomUUID();
+		persistenceService.upsertEnrollment(VerificationEnrollment.builder()
+				.uniqueId(uniqueId)
+				.methodId("totp")
+				.payload("secret")
+				.createdAt(1L)
+				.enabledAt(2L)
+				.build());
+		persistenceService.upsertSelection(VerificationSelection.builder()
+				.uniqueId(uniqueId)
+				.providerId("cracked")
+				.methodId("totp")
+				.selectedAt(3L)
+				.build());
+
+		VerificationAttemptResult result = service.attempt(uniqueId, "cracked", null);
+		assertEquals(VerificationAttemptStatus.METHOD_UNAVAILABLE, result.getStatus());
+		assertTrue(persistenceService.findSelection(uniqueId, "cracked").isPresent());
+	}
+
+	@Test
+	void activationAutoSelectsCurrentProviderWhenEligible() {
+		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
+		TestPendingEnrollmentState pendingState = new TestPendingEnrollmentState();
+		VerificationEnrollmentStore pendingStore = pendingStore(pendingState);
+		Verification verification = new VerificationTemplate().supply(new Verification());
+		Providers providers = new ProvidersTemplate().supply(new Providers());
+		VerificationRegistry registry = new DefaultVerificationRegistry(Set.of(new TotpVerificationMethod()));
+
+		UUID uniqueId = UUID.randomUUID();
+		Session session = Session.builder()
+				.uniqueId(uniqueId)
+				.providerId("cracked")
+				.build();
+		DefaultVerificationService service = service(persistenceService, pendingStore, verification, providers, registry, session);
+
+		service.beginEnrollment(uniqueId, "PlayerOne", "cracked", "totp");
+		VerificationEnrollmentSession pending = service.findPendingEnrollment(uniqueId).orElseThrow();
+		String code = TotpCodec.currentCode(
+				pendingSecret(pending),
+				verification.getTotp().getDigits(),
+				verification.getTotp().periodSeconds()
+		);
+		service.confirmEnrollment(uniqueId, code);
+
+		VerificationEnrollmentResult activated = service.confirmEnrollment(uniqueId, "saved");
+		assertEquals(VerificationEnrollmentStatus.ACTIVATED, activated.getStatus());
+		assertEquals("cracked", activated.getAutoSelectedProviderId());
+		assertEquals("totp", persistenceService.findSelection(uniqueId, "cracked").orElseThrow().getMethodId());
+	}
+
+	@Test
+	void selectMethodReturnsProviderUnsupportedWhenCapabilityMissing() {
+		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
+		Verification verification = new VerificationTemplate().supply(new Verification());
+		Providers providers = new ProvidersTemplate().supply(new Providers());
+		VerificationRegistry registry = new DefaultVerificationRegistry(Set.of(new TotpVerificationMethod()));
+		DefaultVerificationService service = service(
+				persistenceService,
+				pendingStore(new TestPendingEnrollmentState()),
+				verification,
+				providers,
+				registry,
+				null,
+				Set.of()
+		);
+
+		UUID uniqueId = UUID.randomUUID();
+		persistenceService.upsertEnrollment(VerificationEnrollment.builder()
+				.uniqueId(uniqueId)
+				.methodId("totp")
+				.payload("secret")
+				.createdAt(1L)
+				.enabledAt(2L)
+				.build());
+
+		VerificationSelectionResult result = service.selectMethod(uniqueId, "cracked", "totp");
+		assertEquals(VerificationSelectionStatus.PROVIDER_UNSUPPORTED, result.getStatus());
+	}
+
+	@Test
+	void resolveProviderSelectionTargetRequiresSelection() {
+		DefaultVerificationService service = service();
+
+		VerificationAttemptResult result = service.resolve(
+				VerificationTarget.providerSelection(UUID.randomUUID(), "cracked", "authentication")
+		);
+
+		assertEquals(VerificationAttemptStatus.METHOD_NOT_SELECTED, result.getStatus());
+	}
+
+	@Test
+	void verifyMethodEnrollmentTargetUsesEnrolledMethodDirectly() {
+		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
+		TestPendingEnrollmentState pendingState = new TestPendingEnrollmentState();
+		VerificationEnrollmentStore pendingStore = pendingStore(pendingState);
+		Verification verification = new VerificationTemplate().supply(new Verification());
+		Providers providers = new ProvidersTemplate().supply(new Providers());
+		VerificationRegistry registry = new DefaultVerificationRegistry(Set.of(new TotpVerificationMethod()));
+		DefaultVerificationService service = service(persistenceService, pendingStore, verification, providers, registry, null);
+
+		UUID uniqueId = UUID.randomUUID();
+		service.beginEnrollment(uniqueId, "PlayerOne", "cracked", "totp");
+		VerificationEnrollmentSession pending = service.findPendingEnrollment(uniqueId).orElseThrow();
+		String code = TotpCodec.currentCode(
+				pendingSecret(pending),
+				verification.getTotp().getDigits(),
+				verification.getTotp().periodSeconds()
+		);
+		service.confirmEnrollment(uniqueId, code);
+		service.confirmEnrollment(uniqueId, "saved");
+
+		VerificationAttemptResult result = service.verify(
+			VerificationTarget.methodEnrollment(uniqueId, "totp", "cracked", "protected-action"),
+			TotpCodec.currentCode(
+					pendingSecret(pending),
+					verification.getTotp().getDigits(),
+					verification.getTotp().periodSeconds()
+			)
+		);
+
+		assertEquals(VerificationAttemptStatus.VERIFIED, result.getStatus());
 	}
 
 	private DefaultVerificationService service() {
 		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
 		Verification verification = new VerificationTemplate().supply(new Verification());
 		VerificationRegistry registry = new DefaultVerificationRegistry(Set.of(new TotpVerificationMethod()));
+		return service(
+				persistenceService,
+				pendingStore(new TestPendingEnrollmentState()),
+				verification,
+				new ProvidersTemplate().supply(new Providers()),
+				registry,
+				null
+		);
+	}
+
+	private DefaultVerificationService service(
+			TestVerificationPersistenceService persistenceService,
+			VerificationEnrollmentStore pendingStore,
+			Verification verification,
+			Providers providers,
+			VerificationRegistry registry,
+			@Nullable Session session
+	) {
+		return service(persistenceService, pendingStore, verification, providers, registry, session, Set.of(provider("cracked"), provider("premium")));
+	}
+
+	private DefaultVerificationService service(
+			TestVerificationPersistenceService persistenceService,
+			VerificationEnrollmentStore pendingStore,
+			Verification verification,
+			Providers providers,
+			VerificationRegistry registry,
+			@Nullable Session session,
+			Set<InternalProvider> supportedProviders
+	) {
+		SessionService sessionService = mock(SessionService.class);
+		when(sessionService.findByUniqueId(org.mockito.ArgumentMatchers.any())).thenAnswer(invocation ->
+				CompletableFuture.completedFuture(Optional.ofNullable(session)
+						.filter(value -> value.getUniqueId().equals(invocation.getArgument(0)))));
+		ProviderManager providerManager = mock(ProviderManager.class);
+		when(providerManager.getProviders()).thenReturn(List.copyOf(supportedProviders));
+
 		return new DefaultVerificationService(
 				persistenceService,
 				new VerificationEnrollmentWorkflow(
 						persistenceService,
-						pendingStore(new TestPendingEnrollmentState()),
+						pendingStore,
 						registry,
 						() -> verification,
 						mock(EventManager.class)
 				),
 				registry,
 				() -> verification,
-				new VerificationPolicyResolver(() -> new ProvidersTemplate().supply(new Providers())),
+				new VerificationPolicyResolver(() -> providers),
+				providerManager,
+				sessionService,
 				mock(EventManager.class)
 		);
+	}
+
+	private InternalProvider provider(String id) {
+		ProviderDescriptor descriptor = new ProviderDescriptor();
+		descriptor.setId(id);
+		descriptor.setCapabilities(List.of(ProviderCapability.VERIFICATION));
+		return InternalProvider.builder()
+				.descriptor(descriptor)
+				.priority(100)
+				.state(ProviderState.ENABLED)
+				.build();
 	}
 
 	private VerificationEnrollmentStore pendingStore(TestPendingEnrollmentState state) {
@@ -257,6 +445,10 @@ class DefaultVerificationServiceTest {
 		when(store.clear(org.mockito.ArgumentMatchers.any())).thenAnswer(invocation ->
 				state.values.remove(invocation.getArgument(0)) != null);
 		return store;
+	}
+
+	private String pendingSecret(@NotNull VerificationEnrollmentSession pending) {
+		return pending.getMethodData().get("secret");
 	}
 
 	private static final class TestPendingEnrollmentState {

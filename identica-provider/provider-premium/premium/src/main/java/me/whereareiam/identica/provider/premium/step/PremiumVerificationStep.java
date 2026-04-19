@@ -5,12 +5,14 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.model.config.Verification;
+import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.model.verification.VerificationTarget;
+import me.whereareiam.identica.model.verification.VerificationAttemptResult;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeAttempt;
-import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -59,22 +61,28 @@ public class PremiumVerificationStep extends InteractiveStep {
 			return CompletableFuture.completedFuture(StepResult.complete(context));
 
 		UUID uniqueId = providerLinkPersistenceService.findBySubject(provider.getProviderId(), provider.getProviderSubject())
-				.map(link -> link.getUniqueId())
+				.map(AccountProviderLink::getUniqueId)
 				.orElse(null);
 
 		if (uniqueId == null) return CompletableFuture.completedFuture(StepResult.complete(context));
 
 		String input = consumeAttempt(context, verificationProvider.get().challengeTtlMillis());
-		VerificationChallengeResult result = verificationService.challenge(uniqueId, provider.getProviderId(), input);
+		VerificationAttemptResult result = verificationService.verify(
+				VerificationTarget.providerSelection(uniqueId, provider.getProviderId(), "authentication"),
+				input
+		);
 		if (result.getStatus() == null)
 			return CompletableFuture.completedFuture(StepResult.complete(context));
 
 		PremiumMessages.Verification.Authentication messages = messagesProvider.get().getVerification().getAuthentication();
 		return CompletableFuture.completedFuture(switch (result.getStatus()) {
-			case SKIP, ALLOW -> StepResult.complete(context);
-			case WAITING -> StepResult.waiting(joinLines(messages.getPrompt()));
+			case PROVIDER_UNSUPPORTED, PROVIDER_VERIFICATION_DISABLED -> StepResult.complete(context);
+			case METHOD_NOT_SELECTED -> result.isRequired()
+					? StepResult.denied(messages.getRequired())
+					: StepResult.complete(context);
+			case INPUT_REQUIRED -> StepResult.waiting(joinLines(messages.getPrompt()));
+			case VERIFIED -> StepResult.complete(context);
 			case INVALID_INPUT -> StepResult.waiting(joinInvalid(messages));
-			case REQUIRED_MISSING -> StepResult.denied(messages.getRequired());
 			case METHOD_UNAVAILABLE -> StepResult.denied(messages.getUnavailable());
 		});
 	}
@@ -97,7 +105,7 @@ public class PremiumVerificationStep extends InteractiveStep {
 	private String joinInvalid(PremiumMessages.Verification.Authentication messages) {
 		String invalid = messages.getInvalid();
 		String prompt = joinLines(messages.getPrompt());
-		if (invalid == null || invalid.isBlank()) return prompt;
+		if (invalid.isBlank()) return prompt;
 		if (prompt.isBlank()) return invalid;
 
 		return invalid + "\n" + prompt;

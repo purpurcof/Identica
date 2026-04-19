@@ -2,75 +2,136 @@ package me.whereareiam.identica.provider.cracked.command;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.annotation.Command;
-import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.annotation.Argument;
+import me.whereareiam.identica.annotation.Command;
+import me.whereareiam.identica.annotation.Default;
+import me.whereareiam.identica.annotation.Definition;
+import me.whereareiam.identica.command.ProtectedActionCommand;
 import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.model.Session;
+import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.migration.PendingMigration;
 import me.whereareiam.identica.model.migration.operation.MigrationCancel;
 import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.model.migration.operation.MigrationRequest;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
-import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
+import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationCancelScope;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
-import me.whereareiam.keystone.model.SerializerContent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-@RequiredArgsConstructor(onConstructor_ = @Inject)
-public class CrackedCommand {
+public class CrackedCommand extends ProtectedActionCommand<MigrationRequest> {
 	private final Provider<CrackedMessages> messagesProvider;
+	private final Provider<Messages> coreMessagesProvider;
 	private final MigrationService migrationService;
 	private final ProviderManager providerManager;
+	private final SessionService sessionService;
+
+	@Inject
+	public CrackedCommand(
+			Provider<CrackedMessages> messagesProvider,
+			Provider<Messages> coreMessagesProvider,
+			MigrationService migrationService,
+			ProviderManager providerManager,
+			VerificationService verificationService,
+			SessionService sessionService
+	) {
+		super(verificationService);
+		this.messagesProvider = messagesProvider;
+		this.coreMessagesProvider = coreMessagesProvider;
+		this.migrationService = migrationService;
+		this.providerManager = providerManager;
+		this.sessionService = sessionService;
+	}
+
+	@Override
+	protected @NotNull SessionService sessionService() {
+		return sessionService;
+	}
+
+	@Override
+	protected @Nullable String currentSessionRequiredMessage() {
+		return coreMessagesProvider.get().getCommands().getCurrentSessionRequired();
+	}
 
 	@Definition("cracked")
 	@Command("cracked")
 	public void cracked(@NotNull Actor sender) {
-		if (!(sender instanceof Identity identity))
-			return;
+		Identity identity = requireIdentity(sender, null);
+		if (identity == null) return;
 
-		if (!supportsMigration())
-			return;
+		Session session = requireCurrentSession(identity);
+		if (session == null) return;
+		if (!supportsMigration()) return;
 
-		MigrationResult result = migrationService.request(MigrationRequest.builder()
+		MigrationRequest request = MigrationRequest.builder()
 				.connectionUniqueId(identity.getUniqueId())
 				.targetProviderId(CrackedConstants.PROVIDER_ID)
 				.username(identity.getUsername())
 				.ip(identity.getIp())
 				.initiator(MigrationInitiator.USER)
 				.initiatorUniqueId(identity.getUniqueId())
-				.build());
+				.build();
+
+		MigrationResult result = migrationService.request(request);
 
 		CrackedMessages.Commands.Cracked messages = messagesProvider.get().getCommands().getCracked();
-		if (result.getStatus() == MigrationResultStatus.PENDING_CONFIRMATION) {
-			sendMessage(identity, joinMessage(messages.getConfirm()));
-			return;
-		}
-		if (result.getStatus() == MigrationResultStatus.PENDING_EXISTS) {
-			sendMessage(identity, messages.getPendingExists());
-			return;
-		}
-		if (result.getStatus() == MigrationResultStatus.ALREADY_PRIMARY) {
-			sendMessage(identity, messages.getAlreadyPrimary());
+		switch (result.getStatus()) {
+			case PENDING_CONFIRMATION -> sendMessage(identity, requiresStepUp(identity.getUniqueId())
+					? messages.getVerificationRequired()
+					: joinMessage(messages.getConfirm()));
+			case PENDING_EXISTS -> sendMessage(identity, messages.getPendingExists());
+			case ALREADY_PRIMARY -> sendMessage(identity, messages.getAlreadyPrimary());
+			case PRECHECK_DENIED -> sendMessage(identity, result.getMessage());
+			default -> {
+			}
 		}
 	}
 
 	@Definition("cracked-confirm")
-	@Command("cracked confirm")
-	public void confirm(@NotNull Actor sender) {
-		if (!(sender instanceof Identity identity))
-			return;
+	@Command("cracked confirm [input]")
+	public void confirm(@NotNull Actor sender, @Argument("input") @Default("") String input) {
+		Identity identity = requireIdentity(sender, null);
+		if (identity == null) return;
+
+		if (requireCurrentSession(identity) == null) return;
+
+		PendingMigration pendingMigration = migrationService.findPendingMigration(identity.getUniqueId()).orElse(null);
+		boolean verificationRequired = pendingMigration != null
+				&& pendingMigration.getPhase() == PendingMigration.Phase.CONFIRMATION
+				&& requiresStepUp(identity.getUniqueId());
+		if (verificationRequired) {
+			if (input.isBlank()) {
+				sendMessage(identity, messagesProvider.get().getCommands().getCracked().getVerificationRequired());
+				return;
+			}
+
+			StepUpResult result = confirmStepUp(identity.getUniqueId(), input, "migration-confirm");
+			if (result.getStatus() != StepUpResult.Status.VERIFIED) {
+				switch (result.getStatus()) {
+					case INVALID_CODE -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getInvalidCode());
+					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
+					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					default -> sendMessage(identity, messagesProvider.get().getCommands().getCracked().getNoPending());
+				}
+				return;
+			}
+		}
 
 		CrackedMessages.Commands.Cracked messages = messagesProvider.get().getCommands().getCracked();
-		MigrationResult result = migrationService.confirm(MigrationConfirm.builder()
+		var result = migrationService.confirm(MigrationConfirm.builder()
 				.connectionUniqueId(identity.getUniqueId())
 				.kickMessage(joinMessage(messages.getConfirmed()))
 				.build());
@@ -79,28 +140,29 @@ public class CrackedCommand {
 			sendMessage(identity, messages.getNoPending());
 			return;
 		}
+
 		if (result.getStatus() == MigrationResultStatus.EXPIRED) {
 			sendMessage(identity, messages.getExpired());
 			return;
 		}
+
 		if (result.getStatus() == MigrationResultStatus.ALREADY_PRIMARY) {
 			sendMessage(identity, messages.getAlreadyPrimary());
 			return;
 		}
-		if (result.getStatus() == MigrationResultStatus.PRECHECK_DENIED) {
-			String message = result.getMessage();
-			if (message != null && !message.isBlank())
-				sendMessage(identity, message);
-		}
+
+		if (result.getStatus() == MigrationResultStatus.PRECHECK_DENIED)
+			sendMessage(identity, result.getMessage());
 	}
 
 	@Definition("cracked-cancel")
 	@Command("cracked cancel")
 	public void cancel(@NotNull Actor sender) {
-		if (!(sender instanceof Identity identity))
-			return;
+		Identity identity = requireIdentity(sender, null);
+		if (identity == null) return;
+		if (requireCurrentSession(identity) == null) return;
 
-		MigrationResult result = migrationService.cancel(MigrationCancel.builder()
+		var result = migrationService.cancel(MigrationCancel.builder()
 				.connectionUniqueId(identity.getUniqueId())
 				.scope(MigrationCancelScope.CONFIRMATION)
 				.build());
@@ -122,13 +184,8 @@ public class CrackedCommand {
 	}
 
 	private void sendMessage(@NotNull Identity identity, String message) {
-		if (message == null || message.isBlank())
-			return;
-		SerializerContent content = SerializerContent.builder()
-				.receiver(identity)
-				.message(message)
-				.build();
-		identity.sendMessage(Serializer.serialize(content));
+		if (message == null || message.isBlank()) return;
+		identity.sendMessage(Serializer.serialize(identity, message));
 	}
 
 	private String joinMessage(List<String> lines) {

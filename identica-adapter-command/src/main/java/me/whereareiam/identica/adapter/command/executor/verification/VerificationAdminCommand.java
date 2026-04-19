@@ -32,6 +32,7 @@ import java.util.UUID;
 public class VerificationAdminCommand {
 	private final Provider<Messages> messagesProvider;
 	private final VerificationService verificationService;
+	private final VerificationMessagePresenter messagePresenter;
 	private final IdentityService identityService;
 	private final AccountPersistenceService accountPersistenceService;
 
@@ -45,8 +46,7 @@ public class VerificationAdminCommand {
 		ResolvedTarget resolved = resolveTarget(sender, target);
 		if (resolved == null) return;
 
-		verificationService.reset(resolved.uniqueId(), providerId.isBlank() ? null : providerId);
-		sendMessage(sender, verificationMessages().getReset().getCompleted(), Map.of("target", resolved.display()));
+		messagePresenter.presentResetResult(sender, verificationService.reset(resolved.uniqueId(), providerId.isBlank() ? null : providerId));
 	}
 
 	private @Nullable ResolvedTarget resolveTarget(@NotNull Actor sender, @NotNull String target) {

@@ -1,10 +1,14 @@
 package me.whereareiam.identica.verification;
 
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
-import me.whereareiam.identica.model.verification.VerificationActionResult;
-import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
+import me.whereareiam.identica.model.verification.VerificationAttemptResult;
+import me.whereareiam.identica.model.verification.VerificationDisableResult;
+import me.whereareiam.identica.model.verification.VerificationResetResult;
+import me.whereareiam.identica.model.verification.selection.VerificationSelectionResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
-import me.whereareiam.identica.model.verification.VerificationSelection;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
+import me.whereareiam.identica.model.verification.selection.VerificationSelection;
+import me.whereareiam.identica.model.verification.VerificationTarget;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,9 +31,9 @@ public interface VerificationService {
 	 * @param username current player username used for labels or prompts
 	 * @param providerId optional provider context for the enrollment
 	 * @param methodId method id to enroll
-	 * @return enrollment start result
+	 * @return enrollment result describing whether the workflow started or why it could not
 	 */
-	@NotNull VerificationActionResult beginEnrollment(
+	@NotNull VerificationEnrollmentResult beginEnrollment(
 			@NotNull UUID uniqueId,
 			@NotNull String username,
 			@Nullable String providerId,
@@ -45,9 +49,9 @@ public interface VerificationService {
 	 *
 	 * @param uniqueId Identica identity id
 	 * @param value confirmation input
-	 * @return confirmation result
+	 * @return enrollment result describing the next enrollment state
 	 */
-	@NotNull VerificationActionResult confirmEnrollment(
+	@NotNull VerificationEnrollmentResult confirmEnrollment(
 			@NotNull UUID uniqueId,
 			@NotNull String value
 	);
@@ -90,9 +94,9 @@ public interface VerificationService {
 	 * @param uniqueId Identica identity id
 	 * @param providerId provider id to bind the method to
 	 * @param methodId method id to select
-	 * @return selection result
+	 * @return selection result describing the update outcome
 	 */
-	@NotNull VerificationActionResult selectMethod(
+	@NotNull VerificationSelectionResult selectMethod(
 			@NotNull UUID uniqueId,
 			@NotNull String providerId,
 			@NotNull String methodId
@@ -103,9 +107,9 @@ public interface VerificationService {
 	 *
 	 * @param uniqueId Identica identity id
 	 * @param methodId method id to disable
-	 * @return disable result
+	 * @return disable result describing whether the method was removed
 	 */
-	@NotNull VerificationActionResult disableMethod(
+	@NotNull VerificationDisableResult disableMethod(
 			@NotNull UUID uniqueId,
 			@NotNull String methodId
 	);
@@ -119,24 +123,46 @@ public interface VerificationService {
 	 *
 	 * @param uniqueId Identica identity id
 	 * @param providerId optional provider id to scope the reset
-	 * @return reset result
+	 * @return reset result describing the completed reset scope
 	 */
-	@NotNull VerificationActionResult reset(
+	@NotNull VerificationResetResult reset(
 			@NotNull UUID uniqueId,
 			@Nullable String providerId
 	);
 
 	/**
-	 * Evaluates a login-time verification challenge.
+	 * Resolves the verification state for a target without applying user input.
 	 *
-	 * @param uniqueId Identica identity id
-	 * @param providerId provider id currently authenticating the user
-	 * @param input optional challenge input
-	 * @return challenge evaluation result
+	 * @param target verification target
+	 * @return resolution result
 	 */
-	@NotNull VerificationChallengeResult challenge(
+	@NotNull VerificationAttemptResult resolve(@NotNull VerificationTarget target);
+
+	/**
+	 * Verifies user input against a target.
+	 *
+	 * @param target verification target
+	 * @param input optional challenge input
+	 * @return verification result
+	 */
+	@NotNull VerificationAttemptResult verify(
+			@NotNull VerificationTarget target,
+			@Nullable String input
+	);
+
+	default @NotNull VerificationAttemptResult attempt(
 			@NotNull UUID uniqueId,
 			@NotNull String providerId,
 			@Nullable String input
-	);
+	) {
+		return verify(VerificationTarget.providerSelection(uniqueId, providerId, "provider-selection"), input);
+	}
+
+	default @NotNull VerificationAttemptResult verifyMethod(
+			@NotNull UUID uniqueId,
+			@NotNull String methodId,
+			@Nullable String input
+	) {
+		return verify(VerificationTarget.methodEnrollment(uniqueId, methodId, null, "method-enrollment"), input);
+	}
 }

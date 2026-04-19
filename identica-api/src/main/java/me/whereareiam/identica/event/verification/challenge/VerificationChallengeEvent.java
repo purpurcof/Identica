@@ -6,7 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
-import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
+import me.whereareiam.identica.model.verification.VerificationAttemptResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,5 +26,5 @@ public class VerificationChallengeEvent implements Event, SynchronousEvent {
 	private final @NotNull String providerId;
 	private final @NotNull String methodId;
 	private final @Nullable String input;
-	private @Nullable VerificationChallengeResult result;
+	private @Nullable VerificationAttemptResult result;
 }

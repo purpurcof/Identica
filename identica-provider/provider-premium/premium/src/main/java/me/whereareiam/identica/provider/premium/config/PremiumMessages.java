@@ -71,6 +71,7 @@ public class PremiumMessages {
 		public static class Premium {
 			private @NotNull List<String> confirm;
 			private @NotNull List<String> confirmed;
+			private @NotNull String verificationRequired;
 			private @NotNull String cancelled;
 			private @NotNull String expired;
 			private @NotNull String noPending;

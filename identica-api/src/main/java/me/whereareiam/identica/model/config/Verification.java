@@ -13,6 +13,7 @@ import java.time.Duration;
 public class Verification {
 	private @NotNull Duration challengeTtl;
 	private @NotNull Duration enrollmentTtl;
+	private boolean autoSelectCurrentProvider;
 	private @NotNull Totp totp;
 
 	public long challengeTtlMillis() {

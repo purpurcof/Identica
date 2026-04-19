@@ -9,6 +9,7 @@ import lombok.ToString;
 import me.whereareiam.identica.type.verification.VerificationPendingStage;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
@@ -24,8 +25,7 @@ public class VerificationEnrollmentSession {
 	private String methodId;
 	private VerificationPendingStage stage;
 	private String payload;
-	private String secret;
-	private String otpauthUri;
+	private Map<String, String> methodData;
 	private List<String> recoveryCodes;
 	private long createdAt;
 }

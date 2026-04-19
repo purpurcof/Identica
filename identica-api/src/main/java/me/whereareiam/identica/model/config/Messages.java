@@ -54,6 +54,7 @@ public class Messages {
 	@Setter
 	@ToString
 	public static class Commands {
+		private @NotNull String currentSessionRequired;
 		private @NotNull ExceptionMessages exceptions;
 		private @NotNull PaginationMessages pagination;
 		private @NotNull HelpMessages help;
@@ -425,6 +426,7 @@ public class Messages {
 		@ToString
 		public static class Verification {
 			private @NotNull String playerOnly;
+			private @NotNull String notAllowed;
 			private @NotNull Status status;
 			private @NotNull Enroll enroll;
 			private @NotNull Confirm confirm;
@@ -449,6 +451,7 @@ public class Messages {
 			@ToString
 			public static class Enroll {
 				private @NotNull String unknownMethod;
+				private @NotNull String alreadyEnrolled;
 				private @NotNull List<String> pending;
 			}
 
@@ -458,8 +461,11 @@ public class Messages {
 			public static class Confirm {
 				private @NotNull String noPending;
 				private @NotNull String invalidCode;
+				private @NotNull String protectedActionSelectionRequired;
+				private @NotNull String protectedActionSessionRequired;
 				private @NotNull String methodUnavailable;
 				private @NotNull String enabled;
+				private @NotNull String autoSelected;
 				private @NotNull RecoveryCodes recoveryCodes;
 
 				@Getter
@@ -483,8 +489,12 @@ public class Messages {
 			@Setter
 			@ToString
 			public static class Use {
+				private @NotNull String providerNotFound;
+				private @NotNull String providerUnsupported;
+				private @NotNull String providerVerificationDisabled;
 				private @NotNull String methodNotEnrolled;
-				private @NotNull String methodUnavailable;
+				private @NotNull String methodDisabledForProvider;
+				private @NotNull String alreadySelected;
 				private @NotNull String updated;
 			}
 
@@ -493,6 +503,7 @@ public class Messages {
 			@ToString
 			public static class Disable {
 				private @NotNull String methodNotEnrolled;
+				private @NotNull String protectedPrompt;
 				private @NotNull String disabled;
 			}
 
@@ -502,6 +513,7 @@ public class Messages {
 			public static class Cancel {
 				private @NotNull String noPending;
 				private @NotNull String cancelled;
+				private @NotNull String cancelledProtectedAction;
 			}
 
 			@Getter

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static me.whereareiam.identica.common.verification.RecoveryCodeGenerator.generateCodes;
@@ -55,8 +56,10 @@ public class TotpVerificationMethod implements VerificationMethod {
 				.providerId(resolvedProviderId)
 				.methodId(id())
 				.payload(secret)
-				.secret(secret)
-				.otpauthUri(uri)
+				.methodData(Map.of(
+						"secret", secret,
+						"uri", uri
+				))
 				.createdAt(System.currentTimeMillis())
 				.build();
 	}

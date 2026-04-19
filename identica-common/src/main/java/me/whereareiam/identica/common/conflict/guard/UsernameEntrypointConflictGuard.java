@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -68,12 +69,12 @@ public class UsernameEntrypointConflictGuard implements ConflictGuard {
 
 		String message = String.join("\n", lines);
 		Map<String, String> placeholders = Map.of(
-				"incomingProvider", safe(providerOperations.displayProviderName(incomingProvider)),
-				"existingProvider", safe(providerOperations.displayProviderName(existingProvider)),
-				"incomingProviderId", safe(incomingProvider),
-				"existingProviderId", safe(existingProvider),
-				"incomingHost", safe(providerOperations.displayEntrypoint(incomingProvider)),
-				"existingHost", safe(providerOperations.displayEntrypoint(existingProvider))
+				"incomingProvider", Objects.toString(providerOperations.displayProviderName(incomingProvider), ""),
+				"existingProvider", Objects.toString(providerOperations.displayProviderName(existingProvider), ""),
+				"incomingProviderId", Objects.toString(incomingProvider, ""),
+				"existingProviderId", Objects.toString(existingProvider, ""),
+				"incomingHost", Objects.toString(providerOperations.displayEntrypoint(incomingProvider), ""),
+				"existingHost", Objects.toString(providerOperations.displayEntrypoint(existingProvider), "")
 		);
 
 		String resolved = message;
@@ -81,9 +82,5 @@ public class UsernameEntrypointConflictGuard implements ConflictGuard {
 			resolved = resolved.replace("{" + entry.getKey() + "}", entry.getValue());
 
 		return resolved;
-	}
-
-	private @NotNull String safe(@Nullable String value) {
-		return value == null ? "" : value;
 	}
 }

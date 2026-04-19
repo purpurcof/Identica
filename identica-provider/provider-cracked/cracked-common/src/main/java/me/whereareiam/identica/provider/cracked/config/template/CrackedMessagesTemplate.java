@@ -184,6 +184,7 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		cracked.setVerificationRequired("{prefix}<white>Confirm your verification code with <yellow>/cracked confirm</yellow> <gray>[Code]</gray> before starting cracked migration.</white>");
 		cracked.setCancelled("{prefix}<white>Cracked migration cancelled.</white>");
 		cracked.setExpired("{prefix}<white>Cracked migration request expired.</white>");
 		cracked.setNoPending("{prefix}<white>No pending cracked migration.</white>");

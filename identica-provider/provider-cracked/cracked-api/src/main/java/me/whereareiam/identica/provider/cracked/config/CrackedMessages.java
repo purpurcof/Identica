@@ -143,6 +143,7 @@ public class CrackedMessages {
 		public static class Cracked {
 			private List<String> confirm;
 			private List<String> confirmed;
+			private String verificationRequired;
 			private String cancelled;
 			private String expired;
 			private String noPending;

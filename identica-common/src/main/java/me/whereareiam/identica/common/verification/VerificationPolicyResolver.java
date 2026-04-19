@@ -36,6 +36,21 @@ public class VerificationPolicyResolver {
 		return null;
 	}
 
+	boolean hasConfiguredProvider(@Nullable String providerId) {
+		if (providerId == null || providerId.isBlank()) return false;
+
+		Providers providers = providersProvider.get();
+		if (providers == null) return false;
+
+		for (Providers.ProviderEntry entry : providers.getProviders()) {
+			if (entry == null || entry.getId().isBlank()) continue;
+			if (providerId.equalsIgnoreCase(entry.getId()))
+				return true;
+		}
+
+		return false;
+	}
+
 	@Nullable ResolvedMethodPolicy resolveMethodPolicy(@Nullable String providerId, @Nullable String methodId) {
 		if (providerId == null || providerId.isBlank() || methodId == null || methodId.isBlank()) return null;
 

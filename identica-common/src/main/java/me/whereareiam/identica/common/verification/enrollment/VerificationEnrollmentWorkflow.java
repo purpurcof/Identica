@@ -10,11 +10,11 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.verification.enroll.VerificationEnrollEvent;
 import me.whereareiam.identica.event.verification.enroll.VerificationEnrollmentConfirmedEvent;
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
-import me.whereareiam.identica.model.verification.VerificationActionResult;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.VerificationRecoveryCode;
-import me.whereareiam.identica.type.verification.VerificationActionStatus;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
+import me.whereareiam.identica.type.verification.status.VerificationEnrollmentStatus;
 import me.whereareiam.identica.type.verification.VerificationPendingStage;
 import me.whereareiam.identica.verification.VerificationMethod;
 import me.whereareiam.identica.verification.VerificationRegistry;
@@ -23,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,7 +36,7 @@ public class VerificationEnrollmentWorkflow {
 	private final Provider<Verification> verificationProvider;
 	private final EventManager eventManager;
 
-	public @NotNull VerificationActionResult beginEnrollment(
+	public @NotNull VerificationEnrollmentResult beginEnrollment(
 			@NotNull UUID uniqueId,
 			@NotNull String username,
 			@Nullable String providerId,
@@ -50,8 +51,8 @@ public class VerificationEnrollmentWorkflow {
 		);
 		eventManager.call(enrollEvent);
 		if (enrollEvent.isCancelled()) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.NOT_ALLOWED)
+			return VerificationEnrollmentResult.builder()
+					.status(VerificationEnrollmentStatus.NOT_ALLOWED)
 					.methodId(enrollEvent.getMethodId())
 					.providerId(enrollEvent.getProviderId())
 					.build();
@@ -61,16 +62,16 @@ public class VerificationEnrollmentWorkflow {
 		methodId = enrollEvent.getMethodId();
 		VerificationMethod handler = methodRegistry.find(methodId).orElse(null);
 		if (handler == null) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.UNKNOWN_METHOD)
+			return VerificationEnrollmentResult.builder()
+					.status(VerificationEnrollmentStatus.UNKNOWN_METHOD)
 					.methodId(methodId)
 					.providerId(providerId)
 					.build();
 		}
 
 		if (persistenceService.findEnrollment(uniqueId, handler.id()).isPresent()) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.ALREADY_ENROLLED)
+			return VerificationEnrollmentResult.builder()
+					.status(VerificationEnrollmentStatus.ALREADY_ENROLLED)
 					.methodId(handler.id())
 					.providerId(providerId)
 					.build();
@@ -84,20 +85,19 @@ public class VerificationEnrollmentWorkflow {
 		);
 		pending.setStage(VerificationPendingStage.VERIFY_CODE);
 		pendingEnrollmentStore.put(uniqueId, pending);
-		return VerificationActionResult.builder()
-				.status(VerificationActionStatus.STARTED)
+		return VerificationEnrollmentResult.builder()
+				.status(VerificationEnrollmentStatus.STARTED)
 				.methodId(handler.id())
 				.providerId(providerId)
-				.secret(pending.getSecret())
-				.otpauthUri(pending.getOtpauthUri())
+				.methodData(copyMethodData(pending.getMethodData()))
 				.build();
 	}
 
-	public @NotNull VerificationActionResult confirmEnrollment(@NotNull UUID uniqueId, @NotNull String value) {
+	public @NotNull VerificationEnrollmentResult confirmEnrollment(@NotNull UUID uniqueId, @NotNull String value) {
 		VerificationEnrollmentSession pending = pendingEnrollmentStore.peek(uniqueId).orElse(null);
 		if (pending == null) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.NO_PENDING)
+			return VerificationEnrollmentResult.builder()
+					.status(VerificationEnrollmentStatus.NO_PENDING)
 					.build();
 		}
 
@@ -115,14 +115,14 @@ public class VerificationEnrollmentWorkflow {
 		return pendingEnrollmentStore.peek(uniqueId);
 	}
 
-	private @NotNull VerificationActionResult confirmSaved(
+	private @NotNull VerificationEnrollmentResult confirmSaved(
 			@NotNull UUID uniqueId,
 			@NotNull VerificationEnrollmentSession pending,
 			@NotNull String value
 	) {
 		if (!"saved".equalsIgnoreCase(value.trim())) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.REQUIRES_SAVED_CONFIRMATION)
+			return VerificationEnrollmentResult.builder()
+					.status(VerificationEnrollmentStatus.INVALID_CODE)
 					.methodId(pending.getMethodId())
 					.providerId(pending.getProviderId())
 					.build();
@@ -155,14 +155,14 @@ public class VerificationEnrollmentWorkflow {
 				pending.getProviderId()
 		));
 
-		return VerificationActionResult.builder()
-				.status(VerificationActionStatus.ACTIVATED)
+		return VerificationEnrollmentResult.builder()
+				.status(VerificationEnrollmentStatus.ACTIVATED)
 				.methodId(pending.getMethodId())
 				.providerId(pending.getProviderId())
 				.build();
 	}
 
-	private @NotNull VerificationActionResult confirmCode(
+	private @NotNull VerificationEnrollmentResult confirmCode(
 			@NotNull UUID uniqueId,
 			@NotNull VerificationEnrollmentSession pending,
 			@NotNull String value
@@ -170,16 +170,16 @@ public class VerificationEnrollmentWorkflow {
 		VerificationMethod handler = methodRegistry.find(pending.getMethodId()).orElse(null);
 		if (handler == null) {
 			pendingEnrollmentStore.clear(uniqueId);
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.METHOD_UNAVAILABLE)
+			return VerificationEnrollmentResult.builder()
+					.status(VerificationEnrollmentStatus.METHOD_UNAVAILABLE)
 					.methodId(pending.getMethodId())
 					.providerId(pending.getProviderId())
 					.build();
 		}
 
 		if (!handler.verifyEnrollment(pending, value, verificationProvider.get())) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.INVALID_CODE)
+			return VerificationEnrollmentResult.builder()
+					.status(VerificationEnrollmentStatus.INVALID_CODE)
 					.methodId(pending.getMethodId())
 					.providerId(pending.getProviderId())
 					.build();
@@ -189,11 +189,16 @@ public class VerificationEnrollmentWorkflow {
 		pending.setRecoveryCodes(recoveryCodes);
 		pending.setStage(VerificationPendingStage.CONFIRM_SAVED);
 		pendingEnrollmentStore.put(uniqueId, pending);
-		return VerificationActionResult.builder()
-				.status(VerificationActionStatus.PENDING_SAVED_CONFIRMATION)
+		return VerificationEnrollmentResult.builder()
+				.status(VerificationEnrollmentStatus.PENDING_SAVED_CONFIRMATION)
 				.methodId(pending.getMethodId())
 				.providerId(pending.getProviderId())
 				.recoveryCodes(recoveryCodes)
 				.build();
+	}
+
+	private Map<String, String> copyMethodData(@Nullable Map<String, String> methodData) {
+		if (methodData == null || methodData.isEmpty()) return null;
+		return Map.copyOf(methodData);
 	}
 }

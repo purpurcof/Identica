@@ -3,14 +3,18 @@ package me.whereareiam.identica.adapter.command.executor.verification;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
+import me.whereareiam.identica.command.SessionBoundCommand;
+import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.verification.VerificationEnrollment;
-import me.whereareiam.identica.model.verification.VerificationSelection;
+import me.whereareiam.identica.model.config.Verification;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
+import me.whereareiam.identica.model.verification.selection.VerificationSelection;
+import me.whereareiam.identica.verification.VerificationRegistry;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
@@ -25,14 +29,42 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Singleton
-@RequiredArgsConstructor(onConstructor_ = @Inject)
-public class VerificationCommand {
+public class VerificationCommand extends SessionBoundCommand {
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.systemDefault());
 
 	private final Provider<Messages> messagesProvider;
+	private final Provider<Verification> verificationProvider;
 	private final VerificationService verificationService;
+	private final VerificationRegistry verificationRegistry;
+	private final SessionService sessionService;
+
+	@Inject
+	public VerificationCommand(
+			Provider<Messages> messagesProvider,
+			Provider<Verification> verificationProvider,
+			VerificationService verificationService,
+			VerificationRegistry verificationRegistry,
+			SessionService sessionService
+	) {
+		this.messagesProvider = messagesProvider;
+		this.verificationProvider = verificationProvider;
+		this.verificationService = verificationService;
+		this.verificationRegistry = verificationRegistry;
+		this.sessionService = sessionService;
+	}
+
+	@Override
+	protected @NotNull SessionService sessionService() {
+		return sessionService;
+	}
+
+	@Override
+	protected @Nullable String currentSessionRequiredMessage() {
+		return messagesProvider.get().getCommands().getCurrentSessionRequired();
+	}
 
 	@Definition("verification")
 	@Command("2fa")
@@ -43,8 +75,9 @@ public class VerificationCommand {
 	@Definition("verification-status")
 	@Command("2fa status")
 	public void status(@NotNull Actor sender) {
-		Identity identity = requireIdentity(sender);
+		Identity identity = requireIdentity(sender, verificationMessages().getPlayerOnly());
 		if (identity == null) return;
+		if (requireCurrentSession(identity) == null) return;
 
 		Messages.Commands.Verification messages = verificationMessages();
 		Messages.Commands.Verification.Status statusMessages = messages.getStatus();
@@ -69,8 +102,7 @@ public class VerificationCommand {
 
 		List<String> lines = new ArrayList<>();
 		for (VerificationEnrollment enrollment : enrollments) {
-			Map<String, String> placeholders = new HashMap<>();
-			placeholders.put("method", safe(enrollment.getMethodId()));
+			Map<String, String> placeholders = new HashMap<>(methodPlaceholders(enrollment.getMethodId()));
 			placeholders.put("enabledAt", formatDate(enrollment.getEnabledAt()));
 			lines.add(formatEntry(messages.getEnrollmentEntry(), placeholders));
 		}
@@ -86,9 +118,8 @@ public class VerificationCommand {
 
 		List<String> lines = new ArrayList<>();
 		for (VerificationSelection selection : selections) {
-			Map<String, String> placeholders = new HashMap<>();
-			placeholders.put("provider", safe(selection.getProviderId()));
-			placeholders.put("method", safe(selection.getMethodId()));
+			Map<String, String> placeholders = new HashMap<>(methodPlaceholders(selection.getMethodId()));
+			placeholders.put("provider", Objects.toString(selection.getProviderId(), ""));
 			lines.add(formatEntry(messages.getSelectionEntry(), placeholders));
 		}
 
@@ -100,17 +131,10 @@ public class VerificationCommand {
 		String result = complete ? format.getFormat() : format.getEmptyFormat();
 		SerializerOptions.PlaceholderFormat placeholderFormat = placeholderFormat();
 		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-			result = result.replace(placeholderFormat.format(entry.getKey()), safe(entry.getValue()));
+			result = result.replace(placeholderFormat.format(entry.getKey()), Objects.toString(entry.getValue(), ""));
 		}
 
 		return result;
-	}
-
-	private @Nullable Identity requireIdentity(@NotNull Actor sender) {
-		if (sender instanceof Identity identity)
-			return identity;
-		sendMessage(sender, verificationMessages().getPlayerOnly(), Map.of());
-		return null;
 	}
 
 	private Messages.Commands.Verification verificationMessages() {
@@ -137,10 +161,34 @@ public class VerificationCommand {
 
 	private String formatDate(long millis) {
 		if (millis <= 0L) return "";
-		return DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(millis));
+		Messages.Format.Temporal temporal = messagesProvider.get().getFormat().getTemporal();
+		DateTimeFormatter dateTimeFormatter = resolveFormatter(
+				temporal.getDateTime()
+		);
+		return dateTimeFormatter.format(Instant.ofEpochMilli(millis));
 	}
 
-	private String safe(@Nullable String value) {
-		return value == null ? "" : value;
+	private Map<String, String> methodPlaceholders(@Nullable String methodId) {
+		String safeMethodId = Objects.toString(methodId, "");
+		String displayName = displayMethod(methodId);
+
+		Map<String, String> placeholders = new HashMap<>();
+		placeholders.put("methodDisplayName", displayName);
+		placeholders.put("methodId", safeMethodId);
+
+		return placeholders;
+	}
+
+	private String displayMethod(@Nullable String methodId) {
+		if (methodId == null || methodId.isBlank()) return "";
+		return verificationRegistry.find(methodId)
+				.map(method -> method.displayName(verificationProvider.get()))
+				.filter(value -> !value.isBlank())
+				.orElse(methodId);
+	}
+
+	private DateTimeFormatter resolveFormatter(DateTimePattern pattern) {
+		if (pattern == null) return VerificationCommand.DATE_TIME_FORMATTER;
+		return pattern.formatter(VerificationCommand.DATE_TIME_FORMATTER);
 	}
 }

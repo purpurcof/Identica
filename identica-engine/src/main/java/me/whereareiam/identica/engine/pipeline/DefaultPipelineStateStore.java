@@ -10,6 +10,7 @@ import me.whereareiam.identica.event.pipeline.state.PipelineStateSavedEvent;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.replication.ReplicationSystem;
@@ -19,8 +20,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Singleton
 public class DefaultPipelineStateStore implements PipelineStateStore {
@@ -60,6 +63,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 			return;
 
 		PipelineStateSnapshot stored = new PipelineStateSnapshot(state, keys, expiresAt);
+		invalidateOverlappingSnapshots(keys, stored);
 		for (String key : keys)
 			stateCache.put(key, stored, ttlMs).join();
 
@@ -108,9 +112,25 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 			if (consume)
 				invalidateKeys(stored.keys);
 
+			Logger.debug(
+					"Pipeline state %s hit key=%s keys=%s pipeline=%s expiresAt=%s",
+					consume ? "consume" : "find",
+					key,
+					keys,
+					resolved != null ? resolved.getPipelineType() : null,
+					stored.expiresAt
+			);
 			return Optional.ofNullable(resolved);
 		}
 
+		Logger.debug(
+				"Pipeline state %s miss connection=%s identity=%s key=%s candidates=%s",
+				consume ? "consume" : "find",
+				reference.getConnectionUniqueId(),
+				reference.getIdentityUniqueId(),
+				reference.getConnectionKey(),
+				keys
+		);
 		return Optional.empty();
 	}
 
@@ -118,6 +138,19 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 		return consume
 				? stateCache.consume(key).join().orElse(null)
 				: stateCache.getFresh(key).join().orElse(null);
+	}
+
+	private void invalidateOverlappingSnapshots(
+			@NotNull List<String> keys,
+			@NotNull PipelineStateSnapshot next
+	) {
+		for (String key : keys) {
+			PipelineStateSnapshot existing = readStored(key, false);
+			if (existing == null || sameKeySet(existing.keys, next.keys))
+				continue;
+
+			invalidateKeys(existing.keys);
+		}
 	}
 
 	private void invalidateKeys(@Nullable List<String> keys) {
@@ -137,10 +170,34 @@ public class DefaultPipelineStateStore implements PipelineStateStore {
 			keys.add(KEY_IDENTITY_ID_PREFIX + reference.getIdentityUniqueId());
 
 		String connectionKey = reference.getConnectionKey();
-		if (connectionKey != null && !connectionKey.isBlank())
+		if (connectionKey != null && !connectionKey.isBlank()) {
 			keys.add(KEY_CONNECTION_KEY_PREFIX + connectionKey);
+			String originAgnosticConnectionKey = resolveOriginAgnosticConnectionKey(connectionKey);
+			if (originAgnosticConnectionKey != null && !originAgnosticConnectionKey.equals(connectionKey))
+				keys.add(KEY_CONNECTION_KEY_PREFIX + originAgnosticConnectionKey);
+		}
 
 		return keys;
+	}
+
+	private boolean sameKeySet(@Nullable List<String> left, @Nullable List<String> right) {
+		if (left == null || right == null)
+			return left == right;
+
+		Set<String> leftKeys = new LinkedHashSet<>(left);
+		Set<String> rightKeys = new LinkedHashSet<>(right);
+		return leftKeys.equals(rightKeys);
+	}
+
+	private @Nullable String resolveOriginAgnosticConnectionKey(@NotNull String connectionKey) {
+		String[] parts = connectionKey.split("\\|", -1);
+		if (parts.length != 4)
+			return null;
+
+		if (parts[2].isBlank() && parts[3].isBlank())
+			return connectionKey;
+
+		return String.join("|", parts[0], parts[1], "", "");
 	}
 
 	private static @NotNull String resolveNamespace(@NotNull Provider<Replication> replicationProvider) {

@@ -3,8 +3,10 @@ package me.whereareiam.identica.engine.pipeline;
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.config.Replication;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.util.EventUtil;
 import org.junit.jupiter.api.Test;
@@ -59,6 +61,93 @@ class DefaultPipelineStateStoreTest {
 		store.save(reference, state, 1_000L);
 
 		assertEquals(Optional.of(state), store.find(reference));
+	}
+
+	@Test
+	void saveWithoutOriginFindsByOriginAwareConnectionKey() {
+		EventUtil.initialize(mock(EventManager.class));
+		ReplicationAdapter adapter = localOnlyAdapter();
+		DefaultPipelineStateStore store = new DefaultPipelineStateStore(
+				new DefaultReplicationSystem(adapter),
+				this::replication
+		);
+		PipelineStateReference storedReference = PipelineStateReference.builder()
+				.connectionKey("user|127.0.0.1||")
+				.build();
+		PipelineStateReference resumeReference = PipelineStateReference.builder()
+				.connectionKey("user|127.0.0.1|premium.example.com|25565")
+				.build();
+		PipelineState state = PipelineState.initial();
+
+		store.save(storedReference, state, 1_000L);
+
+		assertEquals(Optional.of(state), store.find(resumeReference));
+	}
+
+	@Test
+	void saveWithOriginFindsByOriginAgnosticConnectionKey() {
+		EventUtil.initialize(mock(EventManager.class));
+		ReplicationAdapter adapter = localOnlyAdapter();
+		DefaultPipelineStateStore store = new DefaultPipelineStateStore(
+				new DefaultReplicationSystem(adapter),
+				this::replication
+		);
+		PipelineStateReference storedReference = PipelineStateReference.builder()
+				.connectionKey("user|127.0.0.1|premium.example.com|25565")
+				.build();
+		PipelineStateReference resumeReference = PipelineStateReference.builder()
+				.connectionKey("user|127.0.0.1||")
+				.build();
+		PipelineState state = PipelineState.initial();
+
+		store.save(storedReference, state, 1_000L);
+
+		assertEquals(Optional.of(state), store.find(resumeReference));
+	}
+
+	@Test
+	void replacingSnapshotInvalidatesStaleConnectionKeyAliases() {
+		EventUtil.initialize(mock(EventManager.class));
+		ReplicationAdapter adapter = localOnlyAdapter();
+		DefaultPipelineStateStore store = new DefaultPipelineStateStore(
+				new DefaultReplicationSystem(adapter),
+				this::replication
+		);
+		UUID originalId = UUID.randomUUID();
+		PipelineStateReference originalReference = PipelineStateReference.builder()
+				.connectionUniqueId(originalId)
+				.identityUniqueId(originalId)
+				.connectionKey("user|127.0.0.1|example.com|25565")
+				.build();
+		PipelineState originalState = pendingState();
+
+		store.save(originalReference, originalState, 1_000L);
+
+		PipelineStateReference narrowedReference = PipelineStateReference.builder()
+				.connectionUniqueId(originalId)
+				.identityUniqueId(originalId)
+				.connectionKey("user|127.0.0.1||")
+				.build();
+		PipelineState narrowedState = pendingState();
+
+		store.save(narrowedReference, narrowedState, 1_000L);
+		store.clear(narrowedReference);
+
+		UUID reconnectId = UUID.randomUUID();
+		PipelineStateReference reconnectReference = PipelineStateReference.builder()
+				.connectionUniqueId(reconnectId)
+				.identityUniqueId(reconnectId)
+				.connectionKey("user|127.0.0.1|example.com|25565")
+				.build();
+
+		assertTrue(store.find(reconnectReference).isEmpty());
+	}
+
+	private PipelineState pendingState() {
+		PipelineState state = PipelineState.initial();
+		state.setPipelineType(PipelineType.REGISTRATION);
+		state.putItem(new JourneyStateItem(null, null, 0), 1_000L);
+		return state;
 	}
 
 	private Replication replication() {

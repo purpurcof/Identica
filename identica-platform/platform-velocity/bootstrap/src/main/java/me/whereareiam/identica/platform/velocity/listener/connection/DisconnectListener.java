@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.routing.RoutingStateStore;
+import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.identica.listener.DynamicListener;
 
 @Singleton
@@ -16,6 +17,7 @@ public class DisconnectListener implements DynamicListener<DisconnectEvent> {
 	private final RoutingStateStore routingStateStore;
 	private final IdentityService identityService;
 	private final PrepareStateStore prepareStateStore;
+	private final VerificationService verificationService;
 
 	@Override
 	public void onEvent(DisconnectEvent event) {
@@ -25,5 +27,6 @@ public class DisconnectListener implements DynamicListener<DisconnectEvent> {
 		routingStateStore.clear(player.getUniqueId());
 		identityService.detach(player.getUniqueId());
 		prepareStateStore.clear(player.getUniqueId());
+		verificationService.cancelPendingEnrollment(player.getUniqueId());
 	}
 }

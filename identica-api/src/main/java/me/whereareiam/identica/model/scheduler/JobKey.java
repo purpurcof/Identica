@@ -17,7 +17,12 @@ public final class JobKey {
 	private JobKey(Origin origin, Purpose purpose, String correlationId) {
 		this.origin = Objects.requireNonNull(origin, "origin");
 		this.purpose = Objects.requireNonNull(purpose, "purpose");
-		this.correlationId = normalize(correlationId);
+		if (correlationId == null || correlationId.isBlank()) {
+			this.correlationId = null;
+			return;
+		}
+
+		this.correlationId = correlationId.trim();
 	}
 
 	public static JobKey of(Origin origin, Purpose purpose) {
@@ -26,11 +31,5 @@ public final class JobKey {
 
 	public static JobKey of(Origin origin, Purpose purpose, String correlationId) {
 		return new JobKey(origin, purpose, correlationId);
-	}
-
-	private static String normalize(String value) {
-		if (value == null || value.isBlank())
-			return null;
-		return value.trim();
 	}
 }

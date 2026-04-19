@@ -12,7 +12,7 @@ lombok = "1.18.42"
 attache = "dev-69791b2"
 configura = "dev-edb606f"
 commandant = "dev-29c2338"
-keystone = "dev-176fd53"
+keystone = "dev-9add0ca"
 dialectica = "dev-332d268"
 
 guice = "7.0.0"

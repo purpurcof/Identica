@@ -13,16 +13,26 @@ import me.whereareiam.identica.event.verification.challenge.VerificationChalleng
 import me.whereareiam.identica.event.verification.VerificationMethodDisabledEvent;
 import me.whereareiam.identica.event.verification.VerificationResetEvent;
 import me.whereareiam.identica.event.verification.VerificationSelectionEvent;
+import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
-import me.whereareiam.identica.model.verification.VerificationActionResult;
-import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
+import me.whereareiam.identica.model.verification.VerificationDisableResult;
+import me.whereareiam.identica.model.verification.VerificationResetResult;
+import me.whereareiam.identica.model.verification.selection.VerificationSelectionResult;
+import me.whereareiam.identica.model.verification.VerificationTarget;
+import me.whereareiam.identica.model.verification.VerificationAttemptResult;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
-import me.whereareiam.identica.model.verification.VerificationSelection;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
+import me.whereareiam.identica.model.verification.selection.VerificationSelection;
+import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
-import me.whereareiam.identica.type.verification.VerificationActionStatus;
-import me.whereareiam.identica.type.verification.VerificationChallengeStatus;
+import me.whereareiam.identica.type.verification.status.VerificationAttemptStatus;
+import me.whereareiam.identica.type.verification.status.VerificationDisableStatus;
+import me.whereareiam.identica.type.verification.status.VerificationEnrollmentStatus;
+import me.whereareiam.identica.type.verification.status.VerificationResetStatus;
+import me.whereareiam.identica.type.verification.status.VerificationSelectionStatus;
 import me.whereareiam.identica.verification.VerificationMethod;
 import me.whereareiam.identica.verification.VerificationRegistry;
 import org.jetbrains.annotations.NotNull;
@@ -40,10 +50,12 @@ public class DefaultVerificationService implements VerificationService {
 	private final VerificationRegistry methodRegistry;
 	private final Provider<Verification> verificationProvider;
 	private final VerificationPolicyResolver policyResolver;
+	private final ProviderManager providerManager;
+	private final SessionService sessionService;
 	private final EventManager eventManager;
 
 	@Override
-	public @NotNull VerificationActionResult beginEnrollment(
+	public @NotNull VerificationEnrollmentResult beginEnrollment(
 			@NotNull UUID uniqueId,
 			@NotNull String username,
 			@Nullable String providerId,
@@ -53,8 +65,20 @@ public class DefaultVerificationService implements VerificationService {
 	}
 
 	@Override
-	public @NotNull VerificationActionResult confirmEnrollment(@NotNull UUID uniqueId, @NotNull String value) {
-		return enrollmentWorkflow.confirmEnrollment(uniqueId, value);
+	public @NotNull VerificationEnrollmentResult confirmEnrollment(@NotNull UUID uniqueId, @NotNull String value) {
+		VerificationEnrollmentResult result = enrollmentWorkflow.confirmEnrollment(uniqueId, value);
+		if (result.getStatus() != VerificationEnrollmentStatus.ACTIVATED) return result;
+		if (!verificationProvider.get().isAutoSelectCurrentProvider()) return result;
+
+		Session session = sessionService.findByUniqueId(uniqueId).join().orElse(null);
+		if (session == null || session.getProviderId() == null || session.getProviderId().isBlank()) return result;
+		if (persistenceService.findSelection(uniqueId, session.getProviderId()).isPresent()) return result;
+
+		VerificationSelectionResult selection = selectMethod(uniqueId, session.getProviderId(), result.getMethodId());
+		if (selection.getStatus() == VerificationSelectionStatus.UPDATED)
+			result.setAutoSelectedProviderId(session.getProviderId());
+
+		return result;
 	}
 
 	@Override
@@ -78,7 +102,7 @@ public class DefaultVerificationService implements VerificationService {
 	}
 
 	@Override
-	public @NotNull VerificationActionResult selectMethod(
+	public @NotNull VerificationSelectionResult selectMethod(
 			@NotNull UUID uniqueId,
 			@NotNull String providerId,
 			@NotNull String methodId
@@ -91,8 +115,8 @@ public class DefaultVerificationService implements VerificationService {
 		);
 		eventManager.call(selectionEvent);
 		if (selectionEvent.isCancelled()) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.NOT_ALLOWED)
+			return VerificationSelectionResult.builder()
+					.status(VerificationSelectionStatus.NOT_ALLOWED)
 					.methodId(selectionEvent.getMethodId())
 					.providerId(selectionEvent.getProviderId())
 					.build();
@@ -100,9 +124,26 @@ public class DefaultVerificationService implements VerificationService {
 
 		providerId = selectionEvent.getProviderId();
 		methodId = selectionEvent.getMethodId();
-		if (persistenceService.findEnrollment(uniqueId, methodId).isEmpty()) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.METHOD_NOT_ENROLLED)
+		if (!policyResolver.hasConfiguredProvider(providerId)) {
+			return VerificationSelectionResult.builder()
+					.status(VerificationSelectionStatus.PROVIDER_NOT_FOUND)
+					.methodId(methodId)
+					.providerId(providerId)
+					.build();
+		}
+
+		if (!supportsVerification(providerId)) {
+			return VerificationSelectionResult.builder()
+					.status(VerificationSelectionStatus.PROVIDER_UNSUPPORTED)
+					.methodId(methodId)
+					.providerId(providerId)
+					.build();
+		}
+
+		VerificationPolicyResolver.ResolvedProviderPolicy providerPolicy = policyResolver.resolveProviderPolicy(providerId);
+		if (providerPolicy == null || !providerPolicy.enabled()) {
+			return VerificationSelectionResult.builder()
+					.status(VerificationSelectionStatus.PROVIDER_VERIFICATION_DISABLED)
 					.methodId(methodId)
 					.providerId(providerId)
 					.build();
@@ -110,8 +151,25 @@ public class DefaultVerificationService implements VerificationService {
 
 		VerificationPolicyResolver.ResolvedMethodPolicy policy = policyResolver.resolveMethodPolicy(providerId, methodId);
 		if (policy == null || !policy.enabled()) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.METHOD_UNAVAILABLE)
+			return VerificationSelectionResult.builder()
+					.status(VerificationSelectionStatus.METHOD_DISABLED_FOR_PROVIDER)
+					.methodId(methodId)
+					.providerId(providerId)
+					.build();
+		}
+
+		if (persistenceService.findEnrollment(uniqueId, methodId).isEmpty()) {
+			return VerificationSelectionResult.builder()
+					.status(VerificationSelectionStatus.METHOD_NOT_ENROLLED)
+					.methodId(methodId)
+					.providerId(providerId)
+					.build();
+		}
+
+		VerificationSelection existing = persistenceService.findSelection(uniqueId, providerId).orElse(null);
+		if (existing != null && methodId.equalsIgnoreCase(existing.getMethodId())) {
+			return VerificationSelectionResult.builder()
+					.status(VerificationSelectionStatus.ALREADY_SELECTED)
 					.methodId(methodId)
 					.providerId(providerId)
 					.build();
@@ -124,18 +182,18 @@ public class DefaultVerificationService implements VerificationService {
 				.selectedAt(System.currentTimeMillis())
 				.build());
 
-		return VerificationActionResult.builder()
-				.status(VerificationActionStatus.UPDATED)
+		return VerificationSelectionResult.builder()
+				.status(VerificationSelectionStatus.UPDATED)
 				.methodId(methodId)
 				.providerId(providerId)
 				.build();
 	}
 
 	@Override
-	public @NotNull VerificationActionResult disableMethod(@NotNull UUID uniqueId, @NotNull String methodId) {
+	public @NotNull VerificationDisableResult disableMethod(@NotNull UUID uniqueId, @NotNull String methodId) {
 		if (persistenceService.findEnrollment(uniqueId, methodId).isEmpty()) {
-			return VerificationActionResult.builder()
-					.status(VerificationActionStatus.METHOD_NOT_ENROLLED)
+			return VerificationDisableResult.builder()
+					.status(VerificationDisableStatus.METHOD_NOT_ENROLLED)
 					.methodId(methodId)
 					.build();
 		}
@@ -158,14 +216,14 @@ public class DefaultVerificationService implements VerificationService {
 		}
 		eventManager.call(new VerificationMethodDisabledEvent(uniqueId, methodId));
 
-		return VerificationActionResult.builder()
-				.status(VerificationActionStatus.DISABLED)
+		return VerificationDisableResult.builder()
+				.status(VerificationDisableStatus.DISABLED)
 				.methodId(methodId)
 				.build();
 	}
 
 	@Override
-	public @NotNull VerificationActionResult reset(@NotNull UUID uniqueId, @Nullable String providerId) {
+	public @NotNull VerificationResetResult reset(@NotNull UUID uniqueId, @Nullable String providerId) {
 		boolean fullReset = providerId == null || providerId.isBlank();
 		if (providerId == null || providerId.isBlank()) {
 			persistenceService.deleteAll(uniqueId);
@@ -175,29 +233,50 @@ public class DefaultVerificationService implements VerificationService {
 		enrollmentWorkflow.cancelPendingEnrollment(uniqueId);
 		eventManager.call(new VerificationResetEvent(uniqueId, providerId, fullReset));
 
-		return VerificationActionResult.builder()
-				.status(VerificationActionStatus.RESET)
+		return VerificationResetResult.builder()
+				.status(VerificationResetStatus.RESET)
 				.providerId(providerId)
 				.build();
 	}
 
 	@Override
-	public @NotNull VerificationChallengeResult challenge(
+	public @NotNull VerificationAttemptResult resolve(@NotNull VerificationTarget target) {
+		return verify(target, null);
+	}
+
+	@Override
+	public @NotNull VerificationAttemptResult verify(
+			@NotNull VerificationTarget target,
+			@Nullable String input
+	) {
+		if (target.getSubjectUniqueId() == null || target.getType() == null || target.getKey() == null || target.getKey().isBlank())
+			return result(VerificationAttemptStatus.METHOD_UNAVAILABLE, null, false, false);
+
+		return switch (target.getType()) {
+			case PROVIDER_SELECTION -> verifyProviderSelection(target.getSubjectUniqueId(), target.getKey(), input);
+			case METHOD_ENROLLMENT -> verifyMethodEnrollment(
+					target.getSubjectUniqueId(),
+					target.getKey(),
+					target.getProviderId(),
+					input
+			);
+		};
+	}
+
+	private @NotNull VerificationAttemptResult verifyProviderSelection(
 			@NotNull UUID uniqueId,
 			@NotNull String providerId,
 			@Nullable String input
 	) {
-		VerificationPolicyResolver.ResolvedProviderPolicy providerPolicy =
-				policyResolver.resolveProviderPolicy(providerId);
+		VerificationPolicyResolver.ResolvedProviderPolicy providerPolicy = policyResolver.resolveProviderPolicy(providerId);
+		if (!supportsVerification(providerId))
+			return result(VerificationAttemptStatus.PROVIDER_UNSUPPORTED, null, false, false);
 		if (providerPolicy == null || !providerPolicy.enabled())
-			return result(VerificationChallengeStatus.SKIP, null, false);
+			return result(VerificationAttemptStatus.PROVIDER_VERIFICATION_DISABLED, null, false, false);
 
 		VerificationSelection selection = persistenceService.findSelection(uniqueId, providerId).orElse(null);
-		if (selection == null || selection.getMethodId() == null || selection.getMethodId().isBlank()) {
-			return providerPolicy.required()
-					? result(VerificationChallengeStatus.REQUIRED_MISSING, null, false)
-					: result(VerificationChallengeStatus.SKIP, null, false);
-		}
+		if (selection == null || selection.getMethodId() == null || selection.getMethodId().isBlank())
+			return result(VerificationAttemptStatus.METHOD_NOT_SELECTED, null, providerPolicy.required(), false);
 
 		VerificationPolicyResolver.ResolvedMethodPolicy methodPolicy =
 				policyResolver.resolveMethodPolicy(providerId, selection.getMethodId());
@@ -209,55 +288,89 @@ public class DefaultVerificationService implements VerificationService {
 			return handleUnavailable(uniqueId, providerId, selection.getMethodId(), providerPolicy, methodPolicy);
 
 		if (input == null || input.isBlank())
-			return result(VerificationChallengeStatus.WAITING, selection.getMethodId(), false);
+			return result(VerificationAttemptStatus.INPUT_REQUIRED, selection.getMethodId(), methodPolicy.required(), false);
 
 		VerificationMethod handler = methodRegistry.find(selection.getMethodId()).orElse(null);
 		if (handler == null)
 			return handleUnavailable(uniqueId, providerId, selection.getMethodId(), providerPolicy, methodPolicy);
 
+		return verifyResolved(uniqueId, providerId, new ResolvedVerification(selection.getMethodId(), enrollment.getPayload(), handler), input, methodPolicy.required());
+	}
+
+	private @NotNull VerificationAttemptResult verifyMethodEnrollment(
+			@NotNull UUID uniqueId,
+			@NotNull String methodId,
+			@Nullable String providerId,
+			@Nullable String input
+	) {
+		VerificationEnrollment enrollment = persistenceService.findEnrollment(uniqueId, methodId).orElse(null);
+		if (enrollment == null || enrollment.getPayload() == null || enrollment.getPayload().isBlank())
+			return result(VerificationAttemptStatus.METHOD_UNAVAILABLE, methodId, false, false);
+
+		if (input == null || input.isBlank()) return result(VerificationAttemptStatus.INPUT_REQUIRED, methodId, false, false);
+
+		VerificationMethod handler = methodRegistry.find(methodId).orElse(null);
+		if (handler == null) return result(VerificationAttemptStatus.METHOD_UNAVAILABLE, methodId, false, false);
+
+		return verifyResolved(
+				uniqueId,
+				providerId != null ? providerId : "",
+				new ResolvedVerification(methodId, enrollment.getPayload(), handler),
+				input,
+				false
+		);
+	}
+
+	private @NotNull VerificationAttemptResult verifyResolved(
+			@NotNull UUID uniqueId,
+			@NotNull String providerId,
+			@NotNull ResolvedVerification resolved,
+			@NotNull String input,
+			boolean required
+	) {
 		VerificationChallengeEvent challengeEvent = new VerificationChallengeEvent(
 				uniqueId,
 				providerId,
-				selection.getMethodId(),
+				resolved.methodId(),
 				input,
 				null
 		);
 		eventManager.call(challengeEvent);
 		if (challengeEvent.getResult() != null)
-			return finalizeChallenge(uniqueId, providerId, selection.getMethodId(), challengeEvent.getResult());
+			return finalizeAttempt(uniqueId, providerId, resolved.methodId(), challengeEvent.getResult());
 
-		if (handler.verifyChallenge(enrollment.getPayload(), input.trim(), verificationProvider.get()))
-			return finalizeChallenge(
+		if (resolved.handler().verifyChallenge(resolved.payload(), input.trim(), verificationProvider.get()))
+			return finalizeAttempt(
 					uniqueId,
 					providerId,
-					selection.getMethodId(),
-					result(VerificationChallengeStatus.ALLOW, selection.getMethodId(), false)
+					resolved.methodId(),
+					result(VerificationAttemptStatus.VERIFIED, resolved.methodId(), required, false)
 			);
 
 		String codeHash = RecoveryCodeGenerator.hash(input);
 		boolean recoveryCodeUsed = persistenceService.markRecoveryCodeUsed(
 				uniqueId,
-				selection.getMethodId(),
+				resolved.methodId(),
 				codeHash,
 				System.currentTimeMillis()
 		);
 		if (recoveryCodeUsed)
-			return finalizeChallenge(
+			return finalizeAttempt(
 					uniqueId,
 					providerId,
-					selection.getMethodId(),
-					result(VerificationChallengeStatus.ALLOW, selection.getMethodId(), true)
+					resolved.methodId(),
+					result(VerificationAttemptStatus.VERIFIED, resolved.methodId(), required, true)
 			);
 
-		return finalizeChallenge(
+		return finalizeAttempt(
 				uniqueId,
 				providerId,
-				selection.getMethodId(),
-				result(VerificationChallengeStatus.INVALID_INPUT, selection.getMethodId(), false)
+				resolved.methodId(),
+				result(VerificationAttemptStatus.INVALID_INPUT, resolved.methodId(), required, false)
 		);
 	}
 
-	private VerificationChallengeResult handleUnavailable(
+	private VerificationAttemptResult handleUnavailable(
 			UUID uniqueId,
 			String providerId,
 			String methodId,
@@ -273,34 +386,45 @@ public class DefaultVerificationService implements VerificationService {
 		if (unavailablePolicy == UnavailableSelectionPolicy.CLEAR_SELECTION) {
 			persistenceService.deleteSelection(uniqueId, providerId);
 			boolean required = methodPolicy != null ? methodPolicy.required() : providerPolicy.required();
-			return required
-					? result(VerificationChallengeStatus.REQUIRED_MISSING, methodId, false)
-					: result(VerificationChallengeStatus.SKIP, methodId, false);
+			return result(VerificationAttemptStatus.METHOD_NOT_SELECTED, methodId, required, false);
 		}
 
-		return result(VerificationChallengeStatus.METHOD_UNAVAILABLE, methodId, false);
+		boolean required = methodPolicy != null ? methodPolicy.required() : providerPolicy.required();
+		return result(VerificationAttemptStatus.METHOD_UNAVAILABLE, methodId, required, false);
 	}
 
-	private VerificationChallengeResult result(
-			VerificationChallengeStatus status,
+	private boolean supportsVerification(@Nullable String providerId) {
+		if (providerId == null || providerId.isBlank())
+			return false;
+		return providerManager.getProviders().stream()
+				.anyMatch(provider -> provider != null
+						&& provider.getDescriptor() != null
+						&& providerId.equalsIgnoreCase(provider.getDescriptor().getId())
+						&& provider.getDescriptor().hasCapability(me.whereareiam.identica.type.provider.ProviderCapability.VERIFICATION));
+	}
+
+	private VerificationAttemptResult result(
+			VerificationAttemptStatus status,
 			String methodId,
+			boolean required,
 			boolean recoveryCodeUsed
 	) {
-		return VerificationChallengeResult.builder()
+		return VerificationAttemptResult.builder()
 				.status(status)
 				.methodId(methodId)
+				.required(required)
 				.recoveryCodeUsed(recoveryCodeUsed)
 				.build();
 	}
 
-	private @NotNull VerificationChallengeResult finalizeChallenge(
+	private @NotNull VerificationAttemptResult finalizeAttempt(
 			@NotNull UUID uniqueId,
 			@NotNull String providerId,
 			@NotNull String methodId,
-			@NotNull VerificationChallengeResult result
+			@NotNull VerificationAttemptResult result
 	) {
-		VerificationChallengeStatus status = result.getStatus();
-		if (status == VerificationChallengeStatus.ALLOW) {
+		VerificationAttemptStatus status = result.getStatus();
+		if (status == VerificationAttemptStatus.VERIFIED) {
 			eventManager.call(new VerificationChallengeSucceededEvent(
 					uniqueId,
 					providerId,
@@ -310,7 +434,7 @@ public class DefaultVerificationService implements VerificationService {
 			return result;
 		}
 
-		if (status == VerificationChallengeStatus.INVALID_INPUT) {
+		if (status == VerificationAttemptStatus.INVALID_INPUT) {
 			eventManager.call(new VerificationChallengeFailedEvent(
 					uniqueId,
 					providerId,
@@ -320,5 +444,12 @@ public class DefaultVerificationService implements VerificationService {
 		}
 
 		return result;
+	}
+
+	private record ResolvedVerification(
+			@NotNull String methodId,
+			@NotNull String payload,
+			@NotNull VerificationMethod handler
+	) {
 	}
 }

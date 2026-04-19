@@ -12,6 +12,7 @@ public class VerificationTemplate implements TemplateProvider<Verification> {
 	public Verification supply(Verification verification) {
 		verification.setChallengeTtl(Duration.ofMinutes(2));
 		verification.setEnrollmentTtl(Duration.ofMinutes(10));
+		verification.setAutoSelectCurrentProvider(true);
 
 		Verification.Totp totp = new Verification.Totp();
 		totp.setDisplayName("Authenticator App");

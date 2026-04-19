@@ -1,7 +1,7 @@
 package me.whereareiam.identica.adapter.database.mapper.verification;
 
 import me.whereareiam.identica.adapter.database.entity.verification.VerificationSelectionEntity;
-import me.whereareiam.identica.model.verification.VerificationSelection;
+import me.whereareiam.identica.model.verification.selection.VerificationSelection;
 
 public final class VerificationSelectionMapper {
 	public static VerificationSelection toModel(VerificationSelectionEntity entity) {

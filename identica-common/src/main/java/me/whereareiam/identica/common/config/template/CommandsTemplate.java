@@ -300,7 +300,16 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 				.enabled(true)
 				.aliases(List.of("2fa confirm"))
 				.permission("")
-				.description("Confirm verification challenge or enrollment")
+				.description("Confirm a pending verification challenge")
+				.usage("{alias} <input>")
+				.arguments(Map.of("input", "Verification code"))
+				.build();
+
+		CommandDefinition verificationEnrollConfirm = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("2fa enroll confirm"))
+				.permission("")
+				.description("Confirm pending verification enrollment")
 				.usage("{alias} <input>")
 				.arguments(Map.of("input", "Code or saved"))
 				.build();
@@ -325,7 +334,7 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 
 		CommandDefinition verificationCancel = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("2fa cancel"))
+				.aliases(List.of("2fa enroll cancel"))
 				.permission("")
 				.description("Cancel pending verification enrollment")
 				.usage("{alias}")
@@ -363,13 +372,15 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 		definitions.put("migration-cancel", migrationCancel);
 		definitions.put("migration-primary", migrationPrimary);
 		definitions.put("migration-drop", migrationDrop);
+
 		definitions.put("verification", verification);
 		definitions.put("verification-status", verificationStatus);
 		definitions.put("verification-enroll", verificationEnroll);
+		definitions.put("verification-enroll-confirm", verificationEnrollConfirm);
 		definitions.put("verification-confirm", verificationConfirm);
 		definitions.put("verification-use", verificationUse);
 		definitions.put("verification-disable", verificationDisable);
-		definitions.put("verification-cancel", verificationCancel);
+		definitions.put("verification-enroll-cancel", verificationCancel);
 		definitions.put("verification-reset", verificationReset);
 
 		commands.getCommands().putAll(definitions);

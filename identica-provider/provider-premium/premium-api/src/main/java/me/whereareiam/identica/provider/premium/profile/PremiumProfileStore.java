@@ -69,15 +69,10 @@ public class PremiumProfileStore implements EventListener {
 	}
 
 	private @Nullable String resolveKey(@Nullable String username) {
-		String normalizedUsername = normalize(username);
-		if (normalizedUsername == null) return null;
-		return KEY_USERNAME_PREFIX + normalizedUsername;
-	}
-
-	private @Nullable String normalize(@Nullable String value) {
-		if (value == null || value.isBlank())
+		if (username == null || username.isBlank())
 			return null;
-		return value.trim().toLowerCase(Locale.ROOT);
+
+		return KEY_USERNAME_PREFIX + username.trim().toLowerCase(Locale.ROOT);
 	}
 
 	private boolean isUsable(@Nullable Duration duration) {

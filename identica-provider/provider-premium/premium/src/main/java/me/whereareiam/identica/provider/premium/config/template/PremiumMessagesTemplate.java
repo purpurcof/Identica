@@ -117,6 +117,7 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		premium.setVerificationRequired("{prefix}<white>Confirm your verification code with <yellow>/premium confirm</yellow> <gray>[Code]</gray> before starting premium migration.</white>");
 		premium.setCancelled("{prefix}<white>Premium migration cancelled.</white>");
 		premium.setExpired("{prefix}<white>Premium migration request expired.</white>");
 		premium.setNoPending("{prefix}<white>No pending premium migration.</white>");

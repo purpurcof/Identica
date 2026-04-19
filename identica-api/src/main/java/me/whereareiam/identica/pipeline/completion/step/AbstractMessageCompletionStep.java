@@ -100,12 +100,6 @@ public abstract class AbstractMessageCompletionStep extends AbstractCompletionSt
 		identity.sendMessage(Serializer.serialize(content));
 	}
 
-	private static @Nullable String normalize(@Nullable String value) {
-		if (value == null) return null;
-		String trimmed = value.trim();
-		return trimmed.isEmpty() ? null : trimmed;
-	}
-
 	private static @Nullable String joinLines(@Nullable List<String> lines) {
 		if (lines == null || lines.isEmpty()) return null;
 
@@ -136,7 +130,11 @@ public abstract class AbstractMessageCompletionStep extends AbstractCompletionSt
 			@NotNull Map<String, String> placeholders,
 			@NotNull SerializerOptions.PlaceholderFormat format
 	) {
-		return normalize(applyPlaceholders(value, placeholders, format));
+		String resolved = applyPlaceholders(value, placeholders, format);
+		if (resolved == null) return null;
+
+		String trimmed = resolved.trim();
+		return trimmed.isEmpty() ? null : trimmed;
 	}
 
 	protected record TitleContent(

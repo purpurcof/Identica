@@ -47,6 +47,7 @@ public abstract class HandshakeDecisionAdapter {
 	) {
 		PrepareRequest prepareRequest = PrepareRequest.builder()
 				.stage(PrepareStage.HANDSHAKE)
+				.connectionKey(request.identity().connectionKey())
 				.identity(request.identity())
 				.build();
 

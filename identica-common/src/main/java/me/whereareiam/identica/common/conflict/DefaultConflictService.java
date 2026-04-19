@@ -53,28 +53,28 @@ public class DefaultConflictService implements ConflictService {
 
 	@Override
 	public void register(@NotNull ConflictResolver resolver) {
-		String id = normalize(resolver.getId());
+		String id = UniqueIdResolutionSupport.normalize(resolver.getId());
 		if (id == null) return;
 		resolvers.put(id, resolver);
 	}
 
 	@Override
 	public void unregister(@NotNull ConflictResolver resolver) {
-		String id = normalize(resolver.getId());
+		String id = UniqueIdResolutionSupport.normalize(resolver.getId());
 		if (id == null) return;
 		resolvers.remove(id);
 	}
 
 	@Override
 	public @Nullable ConflictResolver getResolver(@NotNull String id) {
-		String key = normalize(id);
+		String key = UniqueIdResolutionSupport.normalize(id);
 		if (key == null) return null;
 		return resolvers.get(key);
 	}
 
 	@Override
 	public void register(@NotNull ConflictType type) {
-		String key = normalize(type.getKey());
+		String key = UniqueIdResolutionSupport.normalize(type.getKey());
 		if (key == null) return;
 		types.put(key, type);
 		for (ConflictResolver resolver : type.getResolvers())
@@ -83,7 +83,7 @@ public class DefaultConflictService implements ConflictService {
 
 	@Override
 	public void unregister(@NotNull ConflictType type) {
-		String key = normalize(type.getKey());
+		String key = UniqueIdResolutionSupport.normalize(type.getKey());
 		if (key == null) return;
 		types.remove(key);
 		for (ConflictResolver resolver : type.getResolvers())
@@ -92,7 +92,7 @@ public class DefaultConflictService implements ConflictService {
 
 	@Override
 	public @Nullable ConflictType getType(@NotNull String key) {
-		String normalized = normalize(key);
+		String normalized = UniqueIdResolutionSupport.normalize(key);
 		if (normalized == null) return null;
 		return types.get(normalized);
 	}
@@ -236,9 +236,4 @@ public class DefaultConflictService implements ConflictService {
 				? new ObjectNode(objectNode.getValues())
 				: new ObjectNode();
 	}
-
-	private String normalize(String value) {
-		return UniqueIdResolutionSupport.normalize(value);
-	}
-
 }

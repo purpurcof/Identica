@@ -29,6 +29,19 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		PremiumMessages.Verification.Authentication authenticationVerification = new PremiumMessages.Verification.Authentication();
+		authenticationVerification.setPrompt(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Verification required for your account.</white>",
+				"  <white>Use <yellow>/2fa confirm</yellow> <gray>[Code]</gray> to continue.</white>",
+				" "
+		));
+		authenticationVerification.setInvalid("{prefix}<white>Invalid verification <red>code</red>.</white>");
+		authenticationVerification.setRequired("{prefix}<white>A verification method is <red>required</red> before login.</white>");
+		authenticationVerification.setUnavailable("{prefix}<white>Your selected verification method is <red>unavailable</red>.</white>");
+		verification.setAuthentication(authenticationVerification);
 		messages.setVerification(verification);
 
 		PremiumMessages.Completion completion = new PremiumMessages.Completion();

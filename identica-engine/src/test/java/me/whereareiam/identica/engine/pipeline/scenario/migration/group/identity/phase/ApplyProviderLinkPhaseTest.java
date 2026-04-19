@@ -1,7 +1,7 @@
 package me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.phase;
 
-import me.whereareiam.identica.database.ProviderLinkPersistenceService;
-import me.whereareiam.identica.database.ProviderProfilePersistenceService;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityState;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;

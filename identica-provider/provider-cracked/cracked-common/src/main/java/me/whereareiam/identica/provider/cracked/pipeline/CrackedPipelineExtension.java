@@ -11,6 +11,7 @@ import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.CrackedValidationStep;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.authentication.CrackedSessionReuseStep;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.authentication.CrackedAuthenticationPasswordStep;
+import me.whereareiam.identica.provider.cracked.pipeline.scenario.authentication.CrackedAuthenticationVerificationStep;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.migration.CrackedMigrationAuthenticationStep;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.migration.CrackedMigrationConfirmStep;
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.migration.CrackedMigrationRegistrationStep;
@@ -38,6 +39,7 @@ public class CrackedPipelineExtension implements PipelineExtension {
 	// Steps - Authentication
 	private final @NotNull CrackedSessionReuseStep sessionReuseStep;
 	private final @NotNull CrackedAuthenticationPasswordStep authenticationPasswordStep;
+	private final @NotNull CrackedAuthenticationVerificationStep authenticationVerificationStep;
 
 	// Steps - Migration
 	private final @NotNull CrackedMigrationAuthenticationStep migrationAuthenticationStep;
@@ -119,6 +121,13 @@ public class CrackedPipelineExtension implements PipelineExtension {
 				providerId,
 				PipelineType.AUTHENTICATION,
 				authenticationPasswordStep
+		);
+		registerForBothFlows(
+				builder,
+				PipelineScope.AUTHENTICATION,
+				providerId,
+				PipelineType.AUTHENTICATION,
+				authenticationVerificationStep
 		);
 
 		builder.registerStep(

@@ -3,10 +3,10 @@ package me.whereareiam.identica.adapter.database.provider;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.adapter.database.entity.AccountProviderProfileEntity;
-import me.whereareiam.identica.adapter.database.mapper.AccountProviderProfileMapper;
+import me.whereareiam.identica.adapter.database.entity.account.AccountProviderProfileEntity;
+import me.whereareiam.identica.adapter.database.mapper.account.AccountProviderProfileMapper;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderProfileRepository;
-import me.whereareiam.identica.database.ProviderProfilePersistenceService;
+import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import org.jetbrains.annotations.NotNull;
 

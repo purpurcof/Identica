@@ -1,6 +1,6 @@
 package me.whereareiam.identica.adapter.database.repository.provider;
 
-import me.whereareiam.identica.adapter.database.entity.AccountProviderProfileEntity;
+import me.whereareiam.identica.adapter.database.entity.account.AccountProviderProfileEntity;
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;

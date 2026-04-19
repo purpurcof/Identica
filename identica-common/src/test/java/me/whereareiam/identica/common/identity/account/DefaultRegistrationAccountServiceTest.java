@@ -1,6 +1,6 @@
 package me.whereareiam.identica.common.identity.account;
 
-import me.whereareiam.identica.database.ProviderLinkPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;

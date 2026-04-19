@@ -1,4 +1,4 @@
-package me.whereareiam.identica.database;
+package me.whereareiam.identica.database.provider;
 
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import org.jetbrains.annotations.NotNull;

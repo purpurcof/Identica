@@ -6,7 +6,9 @@ import lombok.ToString;
 import me.whereareiam.configura.annotation.Field;
 import me.whereareiam.configura.node.Node;
 import me.whereareiam.configura.node.ObjectNode;
+import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,10 +75,32 @@ public class Providers {
 		private @NotNull String displayName = "";
 		private boolean enabled;
 		private int priority;
+		private @NotNull Verification verification = new Verification();
 		/**
 		 * Hostnames (optionally with port) that map to this provider.
 		 * Entries must use the format {@code host} or {@code host:port}.
 		 */
 		private @NotNull List<String> entrypoints = new ArrayList<>();
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Verification {
+		private boolean enabled;
+		private boolean required;
+		private @Nullable UnavailableSelectionPolicy unavailableSelectionPolicy;
+		private @NotNull List<MethodEntry> methods = new ArrayList<>();
+
+		@Getter
+		@Setter
+		@ToString
+		public static class MethodEntry {
+			private @NotNull String id = "";
+			private boolean enabled;
+			private int priority;
+			private @Nullable Boolean required;
+			private @Nullable UnavailableSelectionPolicy unavailableSelectionPolicy;
+		}
 	}
 }

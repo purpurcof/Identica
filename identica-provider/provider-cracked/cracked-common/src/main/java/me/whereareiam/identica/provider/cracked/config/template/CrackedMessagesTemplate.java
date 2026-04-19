@@ -77,6 +77,19 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 				"{prefix}<white>You have <red>{remaining}</red> tries left.</white>"
 		));
 		authentication.setBruteforce(bruteforce);
+		CrackedMessages.Scenario.Authentication.Verification verification = new CrackedMessages.Scenario.Authentication.Verification();
+		verification.setPrompt(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Verification required for your account.</white>",
+				"  <white>Use <yellow>/2fa confirm</yellow> <gray>[Code]</gray> to continue.</white>",
+				" "
+		));
+		verification.setInvalid("{prefix}<white>Invalid verification <red>code</red>.</white>");
+		verification.setRequired("{prefix}<white>A verification method is <red>required</red> before login.</white>");
+		verification.setUnavailable("{prefix}<white>Your selected verification method is <red>unavailable</red>.</white>");
+		authentication.setVerification(verification);
 		scenario.setAuthentication(authentication);
 		messages.setScenario(scenario);
 

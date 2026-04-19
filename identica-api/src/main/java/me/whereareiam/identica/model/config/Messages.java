@@ -64,6 +64,7 @@ public class Messages {
 		private @NotNull Sessions sessions;
 		private @NotNull Reload reload;
 		private @NotNull Clear clear;
+		private @NotNull Verification verification;
 
 		/**
 		 * Configuration for enroll command messages.
@@ -416,6 +417,92 @@ public class Messages {
 				 * - {command}
 				 */
 				private @NotNull EntryFormat entry;
+			}
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Verification {
+			private @NotNull String playerOnly;
+			private @NotNull Status status;
+			private @NotNull Enroll enroll;
+			private @NotNull Confirm confirm;
+			private @NotNull Use use;
+			private @NotNull Disable disable;
+			private @NotNull Cancel cancel;
+			private @NotNull Reset reset;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Status {
+				private @NotNull List<String> body;
+				private @NotNull EntryFormat enrollmentEntry;
+				private @NotNull EntryFormat selectionEntry;
+				private @NotNull String emptyEnrollments;
+				private @NotNull String emptySelections;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Enroll {
+				private @NotNull String unknownMethod;
+				private @NotNull List<String> pending;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Confirm {
+				private @NotNull String noPending;
+				private @NotNull String invalidCode;
+				private @NotNull String methodUnavailable;
+				private @NotNull String enabled;
+				private @NotNull RecoveryCodes recoveryCodes;
+
+				@Getter
+				@Setter
+				@ToString
+				public static class RecoveryCodes {
+					private @NotNull List<String> body;
+					private @NotNull EntryFormat entry;
+					private @NotNull String empty;
+				}
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Use {
+				private @NotNull String methodNotEnrolled;
+				private @NotNull String methodUnavailable;
+				private @NotNull String updated;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Disable {
+				private @NotNull String methodNotEnrolled;
+				private @NotNull String disabled;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Cancel {
+				private @NotNull String noPending;
+				private @NotNull String cancelled;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Reset {
+				private @NotNull String targetNotFound;
+				private @NotNull String completed;
 			}
 		}
 

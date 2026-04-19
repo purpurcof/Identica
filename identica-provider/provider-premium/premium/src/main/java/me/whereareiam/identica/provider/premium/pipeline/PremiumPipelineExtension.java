@@ -5,6 +5,7 @@ import me.whereareiam.identica.pipeline.extension.PipelineExtension;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
 import me.whereareiam.identica.provider.premium.step.FinalizeProfileStep;
 import me.whereareiam.identica.provider.premium.step.OfflineCheckStep;
+import me.whereareiam.identica.provider.premium.step.PremiumVerificationStep;
 import me.whereareiam.identica.provider.premium.step.ProfilePresenceStep;
 import me.whereareiam.identica.type.pipeline.PipelineScope;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -19,6 +20,7 @@ public class PremiumPipelineExtension implements PipelineExtension {
 	private final @NotNull ProfilePresenceStep profilePresenceStep;
 	private final @NotNull OfflineCheckStep offlineCheckStep;
 	private final @NotNull FinalizeProfileStep finalizeProfileStep;
+	private final @NotNull PremiumVerificationStep premiumVerificationStep;
 
 	public static @NotNull String extensionIdFor(@NotNull String providerId) {
 		return providerId + ":verify-resolver";
@@ -50,6 +52,13 @@ public class PremiumPipelineExtension implements PipelineExtension {
 				providerId,
 				StageType.PROVIDER,
 				finalizeProfileStep
+		);
+		builder.registerStep(
+				PipelineScope.AUTHENTICATION,
+				providerId,
+				StageType.PROVIDER,
+				PipelineType.AUTHENTICATION,
+				premiumVerificationStep
 		);
 
 		builder.registerStep(

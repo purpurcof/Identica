@@ -1,6 +1,6 @@
-package me.whereareiam.identica.adapter.database.mapper;
+package me.whereareiam.identica.adapter.database.mapper.account;
 
-import me.whereareiam.identica.adapter.database.entity.AccountEntity;
+import me.whereareiam.identica.adapter.database.entity.account.AccountEntity;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.type.UsernameSource;
 

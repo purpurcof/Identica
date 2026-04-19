@@ -1,6 +1,6 @@
 package me.whereareiam.identica.adapter.database.account;
 
-import me.whereareiam.identica.adapter.database.entity.AccountEntity;
+import me.whereareiam.identica.adapter.database.entity.account.AccountEntity;
 import me.whereareiam.identica.adapter.database.repository.account.AccountRepository;
 import me.whereareiam.identica.adapter.database.testing.TestDataFactory;
 import me.whereareiam.identica.event.EventManager;

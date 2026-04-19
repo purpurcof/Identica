@@ -1,6 +1,6 @@
-package me.whereareiam.identica.adapter.database.mapper;
+package me.whereareiam.identica.adapter.database.mapper.account;
 
-import me.whereareiam.identica.adapter.database.entity.AccountProviderLinkEntity;
+import me.whereareiam.identica.adapter.database.entity.account.AccountProviderLinkEntity;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 
 public final class AccountProviderLinkMapper {

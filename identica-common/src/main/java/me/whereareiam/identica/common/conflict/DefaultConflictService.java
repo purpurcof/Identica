@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.conflict;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.common.uuid.UniqueIdResolutionSupport;
+import me.whereareiam.identica.common.util.UniqueIdResolutionSupport;
 import me.whereareiam.identica.conflict.ConflictGuard;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;

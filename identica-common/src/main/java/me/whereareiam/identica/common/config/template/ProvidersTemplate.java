@@ -5,6 +5,7 @@ import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.configura.node.ObjectNode;
 import me.whereareiam.configura.node.StringNode;
 import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 
 import java.util.List;
 
@@ -30,6 +31,7 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 		cracked.setEnabled(true);
 		cracked.setPriority(50);
 		cracked.setEntrypoints(List.of("cracked.arcadeya.com"));
+		cracked.setVerification(crackedVerification());
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
 		premium.setId("premium");
@@ -37,6 +39,7 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 		premium.setEnabled(true);
 		premium.setPriority(100);
 		premium.setEntrypoints(List.of("premium.arcadeya.com"));
+		premium.setVerification(premiumVerification());
 
 		config.setProviders(List.of(cracked, premium));
 		return config;
@@ -53,5 +56,37 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 		entry.setId("format_display");
 		entry.setParameters(node);
 		return entry;
+	}
+
+	private Providers.Verification crackedVerification() {
+		Providers.Verification verification = new Providers.Verification();
+		verification.setEnabled(true);
+		verification.setRequired(false);
+		verification.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.CLEAR_SELECTION);
+
+		Providers.Verification.MethodEntry totp = new Providers.Verification.MethodEntry();
+		totp.setId("totp");
+		totp.setEnabled(true);
+		totp.setPriority(100);
+		totp.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.CLEAR_SELECTION);
+		verification.setMethods(List.of(totp));
+
+		return verification;
+	}
+
+	private Providers.Verification premiumVerification() {
+		Providers.Verification verification = new Providers.Verification();
+		verification.setEnabled(false);
+		verification.setRequired(false);
+		verification.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.CLEAR_SELECTION);
+
+		Providers.Verification.MethodEntry totp = new Providers.Verification.MethodEntry();
+		totp.setId("totp");
+		totp.setEnabled(true);
+		totp.setPriority(100);
+		totp.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.CLEAR_SELECTION);
+		verification.setMethods(List.of(totp));
+
+		return verification;
 	}
 }

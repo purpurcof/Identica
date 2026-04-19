@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.migration;
 
 import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.database.ProviderLinkPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.migration.PendingMigration;

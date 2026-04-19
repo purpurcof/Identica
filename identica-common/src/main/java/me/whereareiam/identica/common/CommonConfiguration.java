@@ -52,6 +52,10 @@ import me.whereareiam.identica.common.sentinel.DefaultSentinelService;
 import me.whereareiam.identica.common.sentinel.ConnectionAttemptSentinelLifecycle;
 import me.whereareiam.identica.common.sentinel.SentinelRegistry;
 import me.whereareiam.identica.common.sentinel.ResumeSpamSentinelDefinition;
+import me.whereareiam.identica.common.verification.VerificationEnrollmentStore;
+import me.whereareiam.identica.common.verification.DefaultVerificationRegistry;
+import me.whereareiam.identica.common.verification.DefaultVerificationService;
+import me.whereareiam.identica.common.verification.type.totp.TotpVerificationMethod;
 import me.whereareiam.identica.common.routing.PhaseRoutingService;
 import me.whereareiam.identica.common.routing.DefaultRoutingStateStore;
 import me.whereareiam.identica.common.routing.RoutingLifecycle;
@@ -76,10 +80,13 @@ import me.whereareiam.identica.sentinel.SentinelService;
 import me.whereareiam.identica.sentinel.SentinelDefinition;
 import me.whereareiam.identica.routing.RoutingService;
 import me.whereareiam.identica.routing.RoutingStateStore;
+import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.util.EventUtil;
+import me.whereareiam.identica.verification.VerificationMethod;
+import me.whereareiam.identica.verification.VerificationRegistry;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
@@ -112,6 +119,8 @@ public class CommonConfiguration extends AbstractModule {
 		bind(Commands.class).toProvider(CommandsProvider.class);
 		bind(ProvidersProvider.class).asEagerSingleton();
 		bind(Providers.class).toProvider(ProvidersProvider.class);
+		bind(VerificationProvider.class).asEagerSingleton();
+		bind(Verification.class).toProvider(VerificationProvider.class);
 		bind(PersistenceProvider.class).asEagerSingleton();
 		bind(Persistence.class).toProvider(PersistenceProvider.class);
 		bind(ReplicationProvider.class).asEagerSingleton();
@@ -133,6 +142,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(ProviderAttemptStore.class).to(DefaultProviderAttemptStore.class).asEagerSingleton();
 		bind(PrepareStateStore.class).to(DefaultPrepareStateStore.class).asEagerSingleton();
 		bind(CompletionPendingStore.class).to(DefaultCompletionPendingStore.class).asEagerSingleton();
+		bind(VerificationEnrollmentStore.class).asEagerSingleton();
 
 		// Replication
 		OptionalBinder.newOptionalBinder(binder(), Key.get(ReplicationAdapter.class, Names.named("replicationAdapter")))
@@ -148,7 +158,12 @@ public class CommonConfiguration extends AbstractModule {
 		// Account + presence
 		bind(RegistrationAccountService.class).to(DefaultRegistrationAccountService.class).asEagerSingleton();
 		bind(MigrationService.class).to(DefaultMigrationService.class).asEagerSingleton();
+		bind(VerificationService.class).to(DefaultVerificationService.class).asEagerSingleton();
 		bind(IdentityService.class).to(DefaultIdentityService.class).asEagerSingleton();
+		bind(VerificationRegistry.class).to(DefaultVerificationRegistry.class).asEagerSingleton();
+		Multibinder.newSetBinder(binder(), VerificationMethod.class)
+				.addBinding()
+				.to(TotpVerificationMethod.class);
 
 		// Session lifecycle
 		bind(SessionService.class).to(DefaultSessionService.class).asEagerSingleton();

@@ -1,6 +1,6 @@
-package me.whereareiam.identica.adapter.database.mapper;
+package me.whereareiam.identica.adapter.database.mapper.account;
 
-import me.whereareiam.identica.adapter.database.entity.AccountProviderProfileEntity;
+import me.whereareiam.identica.adapter.database.entity.account.AccountProviderProfileEntity;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 
 public final class AccountProviderProfileMapper {

@@ -1,6 +1,6 @@
 package me.whereareiam.identica.adapter.database.repository.account;
 
-import me.whereareiam.identica.adapter.database.entity.AccountEntity;
+import me.whereareiam.identica.adapter.database.entity.account.AccountEntity;
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;

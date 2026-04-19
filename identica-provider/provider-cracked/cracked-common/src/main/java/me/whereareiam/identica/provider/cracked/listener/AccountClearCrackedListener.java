@@ -2,7 +2,7 @@ package me.whereareiam.identica.provider.cracked.listener;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.database.ProviderLinkPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;

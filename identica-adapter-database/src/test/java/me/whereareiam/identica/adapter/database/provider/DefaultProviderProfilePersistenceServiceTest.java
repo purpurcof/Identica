@@ -1,6 +1,6 @@
 package me.whereareiam.identica.adapter.database.provider;
 
-import me.whereareiam.identica.adapter.database.entity.AccountProviderProfileEntity;
+import me.whereareiam.identica.adapter.database.entity.account.AccountProviderProfileEntity;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderProfileRepository;
 import me.whereareiam.identica.adapter.database.testing.TestDataFactory;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;

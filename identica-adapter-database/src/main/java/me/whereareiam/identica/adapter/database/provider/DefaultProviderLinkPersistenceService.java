@@ -2,10 +2,10 @@ package me.whereareiam.identica.adapter.database.provider;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.adapter.database.entity.AccountProviderLinkEntity;
-import me.whereareiam.identica.adapter.database.mapper.AccountProviderLinkMapper;
+import me.whereareiam.identica.adapter.database.entity.account.AccountProviderLinkEntity;
+import me.whereareiam.identica.adapter.database.mapper.account.AccountProviderLinkMapper;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderLinkRepository;
-import me.whereareiam.identica.database.ProviderLinkPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;

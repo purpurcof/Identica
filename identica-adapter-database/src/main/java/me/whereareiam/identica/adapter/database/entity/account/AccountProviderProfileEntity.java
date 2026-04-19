@@ -1,4 +1,4 @@
-package me.whereareiam.identica.adapter.database.entity;
+package me.whereareiam.identica.adapter.database.entity.account;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

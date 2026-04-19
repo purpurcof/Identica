@@ -271,6 +271,75 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 						.build())
 				.build();
 
+		CommandDefinition verification = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("2fa"))
+				.permission("")
+				.description("Verification methods")
+				.usage("{alias}")
+				.build();
+
+		CommandDefinition verificationStatus = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("2fa status"))
+				.permission("")
+				.description("Show verification status")
+				.usage("{alias}")
+				.build();
+
+		CommandDefinition verificationEnroll = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("2fa enroll"))
+				.permission("")
+				.description("Start verification method enrollment")
+				.usage("{alias} <method>")
+				.arguments(Map.of("method", "Method id"))
+				.build();
+
+		CommandDefinition verificationConfirm = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("2fa confirm"))
+				.permission("")
+				.description("Confirm verification challenge or enrollment")
+				.usage("{alias} <input>")
+				.arguments(Map.of("input", "Code or saved"))
+				.build();
+
+		CommandDefinition verificationUse = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("2fa use"))
+				.permission("")
+				.description("Select a verification method for a provider")
+				.usage("{alias} <provider> <method>")
+				.arguments(Map.of("provider", "Provider id", "method", "Method id"))
+				.build();
+
+		CommandDefinition verificationDisable = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("2fa disable"))
+				.permission("")
+				.description("Disable an enrolled verification method")
+				.usage("{alias} <method>")
+				.arguments(Map.of("method", "Method id"))
+				.build();
+
+		CommandDefinition verificationCancel = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("2fa cancel"))
+				.permission("")
+				.description("Cancel pending verification enrollment")
+				.usage("{alias}")
+				.build();
+
+		CommandDefinition verificationReset = CommandDefinition.builder()
+				.enabled(true)
+				.aliases(List.of("2fa reset"))
+				.permission("identica.admin.2fa.reset")
+				.description("Reset verification state for a player")
+				.usage("{command} {alias} <target> [provider]")
+				.arguments(Map.of("target", "Player/UUID", "provider", "Provider id"))
+				.build();
+
 		Map<String, CommandDefinition> definitions = new LinkedHashMap<>();
 		definitions.put("main", main);
 		definitions.put("reload", reload);
@@ -294,6 +363,14 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 		definitions.put("migration-cancel", migrationCancel);
 		definitions.put("migration-primary", migrationPrimary);
 		definitions.put("migration-drop", migrationDrop);
+		definitions.put("verification", verification);
+		definitions.put("verification-status", verificationStatus);
+		definitions.put("verification-enroll", verificationEnroll);
+		definitions.put("verification-confirm", verificationConfirm);
+		definitions.put("verification-use", verificationUse);
+		definitions.put("verification-disable", verificationDisable);
+		definitions.put("verification-cancel", verificationCancel);
+		definitions.put("verification-reset", verificationReset);
 
 		commands.getCommands().putAll(definitions);
 

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.uuid;
+package me.whereareiam.identica.common.util;
 
 import org.jetbrains.annotations.Nullable;
 

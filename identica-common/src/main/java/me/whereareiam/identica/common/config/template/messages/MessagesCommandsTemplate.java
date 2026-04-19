@@ -20,6 +20,7 @@ public class MessagesCommandsTemplate {
 		applySessions(commands);
 		applyReload(commands);
 		applyClear(commands);
+		applyVerification(commands);
 
 		return commands;
 	}
@@ -270,5 +271,100 @@ public class MessagesCommandsTemplate {
 		));
 
 		commands.setClear(clear);
+	}
+
+	private void applyVerification(Messages.Commands commands) {
+		Messages.Commands.Verification verification = new Messages.Commands.Verification();
+		verification.setPlayerOnly("{prefix}<white>This command can only be used by a player.</white>");
+		Messages.Commands.Verification.Status status = new Messages.Commands.Verification.Status();
+		status.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Enrolled methods:</white>",
+				"{enrollments}",
+				" ",
+				"  <white>Provider selections:</white>",
+				"{selections}",
+				" "
+		));
+		status.setEmptyEnrollments("  <dark_gray>▪</dark_gray> <gray>No enrolled methods</gray>");
+		status.setEmptySelections("  <dark_gray>▪</dark_gray> <gray>No provider selections</gray>");
+
+		Messages.Commands.Verification.Enroll enroll = new Messages.Commands.Verification.Enroll();
+		enroll.setUnknownMethod("{prefix}<white>Unknown verification method <gray>{method}</gray>.</white>");
+		enroll.setPending(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Scan or enter this TOTP secret:</white>",
+				"  <gray>{secret}</gray>",
+				" ",
+				"  <white>Setup URI:</white>",
+				"  <gray>{uri}</gray>",
+				" ",
+				"  <white>Use <yellow>/2fa confirm</yellow> <gray>[Code]</gray> to continue.</white>",
+				" "
+		));
+
+		Messages.Commands.Verification.Confirm confirm = new Messages.Commands.Verification.Confirm();
+		confirm.setNoPending("{prefix}<white>No pending verification action.</white>");
+		confirm.setInvalidCode("{prefix}<white>Invalid verification code.</white>");
+		confirm.setMethodUnavailable("{prefix}<white>Method <gray>{method}</gray> is not available for <gray>{provider}</gray>.</white>");
+		confirm.setEnabled("{prefix}<white>Verification method <green>{method}</green> enabled.</white>");
+		Messages.Commands.Verification.Confirm.RecoveryCodes recoveryCodes = new Messages.Commands.Verification.Confirm.RecoveryCodes();
+		recoveryCodes.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Save these recovery codes now:</white>",
+				"{entries}",
+				" ",
+				"  <click:run_command:/2fa confirm saved><green>[CONFIRM]</green></click>       " +
+						"<click:run_command:/2fa cancel><red>[CANCEL]</red></click>",
+				" "
+		));
+		Messages.Commands.EntryFormat recoveryEntry = new Messages.Commands.EntryFormat();
+		recoveryEntry.setFormat("  <dark_gray>▪</dark_gray> <white>{code}</white>");
+		recoveryEntry.setEmptyFormat("  <dark_gray>▪</dark_gray>");
+		recoveryCodes.setEntry(recoveryEntry);
+		recoveryCodes.setEmpty("  <dark_gray>▪</dark_gray> <gray>No recovery codes generated</gray>");
+		confirm.setRecoveryCodes(recoveryCodes);
+
+		Messages.Commands.EntryFormat enrollmentEntry = new Messages.Commands.EntryFormat();
+		enrollmentEntry.setFormat("  <dark_gray>▪</dark_gray> <white>{method}</white> <gray>(enabled at {enabledAt})</gray>");
+		enrollmentEntry.setEmptyFormat("  <dark_gray>▪</dark_gray> <white>{method}</white>");
+		status.setEnrollmentEntry(enrollmentEntry);
+
+		Messages.Commands.EntryFormat selectionEntry = new Messages.Commands.EntryFormat();
+		selectionEntry.setFormat("  <dark_gray>▪</dark_gray> <white>{provider}</white>: <green>{method}</green>");
+		selectionEntry.setEmptyFormat("  <dark_gray>▪</dark_gray> <white>{provider}</white>");
+		status.setSelectionEntry(selectionEntry);
+
+		Messages.Commands.Verification.Use use = new Messages.Commands.Verification.Use();
+		use.setMethodNotEnrolled("{prefix}<white>Method <gray>{method}</gray> is not enrolled.</white>");
+		use.setMethodUnavailable("{prefix}<white>Method <gray>{method}</gray> is not available for <gray>{provider}</gray>.</white>");
+		use.setUpdated("{prefix}<white><green>{method}</green> selected for <gray>{provider}</gray>.</white>");
+
+		Messages.Commands.Verification.Disable disable = new Messages.Commands.Verification.Disable();
+		disable.setMethodNotEnrolled("{prefix}<white>Method <gray>{method}</gray> is not enrolled.</white>");
+		disable.setDisabled("{prefix}<white>Verification method <red>{method}</red> disabled.</white>");
+
+		Messages.Commands.Verification.Cancel cancel = new Messages.Commands.Verification.Cancel();
+		cancel.setNoPending("{prefix}<white>No pending verification action.</white>");
+		cancel.setCancelled("{prefix}<white>Pending verification enrollment cancelled.</white>");
+
+		Messages.Commands.Verification.Reset reset = new Messages.Commands.Verification.Reset();
+		reset.setTargetNotFound("{prefix}<white>No account found for <gray>{target}</gray>.</white>");
+		reset.setCompleted("{prefix}<white>Verification state reset for <gray>{target}</gray>.</white>");
+
+		verification.setStatus(status);
+		verification.setEnroll(enroll);
+		verification.setConfirm(confirm);
+		verification.setUse(use);
+		verification.setDisable(disable);
+		verification.setCancel(cancel);
+		verification.setReset(reset);
+		commands.setVerification(verification);
 	}
 }

@@ -15,6 +15,8 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.verification.VerificationService;
+import me.whereareiam.identica.verification.VerificationRegistry;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -226,9 +228,39 @@ public final class IdenticaAPI {
 		return getService(ReplicationSystem.class);
 	}
 
+	/**
+	 * Gets the PipelineExtensionRegistry for registering pipeline extensions.
+	 *
+	 * @return the PipelineExtensionRegistry instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
 	@NotNull
 	public static PipelineExtensionRegistry getPipelineExtensionRegistry() {
 		return getService(PipelineExtensionRegistry.class);
+	}
+
+	/**
+	 * Gets the VerificationService for verification enrollment, selection,
+	 * reset, and challenge operations.
+	 *
+	 * @return the VerificationService instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
+	@NotNull
+	public static VerificationService getVerificationService() {
+		return getService(VerificationService.class);
+	}
+
+	/**
+	 * Gets the VerificationRegistry for registering and resolving
+	 * verification methods.
+	 *
+	 * @return the VerificationRegistry instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
+	@NotNull
+	public static VerificationRegistry getVerificationRegistry() {
+		return getService(VerificationRegistry.class);
 	}
 
 }

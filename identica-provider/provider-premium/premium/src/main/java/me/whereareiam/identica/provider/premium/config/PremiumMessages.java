@@ -46,6 +46,17 @@ public class PremiumMessages {
 	public static class Verification {
 		private @NotNull List<String> rejoin;
 		private @NotNull List<String> invalidSession;
+		private @NotNull Authentication authentication;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Authentication {
+			private @NotNull List<String> prompt;
+			private @NotNull String invalid;
+			private @NotNull String required;
+			private @NotNull String unavailable;
+		}
 	}
 
 	@Getter

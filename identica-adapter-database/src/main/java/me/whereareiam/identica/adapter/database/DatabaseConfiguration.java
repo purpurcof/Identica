@@ -7,15 +7,20 @@ import me.whereareiam.identica.adapter.database.account.DefaultAccountPersistenc
 import me.whereareiam.identica.adapter.database.provider.DefaultProviderLinkPersistenceService;
 import me.whereareiam.identica.adapter.database.provider.DefaultProviderProfilePersistenceService;
 import me.whereareiam.identica.adapter.database.provider.JdbiProvider;
+import me.whereareiam.identica.adapter.database.repository.verification.VerificationEnrollmentRepository;
+import me.whereareiam.identica.adapter.database.repository.verification.VerificationRecoveryCodeRepository;
+import me.whereareiam.identica.adapter.database.repository.verification.VerificationSelectionRepository;
 import me.whereareiam.identica.adapter.database.repository.account.AccountRepository;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderLinkRepository;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderProfileRepository;
 import me.whereareiam.identica.adapter.database.repository.username.UsernameHistoryRepository;
+import me.whereareiam.identica.adapter.database.verification.DefaultVerificationPersistenceService;
 import me.whereareiam.identica.adapter.database.username.DefaultUsernameHistoryPersistenceService;
 import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.database.ProviderLinkPersistenceService;
-import me.whereareiam.identica.database.ProviderProfilePersistenceService;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.database.UsernameHistoryPersistenceService;
+import me.whereareiam.identica.database.VerificationPersistenceService;
 import me.whereareiam.identica.database.DatabaseService;
 import org.jdbi.v3.core.Jdbi;
 
@@ -28,6 +33,7 @@ public class DatabaseConfiguration extends AbstractModule {
 		bind(ProviderLinkPersistenceService.class).to(DefaultProviderLinkPersistenceService.class).asEagerSingleton();
 		bind(ProviderProfilePersistenceService.class).to(DefaultProviderProfilePersistenceService.class).asEagerSingleton();
 		bind(UsernameHistoryPersistenceService.class).to(DefaultUsernameHistoryPersistenceService.class).asEagerSingleton();
+		bind(VerificationPersistenceService.class).to(DefaultVerificationPersistenceService.class).asEagerSingleton();
 	}
 
 	@Provides
@@ -52,5 +58,23 @@ public class DatabaseConfiguration extends AbstractModule {
 	@Singleton
 	public UsernameHistoryRepository provideUsernameHistoryRepository(Jdbi jdbi) {
 		return jdbi.onDemand(UsernameHistoryRepository.class);
+	}
+
+	@Provides
+	@Singleton
+	public VerificationEnrollmentRepository provideVerificationEnrollmentRepository(Jdbi jdbi) {
+		return jdbi.onDemand(VerificationEnrollmentRepository.class);
+	}
+
+	@Provides
+	@Singleton
+	public VerificationSelectionRepository provideVerificationSelectionRepository(Jdbi jdbi) {
+		return jdbi.onDemand(VerificationSelectionRepository.class);
+	}
+
+	@Provides
+	@Singleton
+	public VerificationRecoveryCodeRepository provideVerificationRecoveryCodeRepository(Jdbi jdbi) {
+		return jdbi.onDemand(VerificationRecoveryCodeRepository.class);
 	}
 }

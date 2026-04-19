@@ -11,6 +11,8 @@ import me.whereareiam.commandant.model.message.ExceptionMessages;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.adapter.command.annotation.IdenticaAnnotationParser;
 import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
+import me.whereareiam.identica.adapter.command.suggestion.ProviderIdSuggestions;
+import me.whereareiam.identica.adapter.command.suggestion.VerificationMethodSuggestions;
 import me.whereareiam.identica.adapter.command.definition.CommandDefinitionAdapter;
 import me.whereareiam.identica.adapter.command.executor.HelpCommand;
 import me.whereareiam.identica.adapter.command.executor.EnrollCommand;
@@ -20,6 +22,10 @@ import me.whereareiam.identica.adapter.command.executor.ReloadCommand;
 import me.whereareiam.identica.adapter.command.executor.AvailabilityCommand;
 import me.whereareiam.identica.adapter.command.executor.ClearCommand;
 import me.whereareiam.identica.adapter.command.executor.SessionsCommand;
+import me.whereareiam.identica.adapter.command.executor.verification.VerificationAdminCommand;
+import me.whereareiam.identica.adapter.command.executor.verification.VerificationCommand;
+import me.whereareiam.identica.adapter.command.executor.verification.VerificationEnrollmentCommand;
+import me.whereareiam.identica.adapter.command.executor.verification.VerificationSelectionCommand;
 import me.whereareiam.identica.adapter.command.parser.PasswordParser;
 import me.whereareiam.identica.adapter.command.serializer.ScopedSerializerEngine;
 import me.whereareiam.identica.model.CommandDefinition;
@@ -42,6 +48,8 @@ public class DefaultCommandService implements CommandService {
 	private final SerializerEngine serializer;
 	private final Injector injector;
 	private final CrossPlayerSuggestions crossPlayerSuggestions;
+	private final VerificationMethodSuggestions verificationMethodSuggestions;
+	private final ProviderIdSuggestions providerIdSuggestions;
 
 	private final Map<String, CommandDefinition> registeredDefinitions = new HashMap<>();
 	private IdenticaAnnotationParser<Actor> annotationParser;
@@ -53,7 +61,9 @@ public class DefaultCommandService implements CommandService {
 			Provider<CommandManager<Actor>> commandManagerProvider,
 			SerializerEngine serializer,
 			Injector injector,
-			CrossPlayerSuggestions crossPlayerSuggestions
+			CrossPlayerSuggestions crossPlayerSuggestions,
+			VerificationMethodSuggestions verificationMethodSuggestions,
+			ProviderIdSuggestions providerIdSuggestions
 	) {
 		this.commandsProvider = commandsProvider;
 		this.messagesProvider = messagesProvider;
@@ -61,6 +71,8 @@ public class DefaultCommandService implements CommandService {
 		this.serializer = serializer;
 		this.injector = injector;
 		this.crossPlayerSuggestions = crossPlayerSuggestions;
+		this.verificationMethodSuggestions = verificationMethodSuggestions;
+		this.providerIdSuggestions = providerIdSuggestions;
 
 		initialize();
 	}
@@ -77,7 +89,11 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(SessionsCommand.class),
 				injector.getInstance(EnrollCommand.class),
 				injector.getInstance(MigrationCommand.class),
-				injector.getInstance(AvailabilityCommand.class)
+				injector.getInstance(AvailabilityCommand.class),
+				injector.getInstance(VerificationCommand.class),
+				injector.getInstance(VerificationEnrollmentCommand.class),
+				injector.getInstance(VerificationSelectionCommand.class),
+				injector.getInstance(VerificationAdminCommand.class)
 		);
 
 		registerExceptionHandlers(commandManager);
@@ -140,6 +156,10 @@ public class DefaultCommandService implements CommandService {
 	private void registerSuggestions(@NotNull CommandManager<Actor> commandManager) {
 		commandManager.parserRegistry()
 				.registerSuggestionProvider(CrossPlayerSuggestions.KEY, crossPlayerSuggestions);
+		commandManager.parserRegistry()
+				.registerSuggestionProvider(VerificationMethodSuggestions.KEY, verificationMethodSuggestions);
+		commandManager.parserRegistry()
+				.registerSuggestionProvider(ProviderIdSuggestions.KEY, providerIdSuggestions);
 	}
 
 	private void processParsedCommands(

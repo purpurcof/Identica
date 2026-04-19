@@ -22,6 +22,12 @@ public class TotpVerificationMethod implements VerificationMethod {
 	}
 
 	@Override
+	public @NotNull String displayName(@NotNull Verification config) {
+		String displayName = config.getTotp().getDisplayName();
+		return displayName.isBlank() ? id() : displayName;
+	}
+
+	@Override
 	public @NotNull PendingVerificationEnrollment beginEnrollment(
 			@NotNull UUID uniqueId,
 			@NotNull String username,

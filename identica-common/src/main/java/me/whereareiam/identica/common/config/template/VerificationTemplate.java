@@ -14,6 +14,7 @@ public class VerificationTemplate implements TemplateProvider<Verification> {
 		verification.setEnrollmentTtl(Duration.ofMinutes(10));
 
 		Verification.Totp totp = new Verification.Totp();
+		totp.setDisplayName("Authenticator App");
 		totp.setIssuer("Identica");
 		totp.setLabelFormat("{player}@{providerId}");
 		totp.setDigits(6);

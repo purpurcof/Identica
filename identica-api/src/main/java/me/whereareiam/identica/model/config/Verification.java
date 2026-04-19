@@ -33,6 +33,7 @@ public class Verification {
 	@Setter
 	@ToString
 	public static class Totp {
+		private @NotNull String displayName;
 		private @NotNull String issuer;
 		private @NotNull String labelFormat;
 		private int digits;

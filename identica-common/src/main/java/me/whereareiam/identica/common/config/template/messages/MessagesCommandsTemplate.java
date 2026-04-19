@@ -280,6 +280,8 @@ public class MessagesCommandsTemplate {
 		status.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
+				"  <white>Here you can see all enrolled 2FA methods</white>",
+				"  <white>and to which providers they are assigned.</white>",
 				" ",
 				"  <white>Enrolled methods:</white>",
 				"{enrollments}",
@@ -298,10 +300,9 @@ public class MessagesCommandsTemplate {
 				" <green><bold>Identica</bold>",
 				" ",
 				"  <white>Scan or enter this TOTP secret:</white>",
-				"  <gray>{secret}</gray>",
+				"   <gray>{secret}</gray>",
 				" ",
-				"  <white>Setup URI:</white>",
-				"  <gray>{uri}</gray>",
+				"  <click:open_url:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={uriEncoded}'><green>[OPEN QR CODE]</green></click>",
 				" ",
 				"  <white>Use <yellow>/2fa confirm</yellow> <gray>[Code]</gray> to continue.</white>",
 				" "
@@ -313,27 +314,34 @@ public class MessagesCommandsTemplate {
 		confirm.setMethodUnavailable("{prefix}<white>Method <gray>{method}</gray> is not available for <gray>{provider}</gray>.</white>");
 		confirm.setEnabled("{prefix}<white>Verification method <green>{method}</green> enabled.</white>");
 		Messages.Commands.Verification.Confirm.RecoveryCodes recoveryCodes = new Messages.Commands.Verification.Confirm.RecoveryCodes();
+		recoveryCodes.setLayout(Messages.Commands.Verification.Confirm.RecoveryCodes.Layout.TWO_COLUMN);
 		recoveryCodes.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
+				"  <white>Use these recovery codes if you lose access</white>",
+				"  <white>to your authenticator application.</white>",
 				" ",
-				"  <white>Save these recovery codes now:</white>",
+				"  <white>Store them in a safe place before continuing:</white>",
 				"{entries}",
 				" ",
-				"  <click:run_command:/2fa confirm saved><green>[CONFIRM]</green></click>       " +
+				"  <click:run_command:/2fa confirm saved><green>[CONFIRM]</green></click>  " +
 						"<click:run_command:/2fa cancel><red>[CANCEL]</red></click>",
 				" "
 		));
 		Messages.Commands.EntryFormat recoveryEntry = new Messages.Commands.EntryFormat();
-		recoveryEntry.setFormat("  <dark_gray>▪</dark_gray> <white>{code}</white>");
-		recoveryEntry.setEmptyFormat("  <dark_gray>▪</dark_gray>");
-		recoveryCodes.setEntry(recoveryEntry);
-		recoveryCodes.setEmpty("  <dark_gray>▪</dark_gray> <gray>No recovery codes generated</gray>");
+		recoveryEntry.setFormat("   <gray>{code}</gray>");
+		recoveryEntry.setEmptyFormat("   <gray>{code}</gray>");
+		recoveryCodes.setSingleColumnEntry(recoveryEntry);
+		Messages.Commands.EntryFormat twoColumnRecoveryEntry = new Messages.Commands.EntryFormat();
+		twoColumnRecoveryEntry.setFormat("   <gray>{left}</gray>  <gray>{right}</gray>");
+		twoColumnRecoveryEntry.setEmptyFormat("   <gray>{left}</gray>");
+		recoveryCodes.setTwoColumnEntry(twoColumnRecoveryEntry);
+		recoveryCodes.setEmpty("   <red>No recovery codes generated</red>");
 		confirm.setRecoveryCodes(recoveryCodes);
 
 		Messages.Commands.EntryFormat enrollmentEntry = new Messages.Commands.EntryFormat();
-		enrollmentEntry.setFormat("  <dark_gray>▪</dark_gray> <white>{method}</white> <gray>(enabled at {enabledAt})</gray>");
-		enrollmentEntry.setEmptyFormat("  <dark_gray>▪</dark_gray> <white>{method}</white>");
+		enrollmentEntry.setFormat("  <dark_gray>▪</dark_gray> <aqua>{method}</aqua> <gray>[{enabledAt}]</gray>");
+		enrollmentEntry.setEmptyFormat("  <dark_gray>▪</dark_gray> <aqua>{method}</aqua>");
 		status.setEnrollmentEntry(enrollmentEntry);
 
 		Messages.Commands.EntryFormat selectionEntry = new Messages.Commands.EntryFormat();

@@ -466,9 +466,16 @@ public class Messages {
 				@Setter
 				@ToString
 				public static class RecoveryCodes {
+					private @NotNull Layout layout = Layout.TWO_COLUMN;
 					private @NotNull List<String> body;
-					private @NotNull EntryFormat entry;
+					private @NotNull EntryFormat singleColumnEntry;
+					private @NotNull EntryFormat twoColumnEntry;
 					private @NotNull String empty;
+
+					public enum Layout {
+						SINGLE_COLUMN,
+						TWO_COLUMN
+					}
 				}
 			}
 

@@ -25,6 +25,16 @@ public interface VerificationMethod {
 	@NotNull String id();
 
 	/**
+	 * Returns the user-facing display name for this method.
+	 *
+	 * @param config shared verification configuration
+	 * @return display name
+	 */
+	default @NotNull String displayName(@NotNull Verification config) {
+		return id();
+	}
+
+	/**
 	 * Starts a new enrollment for the method.
 	 *
 	 * @param uniqueId Identica identity id

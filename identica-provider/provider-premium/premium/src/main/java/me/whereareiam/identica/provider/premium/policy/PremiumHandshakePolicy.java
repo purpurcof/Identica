@@ -15,7 +15,9 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
+import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
@@ -26,6 +28,7 @@ import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 
 import java.util.List;
+import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -35,6 +38,7 @@ import java.util.concurrent.CompletionStage;
 public class PremiumHandshakePolicy implements HandshakePolicy {
 	private final AccountPersistenceService accountPersistenceService;
 	private final PremiumProfileLookup profileLookup;
+	private final ProviderManager providerManager;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final PremiumProfileStore profileStore;
 	private final ProviderAttemptStore attemptStore;
@@ -63,8 +67,11 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 
-		if (hasPremiumLinkByProfileId(username) || hasPremiumLinkByUsername(username)) {
-			requestForceOnline(username, ip);
+		String preferredProviderId = resolvePreferredLinkedProviderId(username);
+		if (preferredProviderId != null) {
+			if (PremiumConstants.PROVIDER_ID.equalsIgnoreCase(preferredProviderId)) {
+				requestForceOnline(username, ip);
+			}
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 
@@ -106,43 +113,75 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		handshakeStore.putInstruction(instruction);
 	}
 
-	private boolean hasPremiumLinkByProfileId(String username) {
+	private String resolvePreferredLinkedProviderId(String username) {
+		String linkedByProfileId = resolvePreferredProviderIdByProfileId(username);
+		if (linkedByProfileId != null) return linkedByProfileId;
+
+		return resolvePreferredProviderIdByUsername(username);
+	}
+
+	private String resolvePreferredProviderIdByProfileId(String username) {
 		PremiumProfileSnapshot snapshot = profileStore.find(username);
 
 		String profileId = snapshot != null ? snapshot.getProfileId() : null;
-		if (profileId == null || profileId.isBlank()) return false;
+		if (profileId == null || profileId.isBlank()) return null;
 
 		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		if (offlineUuid != null && profileId.equalsIgnoreCase(offlineUuid.toString())) return false;
+		if (offlineUuid != null && profileId.equalsIgnoreCase(offlineUuid.toString())) return null;
 
-		return providerLinkPersistenceService.findBySubject(PremiumConstants.PROVIDER_ID, profileId).isPresent();
+		AccountProviderLink premiumLink = providerLinkPersistenceService
+				.findBySubject(PremiumConstants.PROVIDER_ID, profileId)
+				.orElse(null);
+		if (premiumLink == null) return null;
+
+		return resolvePreferredProviderId(providerLinkPersistenceService.findByUniqueId(premiumLink.getUniqueId()));
 	}
 
-	private boolean hasPremiumLinkByUsername(String username) {
+	private String resolvePreferredProviderIdByUsername(String username) {
 		List<Account> accounts = accountPersistenceService.findByUsername(username);
-		if (accounts.isEmpty()) return false;
-		if (accounts.size() > 1) return false;
+		if (accounts.isEmpty()) return null;
+		if (accounts.size() > 1) return null;
 
 		for (Account account : accounts) {
 			if (account == null) continue;
 			List<AccountProviderLink> links = providerLinkPersistenceService.findByUniqueId(account.getUniqueId());
-			if (hasPremiumLink(links)) return true;
+			String preferredProviderId = resolvePreferredProviderId(links);
+			if (preferredProviderId != null) return preferredProviderId;
 		}
 
-		return false;
+		return null;
 	}
 
-	private boolean hasPremiumLink(List<AccountProviderLink> links) {
-		if (links == null || links.isEmpty())
-			return false;
+	private String resolvePreferredProviderId(List<AccountProviderLink> links) {
+		if (links == null || links.isEmpty()) return null;
 
-		for (AccountProviderLink link : links) {
-			if (link == null) continue;
-			String providerId = link.getProviderId();
-			if (providerId.equalsIgnoreCase(PremiumConstants.PROVIDER_ID))
-				return true;
+		List<AccountProviderLink> candidates = links.stream()
+				.filter(link -> link != null && !link.getProviderId().isBlank())
+				.toList();
+		if (candidates.isEmpty()) return null;
+
+		List<AccountProviderLink> primaries = candidates.stream()
+				.filter(AccountProviderLink::isPrimaryLink)
+				.toList();
+		List<AccountProviderLink> preferredScope = !primaries.isEmpty() ? primaries : candidates;
+
+		return preferredScope.stream()
+				.max(Comparator.comparingInt(this::providerPriority)
+						.thenComparing(AccountProviderLink::getProviderId, String.CASE_INSENSITIVE_ORDER))
+				.map(AccountProviderLink::getProviderId)
+				.orElse(null);
+	}
+
+	private int providerPriority(AccountProviderLink link) {
+		String providerId = link.getProviderId();
+		if (providerId.isBlank()) return 0;
+
+		for (InternalProvider provider : providerManager.getProviders()) {
+			if (provider == null || provider.getDescriptor() == null) continue;
+			if (provider.getDescriptor().getId().equalsIgnoreCase(providerId))
+				return provider.getPriority();
 		}
 
-		return false;
+		return 0;
 	}
 }

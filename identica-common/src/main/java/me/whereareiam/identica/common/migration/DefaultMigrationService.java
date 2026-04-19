@@ -495,10 +495,20 @@ public class DefaultMigrationService implements MigrationService {
 				.connectionUniqueId(connectionUniqueId)
 				.build();
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
-		if (state == null) return null;
+		if (state == null) {
+			Logger.debug("Migration pending lookup missed connection=%s", connectionUniqueId);
+			return null;
+		}
 
 		MigrationPendingState pendingState = state.item(MigrationPendingState.class).orElse(null);
-		if (pendingState == null) return null;
+		if (pendingState == null) {
+			Logger.debug(
+					"Migration pending lookup found state without pending marker connection=%s pipeline=%s",
+					connectionUniqueId,
+					state.getPipelineType()
+			);
+			return null;
+		}
 
 		MigrationContext context = (MigrationContext) state.getScenario(PipelineType.MIGRATION);
 		UUID uniqueId = null;
@@ -509,6 +519,13 @@ public class DefaultMigrationService implements MigrationService {
 			targetProviderId = context.getTargetProviderId();
 			uniqueId = context.getIdentity().getUniqueId();
 		}
+		Logger.debug(
+				"Migration pending lookup found connection=%s storedConnection=%s identica=%s target=%s",
+				connectionUniqueId,
+				storedConnectionUniqueId,
+				uniqueId,
+				targetProviderId
+		);
 
 		return PendingMigration.builder()
 				.uniqueId(uniqueId)

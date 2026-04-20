@@ -26,6 +26,7 @@ import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityResumeDeci
 import me.whereareiam.identica.platform.velocity.adapter.routing.VelocityRoutingEnforcementAdapter;
 import me.whereareiam.identica.platform.velocity.listener.connection.DisconnectListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.PlayerChooseInitialServerListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.server.RoutingTargetReachedPostConnectListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.ServerPreConnectListener;
 import me.whereareiam.identica.platform.velocity.util.VelocityUtil;
 
@@ -58,13 +59,11 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 	public void registerListeners() {
 		listenerRegistry.attachRegistrar(this);
 
-		DynamicListener<LoginEvent> loginListener = injector.getInstance(VelocityLoginDecisionAdapter.class);
-		DynamicListener<ServerPostConnectEvent> connectedListener = injector.getInstance(VelocityResumeDecisionAdapter.class);
-
 		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(VelocityHandshakeDecisionAdapter.class));
 		registerListener(GameProfileRequestEvent.class, injector.getInstance(VelocityProfileRewriteAdapter.class));
-		registerListener(LoginEvent.class, loginListener);
-		registerListener(ServerPostConnectEvent.class, connectedListener);
+		registerListener(LoginEvent.class, injector.getInstance(VelocityLoginDecisionAdapter.class));
+		registerListener(ServerPostConnectEvent.class, injector.getInstance(VelocityResumeDecisionAdapter.class));
+		registerListener(ServerPostConnectEvent.class, injector.getInstance(RoutingTargetReachedPostConnectListener.class));
 		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(PlayerChooseInitialServerListener.class));
 		registerListener(ServerPreConnectEvent.class, injector.getInstance(ServerPreConnectListener.class));
 		registerListener(DisconnectEvent.class, injector.getInstance(DisconnectListener.class));

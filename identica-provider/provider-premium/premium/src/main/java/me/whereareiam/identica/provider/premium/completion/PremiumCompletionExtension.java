@@ -28,6 +28,7 @@ public class PremiumCompletionExtension implements CompletionExtension {
 	@Override
 	public void apply(@NotNull CompletionExtensionBuilder builder) {
 		builder.registerStep(providerId, PipelineType.AUTHENTICATION, premiumCompletionStep);
+		builder.registerStep(providerId, PipelineType.REGISTRATION, premiumCompletionStep);
 		builder.registerStep(providerId, PipelineType.MIGRATION, premiumCompletionStep);
 	}
 }

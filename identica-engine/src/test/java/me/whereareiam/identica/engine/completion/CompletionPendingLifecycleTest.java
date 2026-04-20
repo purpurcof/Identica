@@ -5,9 +5,13 @@ import me.whereareiam.identica.pipeline.completion.CompletionCoordinator;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
+import me.whereareiam.identica.event.routing.RoutingTargetReachedEvent;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.model.RoutingTarget;
+import me.whereareiam.identica.routing.RoutingStateStore;
+import me.whereareiam.identica.type.RoutingTargetType;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import net.kyori.adventure.audience.Audience;
@@ -28,52 +32,107 @@ import static org.mockito.Mockito.when;
 
 class CompletionPendingLifecycleTest {
 	@Test
-	void sessionOpenedExecutesImmediatelyWhenIdentityAlreadyLive() {
+	void sessionOpenedStoresPendingCompletion() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
 		CompletionCoordinator completionCoordinator = mock(CompletionCoordinator.class);
 		IdentityService identityService = mock(IdentityService.class);
+		RoutingStateStore routingStateStore = mock(RoutingStateStore.class);
 		EventManager eventManager = mock(EventManager.class);
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				pendingStore,
 				completionCoordinator,
 				identityService,
+				routingStateStore,
 				eventManager
 		);
-		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
+		UUID connectionUniqueId = UUID.randomUUID();
 		Session session = Session.builder()
 				.uniqueId(UUID.randomUUID())
 				.providerId("cracked")
 				.providerSubject("player-one")
 				.build();
 
-		when(identityService.find(identity.getUniqueId())).thenReturn(Optional.of(identity));
-
 		lifecycle.onSessionOpened(new SessionOpenedEvent(
-				identity.getUniqueId(),
+				connectionUniqueId,
 				PipelineType.AUTHENTICATION,
 				session,
 				true
 		));
 
-		verify(completionCoordinator).execute(identity, PipelineType.AUTHENTICATION, session, true);
-		verify(pendingStore, never()).put(any(), any());
+		verify(pendingStore).put(any(), any());
+		verify(completionCoordinator, never()).consumeAndExecute(any());
 	}
 
 	@Test
-	void identityAttachedConsumesPendingCompletion() {
+	void identityAttachedConsumesPendingCompletionWithoutRoutingTarget() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
 		CompletionCoordinator completionCoordinator = mock(CompletionCoordinator.class);
 		IdentityService identityService = mock(IdentityService.class);
+		RoutingStateStore routingStateStore = mock(RoutingStateStore.class);
 		EventManager eventManager = mock(EventManager.class);
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				pendingStore,
 				completionCoordinator,
 				identityService,
+				routingStateStore,
 				eventManager
 		);
 		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
+		when(pendingStore.peek(identity.getUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
+		when(routingStateStore.peek(identity.getUniqueId())).thenReturn(Optional.empty());
 
 		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
+
+		verify(completionCoordinator).consumeAndExecute(identity);
+	}
+
+	@Test
+	void identityAttachedDefersWhileCompletedRoutingTargetExists() {
+		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
+		CompletionCoordinator completionCoordinator = mock(CompletionCoordinator.class);
+		IdentityService identityService = mock(IdentityService.class);
+		RoutingStateStore routingStateStore = mock(RoutingStateStore.class);
+		EventManager eventManager = mock(EventManager.class);
+		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
+				pendingStore,
+				completionCoordinator,
+				identityService,
+				routingStateStore,
+				eventManager
+		);
+		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
+		when(pendingStore.peek(identity.getUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
+		when(routingStateStore.peek(identity.getUniqueId())).thenReturn(Optional.of(
+				new RoutingTarget(RoutingTargetType.COMPLETED, "lobby", "cracked", null)
+		));
+
+		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
+
+		verify(completionCoordinator, never()).consumeAndExecute(identity);
+	}
+
+	@Test
+	void routingTargetReachedExecutesPendingCompletionForCompletedTarget() {
+		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
+		CompletionCoordinator completionCoordinator = mock(CompletionCoordinator.class);
+		IdentityService identityService = mock(IdentityService.class);
+		RoutingStateStore routingStateStore = mock(RoutingStateStore.class);
+		EventManager eventManager = mock(EventManager.class);
+		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
+				pendingStore,
+				completionCoordinator,
+				identityService,
+				routingStateStore,
+				eventManager
+		);
+		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
+		when(identityService.find(identity.getUniqueId())).thenReturn(Optional.of(identity));
+
+		lifecycle.onRoutingTargetReached(new RoutingTargetReachedEvent(
+				identity.getUniqueId(),
+				new RoutingTarget(RoutingTargetType.COMPLETED, "lobby", "cracked", null),
+				"lobby"
+		));
 
 		verify(completionCoordinator).consumeAndExecute(identity);
 	}

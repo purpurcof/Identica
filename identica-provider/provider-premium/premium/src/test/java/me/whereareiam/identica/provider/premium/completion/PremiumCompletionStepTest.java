@@ -40,6 +40,27 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getMigration().getBody(), lines);
 	}
 
+	@Test
+	void registrationUsesRegistrationMessageWhenConfigured() {
+		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
+		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
+
+		List<String> lines = step.lines(context(false, PipelineType.REGISTRATION));
+
+		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
+	}
+
+	@Test
+	void registrationFallsBackToAuthenticationWhenMissing() {
+		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
+		messages.getCompletion().setRegistration(null);
+		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
+
+		List<String> lines = step.lines(context(false, PipelineType.REGISTRATION));
+
+		assertEquals(messages.getCompletion().getAuthentication().getBody(), lines);
+	}
+
 	private CompletionContext context(boolean sessionReused, PipelineType pipelineType) {
 		return CompletionContext.builder()
 				.identity(new TestIdentity())

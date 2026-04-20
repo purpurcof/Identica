@@ -62,6 +62,23 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 		));
 		completion.setAuthentication(authenticationCompletion);
 
+		PremiumMessages.Completion.Pipeline registrationCompletion = new PremiumMessages.Completion.Pipeline();
+		PremiumMessages.Completion.Pipeline.Title registrationTitle = new PremiumMessages.Completion.Pipeline.Title();
+		registrationTitle.setTitle("<gold><bold>Registered</bold></gold>");
+		registrationTitle.setSubtitle("<dark_gray>Your premium account is ready.</dark_gray>");
+		registrationCompletion.setTitle(registrationTitle);
+		registrationCompletion.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Welcome, <green>{player}</green>.</white>",
+				"  <white>Your account was registered <gold>via premium provider</gold>.</white>",
+				" ",
+				"  <gray>Your premium account will be used for future logins.</gray>",
+				" "
+		));
+		completion.setRegistration(registrationCompletion);
+
 		PremiumMessages.Completion.Pipeline sessionCompletion = new PremiumMessages.Completion.Pipeline();
 		PremiumMessages.Completion.Pipeline.Title sessionTitle = new PremiumMessages.Completion.Pipeline.Title();
 		sessionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");

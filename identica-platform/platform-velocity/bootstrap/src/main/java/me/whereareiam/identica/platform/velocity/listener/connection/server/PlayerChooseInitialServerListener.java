@@ -11,7 +11,6 @@ import me.whereareiam.identica.event.routing.RoutingTargetMissingEvent;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.model.RoutingTarget;
 import me.whereareiam.identica.routing.RoutingStateStore;
-import me.whereareiam.identica.type.RoutingTargetType;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -44,8 +43,6 @@ public class PlayerChooseInitialServerListener implements DynamicListener<Player
 			return;
 		}
 
-		if (target.getType() == RoutingTargetType.COMPLETED)
-			routingStateStore.consume(connectionId);
 		event.setInitialServer(server.get());
 	}
 }

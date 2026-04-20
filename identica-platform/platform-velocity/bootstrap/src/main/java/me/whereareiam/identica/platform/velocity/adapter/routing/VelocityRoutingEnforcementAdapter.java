@@ -21,6 +21,7 @@ import java.util.Optional;
 public class VelocityRoutingEnforcementAdapter extends RoutingEnforcementAdapter implements EventListener {
 	private final ProxyServer proxyServer;
 	private final RoutingStateStore routingStateStore;
+	private final VelocityRoutingTargetReachedEmitter reachedEmitter;
 
 	@IdenticEvent
 	public void onRoutingTargetUpdated(@NotNull RoutingTargetUpdatedEvent event) {
@@ -56,5 +57,6 @@ public class VelocityRoutingEnforcementAdapter extends RoutingEnforcementAdapter
 						routingStateStore.consume(event.getConnectionUniqueId());
 					}
 				});
+		reachedEmitter.emitIfReached(player);
 	}
 }

@@ -37,15 +37,12 @@ public abstract class RoutingEnforcementAdapter {
 		if (currentServer.equalsIgnoreCase(targetServer)) {
 			Logger.debug("Routing already satisfied username=%s current=%s type=%s",
 					context.username(), currentServer, pendingTarget.getType());
-			if (pendingTarget.getType() == RoutingTargetType.COMPLETED)
-				target.consume();
 			return;
 		}
 
 		Logger.debug("Applying routing target username=%s current=%s target=%s type=%s",
 				context.username(), currentServer, targetServer, pendingTarget.getType());
-		if (target.connect(targetServer) && pendingTarget.getType() == RoutingTargetType.COMPLETED)
-			target.consume();
+		target.connect(targetServer);
 	}
 
 	public record RoutingUpdateContext(

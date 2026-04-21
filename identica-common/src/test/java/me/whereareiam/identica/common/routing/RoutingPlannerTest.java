@@ -11,7 +11,9 @@ import me.whereareiam.identica.model.routing.RoutingSignal;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
+import me.whereareiam.identica.type.pipeline.journey.step.StepContextRequirement;
 import me.whereareiam.identica.type.routing.RoutingClearReason;
 import me.whereareiam.identica.type.routing.RoutingPlanAction;
 import me.whereareiam.identica.type.routing.RoutingReason;
@@ -20,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class RoutingPlannerTest {
 	@Test
 	void waitingStepCreatesStepIntent() {
-		RoutingPlanner planner = new RoutingPlanner(() -> settings());
+		RoutingPlanner planner = new RoutingPlanner(this::settings);
 		RoutingPlan plan = planner.plan(RoutingSignal.stepFinished(
 				context(UUID.randomUUID()),
 				PipelineType.AUTHENTICATION,
@@ -44,7 +47,7 @@ class RoutingPlannerTest {
 
 	@Test
 	void completedPipelineCreatesCompletionIntent() {
-		RoutingPlanner planner = new RoutingPlanner(() -> settings());
+		RoutingPlanner planner = new RoutingPlanner(this::settings);
 		RoutingPlan plan = planner.plan(RoutingSignal.pipelineFinished(
 				context(UUID.randomUUID()),
 				PipelineType.AUTHENTICATION,
@@ -59,7 +62,7 @@ class RoutingPlannerTest {
 	@Test
 	void failedPipelineClearsIntent() {
 		UUID connectionId = UUID.randomUUID();
-		RoutingPlanner planner = new RoutingPlanner(() -> settings());
+		RoutingPlanner planner = new RoutingPlanner(this::settings);
 		RoutingPlan plan = planner.plan(RoutingSignal.pipelineFinished(
 				context(connectionId),
 				PipelineType.AUTHENTICATION,
@@ -191,6 +194,16 @@ class RoutingPlannerTest {
 			@Override
 			public @NotNull String getName() {
 				return name;
+			}
+
+			@Override
+			public @NotNull Set<JourneyMode> journeyModes() {
+				return Set.of(JourneyMode.SEAMLESS, JourneyMode.INTERACTIVE);
+			}
+
+			@Override
+			public @NotNull StepContextRequirement contextRequirement() {
+				return StepContextRequirement.LOGIN;
 			}
 
 			@Override

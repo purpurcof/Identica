@@ -19,6 +19,8 @@ import me.whereareiam.identica.common.completion.DefaultCompletionPendingStore;
 import me.whereareiam.identica.common.adapter.ConnectionDecisionApplier;
 import me.whereareiam.identica.common.adapter.HandshakeDecisionProcessor;
 import me.whereareiam.identica.common.adapter.ProfileRewriteProcessor;
+import me.whereareiam.identica.identity.account.AccountService;
+import me.whereareiam.identica.common.identity.account.DefaultAccountService;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.common.handshake.DefaultHandshakeStore;
 import me.whereareiam.identica.common.identity.account.DefaultRegistrationAccountService;
@@ -41,7 +43,6 @@ import me.whereareiam.identica.conflict.ConflictGuard;
 import me.whereareiam.identica.common.provider.DefaultProviderAttemptStore;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
-import me.whereareiam.identica.common.listener.clear.AccountClearReplicationListener;
 import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.listener.SessionClosedDisconnectListener;
 import me.whereareiam.identica.common.listener.SessionReplacedListener;
@@ -165,6 +166,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(SentinelService.class).to(DefaultSentinelService.class).asEagerSingleton();
 
 		// Account + presence
+		bind(AccountService.class).to(DefaultAccountService.class).asEagerSingleton();
 		bind(RegistrationAccountService.class).to(DefaultRegistrationAccountService.class).asEagerSingleton();
 		bind(MigrationService.class).to(DefaultMigrationService.class).asEagerSingleton();
 		bind(VerificationService.class).to(DefaultVerificationService.class).asEagerSingleton();
@@ -197,7 +199,6 @@ public class CommonConfiguration extends AbstractModule {
 		bind(UsernameConflictType.class).asEagerSingleton();
 
 		// Event listeners
-		bind(AccountClearReplicationListener.class).asEagerSingleton();
 		bind(SessionClosedDisconnectListener.class).asEagerSingleton();
 		bind(SessionReplacedListener.class).asEagerSingleton();
 		bind(ConflictPrepareLifecycle.class).asEagerSingleton();

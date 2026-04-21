@@ -8,7 +8,6 @@ import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
 import me.whereareiam.identica.engine.pipeline.completion.DefaultCompletionExtensionRegistry;
-import me.whereareiam.identica.engine.pipeline.AccountClearPipelineListener;
 import me.whereareiam.identica.engine.pipeline.DefaultPipelineExtensionRegistry;
 import me.whereareiam.identica.engine.pipeline.DefaultPipelineStateStore;
 import me.whereareiam.identica.engine.pipeline.PendingPipelineKickCoordinator;
@@ -32,7 +31,6 @@ public class EngineConfiguration extends AbstractModule {
 	@Override
 	protected void configure() {
 		bind(PipelineStateStore.class).to(DefaultPipelineStateStore.class).asEagerSingleton();
-		bind(AccountClearPipelineListener.class).asEagerSingleton();
 
 		bind(PipelineRegistry.class).annotatedWith(Names.named("authenticationPipelineRegistry"))
 				.to(AuthenticationPipelineRegistry.class)

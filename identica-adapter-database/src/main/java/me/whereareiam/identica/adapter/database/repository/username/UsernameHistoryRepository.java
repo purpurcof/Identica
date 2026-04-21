@@ -21,4 +21,10 @@ public interface UsernameHistoryRepository {
 			@Bind("source") String source,
 			@Bind("changedAt") long changedAt
 	);
+
+	@SqlUpdate("""
+			DELETE FROM identica_username_history
+			 WHERE unique_id = :uniqueId
+			""")
+	void deleteAll(@Bind("uniqueId") UUID uniqueId);
 }

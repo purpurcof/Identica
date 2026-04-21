@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.account.AccountClearEvent;
+import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
@@ -61,7 +61,7 @@ public class PremiumProfileStore implements EventListener {
 	}
 
 	@IdenticEvent
-	public void onAccountClear(@NotNull AccountClearEvent event) {
+	public void onAccountLifecycle(@NotNull AccountLifecycleEvent event) {
 		String username = event.getIdentity().getUsername();
 		if (username.isBlank()) return;
 

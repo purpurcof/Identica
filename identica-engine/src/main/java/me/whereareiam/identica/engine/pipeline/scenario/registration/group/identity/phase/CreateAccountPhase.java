@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.database.AccountReservationPersistenceService;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityState;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
@@ -27,6 +28,7 @@ import java.util.concurrent.CompletionStage;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 	private final AccountPersistenceService accountPersistenceService;
+	private final AccountReservationPersistenceService accountReservationPersistenceService;
 	private final Provider<Messages> messagesProvider;
 
 	@Override
@@ -64,12 +66,13 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 		if (uniqueId == null)
 			uniqueId = UniqueIdGenerator.newIdenticaUniqueId();
 
-		if (accountPersistenceService.findByUniqueId(uniqueId).isPresent()) {
+		long now = System.currentTimeMillis();
+		Account existing = accountPersistenceService.findByUniqueId(uniqueId).orElse(null);
+		if (existing != null) {
 			state.setResult(PipelineResult.denied(accountAlreadyExistsMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		long now = System.currentTimeMillis();
 		Account account = Account.builder()
 				.uniqueId(uniqueId)
 				.username(profile.getProviderUsername())
@@ -78,6 +81,7 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 				.lastSeenAt(now)
 				.build();
 		accountPersistenceService.create(account);
+		deleteReservation(profile.getProviderUsername());
 
 		context.setIdenticaUniqueId(uniqueId);
 		pipelineState.setScenario(context);
@@ -96,5 +100,18 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 				.getRegistration()
 				.getErrors()
 				.getPolicy().getAccountCreationMissing());
+	}
+
+	private void deleteReservation(@NotNull String username) {
+		String reservationKey = buildUsernameKey(username);
+		if (reservationKey == null) return;
+
+		accountReservationPersistenceService.delete(reservationKey);
+	}
+
+	private String buildUsernameKey(@NotNull String username) {
+		if (username.isBlank()) return null;
+
+		return "username:" + username.trim().toLowerCase();
 	}
 }

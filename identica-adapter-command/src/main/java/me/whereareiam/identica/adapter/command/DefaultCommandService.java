@@ -19,12 +19,14 @@ import me.whereareiam.identica.adapter.command.executor.HelpCommand;
 import me.whereareiam.identica.adapter.command.executor.EnrollCommand;
 import me.whereareiam.identica.adapter.command.executor.MainCommand;
 import me.whereareiam.identica.adapter.command.executor.MigrationCommand;
-import me.whereareiam.identica.adapter.command.executor.ReloadCommand;
+import me.whereareiam.identica.adapter.command.executor.admin.ReloadCommand;
 import me.whereareiam.identica.adapter.command.executor.AvailabilityCommand;
-import me.whereareiam.identica.adapter.command.executor.ClearCommand;
-import me.whereareiam.identica.adapter.command.executor.SessionsCommand;
-import me.whereareiam.identica.adapter.command.executor.verification.VerificationAdminCommand;
-import me.whereareiam.identica.adapter.command.executor.verification.VerificationCommand;
+import me.whereareiam.identica.adapter.command.executor.admin.SessionsCommand;
+import me.whereareiam.identica.adapter.command.executor.admin.AdminRootCommand;
+import me.whereareiam.identica.adapter.command.executor.admin.ClearCommand;
+import me.whereareiam.identica.adapter.command.executor.admin.DeleteCommand;
+import me.whereareiam.identica.adapter.command.executor.admin.ReservationCommand;
+import me.whereareiam.identica.adapter.command.executor.admin.VerificationCommand;
 import me.whereareiam.identica.adapter.command.executor.verification.VerificationEnrollmentCommand;
 import me.whereareiam.identica.adapter.command.executor.verification.VerificationSelectionCommand;
 import me.whereareiam.identica.adapter.command.parser.PasswordParser;
@@ -87,15 +89,18 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(MainCommand.class),
 				injector.getInstance(HelpCommand.class),
 				injector.getInstance(ReloadCommand.class),
+				injector.getInstance(AdminRootCommand.class),
 				injector.getInstance(ClearCommand.class),
+				injector.getInstance(DeleteCommand.class),
+				injector.getInstance(ReservationCommand.class),
 				injector.getInstance(SessionsCommand.class),
 				injector.getInstance(EnrollCommand.class),
 				injector.getInstance(MigrationCommand.class),
 				injector.getInstance(AvailabilityCommand.class),
-				injector.getInstance(VerificationCommand.class),
+				injector.getInstance(me.whereareiam.identica.adapter.command.executor.verification.VerificationCommand.class),
 				injector.getInstance(VerificationEnrollmentCommand.class),
 				injector.getInstance(VerificationSelectionCommand.class),
-				injector.getInstance(VerificationAdminCommand.class)
+				injector.getInstance(VerificationCommand.class)
 		);
 
 		registerExceptionHandlers(commandManager);

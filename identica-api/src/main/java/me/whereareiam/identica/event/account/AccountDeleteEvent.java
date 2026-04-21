@@ -7,37 +7,37 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * Event fired when an account clear is requested.
+ * Event fired when an account delete is requested.
  */
-public class AccountClearEvent extends AccountLifecycleEvent {
+public class AccountDeleteEvent extends AccountLifecycleEvent {
 	/**
-	 * Creates a non-synchronized clear event.
+	 * Creates a non-synchronized delete event.
 	 *
 	 * @param identity target identity
 	 */
-	public AccountClearEvent(@NotNull ConnectionIdentity identity) {
+	public AccountDeleteEvent(@NotNull ConnectionIdentity identity) {
 		super(identity);
 	}
 
 	/**
-	 * Creates a clear event.
+	 * Creates a delete event.
 	 *
 	 * @param identity target identity
 	 * @param synchronizedEvent whether this event came from synchronization
 	 */
-	public AccountClearEvent(@NotNull ConnectionIdentity identity, boolean synchronizedEvent) {
+	public AccountDeleteEvent(@NotNull ConnectionIdentity identity, boolean synchronizedEvent) {
 		super(identity, synchronizedEvent);
 	}
 
 	/**
-	 * Creates a clear event with replication metadata.
+	 * Creates a delete event with replication metadata.
 	 *
 	 * @param identity target identity
 	 * @param synchronizedEvent whether this event came from synchronization
 	 * @param replicationEventId replication event id
 	 * @param replicationOriginServerId origin server id
 	 */
-	public AccountClearEvent(
+	public AccountDeleteEvent(
 			@NotNull ConnectionIdentity identity,
 			boolean synchronizedEvent,
 			@Nullable UUID replicationEventId,

@@ -5,11 +5,10 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.account.AccountClearEvent;
+import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.account.CrackedAccountService;
-import me.whereareiam.identica.type.ClearScope;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,9 +31,8 @@ public class AccountClearCrackedListener implements EventListener {
 		eventManager.register(this);
 	}
 
-	@IdenticEvent(EventOrder.HIGHEST)
-	public void onAccountClear(@NotNull AccountClearEvent event) {
-		if (event.getScope() != ClearScope.ALL) return;
+	@IdenticEvent(EventOrder.LOW)
+	public void onAccountLifecycle(@NotNull AccountLifecycleEvent event) {
 		deleteByUniqueId(event.getIdentity().getUniqueId());
 	}
 

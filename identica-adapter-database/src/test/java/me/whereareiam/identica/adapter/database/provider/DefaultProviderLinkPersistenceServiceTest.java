@@ -5,9 +5,10 @@ import me.whereareiam.identica.adapter.database.repository.provider.ProviderLink
 import me.whereareiam.identica.adapter.database.testing.TestDataFactory;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
+import me.whereareiam.identica.event.account.AccountDeleteEvent;
+import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
-import me.whereareiam.identica.type.ClearScope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -115,33 +116,33 @@ class DefaultProviderLinkPersistenceServiceTest {
 	}
 
 	@Test
-	void onAccountClearDeletesOnAllScope() {
+	void onAccountLifecycleDeletesOnClear() {
 		UUID uniqueId = UUID.randomUUID();
 		ConnectionIdentity identity = new ConnectionIdentity(uniqueId, "Player", null);
-		AccountClearEvent event = new AccountClearEvent(identity, ClearScope.ALL);
+		AccountLifecycleEvent event = new AccountClearEvent(identity);
 
-		service.onAccountClear(event);
+		service.onAccountLifecycle(event);
 
 		verify(repository).deleteAll(uniqueId);
 	}
 
 	@Test
-	void onAccountClearIgnoresNonAllScope() {
+	void onAccountLifecycleDeletesOnDelete() {
 		UUID uniqueId = UUID.randomUUID();
 		ConnectionIdentity identity = new ConnectionIdentity(uniqueId, "Player", null);
-		AccountClearEvent event = new AccountClearEvent(identity, ClearScope.CACHE);
+		AccountLifecycleEvent event = new AccountDeleteEvent(identity);
 
-		service.onAccountClear(event);
+		service.onAccountLifecycle(event);
 
-		verify(repository, never()).deleteAll(uniqueId);
+		verify(repository).deleteAll(uniqueId);
 	}
 
 	@Test
-	void onAccountClearIgnoresNullUniqueId() {
+	void onAccountLifecycleIgnoresNullUniqueId() {
 		ConnectionIdentity identity = new ConnectionIdentity(null, "Player", null);
-		AccountClearEvent event = new AccountClearEvent(identity, ClearScope.ALL);
+		AccountLifecycleEvent event = new AccountClearEvent(identity);
 
-		service.onAccountClear(event);
+		service.onAccountLifecycle(event);
 
 		verify(repository, never()).deleteAll(org.mockito.ArgumentMatchers.any());
 	}

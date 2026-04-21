@@ -1,4 +1,4 @@
-package me.whereareiam.identica.adapter.command.executor;
+package me.whereareiam.identica.adapter.command.executor.admin;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -51,8 +51,8 @@ public class SessionsCommand {
 	private final SessionService sessionService;
 	private final IdentityService identityService;
 
-	@Definition("session")
-	@Command("identica session [page]")
+	@Definition("admin-session")
+	@Command("identica admin session [page]")
 	public void sessions(
 			@NotNull Actor sender,
 			@Argument("page") @Default("1") @Range(min = "1") int page
@@ -60,14 +60,14 @@ public class SessionsCommand {
 		list(sender, page);
 	}
 
-	@Definition("session-list")
-	@Command("identica session list [page]")
+	@Definition("admin-session-list")
+	@Command("identica admin session list [page]")
 	public void list(
 			@NotNull Actor sender,
 			@Argument("page") @Default("1") @Range(min = "1") int page
 	) {
-		Messages.Commands.Sessions messages = messagesProvider.get().getCommands().getSessions();
-		Messages.Commands.Sessions.Listing listMessages = messages.getListing();
+		Messages.Commands.Admin.Sessions messages = messagesProvider.get().getCommands().getAdmin().getSessions();
+		Messages.Commands.Admin.Sessions.Listing listMessages = messages.getListing();
 		int pageSize = commandsProvider.get().getBehavior().getSessions().getListPageSize();
 		SerializerOptions.PlaceholderFormat format = placeholderFormat();
 
@@ -97,13 +97,13 @@ public class SessionsCommand {
 		sender.sendMessage(Serializer.serialize(sender, paginated));
 	}
 
-	@Definition("session-info")
-	@Command("identica session info <target>")
+	@Definition("admin-session-info")
+	@Command("identica admin session info <target>")
 	public void info(@NotNull Actor sender, @Argument("target") String target) {
-		Messages.Commands.Sessions messages = messagesProvider.get().getCommands().getSessions();
-		Messages.Commands.Sessions.Info infoMessages = messages.getInfo();
+		Messages.Commands.Admin.Sessions messages = messagesProvider.get().getCommands().getAdmin().getSessions();
+		Messages.Commands.Admin.Sessions.Info infoMessages = messages.getInfo();
 		String unknown = messages.getUnknown();
-		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica session info", infoMessages.getNotFound());
+		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica admin session info", infoMessages.getNotFound());
 		if (resolved == null) return;
 
 		Optional<Session> session = sessionService.findByUniqueId(resolved.uniqueId()).join();
@@ -117,13 +117,13 @@ public class SessionsCommand {
 		sendMessage(sender, info, Map.of());
 	}
 
-	@Definition("session-end")
-	@Command("identica session end <target>")
+	@Definition("admin-session-end")
+	@Command("identica admin session end <target>")
 	public void end(@NotNull Actor sender, @Argument("target") String target) {
-		Messages.Commands.Sessions messages = messagesProvider.get().getCommands().getSessions();
-		Messages.Commands.Sessions.End endMessages = messages.getEnd();
+		Messages.Commands.Admin.Sessions messages = messagesProvider.get().getCommands().getAdmin().getSessions();
+		Messages.Commands.Admin.Sessions.End endMessages = messages.getEnd();
 		String unknown = messages.getUnknown();
-		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica session end", endMessages.getNotFound());
+		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica admin session end", endMessages.getNotFound());
 		if (resolved == null) return;
 
 		Optional<Session> session = sessionService.findByUniqueId(resolved.uniqueId()).join();
@@ -161,7 +161,7 @@ public class SessionsCommand {
 	private ResolvedTarget resolveTarget(
 			@NotNull Actor sender,
 			@NotNull String target,
-			@NotNull Messages.Commands.Sessions messages,
+			@NotNull Messages.Commands.Admin.Sessions messages,
 			@NotNull String command,
 			String notFoundMessage
 	) {
@@ -192,10 +192,10 @@ public class SessionsCommand {
 			@NotNull Actor sender,
 			@NotNull String target,
 			@NotNull List<Account> matches,
-			@NotNull Messages.Commands.Sessions messages,
+			@NotNull Messages.Commands.Admin.Sessions messages,
 			@NotNull String command
 	) {
-		Messages.Commands.Sessions.Multiple multiple = messages.getMultiple();
+		Messages.Commands.Admin.Sessions.Multiple multiple = messages.getMultiple();
 
 		Map<String, String> headerPlaceholders = Map.of(
 				"target", target,

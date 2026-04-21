@@ -1,4 +1,4 @@
-package me.whereareiam.identica.adapter.command.executor;
+package me.whereareiam.identica.adapter.command.executor.admin;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -28,8 +28,8 @@ public class ReloadCommand {
 		this.messagesProvider = messagesProvider;
 	}
 
-	@Definition("reload")
-	@Command("identica reload")
+	@Definition("admin-reload")
+	@Command("identica admin reload")
 	public void command(@NotNull Actor sender) {
 		Messages.Commands.Reload reload = messagesProvider.get().getCommands().getReload();
 

@@ -18,4 +18,11 @@ public final class UniqueIdResolutionSupport {
 
 		return "subject:" + id + ":" + subject;
 	}
+
+	public static @Nullable String buildUsernameKey(@Nullable String username) {
+		String normalized = normalize(username);
+		if (normalized == null) return null;
+
+		return "username:" + normalized;
+	}
 }

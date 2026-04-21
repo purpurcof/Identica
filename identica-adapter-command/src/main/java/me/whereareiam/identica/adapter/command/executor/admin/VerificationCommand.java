@@ -1,10 +1,11 @@
-package me.whereareiam.identica.adapter.command.executor.verification;
+package me.whereareiam.identica.adapter.command.executor.admin;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.adapter.command.executor.verification.VerificationMessagePresenter;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Default;
@@ -29,15 +30,15 @@ import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class VerificationAdminCommand {
+public class VerificationCommand {
 	private final Provider<Messages> messagesProvider;
 	private final VerificationService verificationService;
 	private final VerificationMessagePresenter messagePresenter;
 	private final IdentityService identityService;
 	private final AccountPersistenceService accountPersistenceService;
 
-	@Definition("verification-reset")
-	@Command("identica 2fa reset <target> [provider]")
+	@Definition("admin-verification-reset")
+	@Command("identica admin 2fa reset <target> [provider]")
 	public void reset(
 			@NotNull Actor sender,
 			@Argument("target") @Suggestions(CrossPlayerSuggestions.KEY) String target,

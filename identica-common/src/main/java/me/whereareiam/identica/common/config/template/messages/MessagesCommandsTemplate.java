@@ -18,9 +18,8 @@ public class MessagesCommandsTemplate {
 		applyEnroll(commands);
 		applyAvailability(commands);
 		applyMigration(commands);
-		applySessions(commands);
 		applyReload(commands);
-		applyClear(commands);
+		applyAdmin(commands);
 		applyVerification(commands);
 
 		return commands;
@@ -137,10 +136,10 @@ public class MessagesCommandsTemplate {
 		commands.setMigration(migration);
 	}
 
-	private void applySessions(Messages.Commands commands) {
-		Messages.Commands.Sessions sessions = new Messages.Commands.Sessions();
+	private Messages.Commands.Admin.Sessions sessions() {
+		Messages.Commands.Admin.Sessions sessions = new Messages.Commands.Admin.Sessions();
 		sessions.setUnknown("unknown");
-		Messages.Commands.Sessions.Listing sessionList = new Messages.Commands.Sessions.Listing();
+		Messages.Commands.Admin.Sessions.Listing sessionList = new Messages.Commands.Admin.Sessions.Listing();
 		sessionList.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
@@ -150,13 +149,13 @@ public class MessagesCommandsTemplate {
 				" "
 		));
 		Messages.Commands.EntryFormat sessionListEntry = new Messages.Commands.EntryFormat();
-		sessionListEntry.setFormat("   <dark_gray>▪</dark_gray> <gray><click:run_command:/identica session info {uniqueId}>[{uniqueId}]</click></gray>\n     <white>Provider: <green>{eligibility} <gray>| <white>Username: <green>{username}");
-		sessionListEntry.setEmptyFormat("  <dark_gray>▪</dark_gray> <gray><click:run_command:/identica session info {uniqueId}>[{uniqueId}]</click></gray>");
+		sessionListEntry.setFormat("   <dark_gray>▪</dark_gray> <gray><click:run_command:/identica admin session info {uniqueId}>[{uniqueId}]</click></gray>\n     <white>Provider: <green>{eligibility} <gray>| <white>Username: <green>{username}");
+		sessionListEntry.setEmptyFormat("  <dark_gray>▪</dark_gray> <gray><click:run_command:/identica admin session info {uniqueId}>[{uniqueId}]</click></gray>");
 		sessionList.setEntry(sessionListEntry);
 		sessionList.setEmpty("{prefix}<white>No active sessions.</white>");
 		sessions.setListing(sessionList);
 
-		Messages.Commands.Sessions.Info sessionInfo = new Messages.Commands.Sessions.Info();
+		Messages.Commands.Admin.Sessions.Info sessionInfo = new Messages.Commands.Admin.Sessions.Info();
 		sessionInfo.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
@@ -181,7 +180,7 @@ public class MessagesCommandsTemplate {
 		sessionInfo.setNotFound("{prefix}<white>No active session found for <gray>{target}</gray>.</white>");
 		sessions.setInfo(sessionInfo);
 
-		Messages.Commands.Sessions.Multiple sessionsMultiple = new Messages.Commands.Sessions.Multiple();
+		Messages.Commands.Admin.Sessions.Multiple sessionsMultiple = new Messages.Commands.Admin.Sessions.Multiple();
 		sessionsMultiple.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
@@ -199,7 +198,7 @@ public class MessagesCommandsTemplate {
 		sessionsMultiple.setEntry(sessionsMultipleEntry);
 		sessions.setMultiple(sessionsMultiple);
 
-		Messages.Commands.Sessions.End sessionEnd = new Messages.Commands.Sessions.End();
+		Messages.Commands.Admin.Sessions.End sessionEnd = new Messages.Commands.Admin.Sessions.End();
 		sessionEnd.setEnded("{prefix}<white>Ended session for <gray>{username}</gray> [<gray>{uniqueId}</gray>].</white>");
 		sessionEnd.setNotFound("{prefix}<white>No active session found for <gray>{target}</gray>.</white>");
 		sessionEnd.setDisconnect(List.of(
@@ -212,7 +211,7 @@ public class MessagesCommandsTemplate {
 		));
 		sessions.setEnd(sessionEnd);
 
-		commands.setSessions(sessions);
+		return sessions;
 	}
 
 	private void applyReload(Messages.Commands commands) {
@@ -222,8 +221,8 @@ public class MessagesCommandsTemplate {
 		commands.setReload(reload);
 	}
 
-	private void applyClear(Messages.Commands commands) {
-		Messages.Commands.Clear clear = new Messages.Commands.Clear();
+	private Messages.Commands.Admin.Clear clear() {
+		Messages.Commands.Admin.Clear clear = new Messages.Commands.Admin.Clear();
 		clear.setConfirm(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
@@ -232,8 +231,8 @@ public class MessagesCommandsTemplate {
 				"  <white>Scope: <aqua>{scope}</aqua></white>",
 				"  <white>UUID: <gray>{uniqueId}</gray></white>",
 				" ",
-				"  <click:run_command:/identica clear confirm><green>[CONFIRM]</green></click>       " +
-						"<click:run_command:/identica clear cancel><red>[CANCEL]</red></click>",
+				"  <click:run_command:/identica admin clear confirm><green>[CONFIRM]</green></click>       " +
+						"<click:run_command:/identica admin clear cancel><red>[CANCEL]</red></click>",
 				" "
 		));
 		clear.setNoPending("{prefix}<white>No pending clear request.</white>");
@@ -241,7 +240,7 @@ public class MessagesCommandsTemplate {
 		clear.setCancelled("{prefix}<white>Clear request cancelled.</white>");
 		clear.setNotFound("{prefix}<white>No account found for <gray>{target}</gray>.</white>");
 
-		Messages.Commands.Clear.Multiple clearMultiple = new Messages.Commands.Clear.Multiple();
+		Messages.Commands.Admin.Clear.Multiple clearMultiple = new Messages.Commands.Admin.Clear.Multiple();
 		clearMultiple.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
@@ -271,7 +270,70 @@ public class MessagesCommandsTemplate {
 				"<dark_gray>discord.arcadeya.com"
 		));
 
-		commands.setClear(clear);
+		return clear;
+	}
+
+	private void applyAdmin(Messages.Commands commands) {
+		Messages.Commands.Admin admin = new Messages.Commands.Admin();
+		admin.setClear(clear());
+		admin.setSessions(sessions());
+		Messages.Commands.Admin.Delete delete = new Messages.Commands.Admin.Delete();
+		delete.setConfirm(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Delete request for <aqua>{target}</aqua></white>",
+				"  <white>UUID: <gray>{uniqueId}</gray></white>",
+				" ",
+				"  <click:run_command:/identica admin delete confirm><green>[CONFIRM]</green></click>       " +
+						"<click:run_command:/identica admin delete cancel><red>[CANCEL]</red></click>",
+				" "
+		));
+		delete.setNoPending("{prefix}<white>No pending delete request.</white>");
+		delete.setExpired("{prefix}<white>Delete request expired, please run the command again.</white>");
+		delete.setCancelled("{prefix}<white>Delete request cancelled.</white>");
+		delete.setNotFound("{prefix}<white>No account found for <gray>{target}</gray>.</white>");
+
+		Messages.Commands.Admin.Clear.Multiple multiple = new Messages.Commands.Admin.Clear.Multiple();
+		multiple.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Found <gray>{count}</gray> accounts for</white>",
+				"  <white>username <gray>{target}</gray></white>",
+				" ",
+				"  <white>Matches:</white>",
+				"{entries}",
+				" "
+		));
+
+		Messages.Commands.EntryFormat entryFormat = new Messages.Commands.EntryFormat();
+		entryFormat.setFormat("  <click:run_command:/{command} {uniqueId}>▪ <gray>{uniqueId}</gray>: <green>{username}</green></click>");
+		entryFormat.setEmptyFormat("  <click:run_command:/{command} {uniqueId}>▪ <gray>{uniqueId}</gray></click>");
+		multiple.setEntry(entryFormat);
+		delete.setMultiple(multiple);
+
+		delete.setSuccess("{prefix}<white>Deleted account <gray>{uniqueId}</gray>.</white>");
+		delete.setError("{prefix}<white>An <red>error occurred</red> while deleting: <gray>{error}</gray></white>");
+		delete.setDisconnect(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Your account has been deleted.</white>",
+				"<white>Please rejoin to continue.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+
+		Messages.Commands.Admin.Reservation reservation = new Messages.Commands.Admin.Reservation();
+		reservation.setSet("{prefix}<white>Reserved <gray>{key}</gray> for <gray>{uniqueId}</gray>.</white>");
+		reservation.setInfo("{prefix}<white>Reservation <gray>{key}</gray> points to <gray>{uniqueId}</gray>.</white>");
+		reservation.setDeleted("{prefix}<white>Deleted reservation <gray>{key}</gray>.</white>");
+		reservation.setNotFound("{prefix}<white>No reservation found for <gray>{key}</gray>.</white>");
+		reservation.setInvalidKey("{prefix}<white>Invalid reservation key <gray>{key}</gray>.</white>");
+
+		admin.setDelete(delete);
+		admin.setReservation(reservation);
+		commands.setAdmin(admin);
 	}
 
 	private void applyVerification(Messages.Commands commands) {

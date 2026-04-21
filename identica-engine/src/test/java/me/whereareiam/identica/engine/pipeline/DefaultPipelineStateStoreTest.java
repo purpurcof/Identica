@@ -2,6 +2,7 @@ package me.whereareiam.identica.engine.pipeline;
 
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
@@ -32,7 +33,9 @@ class DefaultPipelineStateStoreTest {
 		ReplicationAdapter adapter = localOnlyAdapter();
 		DefaultPipelineStateStore store = new DefaultPipelineStateStore(
 				new DefaultReplicationSystem(adapter),
-				this::replication
+				this::replication,
+				mock(IdentityService.class),
+				mock(EventManager.class)
 		);
 		UUID connectionId = UUID.randomUUID();
 		PipelineStateReference reference = PipelineStateReference.builder()
@@ -51,7 +54,9 @@ class DefaultPipelineStateStoreTest {
 		ReplicationAdapter adapter = localOnlyAdapter();
 		DefaultPipelineStateStore store = new DefaultPipelineStateStore(
 				new DefaultReplicationSystem(adapter),
-				this::replication
+				this::replication,
+				mock(IdentityService.class),
+				mock(EventManager.class)
 		);
 		PipelineStateReference reference = PipelineStateReference.builder()
 				.connectionKey("user|127.0.0.1|example.com|25565")
@@ -69,7 +74,9 @@ class DefaultPipelineStateStoreTest {
 		ReplicationAdapter adapter = localOnlyAdapter();
 		DefaultPipelineStateStore store = new DefaultPipelineStateStore(
 				new DefaultReplicationSystem(adapter),
-				this::replication
+				this::replication,
+				mock(IdentityService.class),
+				mock(EventManager.class)
 		);
 		PipelineStateReference storedReference = PipelineStateReference.builder()
 				.connectionKey("user|127.0.0.1||")
@@ -90,7 +97,9 @@ class DefaultPipelineStateStoreTest {
 		ReplicationAdapter adapter = localOnlyAdapter();
 		DefaultPipelineStateStore store = new DefaultPipelineStateStore(
 				new DefaultReplicationSystem(adapter),
-				this::replication
+				this::replication,
+				mock(IdentityService.class),
+				mock(EventManager.class)
 		);
 		PipelineStateReference storedReference = PipelineStateReference.builder()
 				.connectionKey("user|127.0.0.1|premium.example.com|25565")
@@ -111,7 +120,9 @@ class DefaultPipelineStateStoreTest {
 		ReplicationAdapter adapter = localOnlyAdapter();
 		DefaultPipelineStateStore store = new DefaultPipelineStateStore(
 				new DefaultReplicationSystem(adapter),
-				this::replication
+				this::replication,
+				mock(IdentityService.class),
+				mock(EventManager.class)
 		);
 		UUID originalId = UUID.randomUUID();
 		PipelineStateReference originalReference = PipelineStateReference.builder()

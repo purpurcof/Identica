@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import lombok.Getter;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
+import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.database.DatabaseService;
@@ -182,6 +183,17 @@ public final class IdenticaAPI {
 	@NotNull
 	public static RegistrationAccountService getRegistrationAccountService() {
 		return getService(RegistrationAccountService.class);
+	}
+
+	/**
+	 * Gets the AccountService for account lookup and lifecycle operations.
+	 *
+	 * @return the AccountService instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
+	@NotNull
+	public static AccountService getAccountService() {
+		return getService(AccountService.class);
 	}
 
 	/**

@@ -62,9 +62,8 @@ public class Messages {
 		private @NotNull Availability availability;
 
 		private @NotNull Migration migration;
-		private @NotNull Sessions sessions;
 		private @NotNull Reload reload;
-		private @NotNull Clear clear;
+		private @NotNull Admin admin;
 		private @NotNull Verification verification;
 
 		/**
@@ -202,95 +201,142 @@ public class Messages {
 		@Getter
 		@Setter
 		@ToString
-		public static class Sessions {
-			/**
-			 * Placeholder value used when session fields are missing.
-			 */
-			private @NotNull String unknown;
-			@Field(name = "list")
-			private @NotNull Listing listing;
-			private @NotNull Info info;
-			private @NotNull End end;
-			private @NotNull Multiple multiple;
+		public static class Admin {
+			private @NotNull Clear clear;
+			private @NotNull Delete delete;
+			private @NotNull Reservation reservation;
+			private @NotNull Sessions sessions;
 
 			@Getter
 			@Setter
 			@ToString
-			public static class Listing {
+			public static class Clear {
 				/**
-				 * Lines shown in session list output.
+				 * Confirmation message shown before clearing.
 				 * Placeholders:
-				 * - {entries}
+				 * - {prefix}: The global message prefix
+				 * - {target}: Provided input
+				 * - {scope}: clear scope (cache/all)
+				 * - {uniqueId}: Identica UUID
 				 */
-				private @NotNull List<String> body;
+				private @NotNull List<String> confirm;
 
 				/**
-				 * Entry format for a single session in list output.
+				 * Message shown when no pending clear exists.
+				 */
+				private @NotNull String noPending;
+
+				/**
+				 * Message shown when pending clear expired.
+				 */
+				private @NotNull String expired;
+
+				/**
+				 * Message shown when clear is cancelled.
+				 */
+				private @NotNull String cancelled;
+
+				/**
+				 * Message shown when no account could be resolved.
+				 */
+				private @NotNull String notFound;
+
+				private @NotNull Multiple multiple;
+
+				/**
+				 * Message shown on successful clear.
 				 * Placeholders:
-				 * - {username}
+				 * - {scope}
 				 * - {uniqueId}
-				 * - {eligibility}
-				 * - {session}
-				 * - {ip}
 				 */
-				private @NotNull EntryFormat entry;
+				private @NotNull String success;
 
 				/**
-				 * Message shown when no sessions are available.
+				 * Message shown when a clear fails.
+				 * Placeholders:
+				 * - {error}
 				 */
-				private @NotNull String empty;
+				private @NotNull String error;
+
+				/**
+				 * Message sent to the target when disconnected.
+				 */
+				private @NotNull List<String> disconnect;
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Multiple {
+					/**
+					 * Lines shown before listing matches.
+					 * Placeholders:
+					 * - {target}
+					 * - {count}
+					 * - {entries}
+					 */
+					private @NotNull List<String> body;
+
+					/**
+					 * Entry formats for each match.
+					 * Placeholders:
+					 * - {username}
+					 * - {uniqueId}
+					 * - {command}
+					 */
+					private @NotNull EntryFormat entry;
+				}
 			}
 
 			@Getter
 			@Setter
 			@ToString
-			public static class Info {
+			public static class Delete {
 				/**
-				 * Detailed session info lines.
-				 * Placeholders:
-				 * - {username}
-				 * - {original}
-				 * - {effective}
-				 * - {uniqueId}
-				 * - {eligibility}
-				 * - {subject}
-				 * - {session}
-				 * - {ip}
-				 * - {created} (same as {createdDateTime})
-				 * - {createdDate}
-				 * - {createdDateTime}
-				 */
-				private @NotNull List<String> body;
-
-				/**
-				 * Message shown when no active session found.
+				 * Confirmation message shown before deleting.
 				 * Placeholders:
 				 * - {target}
-				 */
-				private @NotNull String notFound;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class End {
-				/**
-				 * Message shown on successful session end.
-				 * Placeholders:
-				 * - {username}
 				 * - {uniqueId}
 				 */
-				private @NotNull String ended;
+				private @NotNull List<String> confirm;
 
 				/**
-				 * Message shown when no active session found.
-				 * Placeholders:
-				 * - {target}
+				 * Message shown when no pending delete exists.
+				 */
+				private @NotNull String noPending;
+
+				/**
+				 * Message shown when pending delete expired.
+				 */
+				private @NotNull String expired;
+
+				/**
+				 * Message shown when delete is cancelled.
+				 */
+				private @NotNull String cancelled;
+
+				/**
+				 * Message shown when no account could be resolved.
 				 */
 				private @NotNull String notFound;
 
+				private @NotNull Clear.Multiple multiple;
+
 				/**
-				 * Message sent to the player when their session ends.
+				 * Message shown on successful delete.
+				 * Placeholders:
+				 * - {uniqueId}
+				 */
+				private @NotNull String success;
+
+				/**
+				 * Message shown when a delete fails.
+				 * Placeholders:
+				 * - {error}
+				 */
+				private @NotNull String error;
+
+				/**
+				 * Message sent to the target when disconnected.
 				 */
 				private @NotNull List<String> disconnect;
 			}
@@ -298,24 +344,132 @@ public class Messages {
 			@Getter
 			@Setter
 			@ToString
-			public static class Multiple {
-				/**
-				 * Lines shown before listing matches.
-				 * Placeholders:
-				 * - {target}
-				 * - {count}
-				 * - {entries}
-				 */
-				private @NotNull List<String> body;
+			public static class Reservation {
+				private @NotNull String set;
+				private @NotNull String info;
+				private @NotNull String deleted;
+				private @NotNull String notFound;
+				private @NotNull String invalidKey;
+			}
 
+			@Getter
+			@Setter
+			@ToString
+			public static class Sessions {
 				/**
-				 * Entry formats for each match.
-				 * Placeholders:
-				 * - {username}
-				 * - {uniqueId}
-				 * - {command}
+				 * Placeholder value used when session fields are missing.
 				 */
-				private @NotNull EntryFormat entry;
+				private @NotNull String unknown;
+				@Field(name = "list")
+				private @NotNull Listing listing;
+				private @NotNull Info info;
+				private @NotNull End end;
+				private @NotNull Multiple multiple;
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Listing {
+					/**
+					 * Lines shown in session list output.
+					 * Placeholders:
+					 * - {entries}
+					 */
+					private @NotNull List<String> body;
+
+					/**
+					 * Entry format for a single session in list output.
+					 * Placeholders:
+					 * - {username}
+					 * - {uniqueId}
+					 * - {eligibility}
+					 * - {session}
+					 * - {ip}
+					 */
+					private @NotNull EntryFormat entry;
+
+					/**
+					 * Message shown when no sessions are available.
+					 */
+					private @NotNull String empty;
+				}
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Info {
+					/**
+					 * Detailed session info lines.
+					 * Placeholders:
+					 * - {username}
+					 * - {original}
+					 * - {effective}
+					 * - {uniqueId}
+					 * - {eligibility}
+					 * - {subject}
+					 * - {session}
+					 * - {ip}
+					 * - {created} (same as {createdDateTime})
+					 * - {createdDate}
+					 * - {createdDateTime}
+					 */
+					private @NotNull List<String> body;
+
+					/**
+					 * Message shown when no active session found.
+					 * Placeholders:
+					 * - {target}
+					 */
+					private @NotNull String notFound;
+				}
+
+				@Getter
+				@Setter
+				@ToString
+				public static class End {
+					/**
+					 * Message shown on successful session end.
+					 * Placeholders:
+					 * - {username}
+					 * - {uniqueId}
+					 */
+					private @NotNull String ended;
+
+					/**
+					 * Message shown when no active session found.
+					 * Placeholders:
+					 * - {target}
+					 */
+					private @NotNull String notFound;
+
+					/**
+					 * Message sent to the player when their session ends.
+					 */
+					private @NotNull List<String> disconnect;
+				}
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Multiple {
+					/**
+					 * Lines shown before listing matches.
+					 * Placeholders:
+					 * - {target}
+					 * - {count}
+					 * - {entries}
+					 */
+					private @NotNull List<String> body;
+
+					/**
+					 * Entry formats for each match.
+					 * Placeholders:
+					 * - {username}
+					 * - {uniqueId}
+					 * - {command}
+					 */
+					private @NotNull EntryFormat entry;
+				}
 			}
 		}
 		/**
@@ -339,86 +493,6 @@ public class Messages {
 			 * - {error}: The error message
 			 */
 			private @NotNull String error;
-		}
-
-		@Getter
-		@Setter
-		@ToString
-		public static class Clear {
-			/**
-			 * Confirmation message shown before clearing.
-			 * Placeholders:
-			 * - {prefix}: The global message prefix
-			 * - {target}: Provided input
-			 * - {scope}: clear scope (cache/all)
-			 * - {uniqueId}: Identica UUID
-			 */
-			private @NotNull List<String> confirm;
-
-			/**
-			 * Message shown when no pending clear exists.
-			 */
-			private @NotNull String noPending;
-
-			/**
-			 * Message shown when pending clear expired.
-			 */
-			private @NotNull String expired;
-
-			/**
-			 * Message shown when clear is cancelled.
-			 */
-			private @NotNull String cancelled;
-
-			/**
-			 * Message shown when no account could be resolved.
-			 */
-			private @NotNull String notFound;
-
-			private @NotNull Multiple multiple;
-
-			/**
-			 * Message shown on successful clear.
-			 * Placeholders:
-			 * - {scope}
-			 * - {uniqueId}
-			 */
-			private @NotNull String success;
-
-			/**
-			 * Message shown when a clear fails.
-			 * Placeholders:
-			 * - {error}
-			 */
-			private @NotNull String error;
-
-			/**
-			 * Message sent to the target when disconnected.
-			 */
-			private @NotNull List<String> disconnect;
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Multiple {
-				/**
-				 * Lines shown before listing matches.
-				 * Placeholders:
-				 * - {target}
-				 * - {count}
-				 * - {entries}
-				 */
-				private @NotNull List<String> body;
-
-				/**
-				 * Entry formats for each match.
-				 * Placeholders:
-				 * - {username}
-				 * - {uniqueId}
-				 * - {command}
-				 */
-				private @NotNull EntryFormat entry;
-			}
 		}
 
 		@Getter

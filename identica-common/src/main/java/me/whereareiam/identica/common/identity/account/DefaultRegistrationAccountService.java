@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.common.util.UniqueIdResolutionSupport;
+import me.whereareiam.identica.database.AccountReservationPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.model.Session;
@@ -18,12 +19,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultRegistrationAccountService implements RegistrationAccountService {
+	private final AccountReservationPersistenceService accountReservationPersistenceService;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final SessionService sessionService;
 	private final ReservationCache reservationCache;
@@ -38,15 +42,13 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 		String providerSubject = UniqueIdResolutionSupport.normalize(request.getProviderSubject());
 		if (providerId == null || providerSubject == null) return null;
 
-		UUID resolved = resolveFromSession(providerId, providerSubject);
-		if (resolved == null)
-			resolved = resolveFromProviderLink(providerId, providerSubject);
-		if (resolved == null)
-			resolved = resolveFromReservation(providerId, providerSubject);
-		if (resolved == null)
-			resolved = reserveNewAccountId(providerId, providerSubject);
-
-		return resolved;
+		return resolveFirst(List.of(
+				() -> resolveFromSession(providerId, providerSubject),
+				() -> resolveFromProviderLink(providerId, providerSubject),
+				() -> resolveFromReservation(providerId, providerSubject),
+				() -> resolveFromAccountReservation(username),
+				() -> reserveNewAccountId(providerId, providerSubject)
+		));
 	}
 
 	@Override
@@ -95,6 +97,14 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 		return generated;
 	}
 
+	@Nullable
+	private UUID resolveFromAccountReservation(String username) {
+		String usernameKey = UniqueIdResolutionSupport.buildUsernameKey(username);
+		if (usernameKey == null) return null;
+
+		return accountReservationPersistenceService.find(usernameKey).orElse(null);
+	}
+
 	private long pendingTtlMillis() {
 		Settings.Connection connection = settingsProvider.get().getConnection();
 
@@ -105,4 +115,12 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 		return configured.toMillis();
 	}
 
+	private @Nullable UUID resolveFirst(@NotNull List<Supplier<@Nullable UUID>> resolvers) {
+		for (Supplier<@Nullable UUID> resolver : resolvers) {
+			UUID resolved = resolver.get();
+			if (resolved != null) return resolved;
+		}
+
+		return null;
+	}
 }

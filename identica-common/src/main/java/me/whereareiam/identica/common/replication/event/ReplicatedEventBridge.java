@@ -7,6 +7,8 @@ import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.base.ReplicatedEvent;
+import me.whereareiam.identica.event.account.AccountClearEvent;
+import me.whereareiam.identica.event.account.AccountDeleteEvent;
 import me.whereareiam.identica.event.identity.session.SessionClosedEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Replication;
@@ -92,6 +94,8 @@ public class ReplicatedEventBridge implements EventListener {
 
 	private void registerBuiltInEvents() {
 		registry.register("session-closed", SessionClosedEvent.class);
+		registry.register("account-clear", AccountClearEvent.class);
+		registry.register("account-delete", AccountDeleteEvent.class);
 	}
 
 	private void prepare(@NotNull ReplicatedEvent event) {
@@ -115,8 +119,6 @@ public class ReplicatedEventBridge implements EventListener {
 
 	private @Nullable String resolveChannelName() {
 		Replication replication = replicationProvider.get();
-		if (replication == null || replication.getRedis() == null || replication.getRedis().getChannels() == null)
-			return null;
 
 		Replication.Channels channels = replication.getRedis().getChannels();
 		if (hasText(channels.getEvents())) return channels.getEvents();
@@ -127,7 +129,7 @@ public class ReplicatedEventBridge implements EventListener {
 
 	private @NotNull String resolveServerId() {
 		Replication replication = replicationProvider.get();
-		if (replication == null || replication.getServerId() == null) return "";
+		if (replication == null) return "";
 
 		return replication.getServerId();
 	}

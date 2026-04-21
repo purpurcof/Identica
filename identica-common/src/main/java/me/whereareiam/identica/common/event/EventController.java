@@ -33,6 +33,7 @@ public class EventController implements EventManager {
 
 			Class<?> eventType = method.getParameterTypes()[0];
 			EventOrder order = method.getAnnotation(IdenticEvent.class).value();
+			method.setAccessible(true);
 
 			listeners.computeIfAbsent(eventType, ignored -> new ArrayList<>())
 					.add(new RegisteredListener(listener, method, order));

@@ -2,6 +2,7 @@ package me.whereareiam.identica.adapter.database.username;
 
 import me.whereareiam.identica.adapter.database.repository.username.UsernameHistoryRepository;
 import me.whereareiam.identica.adapter.database.testing.TestDataFactory;
+import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.UsernameHistoryEntry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,12 +19,14 @@ import static org.mockito.Mockito.verify;
 class DefaultUsernameHistoryPersistenceServiceTest {
 	@Mock
 	private UsernameHistoryRepository repository;
+	@Mock
+	private EventManager eventManager;
 
 	private DefaultUsernameHistoryPersistenceService service;
 
 	@BeforeEach
 	void setUp() {
-		service = new DefaultUsernameHistoryPersistenceService(repository);
+		service = new DefaultUsernameHistoryPersistenceService(repository, eventManager);
 	}
 
 	@Test
@@ -55,5 +58,14 @@ class DefaultUsernameHistoryPersistenceServiceTest {
 		service.record(entry);
 
 		verify(repository).insert(uniqueId, "provider", "old", "new", "source", TestDataFactory.CHANGED_AT);
+	}
+
+	@Test
+	void deleteAllDelegatesToRepository() {
+		UUID uniqueId = UUID.randomUUID();
+
+		service.deleteAll(uniqueId);
+
+		verify(repository).deleteAll(uniqueId);
 	}
 }

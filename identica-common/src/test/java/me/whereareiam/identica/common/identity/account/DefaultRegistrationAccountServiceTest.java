@@ -1,5 +1,6 @@
 package me.whereareiam.identica.common.identity.account;
 
+import me.whereareiam.identica.database.AccountReservationPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -9,6 +10,7 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 import java.time.Duration;
 import java.util.Map;
@@ -46,6 +48,7 @@ class DefaultRegistrationAccountServiceTest {
 	@Test
 	void reserveReusesExistingProviderLinkUniqueId() {
 		TestReservationCache reservationCache = new TestReservationCache();
+		AccountReservationPersistenceService accountReservationPersistenceService = mock(AccountReservationPersistenceService.class);
 		ProviderLinkPersistenceService providerLinkPersistenceService = mock(ProviderLinkPersistenceService.class);
 		SessionService sessionService = mock(SessionService.class);
 		UUID existingUniqueId = UUID.randomUUID();
@@ -62,6 +65,7 @@ class DefaultRegistrationAccountServiceTest {
 
 		DefaultRegistrationAccountService service = service(
 				reservationCache,
+				accountReservationPersistenceService,
 				providerLinkPersistenceService,
 				sessionService
 		);
@@ -71,16 +75,37 @@ class DefaultRegistrationAccountServiceTest {
 		assertEquals(existingUniqueId, reserved);
 	}
 
+	@Test
+	void reserveReusesAccountReservationByUsername() {
+		TestReservationCache reservationCache = new TestReservationCache();
+		AccountReservationPersistenceService accountReservationPersistenceService = mock(AccountReservationPersistenceService.class);
+		UUID clearedUniqueId = UUID.randomUUID();
+
+		when(accountReservationPersistenceService.find("username:clearedplayer"))
+				.thenReturn(Optional.of(clearedUniqueId));
+
+		DefaultRegistrationAccountService service = service(
+				reservationCache,
+				accountReservationPersistenceService,
+				mock(ProviderLinkPersistenceService.class),
+				mockSessionService()
+		);
+
+		UUID reserved = service.reserve(request("ClearedPlayer", "1.1.1.1", "subject-new"));
+
+		assertEquals(clearedUniqueId, reserved);
+	}
+
 	private DefaultRegistrationAccountService service(ReservationCache reservationCache) {
+		AccountReservationPersistenceService accountReservationPersistenceService = mock(AccountReservationPersistenceService.class);
 		ProviderLinkPersistenceService providerLinkPersistenceService = mock(ProviderLinkPersistenceService.class);
-		SessionService sessionService = mock(SessionService.class);
-		when(sessionService.findByProviderSubject(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString()))
-				.thenReturn(CompletableFuture.completedFuture(Optional.empty()));
-		return service(reservationCache, providerLinkPersistenceService, sessionService);
+		SessionService sessionService = mockSessionService();
+		return service(reservationCache, accountReservationPersistenceService, providerLinkPersistenceService, sessionService);
 	}
 
 	private DefaultRegistrationAccountService service(
 			ReservationCache reservationCache,
+			AccountReservationPersistenceService accountReservationPersistenceService,
 			ProviderLinkPersistenceService providerLinkPersistenceService,
 			SessionService sessionService
 	) {
@@ -90,6 +115,7 @@ class DefaultRegistrationAccountServiceTest {
 		settings.setConnection(connection);
 
 		return new DefaultRegistrationAccountService(
+				accountReservationPersistenceService,
 				providerLinkPersistenceService,
 				sessionService,
 				reservationCache,
@@ -103,6 +129,13 @@ class DefaultRegistrationAccountServiceTest {
 				.providerId("premium")
 				.providerSubject(providerSubject)
 				.build();
+	}
+
+	private SessionService mockSessionService() {
+		SessionService sessionService = mock(SessionService.class);
+		when(sessionService.findByProviderSubject(ArgumentMatchers.anyString(), ArgumentMatchers.anyString()))
+				.thenReturn(CompletableFuture.completedFuture(Optional.empty()));
+		return sessionService;
 	}
 
 	private static final class TestReservationCache implements ReservationCache {

@@ -11,12 +11,11 @@ import me.whereareiam.identica.adapter.database.repository.verification.Verifica
 import me.whereareiam.identica.database.VerificationPersistenceService;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.account.AccountClearEvent;
+import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.VerificationRecoveryCode;
 import me.whereareiam.identica.model.verification.selection.VerificationSelection;
-import me.whereareiam.identica.type.ClearScope;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -186,8 +185,7 @@ public class DefaultVerificationPersistenceService implements VerificationPersis
 	}
 
 	@IdenticEvent(EventOrder.HIGH)
-	public void onAccountClear(@NotNull AccountClearEvent event) {
-		if (event.getScope() != ClearScope.ALL) return;
+	public void onAccountLifecycle(@NotNull AccountLifecycleEvent event) {
 		UUID uniqueId = event.getIdentity().getUniqueId();
 		if (uniqueId == null) return;
 		deleteAll(uniqueId);

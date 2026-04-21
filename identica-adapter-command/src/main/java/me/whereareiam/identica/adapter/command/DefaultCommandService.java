@@ -8,6 +8,7 @@ import me.whereareiam.commandant.Commandant;
 import me.whereareiam.commandant.CommandantKeys;
 import me.whereareiam.commandant.ExceptionHandlerRegistrar;
 import me.whereareiam.commandant.model.message.ExceptionMessages;
+import me.whereareiam.commandant.CommandantSyntaxFormatter;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.adapter.command.annotation.IdenticaAnnotationParser;
 import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
@@ -79,6 +80,7 @@ public class DefaultCommandService implements CommandService {
 
 	private void initialize() {
 		CommandManager<Actor> commandManager = commandManagerProvider.get();
+		registerSyntaxFormatter(commandManager);
 		registerSuggestions(commandManager);
 		registerInternal(
 				injector.getInstance(PasswordParser.class),
@@ -160,6 +162,30 @@ public class DefaultCommandService implements CommandService {
 				.registerSuggestionProvider(VerificationMethodSuggestions.KEY, verificationMethodSuggestions);
 		commandManager.parserRegistry()
 				.registerSuggestionProvider(ProviderIdSuggestions.KEY, providerIdSuggestions);
+	}
+
+	private void registerSyntaxFormatter(@NotNull CommandManager<Actor> commandManager) {
+		Messages messages = messagesProvider.get();
+		commandManager.commandSyntaxFormatter(new CommandantSyntaxFormatter<>(
+				commandManager,
+				collectArgumentDescriptions(),
+				messages.getCommands().getHelp().getArgumentFormat(),
+				Serializer.getEngine().getPlaceholderFormat()
+		));
+	}
+
+	private @NotNull Map<String, String> collectArgumentDescriptions() {
+		Map<String, String> argumentDescriptions = new HashMap<>();
+		Commands commands = commandsProvider.get();
+		if (commands == null) return argumentDescriptions;
+
+		for (CommandDefinition definition : commands.getCommands().values()) {
+			Map<String, String> arguments = definition.getArguments();
+			if (arguments == null || arguments.isEmpty()) continue;
+			argumentDescriptions.putAll(arguments);
+		}
+
+		return argumentDescriptions;
 	}
 
 	private void processParsedCommands(

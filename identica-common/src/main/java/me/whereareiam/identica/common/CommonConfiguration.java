@@ -56,9 +56,9 @@ import me.whereareiam.identica.common.verification.DefaultVerificationRegistry;
 import me.whereareiam.identica.common.verification.DefaultVerificationService;
 import me.whereareiam.identica.common.verification.enrollment.VerificationEnrollmentStore;
 import me.whereareiam.identica.common.verification.type.totp.TotpVerificationMethod;
-import me.whereareiam.identica.common.routing.PhaseRoutingService;
-import me.whereareiam.identica.common.routing.DefaultRoutingStateStore;
-import me.whereareiam.identica.common.routing.RoutingLifecycle;
+import me.whereareiam.identica.common.routing.DefaultRoutingCoordinator;
+import me.whereareiam.identica.common.routing.DefaultRoutingIntentStore;
+import me.whereareiam.identica.common.routing.RoutingPlanner;
 import me.whereareiam.identica.common.routing.RoutingTargetMissingListener;
 import me.whereareiam.identica.common.identity.session.DefaultSessionService;
 import me.whereareiam.identica.common.identity.session.SessionRefreshCoordinator;
@@ -78,8 +78,9 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.sentinel.SentinelService;
 import me.whereareiam.identica.sentinel.SentinelDefinition;
-import me.whereareiam.identica.routing.RoutingService;
-import me.whereareiam.identica.routing.RoutingStateStore;
+import me.whereareiam.identica.routing.RoutingAttemptService;
+import me.whereareiam.identica.routing.RoutingCoordinator;
+import me.whereareiam.identica.routing.RoutingIntentStore;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.service.MigrationService;
@@ -169,12 +170,12 @@ public class CommonConfiguration extends AbstractModule {
 		bind(SessionService.class).to(DefaultSessionService.class).asEagerSingleton();
 		bind(SessionRefreshCoordinator.class).asEagerSingleton();
 
-		// Routing state
-		bind(RoutingStateStore.class).to(DefaultRoutingStateStore.class).asEagerSingleton();
-
 		// Routing
-		bind(RoutingService.class).to(PhaseRoutingService.class).asEagerSingleton();
-		bind(RoutingLifecycle.class).asEagerSingleton();
+		bind(RoutingIntentStore.class).to(DefaultRoutingIntentStore.class).asEagerSingleton();
+		bind(RoutingPlanner.class).asEagerSingleton();
+		bind(DefaultRoutingCoordinator.class).asEagerSingleton();
+		bind(RoutingCoordinator.class).to(DefaultRoutingCoordinator.class);
+		bind(RoutingAttemptService.class).to(DefaultRoutingCoordinator.class);
 		bind(RoutingTargetMissingListener.class).asEagerSingleton();
 
 		// Conflict resolution

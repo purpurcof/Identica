@@ -9,12 +9,12 @@ import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
-import me.whereareiam.identica.event.routing.RoutingTargetReachedEvent;
+import me.whereareiam.identica.event.routing.intent.RoutingIntentReachedEvent;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.model.RoutingTarget;
-import me.whereareiam.identica.routing.RoutingStateStore;
-import me.whereareiam.identica.type.RoutingTargetType;
+import me.whereareiam.identica.model.routing.RoutingIntent;
+import me.whereareiam.identica.routing.RoutingIntentStore;
+import me.whereareiam.identica.type.routing.RoutingReason;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
@@ -22,20 +22,20 @@ public class CompletionPendingLifecycle implements EventListener {
 	private final CompletionPendingStore completionPendingStore;
 	private final CompletionCoordinator completionCoordinator;
 	private final IdentityService identityService;
-	private final RoutingStateStore routingStateStore;
+	private final RoutingIntentStore routingIntentStore;
 
 	@Inject
 	public CompletionPendingLifecycle(
 			@NotNull CompletionPendingStore completionPendingStore,
 			@NotNull CompletionCoordinator completionCoordinator,
 			@NotNull IdentityService identityService,
-			@NotNull RoutingStateStore routingStateStore,
+			@NotNull RoutingIntentStore routingIntentStore,
 			@NotNull EventManager eventManager
 	) {
 		this.completionPendingStore = completionPendingStore;
 		this.completionCoordinator = completionCoordinator;
 		this.identityService = identityService;
-		this.routingStateStore = routingStateStore;
+		this.routingIntentStore = routingIntentStore;
 		eventManager.register(this);
 	}
 
@@ -52,24 +52,22 @@ public class CompletionPendingLifecycle implements EventListener {
 	@IdenticEvent
 	public void onIdentityAttached(@NotNull IdentityAttachedEvent event) {
 		if (completionPendingStore.peek(event.getIdentity().getUniqueId()).isEmpty()) return;
-		if (hasRoutingTarget(event.getIdentity().getUniqueId())) return;
+		if (hasRoutingIntent(event.getIdentity().getUniqueId())) return;
 
 		completionCoordinator.consumeAndExecute(event.getIdentity());
 	}
 
 	@IdenticEvent
-	public void onRoutingTargetReached(@NotNull RoutingTargetReachedEvent event) {
-		RoutingTarget target = event.getTarget();
-		if (target == null || target.getType() != RoutingTargetType.COMPLETED) return;
+	public void onRoutingIntentReached(@NotNull RoutingIntentReachedEvent event) {
+		RoutingIntent intent = event.getIntent();
+		if (intent.getReason() != RoutingReason.COMPLETION) return;
 
-		identityService.find(event.getConnectionUniqueId())
+		identityService.find(intent.getConnectionUniqueId())
 				.ifPresent(completionCoordinator::consumeAndExecute);
 	}
 
-	private boolean hasRoutingTarget(@NotNull java.util.UUID connectionUniqueId) {
-		RoutingTarget target = routingStateStore.peek(connectionUniqueId).orElse(null);
-		return target != null
-				&& target.getServer() != null
-				&& !target.getServer().isBlank();
+	private boolean hasRoutingIntent(@NotNull java.util.UUID connectionUniqueId) {
+		RoutingIntent intent = routingIntentStore.peek(connectionUniqueId).orElse(null);
+		return intent != null && !intent.getEndpoint().getServer().isBlank();
 	}
 }

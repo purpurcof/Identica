@@ -5,26 +5,48 @@ connection:
   reservationTtl: "15m"
   prepareStateTtl: "10m"
   routing:
+    defaults:
+      step:
+        target: "auth"
+        attempts:
+          mode: "RETRY_ONCE"
+          maxAttempts: 1
+          retryDelay: "0s"
+          consumeOnReached: false
+          consumeOnExhausted: true
+      complete:
+        target: "lobby"
+        attempts:
+          mode: "NONE"
+          maxAttempts: 1
+          retryDelay: "0s"
+          consumeOnReached: true
+          consumeOnExhausted: true
     scenarios:
       migration:
-        step: "migration"
-        complete: "lobby"
+        step:
+          target: "migration"
+        complete:
+          target: "lobby"
         overrides:
           stages: {}
           steps: {}
       registration:
-        step: "registration"
-        complete: "lobby"
+        step:
+          target: "registration"
+        complete:
+          target: "lobby"
         overrides:
           stages: {}
           steps: {}
       authentication:
-        step: "auth"
-        complete: "lobby"
+        step:
+          target: "auth"
+        complete:
+          target: "lobby"
         overrides:
           stages: {}
           steps: {}
-    enforcementMode: "FIRST_CONNECT"
   sessions:
     defaultTtl: "2h"
     refreshTtl: "10m"

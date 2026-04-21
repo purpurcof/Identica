@@ -15,6 +15,7 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.routing.RoutingSignal;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
@@ -31,6 +32,7 @@ import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
@@ -58,6 +60,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	private final Provider<Messages> messagesProvider;
 	private final ProviderManager providerManager;
 	private final PipelineStateStore pipelineStateStore;
+	private final RoutingCoordinator routingCoordinator;
 
 	@Override
 	public @NotNull String id() {
@@ -529,6 +532,13 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				pipelineType,
 				result,
 				stage.getType()
+		));
+		routingCoordinator.accept(RoutingSignal.stepFinished(
+				context,
+				pipelineType,
+				stage.getType(),
+				journeyStep.getStep(),
+				result
 		));
 		return result;
 	}

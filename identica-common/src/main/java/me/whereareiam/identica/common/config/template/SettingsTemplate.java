@@ -4,9 +4,9 @@ import com.google.inject.Singleton;
 import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.type.event.EventPriority;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
-import me.whereareiam.identica.type.RoutingEnforcementMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
@@ -22,8 +22,8 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		settings.setLevel(2);
 
 		Settings.Routing routing = new Settings.Routing();
+		routing.setDefaults(defaultRoutingDefaults());
 		routing.setScenarios(defaultScenarioRoutingTargets());
-		routing.setEnforcementMode(RoutingEnforcementMode.FIRST_CONNECT);
 
 		Settings.Listeners listeners = new Settings.Listeners();
 		listeners.setEvents(defaultListenerEvents());
@@ -113,10 +113,31 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		return scenarios;
 	}
 
+	private Settings.Routing.Defaults defaultRoutingDefaults() {
+		Settings.Routing.Defaults defaults = new Settings.Routing.Defaults();
+
+		Settings.Routing.Target step = Settings.Routing.Target.step();
+		step.setTarget("auth");
+		step.setAttempts(RoutingAttemptPolicy.defaultStep());
+
+		Settings.Routing.Target complete = Settings.Routing.Target.complete();
+		complete.setTarget("survival");
+		complete.setAttempts(RoutingAttemptPolicy.defaultCompletion());
+
+		defaults.setStep(step);
+		defaults.setComplete(complete);
+		return defaults;
+	}
+
 	private Settings.Routing.Targets createScenarioTargets(String step, String complete) {
 		Settings.Routing.Targets targets = new Settings.Routing.Targets();
-		targets.setStep(step);
-		targets.setComplete(complete);
+		Settings.Routing.Target stepTarget = Settings.Routing.Target.step();
+		stepTarget.setTarget(step);
+		Settings.Routing.Target completeTarget = Settings.Routing.Target.complete();
+		completeTarget.setTarget(complete);
+
+		targets.setStep(stepTarget);
+		targets.setComplete(completeTarget);
 
 		Settings.Routing.Targets.Overrides overrides = new Settings.Routing.Targets.Overrides();
 		overrides.setStages(new HashMap<>());

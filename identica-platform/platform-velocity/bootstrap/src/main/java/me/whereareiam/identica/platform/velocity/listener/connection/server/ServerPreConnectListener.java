@@ -9,9 +9,12 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.routing.RoutingTargetMissingEvent;
 import me.whereareiam.identica.listener.DynamicListener;
-import me.whereareiam.identica.model.RoutingTarget;
-import me.whereareiam.identica.routing.RoutingStateStore;
-import me.whereareiam.identica.type.RoutingTargetType;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
+import me.whereareiam.identica.model.routing.RoutingIntent;
+import me.whereareiam.identica.routing.RoutingAttemptService;
+import me.whereareiam.identica.type.routing.RoutingAttemptTrigger;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -20,35 +23,62 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class ServerPreConnectListener implements DynamicListener<ServerPreConnectEvent> {
 	private final ProxyServer proxyServer;
-	private final RoutingStateStore routingStateStore;
+	private final RoutingAttemptService routingAttemptService;
 	private final EventManager eventManager;
 
 	@Override
 	public void onEvent(ServerPreConnectEvent event) {
 		UUID connectionId = event.getPlayer().getUniqueId();
-		RoutingTarget target = routingStateStore.peek(connectionId).orElse(null);
-		if (target == null) return;
-		if (target.getType() != RoutingTargetType.STEP) return;
-		if (target.getServer() == null || target.getServer().isBlank()) return;
+		RoutingIntent currentIntent = routingAttemptService.current(connectionId).orElse(null);
+		if (currentIntent == null) return;
+		String targetServer = currentIntent.getEndpoint().getServer();
+		if (targetServer.isBlank()) return;
+		if (event.getOriginalServer().getServerInfo().getName().equalsIgnoreCase(targetServer)) {
+			return;
+		}
 
-		Optional<RegisteredServer> server = proxyServer.getServer(target.getServer());
+		String currentServer = event.getPlayer().getCurrentServer()
+				.map(server -> server.getServerInfo().getName())
+				.orElse(null);
+		RoutingAttemptDecision decision = routingAttemptService.decide(new RoutingAttemptRequest(
+				connectionId,
+				RoutingAttemptTrigger.PRE_CONNECT,
+				currentServer
+		));
+		if (!decision.isAllowed() || decision.getIntent() == null) return;
+
+		RoutingIntent intent = decision.getIntent();
+		targetServer = intent.getEndpoint().getServer();
+		if (targetServer.isBlank()) return;
+
+		Optional<RegisteredServer> server = proxyServer.getServer(targetServer);
 		if (server.isEmpty()) {
 			RoutingTargetMissingEvent missingEvent = new RoutingTargetMissingEvent(
 					connectionId,
 					event.getPlayer().getUsername(),
-					target
+					intent
 			);
 			eventManager.call(missingEvent);
 			if (missingEvent.isDisconnect() && missingEvent.getMessage() != null)
 				event.getPlayer().disconnect(missingEvent.getMessage());
 
-			return;
-		}
-
-		if (event.getOriginalServer().getServerInfo().getName().equalsIgnoreCase(target.getServer())) {
+			routingAttemptService.record(new RoutingAttemptReport(
+					connectionId,
+					RoutingAttemptTrigger.PRE_CONNECT,
+					false,
+					targetServer,
+					"missing-server"
+			));
 			return;
 		}
 
 		event.setResult(ServerPreConnectEvent.ServerResult.allowed(server.get()));
+		routingAttemptService.record(new RoutingAttemptReport(
+				connectionId,
+				RoutingAttemptTrigger.PRE_CONNECT,
+				true,
+				targetServer,
+				null
+		));
 	}
 }

@@ -12,7 +12,9 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.routing.RoutingSignal;
 import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 public class ConnectionDecisionResolver {
 	private final ScenarioRegistry scenarioRegistry;
 	private final EventManager eventManager;
+	private final RoutingCoordinator routingCoordinator;
 
 	public @NotNull ConnectionDecision resolveDecision(
 			@Nullable PipelineResult result,
@@ -38,7 +41,10 @@ public class ConnectionDecisionResolver {
 			return failureDecision(runner);
 
 		ScenarioContext scenarioContext = resolveScenarioContext(result, runner);
-		if (scenarioContext != null) eventManager.call(new PipelineAttemptFinishedEvent(scenarioContext, pipelineType, result));
+		if (scenarioContext != null) {
+			eventManager.call(new PipelineAttemptFinishedEvent(scenarioContext, pipelineType, result));
+			routingCoordinator.accept(RoutingSignal.pipelineFinished(scenarioContext, pipelineType, result));
+		}
 
 		ConnectionDecision decision = runner != null
 				? runner.mapDecision(result)

@@ -4,8 +4,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.model.Event;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
-import me.whereareiam.identica.type.RoutingEnforcementMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyType;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
@@ -110,15 +110,40 @@ public class Settings {
 	@Setter
 	@ToString
 	public static class Routing {
+		private @NotNull Defaults defaults = new Defaults();
 		/**
 		 * Scenario-specific routing targets keyed by scenario id.
 		 * Supported ids: authentication, registration, migration.
 		 */
 		private @NotNull Map<String, Targets> scenarios = new HashMap<>();
-		/**
-		 * Strategy used when external proxy plugins override Identica's resolved target.
-		 */
-		private @NotNull RoutingEnforcementMode enforcementMode = RoutingEnforcementMode.FIRST_CONNECT;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Defaults {
+			private @NotNull Target step = Target.step();
+			private @NotNull Target complete = Target.complete();
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Target {
+			private @NotNull String target = "";
+			private @NotNull RoutingAttemptPolicy attempts = RoutingAttemptPolicy.defaultStep();
+
+			public static @NotNull Target step() {
+				Target target = new Target();
+				target.setAttempts(RoutingAttemptPolicy.defaultStep());
+				return target;
+			}
+
+			public static @NotNull Target complete() {
+				Target target = new Target();
+				target.setAttempts(RoutingAttemptPolicy.defaultCompletion());
+				return target;
+			}
+		}
 
 		/**
 		 * Routing targets by phase.
@@ -127,11 +152,11 @@ public class Settings {
 		@Setter
 		@ToString
 		public static class Targets {
-			private @NotNull String step = "";
+			private @NotNull Target step = Target.step();
 			/**
 			 * Routing target used when a scenario flow fully completes.
 			 */
-			private @NotNull String complete = "";
+			private @NotNull Target complete = Target.complete();
 			private @NotNull Overrides overrides = new Overrides();
 
 			/**
@@ -141,8 +166,8 @@ public class Settings {
 			@Setter
 			@ToString
 			public static class Overrides {
-				private @NotNull Map<String, String> stages = new HashMap<>();
-				private @NotNull Map<String, String> steps = new HashMap<>();
+				private @NotNull Map<String, Target> stages = new HashMap<>();
+				private @NotNull Map<String, Target> steps = new HashMap<>();
 			}
 		}
 	}

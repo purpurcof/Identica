@@ -7,14 +7,15 @@ import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.routing.RoutingStateStore;
+import me.whereareiam.identica.routing.RoutingCoordinator;
+import me.whereareiam.identica.type.routing.RoutingClearReason;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.identica.listener.DynamicListener;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DisconnectListener implements DynamicListener<DisconnectEvent> {
-	private final RoutingStateStore routingStateStore;
+	private final RoutingCoordinator routingCoordinator;
 	private final IdentityService identityService;
 	private final PrepareStateStore prepareStateStore;
 	private final VerificationService verificationService;
@@ -24,7 +25,7 @@ public class DisconnectListener implements DynamicListener<DisconnectEvent> {
 		Player player = event.getPlayer();
 		if (player == null) return;
 
-		routingStateStore.clear(player.getUniqueId());
+		routingCoordinator.clear(player.getUniqueId(), RoutingClearReason.DISCONNECT);
 		identityService.detach(player.getUniqueId());
 		prepareStateStore.clear(player.getUniqueId());
 		verificationService.cancelPendingEnrollment(player.getUniqueId());

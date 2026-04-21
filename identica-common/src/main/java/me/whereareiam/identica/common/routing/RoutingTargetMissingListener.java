@@ -9,8 +9,8 @@ import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.routing.RoutingTargetMissingEvent;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.RoutingTarget;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.routing.RoutingIntent;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,8 +31,8 @@ public class RoutingTargetMissingListener implements EventListener {
 
 	@IdenticEvent
 	public void onTargetMissing(RoutingTargetMissingEvent event) {
-		RoutingTarget target = event.getTarget();
-		String server = target.getServer();
+		RoutingIntent intent = event.getIntent();
+		String server = intent.getEndpoint().getServer();
 		if (server == null || server.isBlank()) return;
 
 		String actor = event.getUsername() != null && !event.getUsername().isBlank()

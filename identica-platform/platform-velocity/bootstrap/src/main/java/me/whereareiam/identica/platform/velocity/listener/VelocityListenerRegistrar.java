@@ -22,12 +22,10 @@ import me.whereareiam.identica.platform.velocity.VelocityIdentica;
 import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityHandshakeDecisionAdapter;
 import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityLoginDecisionAdapter;
 import me.whereareiam.identica.platform.velocity.adapter.profile.VelocityProfileRewriteAdapter;
-import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityResumeDecisionAdapter;
-import me.whereareiam.identica.platform.velocity.adapter.routing.VelocityRoutingEnforcementAdapter;
 import me.whereareiam.identica.platform.velocity.listener.connection.DisconnectListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.PlayerChooseInitialServerListener;
-import me.whereareiam.identica.platform.velocity.listener.connection.server.RoutingTargetReachedPostConnectListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.ServerPreConnectListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.server.VelocityPostConnectListener;
 import me.whereareiam.identica.platform.velocity.util.VelocityUtil;
 
 @Singleton
@@ -35,7 +33,6 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 	private final Injector injector;
 	private final VelocityIdentica plugin;
 	private final EventManager eventManager;
-	private final me.whereareiam.identica.event.EventManager identicaEventManager;
 	private final DynamicListenerRegistry listenerRegistry;
 
 	@Inject
@@ -44,14 +41,12 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 			Provider<Settings> settingsProvider,
 			VelocityIdentica plugin,
 			EventManager eventManager,
-			me.whereareiam.identica.event.EventManager identicaEventManager,
 			DynamicListenerRegistry listenerRegistry
 	) {
 		super(settingsProvider);
 		this.injector = injector;
 		this.plugin = plugin;
 		this.eventManager = eventManager;
-		this.identicaEventManager = identicaEventManager;
 		this.listenerRegistry = listenerRegistry;
 	}
 
@@ -62,12 +57,10 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(VelocityHandshakeDecisionAdapter.class));
 		registerListener(GameProfileRequestEvent.class, injector.getInstance(VelocityProfileRewriteAdapter.class));
 		registerListener(LoginEvent.class, injector.getInstance(VelocityLoginDecisionAdapter.class));
-		registerListener(ServerPostConnectEvent.class, injector.getInstance(VelocityResumeDecisionAdapter.class));
-		registerListener(ServerPostConnectEvent.class, injector.getInstance(RoutingTargetReachedPostConnectListener.class));
+		registerListener(ServerPostConnectEvent.class, injector.getInstance(VelocityPostConnectListener.class));
 		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(PlayerChooseInitialServerListener.class));
 		registerListener(ServerPreConnectEvent.class, injector.getInstance(ServerPreConnectListener.class));
 		registerListener(DisconnectEvent.class, injector.getInstance(DisconnectListener.class));
-		identicaEventManager.register(injector.getInstance(VelocityRoutingEnforcementAdapter.class));
 	}
 
 	@Override

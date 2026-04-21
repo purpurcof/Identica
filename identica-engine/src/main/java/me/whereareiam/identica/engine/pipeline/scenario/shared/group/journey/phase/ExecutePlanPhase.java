@@ -505,7 +505,15 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 					context.getUsername(),
 					context.getConnectionUniqueId()
 			);
-			return StepResult.waiting("");
+			StepResult result = StepResult.waiting("");
+			routingCoordinator.accept(RoutingSignal.stepFinished(
+					context,
+					pipelineType,
+					stage.getType(),
+					journeyStep.getStep(),
+					result
+			));
+			return result;
 		}
 
 		if (!journeyStep.getStep().shouldExecute(context))

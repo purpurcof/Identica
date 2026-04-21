@@ -88,3 +88,31 @@ jobs:
             output/${{ needs.prepare.outputs.name }}-VELOCITY-${{ needs.prepare.outputs.version }}.jar
             output/${{ needs.prepare.outputs.name }}-Cracked-${{ needs.prepare.outputs.version }}.jar
             output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
+
+  publish-docs:
+    needs:
+      - prepare
+      - build
+    if: github.repository == 'whereareiam/Identica' && github.event_name == 'release' && github.event.action == 'created'
+    runs-on: [self-hosted, linux, identica-docs-k8s]
+    permissions:
+      contents: read
+    env:
+      IMAGE: repository.arcadeya.com/whereareiam/identica-docs
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Publish docs site
+        uses: whereareiam/devops/actions/publish-docs-site@dev
+        with:
+          registry: repository.arcadeya.com
+          registry-username: ${{ secrets.REGISTRY_USER }}
+          registry-token: ${{ secrets.REGISTRY_TOKEN }}
+          image: ${{ env.IMAGE }}
+          tags: |
+            v${{ env.VERSION }}
+            latest

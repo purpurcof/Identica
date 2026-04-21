@@ -63,7 +63,7 @@ class CompletionPendingLifecycleTest {
 		));
 
 		verify(pendingStore).put(any(), any());
-		verify(completionPipeline, never()).consumeAndExecute(any());
+		verify(completionPipeline, never()).complete(any());
 	}
 
 	@Test
@@ -86,7 +86,7 @@ class CompletionPendingLifecycleTest {
 
 		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
 
-		verify(completionPipeline).consumeAndExecute(identity);
+		verify(completionPipeline).complete(identity);
 	}
 
 	@Test
@@ -109,7 +109,7 @@ class CompletionPendingLifecycleTest {
 
 		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
 
-		verify(completionPipeline, never()).consumeAndExecute(identity);
+		verify(completionPipeline, never()).complete(identity);
 	}
 
 	@Test
@@ -131,7 +131,7 @@ class CompletionPendingLifecycleTest {
 
 		lifecycle.onRoutingIntentReached(new RoutingIntentReachedEvent(completionIntent(identity.getUniqueId()), "lobby"));
 
-		verify(completionPipeline).consumeAndExecute(identity);
+		verify(completionPipeline).complete(identity);
 	}
 
 	private static RoutingIntent completionIntent(UUID connectionUniqueId) {

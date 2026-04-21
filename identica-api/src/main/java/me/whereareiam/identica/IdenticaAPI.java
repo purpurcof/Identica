@@ -118,7 +118,7 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the ConnectionCoordinator for processing connection flows.
+	 * Gets the ConnectionCoordinator for processing connection lifecycle operations.
 	 *
 	 * @return the ConnectionCoordinator instance
 	 * @throws IllegalStateException if the API is not initialized

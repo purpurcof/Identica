@@ -2,7 +2,11 @@ package me.whereareiam.identica.common.adapter;
 
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
+import me.whereareiam.identica.model.auth.ConnectionDecision;
+import me.whereareiam.identica.model.auth.request.AdvanceRequest;
+import me.whereareiam.identica.model.auth.request.ConnectionRequest;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import org.jetbrains.annotations.NotNull;
@@ -54,34 +58,32 @@ class ProfileRewriteProcessorTest {
 		}
 
 		@Override
-		public @NotNull CompletableFuture<PrepareDecision> prepare(PrepareRequest request) {
+		public @NotNull CompletableFuture<PrepareDecision> prepare(me.whereareiam.identica.model.pipeline.prepare.PrepareRequest request) {
 			return CompletableFuture.completedFuture(decision);
 		}
 
 		@Override
-		public @NotNull CompletableFuture<me.whereareiam.identica.model.auth.ConnectionDecision> process(
-				me.whereareiam.identica.model.auth.request.ConnectionRequest request
-		) {
+		public @NotNull CompletableFuture<ConnectionDecision> process(ConnectionRequest request) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public @NotNull CompletableFuture<me.whereareiam.identica.model.auth.ConnectionDecision> resume(
-				me.whereareiam.identica.model.auth.request.ResumeRequest request
-		) {
+		public @NotNull CompletableFuture<ConnectionDecision> resume(@NotNull ResumeRequest request) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public @NotNull CompletableFuture<me.whereareiam.identica.model.auth.ConnectionDecision> advance(
-				me.whereareiam.identica.model.auth.request.AdvanceRequest request
-		) {
+		public @NotNull CompletableFuture<ConnectionDecision> advance(@NotNull AdvanceRequest request) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		public boolean hasPending(@NotNull UUID connectionUniqueId) {
 			return false;
+		}
+
+		@Override
+		public void complete(@NotNull Identity identity) {
 		}
 	}
 

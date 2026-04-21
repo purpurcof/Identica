@@ -3,6 +3,10 @@ package me.whereareiam.identica.common.adapter;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.auth.ConnectionDecision;
+import me.whereareiam.identica.model.auth.request.AdvanceRequest;
+import me.whereareiam.identica.model.auth.request.ConnectionRequest;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
@@ -15,6 +19,8 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentCaptor.forClass;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -22,7 +28,8 @@ import static org.mockito.Mockito.when;
 class PrepareRequestConnectionKeyTest {
 	@Test
 	void profileRewritePassesConnectionKeyIntoPrepareRequest() {
-		TestConnectionCoordinator connectionCoordinator = new TestConnectionCoordinator();
+		ConnectionCoordinator connectionCoordinator = mock(ConnectionCoordinator.class);
+		when(connectionCoordinator.prepare(any())).thenReturn(CompletableFuture.completedFuture(PrepareDecision.allow()));
 		ProfileRewriteProcessor processor = new ProfileRewriteProcessor(connectionCoordinator, new NoopPrepareStateStore());
 		ConnectionIdentity identity = identity("PlayerOne");
 
@@ -35,13 +42,16 @@ class PrepareRequestConnectionKeyTest {
 				.toCompletableFuture()
 				.join();
 
-		PrepareRequest captured = connectionCoordinator.lastPrepareRequest;
+		ArgumentCaptor<PrepareRequest> captor = forClass(PrepareRequest.class);
+		org.mockito.Mockito.verify(connectionCoordinator).prepare(captor.capture());
+		PrepareRequest captured = captor.getValue();
 		assertEquals(identity.connectionKey(), captured.getConnectionKey());
 	}
 
 	@Test
 	void handshakePassesConnectionKeyIntoPrepareRequest() {
-		TestConnectionCoordinator connectionCoordinator = new TestConnectionCoordinator();
+		ConnectionCoordinator connectionCoordinator = mock(ConnectionCoordinator.class);
+		when(connectionCoordinator.prepare(any())).thenReturn(CompletableFuture.completedFuture(PrepareDecision.allow()));
 		HandshakeStore handshakeStore = mock(HandshakeStore.class);
 		when(handshakeStore.consumeInstruction(any(), any())).thenReturn(Optional.empty());
 
@@ -62,7 +72,9 @@ class PrepareRequestConnectionKeyTest {
 				.toCompletableFuture()
 				.join();
 
-		PrepareRequest captured = connectionCoordinator.lastPrepareRequest;
+		ArgumentCaptor<PrepareRequest> captor = forClass(PrepareRequest.class);
+		org.mockito.Mockito.verify(connectionCoordinator).prepare(captor.capture());
+		PrepareRequest captured = captor.getValue();
 		assertEquals(identity.connectionKey(), captured.getConnectionKey());
 	}
 
@@ -70,42 +82,6 @@ class PrepareRequestConnectionKeyTest {
 		ConnectionIdentity identity = new ConnectionIdentity(username, "127.0.0.1");
 		identity.setOrigin(new ConnectionIdentity.Origin("play.example.com", 25565));
 		return identity;
-	}
-
-	private static final class TestConnectionCoordinator implements ConnectionCoordinator {
-		private PrepareRequest lastPrepareRequest;
-
-		@Override
-		public @NotNull CompletableFuture<PrepareDecision> prepare(PrepareRequest request) {
-			lastPrepareRequest = request;
-			return CompletableFuture.completedFuture(PrepareDecision.allow());
-		}
-
-		@Override
-		public @NotNull CompletableFuture<me.whereareiam.identica.model.auth.ConnectionDecision> process(
-				me.whereareiam.identica.model.auth.request.ConnectionRequest request
-		) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public @NotNull CompletableFuture<me.whereareiam.identica.model.auth.ConnectionDecision> resume(
-				me.whereareiam.identica.model.auth.request.ResumeRequest request
-		) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public @NotNull CompletableFuture<me.whereareiam.identica.model.auth.ConnectionDecision> advance(
-				me.whereareiam.identica.model.auth.request.AdvanceRequest request
-		) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean hasPending(@NotNull UUID connectionUniqueId) {
-			return false;
-		}
 	}
 
 	private static final class NoopPrepareStateStore implements PrepareStateStore {

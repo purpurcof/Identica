@@ -28,7 +28,7 @@ public class PreparePipeline {
 	private final PreparePipelineRegistry registry;
 	private final PipelineExecutor executor;
 
-	public @NotNull CompletionStage<PrepareDecision> execute(@Nullable PrepareRequest request) {
+	public @NotNull CompletionStage<PrepareDecision> prepare(@Nullable PrepareRequest request) {
 		if (request == null) return CompletableFuture.completedFuture(PrepareDecision.allow());
 
 		try {

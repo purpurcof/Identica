@@ -125,7 +125,7 @@ class PreparePipelineTest {
 			return null;
 		}).when(eventManager).call(any());
 
-		PrepareDecision decision = pipeline.execute(PrepareRequest.builder()
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
 						.stage(PrepareStage.PROFILE)
 						.connectionKey(connectionKey)
 						.identity(identity)
@@ -156,7 +156,7 @@ class PreparePipelineTest {
 				.build();
 		prepareStateStore.put(connectionKey, previous);
 
-		PrepareDecision decision = pipeline.execute(PrepareRequest.builder()
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
 						.stage(PrepareStage.HANDSHAKE)
 						.connectionKey(connectionKey)
 						.identity(identity)
@@ -210,7 +210,7 @@ class PreparePipelineTest {
 						.providerUsername("MigratedPlayer")
 						.build()));
 
-		PrepareDecision decision = pipeline.execute(PrepareRequest.builder()
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
 						.stage(PrepareStage.PROFILE)
 						.connectionKey(connectionKey)
 						.identity(identity)
@@ -274,7 +274,7 @@ class PreparePipelineTest {
 		when(providerProfilePersistenceService.findBySubject("premium", "premium-subject"))
 				.thenReturn(Optional.empty());
 
-		PrepareDecision decision = pipeline.execute(PrepareRequest.builder()
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
 						.stage(PrepareStage.PROFILE)
 						.connectionKey(connectionKey)
 						.identity(identity)

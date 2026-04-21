@@ -16,6 +16,8 @@ import me.whereareiam.identica.routing.RoutingIntentStore;
 import me.whereareiam.identica.type.routing.RoutingReason;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.UUID;
+
 @Singleton
 public class CompletionPendingLifecycle implements EventListener {
 	private final CompletionPendingStore completionPendingStore;
@@ -53,7 +55,7 @@ public class CompletionPendingLifecycle implements EventListener {
 		if (completionPendingStore.peek(event.getIdentity().getUniqueId()).isEmpty()) return;
 		if (hasRoutingIntent(event.getIdentity().getUniqueId())) return;
 
-		completionPipeline.consumeAndExecute(event.getIdentity());
+		completionPipeline.complete(event.getIdentity());
 	}
 
 	@IdenticEvent
@@ -62,10 +64,10 @@ public class CompletionPendingLifecycle implements EventListener {
 		if (intent.getReason() != RoutingReason.COMPLETION) return;
 
 		identityService.find(intent.getConnectionUniqueId())
-				.ifPresent(completionPipeline::consumeAndExecute);
+				.ifPresent(completionPipeline::complete);
 	}
 
-	private boolean hasRoutingIntent(@NotNull java.util.UUID connectionUniqueId) {
+	private boolean hasRoutingIntent(@NotNull UUID connectionUniqueId) {
 		RoutingIntent intent = routingIntentStore.peek(connectionUniqueId).orElse(null);
 		return intent != null && !intent.getEndpoint().getServer().isBlank();
 	}

@@ -1,11 +1,12 @@
 package me.whereareiam.identica;
 
+import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
-import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
+import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,76 +14,57 @@ import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
 /**
- * Public API for coordinating connection flows and handshake decisions.
- *
- * <p>This service exposes high-level connection operations that return {@link ConnectionDecision}
- * results. It delegates flow execution to Identica's internal pipeline and is safe to use by
- * platform adapters and external plugins.</p>
- *
- * <p><b>Example:</b></p>
- * <pre>{@code
- * ConnectionCoordinator connectionCoordinator = IdenticaAPI.getConnectionCoordinator();
- * ConnectionDecision decision = connectionCoordinator.process(connectionRequest).toCompletableFuture().join();
- * if (decision.getStatus().isDenied()) {
- *     // handle denial
- * }
- * }</pre>
+ * Coordinates Identica's connection lifecycle.
+ * <p>
+ * This service is the product-level entry point for platform adapters and
+ * commands. It delegates preparation, scenario progression, and post-connection
+ * completion to the internal pipelines.
  */
-@SuppressWarnings("unused")
 public interface ConnectionCoordinator {
 	/**
-	 * Prepares a connection before the main scenario pipelines run.
+	 * Prepares a connection before scenario processing.
 	 *
-	 * <p>This generic preparation flow may include early handshake evaluation,
-	 * provider resolution, profile rewriting, and conflict handling depending on
-	 * the requested stage.</p>
-	 *
-	 * @param request preparation request details, or {@code null} when unavailable
-	 * @return a completion stage that resolves to the preparation decision
+	 * @param request preparation request, or {@code null} when no preparation context is available
+	 * @return preparation decision
 	 */
-	@NotNull
-	CompletionStage<PrepareDecision> prepare(@Nullable PrepareRequest request);
+	@NotNull CompletionStage<PrepareDecision> prepare(@Nullable PrepareRequest request);
 
 	/**
-	 * Processes a connection using the provided request asynchronously.
+	 * Processes a new connection scenario.
 	 *
-	 * @param request connection request details, or {@code null} when unavailable
-	 * @return a completion stage that resolves to the connection decision
+	 * @param request connection request, or {@code null} when no connection context is available
+	 * @return connection decision
 	 */
-	@NotNull
-	CompletionStage<ConnectionDecision> process(@Nullable ConnectionRequest request);
+	@NotNull CompletionStage<ConnectionDecision> process(@Nullable ConnectionRequest request);
 
 	/**
-	 * Resumes a pending connection flow.
+	 * Resumes a pending connection scenario.
 	 *
-	 * <p>The resume request should include the latest connection info so any
-	 * platform-specific handshake requirements can be evaluated correctly.</p>
-	 *
-	 * @param request resume request details
-	 * @return a completion stage that resolves to the connection decision
+	 * @param request resume request
+	 * @return connection decision
 	 */
-	@NotNull
-	CompletionStage<ConnectionDecision> resume(
-			@NotNull ResumeRequest request
-	);
+	@NotNull CompletionStage<ConnectionDecision> resume(@NotNull ResumeRequest request);
 
 	/**
-	 * Advances a pending connection flow within the same session.
+	 * Advances a pending connection scenario after user input.
 	 *
-	 * @param request advance request details
-	 * @return a completion stage that resolves to the connection decision
+	 * @param request advance request
+	 * @return connection decision
 	 */
-	@NotNull
-	CompletionStage<ConnectionDecision> advance(
-			@NotNull AdvanceRequest request
-	);
+	@NotNull CompletionStage<ConnectionDecision> advance(@NotNull AdvanceRequest request);
 
 	/**
-	 * Checks whether a connection has a pending flow.
+	 * Checks whether a connection has a pending scenario.
 	 *
-	 * @param connectionUniqueId unique connection identifier
-	 * @return {@code true} if the connection has a pending flow
+	 * @param connectionUniqueId connection unique id
+	 * @return {@code true} when a pending scenario exists
 	 */
 	boolean hasPending(@NotNull UUID connectionUniqueId);
 
+	/**
+	 * Runs pending post-connection completion for an attached identity.
+	 *
+	 * @param identity attached identity
+	 */
+	void complete(@NotNull Identity identity);
 }

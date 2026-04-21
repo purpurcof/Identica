@@ -20,14 +20,14 @@ public class CompletionPipeline {
 	private final CompletionPipelineRegistry registry;
 	private final PipelineExecutor executor;
 
-	public void consumeAndExecute(@NotNull Identity identity) {
+	public void complete(@NotNull Identity identity) {
 		CompletionPendingState pendingState = completionPendingStore.consume(identity.getUniqueId()).orElse(null);
 		if (pendingState == null) return;
 
-		execute(identity, pendingState);
+		complete(identity, pendingState);
 	}
 
-	public void execute(@NotNull Identity identity, @NotNull CompletionPendingState pendingState) {
+	public void complete(@NotNull Identity identity, @NotNull CompletionPendingState pendingState) {
 		CompletionPipelineState completionState = CompletionPipelineState.builder()
 				.identity(identity)
 				.pendingState(pendingState)

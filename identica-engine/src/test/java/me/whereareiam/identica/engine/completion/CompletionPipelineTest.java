@@ -83,7 +83,7 @@ class CompletionPipelineTest {
 		when(step.shouldExecute(org.mockito.ArgumentMatchers.any())).thenReturn(true);
 		when(step.getName()).thenReturn("test-step");
 
-		pipeline.consumeAndExecute(identity);
+		pipeline.complete(identity);
 
 		verify(step).execute(argThat((CompletionContext context) ->
 				context.getIdentity() == identity

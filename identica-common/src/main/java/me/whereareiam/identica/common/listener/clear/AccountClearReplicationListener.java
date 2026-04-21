@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
@@ -88,12 +87,11 @@ public class AccountClearReplicationListener implements EventListener {
 		return replication.getRedis().getChannels().getAccountUpdates();
 	}
 
-	@NoArgsConstructor
 	@AllArgsConstructor
 	private static final class AccountClearMessage {
-		private @Nullable String serverId;
-		private @NotNull ClearScope scope;
-		private @NotNull UUID uniqueId;
-		private @Nullable String username;
+		private final @Nullable String serverId;
+		private final @NotNull ClearScope scope;
+		private final @NotNull UUID uniqueId;
+		private final @Nullable String username;
 	}
 }

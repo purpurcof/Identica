@@ -14,6 +14,8 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountClearEvent;
+import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Messages;
@@ -32,6 +34,7 @@ public class ClearCommand {
 	private final Provider<Messages> messagesProvider;
 	private final Provider<Commands> commandsProvider;
 	private final AccountPersistenceService accountPersistenceService;
+	private final SessionService sessionService;
 	private final EventManager eventManager;
 
 	private final Map<UUID, PendingClear> pending = new ConcurrentHashMap<>();
@@ -115,6 +118,10 @@ public class ClearCommand {
 					username,
 					null
 			);
+			sessionService.close(SessionCloseRequest.builder()
+					.uniqueId(pendingClear.uniqueId())
+					.disconnectMessage(String.join("\n", messages.getDisconnect()))
+					.build()).join();
 			eventManager.call(new AccountClearEvent(identity, pendingClear.scope()));
 
 			sendMessage(sender, messages.getSuccess(), Map.of(

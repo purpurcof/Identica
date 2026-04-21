@@ -16,6 +16,7 @@ import me.whereareiam.identica.annotation.Range;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
+import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.DateTimePattern;
@@ -132,10 +133,10 @@ public class SessionsCommand {
 		}
 
 		Session resolvedSession = session.get();
-		sessionService.close(resolvedSession.getUniqueId()).join();
-
-		identityService.find(resolvedSession.getUniqueId())
-				.ifPresent(identity -> disconnect(identity, endMessages));
+		sessionService.close(SessionCloseRequest.builder()
+				.uniqueId(resolvedSession.getUniqueId())
+				.disconnectMessage(joinLines(endMessages.getDisconnect()))
+				.build()).join();
 
 		String username = resolveUsername(resolvedSession, unknown);
 		sendMessage(sender, endMessages.getEnded(), Map.of(
@@ -155,17 +156,6 @@ public class SessionsCommand {
 			sessions.add(session.get());
 		}
 		return sessions;
-	}
-
-	private void disconnect(
-			@NotNull Identity identity,
-			@NotNull Messages.Commands.Sessions.End messages
-	) {
-		String reason = joinLines(messages.getDisconnect());
-		if (reason.isBlank()) {
-			reason = "{prefix}<white>Your session was ended by an administrator.</white>";
-		}
-		identity.disconnect(Serializer.serialize(identity, reason));
 	}
 
 	private ResolvedTarget resolveTarget(
@@ -450,4 +440,3 @@ public class SessionsCommand {
 	private record EntryData(Map<String, String> placeholders, boolean complete) {
 	}
 }
-

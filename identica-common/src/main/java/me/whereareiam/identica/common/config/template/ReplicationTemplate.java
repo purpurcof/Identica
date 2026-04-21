@@ -22,6 +22,7 @@ public class ReplicationTemplate implements TemplateProvider<Replication> {
 		channels.setAccountUpdates("identica:accounts");
 		channels.setSessions("identica:sessions");
 		channels.setConflicts("identica:conflicts");
+		channels.setEvents("identica:events");
 		redis.setChannels(channels);
 
 		Replication.Cache cache = new Replication.Cache();

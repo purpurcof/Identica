@@ -81,5 +81,9 @@ public class Replication {
 		private @NotNull String accountUpdates;
 		private @NotNull String sessions;
 		private @NotNull String conflicts;
+		/**
+		 * Channel used for generic replicated events.
+		 */
+		private @NotNull String events;
 	}
 }

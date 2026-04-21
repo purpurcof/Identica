@@ -26,6 +26,8 @@ import me.whereareiam.identica.common.migration.DefaultMigrationService;
 import me.whereareiam.identica.common.replication.DefaultReplicationAdapter;
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.common.replication.NoopReplicationAdapter;
+import me.whereareiam.identica.common.replication.event.DefaultReplicatedEventRegistry;
+import me.whereareiam.identica.common.replication.event.ReplicatedEventBridge;
 import me.whereareiam.identica.common.config.adapter.DateTimePatternAdapter;
 import me.whereareiam.identica.common.config.adapter.DurationAdapter;
 import me.whereareiam.identica.common.config.adapter.NodeAdapter;
@@ -40,8 +42,8 @@ import me.whereareiam.identica.common.provider.DefaultProviderAttemptStore;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.identity.DefaultReservationCache;
 import me.whereareiam.identica.common.listener.clear.AccountClearReplicationListener;
-import me.whereareiam.identica.common.listener.clear.AccountClearSessionListener;
 import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
+import me.whereareiam.identica.common.listener.SessionClosedDisconnectListener;
 import me.whereareiam.identica.common.listener.SessionReplacedListener;
 import me.whereareiam.identica.common.identity.DefaultIdentityService;
 import me.whereareiam.identica.common.provider.DefaultProviderManager;
@@ -79,6 +81,7 @@ import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.provider.ProviderDescriptorReader;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
+import me.whereareiam.identica.replication.event.ReplicatedEventRegistry;
 import me.whereareiam.identica.sentinel.SentinelService;
 import me.whereareiam.identica.sentinel.SentinelDefinition;
 import me.whereareiam.identica.routing.RoutingAttemptService;
@@ -156,6 +159,8 @@ public class CommonConfiguration extends AbstractModule {
 
 		bind(ReplicationAdapter.class).to(DefaultReplicationAdapter.class).asEagerSingleton();
 		bind(ReplicationSystem.class).to(DefaultReplicationSystem.class).asEagerSingleton();
+		bind(ReplicatedEventRegistry.class).to(DefaultReplicatedEventRegistry.class).asEagerSingleton();
+		bind(ReplicatedEventBridge.class).asEagerSingleton();
 		bind(ReservationCache.class).to(DefaultReservationCache.class).asEagerSingleton();
 		bind(SentinelService.class).to(DefaultSentinelService.class).asEagerSingleton();
 
@@ -193,7 +198,7 @@ public class CommonConfiguration extends AbstractModule {
 
 		// Event listeners
 		bind(AccountClearReplicationListener.class).asEagerSingleton();
-		bind(AccountClearSessionListener.class).asEagerSingleton();
+		bind(SessionClosedDisconnectListener.class).asEagerSingleton();
 		bind(SessionReplacedListener.class).asEagerSingleton();
 		bind(ConflictPrepareLifecycle.class).asEagerSingleton();
 		bind(ProviderEntrypointSelectionLifecycle.class).asEagerSingleton();

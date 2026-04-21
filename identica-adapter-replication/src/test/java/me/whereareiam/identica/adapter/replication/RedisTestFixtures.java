@@ -28,6 +28,7 @@ public final class RedisTestFixtures {
 		channels.setAccountUpdates("account-updates");
 		channels.setSessions("sessions");
 		channels.setConflicts("conflicts");
+		channels.setEvents("events");
 		redis.setChannels(channels);
 		replication.setRedis(redis);
 

@@ -1,6 +1,7 @@
 package me.whereareiam.identica.identity.session;
 
 import me.whereareiam.identica.model.Session;
+import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,6 +78,17 @@ public interface SessionService {
 	 * @return completion journey
 	 */
 	@NotNull CompletableFuture<Void> close(@Nullable UUID uniqueId);
+
+	/**
+	 * Closes a session using an explicit replicated request.
+	 *
+	 * <p>Use this overload when the caller wants every instance to receive the
+	 * same disconnect message or request metadata.</p>
+	 *
+	 * @param request close request
+	 * @return completion journey
+	 */
+	@NotNull CompletableFuture<Void> close(@NotNull SessionCloseRequest request);
 
 	/**
 	 * Refreshes a session for an identity id.

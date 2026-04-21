@@ -3,15 +3,20 @@ package me.whereareiam.identica.common.identity.session;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.event.identity.session.SessionClosedEvent;
 import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.identity.session.SessionReplacedEvent;
 import me.whereareiam.identica.model.Session;
+import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,8 +31,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Singleton
-public class DefaultSessionService implements SessionService {
+public class DefaultSessionService implements SessionService, EventListener {
 	private final Provider<Settings> settingsProvider;
+	private final Provider<Replication> replicationProvider;
 	private final EventManager eventManager;
 
 	private final ReplicatedCache<Session> userCache;
@@ -42,6 +48,7 @@ public class DefaultSessionService implements SessionService {
 			ReplicationSystem replicationSystem
 	) {
 		this.settingsProvider = settingsProvider;
+		this.replicationProvider = replicationProvider;
 		this.eventManager = eventManager;
 
 		Replication.Sessions sessions = resolveSessions(replicationProvider);
@@ -49,6 +56,7 @@ public class DefaultSessionService implements SessionService {
 		this.userCache = replicationSystem.cache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user")).replicated(type);
 		this.sessionCache = replicationSystem.cache(resolveNamespace(sessions.getSession(), "replication.cache.sessions.session")).replicated(type);
 		this.subjectCache = replicationSystem.cache(resolveNamespace(sessions.getSubject(), "replication.cache.sessions.subject")).replicated(type);
+		eventManager.register(this);
 	}
 
 	@Override
@@ -91,8 +99,16 @@ public class DefaultSessionService implements SessionService {
 	@Override
 	public @NotNull CompletableFuture<Void> close(@Nullable UUID uniqueId) {
 		if (uniqueId == null) return CompletableFuture.completedFuture(null);
-		return findByUniqueId(uniqueId)
-				.thenCompose(existing -> existing.map(this::invalidateKeys).orElseGet(() -> userCache.invalidate(keyUser(uniqueId))));
+		return close(SessionCloseRequest.builder()
+				.uniqueId(uniqueId)
+				.build());
+	}
+
+	@Override
+	public @NotNull CompletableFuture<Void> close(@NotNull SessionCloseRequest request) {
+		SessionCloseRequest prepared = prepareCloseRequest(request);
+
+        return dispatchClose(prepared);
 	}
 
 	@Override
@@ -147,6 +163,41 @@ public class DefaultSessionService implements SessionService {
 		}
 
 		return futures;
+	}
+
+	@IdenticEvent(EventOrder.LOWEST)
+	public void onSessionClosed(@NotNull SessionClosedEvent event) {
+		Session session = event.getSession();
+		if (session != null) {
+			invalidateKeys(session).join();
+			return;
+		}
+
+		userCache.invalidate(keyUser(event.getUniqueId())).join();
+	}
+
+	private @NotNull CompletableFuture<Void> dispatchClose(@NotNull SessionCloseRequest request) {
+		UUID uniqueId = request.getUniqueId();
+		return findByUniqueId(uniqueId)
+				.thenAccept(existing -> eventManager.call(new SessionClosedEvent(
+						uniqueId,
+						existing.orElse(null),
+						request
+				)));
+	}
+
+	private @NotNull SessionCloseRequest prepareCloseRequest(@NotNull SessionCloseRequest request) {
+		UUID requestId = request.getRequestId() != null
+				? request.getRequestId()
+				: UUID.randomUUID();
+		String originServerId = hasText(request.getOriginServerId())
+				? request.getOriginServerId()
+				: resolveServerId();
+
+		return request.toBuilder()
+				.requestId(requestId)
+				.originServerId(originServerId)
+				.build();
 	}
 
 	private void prepareSession(Session session) {
@@ -293,6 +344,10 @@ public class DefaultSessionService implements SessionService {
 		return trimmed.isEmpty() ? null : trimmed;
 	}
 
+	private boolean hasText(@Nullable String value) {
+		return value != null && !value.trim().isEmpty();
+	}
+
 	private @NotNull CompletableFuture<Optional<Session>> getByKey(
 			@NotNull ReplicatedCache<Session> cache,
 			@Nullable String key
@@ -308,6 +363,13 @@ public class DefaultSessionService implements SessionService {
 			throw new IllegalStateException("replication is missing");
 
 		return replication.getCache().getSessions();
+	}
+
+	private @NotNull String resolveServerId() {
+		Replication replication = replicationProvider.get();
+		if (replication == null) return "";
+
+		return replication.getServerId();
 	}
 
 	private static String resolveNamespace(String namespace, String label) {

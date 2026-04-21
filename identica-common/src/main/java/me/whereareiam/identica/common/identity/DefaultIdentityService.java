@@ -1,23 +1,14 @@
 package me.whereareiam.identica.common.identity;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.event.EventListener;
-import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.account.AccountClearEvent;
-import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
 import me.whereareiam.identica.event.identity.IdentityDetachedEvent;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Map;
@@ -28,18 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Singleton
-public class DefaultIdentityService implements IdentityService, EventListener {
-	private final Provider<Messages> messagesProvider;
+public class DefaultIdentityService implements IdentityService {
 	private final Map<UUID, Identity> identities = new ConcurrentHashMap<>();
-
-	@Inject
-	public DefaultIdentityService(
-			Provider<Messages> messagesProvider,
-			EventManager eventManager
-	) {
-		this.messagesProvider = messagesProvider;
-		eventManager.register(this);
-	}
 
 	@Override
 	public void attach(@NotNull Identity identity) {
@@ -84,25 +65,4 @@ public class DefaultIdentityService implements IdentityService, EventListener {
 				.collect(Collectors.toList());
 	}
 
-	@IdenticEvent(EventOrder.NORMAL)
-	public void onAccountClear(@NotNull AccountClearEvent event) {
-		Identity identity = resolve(event.getIdentity().getUniqueId(), event.getIdentity().getUsername());
-		if (identity == null) return;
-
-		String disconnectMessage = String.join("\n", messagesProvider.get().getCommands().getClear().getDisconnect());
-		if (disconnectMessage.isBlank())
-			return;
-
-		identity.disconnect(Serializer.serialize(identity, disconnectMessage));
-	}
-
-	private Identity resolve(@Nullable UUID uniqueId, @NotNull String username) {
-		if (uniqueId != null) {
-			Identity byId = identities.get(uniqueId);
-			if (byId != null) return byId;
-		}
-
-		if (username.isBlank()) return null;
-		return find(username).orElse(null);
-	}
 }

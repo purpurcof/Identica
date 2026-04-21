@@ -7,6 +7,8 @@ import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.replication.codec.SnapshotCodecFactory;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -47,7 +49,7 @@ public final class ReplicationTestFixtures {
 		public String lastPublishChannel;
 		public byte[] lastPublishPayload;
 
-		private Consumer<byte[]> subscriber;
+		private final List<Consumer<byte[]>> subscribers = new ArrayList<>();
 
 		@Override
 		public boolean isAvailable() {
@@ -125,13 +127,12 @@ public final class ReplicationTestFixtures {
 
 		@Override
 		public void subscribe(@NotNull String channel, @NotNull Consumer<byte[]> handler) {
-			this.subscriber = handler;
+			this.subscribers.add(handler);
 		}
 
 		public void emit(byte[] payload) {
-			if (subscriber != null) {
+			for (Consumer<byte[]> subscriber : subscribers)
 				subscriber.accept(payload);
-			}
 		}
 	}
 }

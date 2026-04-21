@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.ListenerRegistrar;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.platform.velocity.listener.VelocityListenerRegistrar;
+import me.whereareiam.identica.platform.velocity.listener.routing.VelocityRoutingIntentListener;
 import me.whereareiam.identica.platform.velocity.logging.VelocityLoggingHelper;
 import me.whereareiam.identica.platform.velocity.mapper.CommandSourceMapper;
 import me.whereareiam.identica.handshake.HandshakeApplierRegistry;
@@ -36,6 +37,7 @@ public class VelocityConfiguration extends AbstractModule {
 		bind(Logger.class).toInstance(logger);
 		bind(LoggingHelper.class).to(VelocityLoggingHelper.class);
 		bind(ListenerRegistrar.class).to(VelocityListenerRegistrar.class);
+		bind(VelocityRoutingIntentListener.class).asEagerSingleton();
 		bind(new TypeLiteral<HandshakeApplierRegistry<VelocityHandshakeContext>>() {})
 				.to(VelocityHandshakeApplierRegistry.class)
 				.asEagerSingleton();

@@ -1,60 +1,47 @@
 package me.whereareiam.identica.platform.velocity.adapter.auth;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import com.velocitypowered.api.event.AwaitingEventExecutor;
-import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
-import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
-import me.whereareiam.identica.handshake.HandshakeDecisionAdapter;
+import me.whereareiam.identica.common.adapter.HandshakeDecisionProcessor;
 import me.whereareiam.identica.handshake.HandshakeApplierRegistry;
-import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.platform.velocity.api.handshake.VelocityHandshakeContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 @Singleton
-public class VelocityHandshakeDecisionAdapter extends HandshakeDecisionAdapter implements AwaitingEventExecutor<PreLoginEvent> {
+public class VelocityHandshakeDecisionAdapter {
+	private final @NotNull HandshakeDecisionProcessor processor;
 	private final @NotNull HandshakeApplierRegistry<VelocityHandshakeContext> applierRegistry;
 
 	@Inject
 	public VelocityHandshakeDecisionAdapter(
-			@NotNull ConnectionCoordinator connectionCoordinator,
-			@NotNull PrepareStateStore prepareStateStore,
-			@NotNull HandshakeStore handshakeStore,
-			@NotNull HandshakeApplierRegistry<VelocityHandshakeContext> applierRegistry,
-			@NotNull Provider<Messages> messagesProvider
+			@NotNull HandshakeDecisionProcessor processor,
+			@NotNull HandshakeApplierRegistry<VelocityHandshakeContext> applierRegistry
 	) {
-		super(connectionCoordinator, prepareStateStore, handshakeStore, messagesProvider);
+		this.processor = processor;
 		this.applierRegistry = applierRegistry;
 	}
 
-	@Override
-	public EventTask executeAsync(PreLoginEvent event) {
-		if (!event.getResult().isAllowed()) return null;
+	public @NotNull CompletionStage<Void> process(@NotNull PreLoginEvent event) {
+		Request request = request(event);
+		if (request == null) return CompletableFuture.completedFuture(null);
 
-		HandshakeAdapterRequest request = request(event);
-		if (request == null) return null;
-
-		CompletableFuture<?> future = CompletableFuture.completedFuture(null).thenCompose(ignored -> {
+		return CompletableFuture.completedFuture(null).thenCompose(ignored -> {
 			if (!event.getResult().isAllowed())
 				return CompletableFuture.completedFuture(null);
 
-			return adapt(request, target(event)).toCompletableFuture();
+			return processor.process(toProcessorRequest(request), target(event)).toCompletableFuture();
 		});
-
-		return EventTask.resumeWhenComplete(future);
 	}
 
-	private @Nullable HandshakeAdapterRequest request(@NotNull PreLoginEvent event) {
+	private @Nullable Request request(@NotNull PreLoginEvent event) {
 		String resolvedIp = resolveIp(event);
 		if (resolvedIp == null) {
 			Logger.warn("PreLogin missing remote IP for %s, skipping handshake processing", event.getUsername());
@@ -64,13 +51,17 @@ public class VelocityHandshakeDecisionAdapter extends HandshakeDecisionAdapter i
 		ConnectionIdentity identity = new ConnectionIdentity(event.getUsername(), resolvedIp);
 		applyOrigin(identity, event);
 		VelocityHandshakeContext context = new VelocityHandshakeContext(event);
-		return new HandshakeAdapterRequest(
+		return new Request(
 				identity,
 				instruction -> applierRegistry.applyAll(context, instruction)
 		);
 	}
 
-	private @NotNull HandshakeDecisionTarget target(@NotNull PreLoginEvent event) {
+	private @NotNull HandshakeDecisionProcessor.Request toProcessorRequest(@NotNull Request request) {
+		return new HandshakeDecisionProcessor.Request(request.identity(), request.instructionTarget());
+	}
+
+	private @NotNull HandshakeDecisionProcessor.Target target(@NotNull PreLoginEvent event) {
 		return message -> event.setResult(PreLoginEvent.PreLoginComponentResult.denied(message));
 	}
 
@@ -96,5 +87,11 @@ public class VelocityHandshakeDecisionAdapter extends HandshakeDecisionAdapter i
 		if (hostString == null || hostString.isBlank()) return null;
 
 		return hostString;
+	}
+
+	private record Request(
+			@NotNull ConnectionIdentity identity,
+			@NotNull HandshakeDecisionProcessor.InstructionTarget instructionTarget
+	) {
 	}
 }

@@ -1,49 +1,38 @@
-package me.whereareiam.identica.handshake;
+package me.whereareiam.identica.common.adapter;
 
+import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
-import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
-import me.whereareiam.identica.type.PrepareStage;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import me.whereareiam.identica.type.PrepareStage;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletionStage;
 
-/**
- * Base class for applying handshake decisions in a platform-agnostic way.
- * Platform adapters should extend this class and provide the concrete decision targets.
- *
- * <pre>{@code
- * handshakeDecisionAdapter.apply(decision, target);
- * }</pre>
- */
-@RequiredArgsConstructor
-public abstract class HandshakeDecisionAdapter {
+@Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public class HandshakeDecisionProcessor {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
 	private final @NotNull PrepareStateStore prepareStateStore;
 	private final @NotNull HandshakeStore handshakeStore;
 	private final @NotNull Provider<Messages> messagesProvider;
 
-	/**
-	 * Runs the shared handshake preparation flow and applies the resolved platform target.
-	 *
-	 * @param request platform-neutral handshake request
-	 * @param target platform target for handshake actions
-	 * @return completion stage that finishes once the flow has been applied
-	 */
-	protected final @NotNull CompletionStage<Void> adapt(
-			@NotNull HandshakeAdapterRequest request,
-			@NotNull HandshakeDecisionTarget target
+	public @NotNull CompletionStage<Void> process(
+			@NotNull Request request,
+			@NotNull Target target
 	) {
 		PrepareRequest prepareRequest = PrepareRequest.builder()
 				.stage(PrepareStage.HANDSHAKE)
@@ -69,30 +58,16 @@ public abstract class HandshakeDecisionAdapter {
 				});
 	}
 
-	/**
-	 * Applies a handshake decision using the provided target.
-	 *
-	 * @param decision decision to apply
-	 * @param target platform target for handshake actions
-	 */
-	public final void apply(
+	private void apply(
 			@Nullable HandshakeDecision decision,
-			@NotNull HandshakeDecisionTarget target
+			@NotNull Target target
 	) {
 		if (decision == null || decision.getStatus() == null) return;
-
-		if (decision.getStatus() == HandshakeDecision.Status.DENY) {
+		if (decision.getStatus() == HandshakeDecision.Status.DENY)
 			target.deny(Serializer.serialize(resolveHandshakeMessage(decision.getMessage())));
-		}
 	}
 
-	/**
-	 * Resolves a decision message or falls back to the configured handshake denied messages.
-	 *
-	 * @param message decision message
-	 * @return resolved message text
-	 */
-	protected @NotNull String resolveHandshakeMessage(@Nullable String message) {
+	private @NotNull String resolveHandshakeMessage(@Nullable String message) {
 		if (message != null && !message.isBlank()) return message;
 		return String.join("\n", messagesProvider.get().getConnection().getPrepare().getHandshakeDenied());
 	}
@@ -110,7 +85,7 @@ public abstract class HandshakeDecisionAdapter {
 	}
 
 	private void applyHandshakeInstruction(
-			@NotNull HandshakeAdapterRequest request,
+			@NotNull Request request,
 			@NotNull PrepareDecision prepared
 	) {
 		if (prepared.isDenied()) return;
@@ -123,34 +98,17 @@ public abstract class HandshakeDecisionAdapter {
 				.ifPresent(request.instructionTarget()::apply);
 	}
 
-	/**
-	 * Platform-neutral handshake request used by the shared adaptation flow.
-	 *
-	 * @param identity normalized connection identity
-	 * @param instructionTarget platform-specific instruction application target
-	 */
-	public record HandshakeAdapterRequest(
+	public record Request(
 			@NotNull ConnectionIdentity identity,
-			@NotNull HandshakeInstructionTarget instructionTarget
+			@NotNull InstructionTarget instructionTarget
 	) {
 	}
 
-	/**
-	 * Target abstraction for platform-specific handshake instruction handling.
-	 */
-	public interface HandshakeInstructionTarget {
+	public interface InstructionTarget {
 		void apply(@NotNull HandshakeInstruction instruction);
 	}
 
-	/**
-	 * Target abstraction for platform-specific handshake handling.
-	 */
-	public interface HandshakeDecisionTarget {
-		/**
-		 * Denies the handshake.
-		 *
-		 * @param message denial message
-		 */
+	public interface Target {
 		void deny(@NotNull Component message);
 	}
 }

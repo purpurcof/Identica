@@ -16,6 +16,9 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.common.completion.DefaultCompletionPendingStore;
+import me.whereareiam.identica.common.adapter.ConnectionDecisionApplier;
+import me.whereareiam.identica.common.adapter.HandshakeDecisionProcessor;
+import me.whereareiam.identica.common.adapter.ProfileRewriteProcessor;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.common.handshake.DefaultHandshakeStore;
 import me.whereareiam.identica.common.identity.account.DefaultRegistrationAccountService;
@@ -169,6 +172,11 @@ public class CommonConfiguration extends AbstractModule {
 		// Session lifecycle
 		bind(SessionService.class).to(DefaultSessionService.class).asEagerSingleton();
 		bind(SessionRefreshCoordinator.class).asEagerSingleton();
+
+		// Platform adaptation helpers
+		bind(ConnectionDecisionApplier.class).asEagerSingleton();
+		bind(HandshakeDecisionProcessor.class).asEagerSingleton();
+		bind(ProfileRewriteProcessor.class).asEagerSingleton();
 
 		// Routing
 		bind(RoutingIntentStore.class).to(DefaultRoutingIntentStore.class).asEagerSingleton();

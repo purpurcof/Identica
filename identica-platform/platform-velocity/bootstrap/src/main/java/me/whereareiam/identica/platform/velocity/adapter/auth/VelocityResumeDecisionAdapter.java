@@ -1,21 +1,19 @@
 package me.whereareiam.identica.platform.velocity.adapter.auth;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
+import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.adapter.ConnectionDecisionAdapter;
+import me.whereareiam.identica.common.adapter.ConnectionDecisionApplier;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import net.kyori.adventure.text.Component;
@@ -24,26 +22,14 @@ import org.jetbrains.annotations.NotNull;
 import java.net.InetSocketAddress;
 
 @Singleton
-public class VelocityResumeDecisionAdapter extends ConnectionDecisionAdapter implements DynamicListener<ServerPostConnectEvent> {
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public class VelocityResumeDecisionAdapter {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
 	private final @NotNull IdentityService identityService;
 	private final @NotNull PrepareStateStore prepareStateStore;
+	private final @NotNull ConnectionDecisionApplier decisionApplier;
 
-	@Inject
-	public VelocityResumeDecisionAdapter(
-			@NotNull ConnectionCoordinator connectionCoordinator,
-			@NotNull Provider<Messages> messagesProvider,
-			@NotNull IdentityService identityService,
-			@NotNull PrepareStateStore prepareStateStore
-	) {
-		super(messagesProvider);
-		this.connectionCoordinator = connectionCoordinator;
-		this.identityService = identityService;
-		this.prepareStateStore = prepareStateStore;
-	}
-
-	@Override
-	public void onEvent(ServerPostConnectEvent event) {
+	public void resume(@NotNull ServerPostConnectEvent event) {
 		if (event.getPreviousServer() != null)
 			return;
 
@@ -93,7 +79,7 @@ public class VelocityResumeDecisionAdapter extends ConnectionDecisionAdapter imp
 		if (decision == null || decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
 			return;
 
-		apply(decision, liveIdentity, resumeTarget(player));
+		decisionApplier.apply(decision, liveIdentity, resumeTarget(player));
 		ConnectionDecision.Status status = decision.getStatus();
 		if (status == ConnectionDecision.Status.DENY || status == ConnectionDecision.Status.REQUIRE_RECONNECT)
 			return;
@@ -112,8 +98,8 @@ public class VelocityResumeDecisionAdapter extends ConnectionDecisionAdapter imp
 		return player.getRemoteAddress().getHostString();
 	}
 
-	private @NotNull ConnectionDecisionTarget resumeTarget(@NotNull Player player) {
-		return new ConnectionDecisionTarget() {
+	private @NotNull ConnectionDecisionApplier.Target resumeTarget(@NotNull Player player) {
+		return new ConnectionDecisionApplier.Target() {
 			@Override
 			public void deny(@NotNull Component message) {
 				player.disconnect(message);

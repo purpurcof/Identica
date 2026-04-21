@@ -1,12 +1,14 @@
-package me.whereareiam.identica.adapter;
+package me.whereareiam.identica.common.adapter;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.type.PrepareStage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,17 +16,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 
-/**
- * Base class for platform profile rewrite adapters.
- */
-@RequiredArgsConstructor
-public abstract class ProfileRewriteAdapter {
+@Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public class ProfileRewriteProcessor {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
 	private final @NotNull PrepareStateStore prepareStateStore;
 
-	protected final @NotNull CompletionStage<Void> adapt(
-			@NotNull ProfileRewriteRequest request,
-			@NotNull ProfileRewriteTarget target
+	public @NotNull CompletionStage<Void> process(
+			@NotNull Request request,
+			@NotNull Target target
 	) {
 		PrepareRequest prepareRequest = PrepareRequest.builder()
 				.stage(PrepareStage.PROFILE)
@@ -49,15 +49,15 @@ public abstract class ProfileRewriteAdapter {
 						return null;
 					}
 
-					ProfileRewrite rewrite = resolveRewrite(request, prepared);
+					Rewrite rewrite = resolveRewrite(request, prepared);
 					storePreparedState(rewrite.uniqueId(), prepareRequest.getConnectionKey(), prepared);
 					target.apply(rewrite);
 					return null;
 				});
 	}
 
-	private @NotNull ProfileRewrite resolveRewrite(
-			@NotNull ProfileRewriteRequest request,
+	private @NotNull Rewrite resolveRewrite(
+			@NotNull Request request,
 			@NotNull PrepareDecision prepared
 	) {
 		UUID uniqueId = prepared.getUniqueId() != null
@@ -66,7 +66,8 @@ public abstract class ProfileRewriteAdapter {
 		String username = prepared.getEffectiveUsername();
 		if (username == null || username.isBlank())
 			username = request.currentUsername();
-		return new ProfileRewrite(uniqueId, username);
+
+		return new Rewrite(uniqueId, username);
 	}
 
 	private void storePreparedState(
@@ -74,29 +75,26 @@ public abstract class ProfileRewriteAdapter {
 			@Nullable String connectionKey,
 			@NotNull PrepareDecision prepared
 	) {
-		if (uniqueId == null)
-			return;
-
+		if (uniqueId == null) return;
 		prepareStateStore.put(uniqueId, connectionKey, prepared);
 	}
 
-	public record ProfileRewriteRequest(
+	public record Request(
 			@NotNull ConnectionIdentity identity,
 			@Nullable UUID observedUniqueId,
 			@NotNull String currentUsername
 	) {
 	}
 
-	public record ProfileRewrite(
+	public record Rewrite(
 			@Nullable UUID uniqueId,
 			@NotNull String username
 	) {
 	}
 
-	public interface ProfileRewriteTarget {
-		void apply(@NotNull ProfileRewrite rewrite);
+	public interface Target {
+		void apply(@NotNull Rewrite rewrite);
 
-		@SuppressWarnings("unused")
 		default void deny(@NotNull PrepareDecision prepared) {
 		}
 	}

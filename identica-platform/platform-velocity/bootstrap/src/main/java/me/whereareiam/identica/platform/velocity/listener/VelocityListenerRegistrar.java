@@ -19,10 +19,10 @@ import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.platform.velocity.VelocityIdentica;
-import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityHandshakeDecisionAdapter;
-import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityLoginDecisionAdapter;
-import me.whereareiam.identica.platform.velocity.adapter.profile.VelocityProfileRewriteAdapter;
 import me.whereareiam.identica.platform.velocity.listener.connection.DisconnectListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.GameProfileRequestListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.LoginListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.PreLoginListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.PlayerChooseInitialServerListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.ServerPreConnectListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.VelocityPostConnectListener;
@@ -54,9 +54,9 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 	public void registerListeners() {
 		listenerRegistry.attachRegistrar(this);
 
-		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(VelocityHandshakeDecisionAdapter.class));
-		registerListener(GameProfileRequestEvent.class, injector.getInstance(VelocityProfileRewriteAdapter.class));
-		registerListener(LoginEvent.class, injector.getInstance(VelocityLoginDecisionAdapter.class));
+		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(PreLoginListener.class));
+		registerListener(GameProfileRequestEvent.class, injector.getInstance(GameProfileRequestListener.class));
+		registerListener(LoginEvent.class, injector.getInstance(LoginListener.class));
 		registerListener(ServerPostConnectEvent.class, injector.getInstance(VelocityPostConnectListener.class));
 		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(PlayerChooseInitialServerListener.class));
 		registerListener(ServerPreConnectEvent.class, injector.getInstance(ServerPreConnectListener.class));

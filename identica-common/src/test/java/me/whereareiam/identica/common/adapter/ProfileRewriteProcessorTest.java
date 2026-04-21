@@ -1,9 +1,7 @@
 package me.whereareiam.identica.common.adapter;
 
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
@@ -13,72 +11,51 @@ import org.junit.jupiter.api.Test;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class PrepareRequestConnectionKeyTest {
+class ProfileRewriteProcessorTest {
 	@Test
-	void profileRewritePassesConnectionKeyIntoPrepareRequest() {
-		TestConnectionCoordinator connectionCoordinator = new TestConnectionCoordinator();
-		ProfileRewriteProcessor processor = new ProfileRewriteProcessor(connectionCoordinator, new NoopPrepareStateStore());
-		ConnectionIdentity identity = identity("PlayerOne");
+	void deniedPrepareStoresStateAndCallsDenyTarget() {
+		UUID observedUniqueId = UUID.randomUUID();
+		TestConnectionCoordinator connectionCoordinator = new TestConnectionCoordinator(PrepareDecision.deny("denied"));
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		ProfileRewriteProcessor processor = new ProfileRewriteProcessor(connectionCoordinator, prepareStateStore);
+		AtomicBoolean denied = new AtomicBoolean();
 
-		processor.process(new ProfileRewriteProcessor.Request(
-						identity,
-						UUID.randomUUID(),
-						identity.getUsername()
-				), rewrite -> {
-				})
+		ConnectionIdentity identity = new ConnectionIdentity("PlayerOne", "127.0.0.1");
+		processor.process(
+						new ProfileRewriteProcessor.Request(identity, observedUniqueId, identity.getUsername()),
+						new ProfileRewriteProcessor.Target() {
+							@Override
+							public void apply(@NotNull ProfileRewriteProcessor.Rewrite rewrite) {
+							}
+
+							@Override
+							public void deny(@NotNull PrepareDecision prepared) {
+								denied.set(true);
+							}
+						})
 				.toCompletableFuture()
 				.join();
 
-		PrepareRequest captured = connectionCoordinator.lastPrepareRequest;
-		assertEquals(identity.connectionKey(), captured.getConnectionKey());
-	}
-
-	@Test
-	void handshakePassesConnectionKeyIntoPrepareRequest() {
-		TestConnectionCoordinator connectionCoordinator = new TestConnectionCoordinator();
-		HandshakeStore handshakeStore = mock(HandshakeStore.class);
-		when(handshakeStore.consumeInstruction(any(), any())).thenReturn(Optional.empty());
-
-		HandshakeDecisionProcessor processor = new HandshakeDecisionProcessor(
-				connectionCoordinator,
-				new NoopPrepareStateStore(),
-				handshakeStore,
-				Messages::new
-		);
-		ConnectionIdentity identity = identity("PlayerTwo");
-
-		processor.process(new HandshakeDecisionProcessor.Request(
-						identity,
-						instruction -> {
-						}
-				), message -> {
-				})
-				.toCompletableFuture()
-				.join();
-
-		PrepareRequest captured = connectionCoordinator.lastPrepareRequest;
-		assertEquals(identity.connectionKey(), captured.getConnectionKey());
-	}
-
-	private @NotNull ConnectionIdentity identity(@NotNull String username) {
-		ConnectionIdentity identity = new ConnectionIdentity(username, "127.0.0.1");
-		identity.setOrigin(new ConnectionIdentity.Origin("play.example.com", 25565));
-		return identity;
+		assertTrue(denied.get());
+		assertEquals(observedUniqueId, prepareStateStore.uniqueId);
+		assertEquals(identity.connectionKey(), prepareStateStore.connectionKey);
 	}
 
 	private static final class TestConnectionCoordinator implements ConnectionCoordinator {
-		private PrepareRequest lastPrepareRequest;
+		private final PrepareDecision decision;
+
+		private TestConnectionCoordinator(PrepareDecision decision) {
+			this.decision = decision;
+		}
 
 		@Override
 		public @NotNull CompletableFuture<PrepareDecision> prepare(PrepareRequest request) {
-			lastPrepareRequest = request;
-			return CompletableFuture.completedFuture(PrepareDecision.allow());
+			return CompletableFuture.completedFuture(decision);
 		}
 
 		@Override
@@ -108,13 +85,18 @@ class PrepareRequestConnectionKeyTest {
 		}
 	}
 
-	private static final class NoopPrepareStateStore implements PrepareStateStore {
+	private static final class TestPrepareStateStore implements PrepareStateStore {
+		private UUID uniqueId;
+		private String connectionKey;
+
 		@Override
 		public void put(@NotNull String connectionKey, @NotNull PrepareDecision decision) {
 		}
 
 		@Override
 		public void put(@NotNull UUID uniqueId, String connectionKey, @NotNull PrepareDecision decision) {
+			this.uniqueId = uniqueId;
+			this.connectionKey = connectionKey;
 		}
 
 		@Override

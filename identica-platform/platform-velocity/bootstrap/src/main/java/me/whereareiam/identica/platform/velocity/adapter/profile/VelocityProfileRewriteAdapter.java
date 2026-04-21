@@ -1,35 +1,27 @@
 package me.whereareiam.identica.platform.velocity.adapter.profile;
 
-import me.whereareiam.identica.adapter.ProfileRewriteAdapter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.util.GameProfile;
-import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.common.adapter.ProfileRewriteProcessor;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.listener.DynamicListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 
 @Singleton
-public class VelocityProfileRewriteAdapter extends ProfileRewriteAdapter implements DynamicListener<GameProfileRequestEvent> {
-	@Inject
-	public VelocityProfileRewriteAdapter(
-			@NotNull ConnectionCoordinator connectionCoordinator,
-			@NotNull PrepareStateStore prepareStateStore
-	) {
-		super(connectionCoordinator, prepareStateStore);
-	}
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public class VelocityProfileRewriteAdapter {
+	private final @NotNull ProfileRewriteProcessor processor;
 
-	@Override
-	public void onEvent(GameProfileRequestEvent event) {
+	public void rewrite(@NotNull GameProfileRequestEvent event) {
 		GameProfile current = event.getGameProfile();
 		if (current == null) return;
 
-		adapt(request(event, current), target(event, current))
+		processor.process(request(event, current), target(event, current))
 				.toCompletableFuture()
 				.join();
 	}
@@ -44,18 +36,18 @@ public class VelocityProfileRewriteAdapter extends ProfileRewriteAdapter impleme
 		));
 	}
 
-	private @NotNull ProfileRewriteRequest request(@NotNull GameProfileRequestEvent event, @NotNull GameProfile current) {
+	private @NotNull ProfileRewriteProcessor.Request request(@NotNull GameProfileRequestEvent event, @NotNull GameProfile current) {
 		ConnectionIdentity identity = new ConnectionIdentity(event.getUsername(), resolveIp(event));
 		identity.setObservedUniqueId(current.getId());
 		applyOrigin(identity, event);
-		return new ProfileRewriteRequest(
+		return new ProfileRewriteProcessor.Request(
 				identity,
 				current.getId(),
 				current.getName()
 		);
 	}
 
-	private @NotNull ProfileRewriteTarget target(@NotNull GameProfileRequestEvent event, @NotNull GameProfile current) {
+	private @NotNull ProfileRewriteProcessor.Target target(@NotNull GameProfileRequestEvent event, @NotNull GameProfile current) {
 		return rewrite -> {
 			GameProfile rewritten = current;
 			if (rewrite.uniqueId() != null && !rewrite.uniqueId().equals(rewritten.getId()))

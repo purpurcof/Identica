@@ -1,0 +1,52 @@
+package me.whereareiam.identica.common.adapter;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.Singleton;
+import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.model.auth.ConnectionDecision;
+import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.keystone.Actor;
+import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+@Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
+public class ConnectionDecisionApplier {
+	private final @NotNull Provider<Messages> messagesProvider;
+
+	public void apply(
+			@Nullable ConnectionDecision decision,
+			@NotNull Actor actor,
+			@NotNull Target target
+	) {
+		if (decision == null || decision.getStatus() == null) return;
+
+		switch (decision.getStatus()) {
+			case WAIT -> {
+				String message = decision.getMessage();
+				if (message == null || message.isBlank())
+					return;
+
+				actor.sendMessage(Serializer.serialize(actor, message));
+			}
+			case DENY -> target.deny(Serializer.serialize(actor, resolveAuthMessage(decision.getMessage())));
+			case REQUIRE_RECONNECT -> target.requireReconnect(Serializer.serialize(actor, resolveAuthMessage(decision.getMessage())));
+			default -> {
+			}
+		}
+	}
+
+	private @NotNull String resolveAuthMessage(@Nullable String message) {
+		if (message != null && !message.isBlank()) return message;
+		return String.join("\n", messagesProvider.get().getConnection().getAuthentication().getAuthenticationFailed());
+	}
+
+	public interface Target {
+		void deny(@NotNull Component message);
+
+		void requireReconnect(@NotNull Component message);
+	}
+}

@@ -1,7 +1,11 @@
 import org.gradle.api.Action
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.jvm.tasks.Jar
+
+val velocityJvmArgs = listOf("-Xms256M", "-Xmx256M")
+val paperJvmArgs = listOf("-Xms512M", "-Xmx512M")
 
 evaluationDependsOn(":platform-velocity-bootstrap")
 evaluationDependsOn(":provider-cracked-runtime")
@@ -18,6 +22,7 @@ val scenarios = spawner.readProperty("scenarios")
 scenarios.registerScenario("normal") { scenario ->
     scenario.addVelocity("proxy") { velocity ->
         velocity.setInt("port", 25565)
+        velocity.setJvmArgs(velocityJvmArgs)
         velocity.setBoolean("onlineMode", false)
         velocity.setString("forwardingMode", "legacy")
         velocity.setDirectory("rootOverlayDir", "dev/scenarios/normal/proxy")
@@ -30,6 +35,7 @@ scenarios.registerScenario("normal") { scenario ->
 
     scenario.addPaper("lobby") { paper ->
         paper.setInt("port", 25566)
+        paper.setJvmArgs(paperJvmArgs)
         paper.setBoolean("onlineMode", false)
     }
 }
@@ -37,6 +43,7 @@ scenarios.registerScenario("normal") { scenario ->
 scenarios.registerScenario("extended") { scenario ->
     scenario.addVelocity("proxy") { velocity ->
         velocity.setInt("port", 25565)
+        velocity.setJvmArgs(velocityJvmArgs)
         velocity.setBoolean("onlineMode", false)
         velocity.setString("forwardingMode", "legacy")
         velocity.setDirectory("rootOverlayDir", "dev/scenarios/extended/proxy")
@@ -52,22 +59,30 @@ scenarios.registerScenario("extended") { scenario ->
 
     scenario.addPaper("auth") { paper ->
         paper.setInt("port", 25566)
+        paper.setJvmArgs(paperJvmArgs)
         paper.setBoolean("onlineMode", false)
+        paper.setDirectory("rootOverlayDir", "dev/scenarios/extended/auth")
     }
 
     scenario.addPaper("migration") { paper ->
         paper.setInt("port", 25567)
+        paper.setJvmArgs(paperJvmArgs)
         paper.setBoolean("onlineMode", false)
+        paper.setDirectory("rootOverlayDir", "dev/scenarios/extended/migration")
     }
 
     scenario.addPaper("registration") { paper ->
         paper.setInt("port", 25568)
+        paper.setJvmArgs(paperJvmArgs)
         paper.setBoolean("onlineMode", false)
+        paper.setDirectory("rootOverlayDir", "dev/scenarios/extended/registration")
     }
 
     scenario.addPaper("lobby") { paper ->
         paper.setInt("port", 25569)
+        paper.setJvmArgs(paperJvmArgs)
         paper.setBoolean("onlineMode", false)
+        paper.setDirectory("rootOverlayDir", "dev/scenarios/extended/lobby")
     }
 }
 
@@ -135,6 +150,11 @@ private fun Any.setDirectory(propertyName: String, relativePath: String) {
 private fun Any.setInt(propertyName: String, value: Int) {
     @Suppress("UNCHECKED_CAST")
     (readProperty(propertyName) as Property<Int>).set(value)
+}
+
+private fun Any.setJvmArgs(value: List<String>) {
+    @Suppress("UNCHECKED_CAST")
+    (readProperty("jvmArgs") as ListProperty<String>).set(value)
 }
 
 private fun Any.setBoolean(propertyName: String, value: Boolean) {

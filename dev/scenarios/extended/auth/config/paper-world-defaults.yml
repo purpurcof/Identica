@@ -1,0 +1,3 @@
+_version: 31
+environment:
+  void-damage-amount: disabled

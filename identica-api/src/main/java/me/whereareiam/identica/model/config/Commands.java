@@ -31,6 +31,10 @@ public class Commands {
 		private @NotNull Clear clear;
 		private @NotNull Sessions sessions;
 		private @NotNull Migration migration;
+		/**
+		 * Whether Velocity should register commands through Brigadier.
+		 */
+		private boolean useBrigadier;
 
 		/**
 		 * Configuration for command suggestions.

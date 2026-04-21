@@ -26,7 +26,7 @@ public class VelocityDependencyResolver extends CommonDependencyResolver {
 		super.loadLibraries();
 
 		addDependency(LibraryRequest.builder()
-				.groupId("org{}incendo")
+				.groupId("me{}whereareiam")
 				.artifactId("cloud-velocity")
 				.version(me.whereareiam.identica.Constants.Dependency.CLOUD_VELOCITY)
 				.resolveTransitiveDependencies(true)

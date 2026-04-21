@@ -45,7 +45,7 @@ public class CrackedSettingsTemplate implements TemplateProvider<CrackedSettings
 		password.setMinUpper(1);
 		password.setMinLower(1);
 		password.setMinNumber(1);
-		password.setMinSpecial(0);
+		password.setMinSpecial(1);
 		registration.setUsername(username);
 		registration.setPassword(password);
 

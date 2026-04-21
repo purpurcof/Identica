@@ -24,9 +24,9 @@ adventure = "4.25.0"
 
 # cloud
 cloud-core = "2.0.0"
-cloud-velocity = "2.0.0-beta.14"
 cloud-cooldown = "1.0.0-rc.1"
-cloud-minecraft-extras = "2.0.0-beta.14"
+cloud-velocity = "dev-e69fce6"
+cloud-minecraft-extras = "dev-e69fce6"
 
 # platform api
 velocity = "3.5.0-SNAPSHOT"
@@ -78,8 +78,8 @@ adventure-plain = { group = "net.kyori", name = "adventure-text-serializer-plain
 cloud-core = { group = "org.incendo", name = "cloud-core", version.ref = "cloud-core" }
 cloud-annotations = { group = "org.incendo", name = "cloud-annotations", version.ref = "cloud-core" }
 cloud-cooldowns = { group = "org.incendo", name = "cloud-processors-cooldown", version.ref = "cloud-cooldown" }
-cloud-velocity = { group = "org.incendo", name = "cloud-velocity", version.ref = "cloud-velocity" }
-cloud-minecraft-extras = { group = "org.incendo", name = "cloud-minecraft-extras", version.ref = "cloud-minecraft-extras" }
+cloud-velocity = { group = "me.whereareiam", name = "cloud-velocity", version.ref = "cloud-velocity" }
+cloud-minecraft-extras = { group = "me.whereareiam", name = "cloud-minecraft-extras", version.ref = "cloud-minecraft-extras" }
 
 # platform api
 velocity = { group = "com.velocitypowered", name = "velocity-api", version.ref = "velocity" }

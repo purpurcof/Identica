@@ -6,11 +6,13 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.keystone.Actor;
+import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.platform.velocity.mapper.CommandSourceMapper;
+import me.whereareiam.keystone.Actor;
 import org.incendo.cloud.CommandManager;
 import org.incendo.cloud.execution.ExecutionCoordinator;
 import org.incendo.cloud.velocity.VelocityCommandManager;
+import org.incendo.cloud.velocity.VelocityCommandRegistrationMode;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -18,6 +20,7 @@ public class VelocityCommandManagerProvider implements Provider<CommandManager<A
 	private final PluginContainer plugin;
 	private final ProxyServer proxyServer;
 	private final CommandSourceMapper mapper;
+	private final Provider<Commands> commandsProvider;
 	private CommandManager<Actor> manager;
 
 	@Override
@@ -27,9 +30,16 @@ public class VelocityCommandManagerProvider implements Provider<CommandManager<A
 				plugin,
 				proxyServer,
 				ExecutionCoordinator.asyncCoordinator(),
-				mapper
+				mapper,
+				registrationMode()
 		);
 
 		return manager;
+	}
+
+	private VelocityCommandRegistrationMode registrationMode() {
+		return commandsProvider.get().getBehavior().isUseBrigadier()
+				? VelocityCommandRegistrationMode.BRIGADIER
+				: VelocityCommandRegistrationMode.RAW;
 	}
 }

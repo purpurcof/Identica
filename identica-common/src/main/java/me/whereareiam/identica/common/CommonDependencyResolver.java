@@ -102,7 +102,7 @@ public abstract class CommonDependencyResolver implements DependencyResolver {
 				.build());
 
 		addDependency(LibraryRequest.builder()
-				.groupId("org{}incendo")
+				.groupId("me{}whereareiam")
 				.artifactId("cloud-minecraft-extras")
 				.version(Constants.Dependency.CLOUD_MINECRAFT_EXTRAS)
 				.build());

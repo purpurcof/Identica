@@ -15,6 +15,7 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 	@Override
 	public Commands supply(Commands commands) {
 		Commands.Behavior behavior = new Commands.Behavior();
+		behavior.setUseBrigadier(false);
 
 		Commands.Behavior.Clear clearSettings = new Commands.Behavior.Clear();
 		clearSettings.setConfirmTtl(Duration.ofSeconds(60));

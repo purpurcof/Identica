@@ -17,7 +17,7 @@ import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.keystone.model.SerializerOptions;
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +53,7 @@ public class EnrollmentStep extends InteractiveStep {
 		List<InternalProvider> providers = providerOperations.eligibleProviders(
 				context,
 				PipelineType.REGISTRATION,
-				JourneyType.INTERACTIVE
+				JourneyMode.INTERACTIVE
 		);
 		Messages.Connection.Journey.Step.Enrollment enrollment = messagesProvider.get()
 				.getConnection()

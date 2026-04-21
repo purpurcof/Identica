@@ -12,7 +12,7 @@ import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -31,7 +31,7 @@ public class PremiumEligibilityResolver implements ProviderEligibilityResolver {
 	public boolean isEligible(
 			@NotNull ScenarioContext context,
 			@NotNull InternalProvider provider,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
 		ProviderDescriptor descriptor = provider.getDescriptor();
 		if (descriptor == null) return true;
@@ -41,8 +41,7 @@ public class PremiumEligibilityResolver implements ProviderEligibilityResolver {
 			return true;
 
 		String username = context.getUsername();
-		if (username == null || username.isBlank())
-			return false;
+		if (username == null || username.isBlank()) return false;
 
 		UUID uniqueId = context.getIdenticaUniqueId();
 		if (hasPremiumLinkByUniqueId(uniqueId)) {
@@ -58,16 +57,14 @@ public class PremiumEligibilityResolver implements ProviderEligibilityResolver {
 	}
 
 	private boolean hasPremiumLinkByUniqueId(UUID uniqueId) {
-		if (uniqueId == null)
-			return false;
+		if (uniqueId == null) return false;
 
 		List<AccountProviderLink> links = providerLinkPersistenceService.findByUniqueId(uniqueId);
 		return containsPremiumLink(links);
 	}
 
 	private boolean containsPremiumLink(List<AccountProviderLink> links) {
-		if (links.isEmpty())
-			return false;
+		if (links.isEmpty()) return false;
 
 		for (AccountProviderLink link : links) {
 			if (link == null) continue;

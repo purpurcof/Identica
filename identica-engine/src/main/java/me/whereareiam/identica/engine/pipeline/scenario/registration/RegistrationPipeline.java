@@ -42,7 +42,7 @@ public class RegistrationPipeline extends AbstractScenarioPipeline {
 			PipelineExecutor executor,
 			ProviderLinkPersistenceService providerLinkPersistenceService
 	) {
-		super(registry, messagesProvider, settingsProvider, pipelineStateStore, executor, PipelineType.REGISTRATION);
+		super(registry, messagesProvider, settingsProvider, pipelineStateStore, PipelineType.REGISTRATION, executor);
 		this.providerLinkPersistenceService = providerLinkPersistenceService;
 	}
 
@@ -116,7 +116,7 @@ public class RegistrationPipeline extends AbstractScenarioPipeline {
 	}
 
 	@Override
-	public boolean matchesNewFlow(@Nullable ConnectionRequest request) {
+	public boolean matchesNewScenario(@Nullable ConnectionRequest request) {
 		if (request == null) return true;
 		UUID uniqueId = request.getIdentity().getUniqueId();
 		if (uniqueId == null) return true;

@@ -24,7 +24,7 @@ import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.provider.profile.ProfileResolveContext;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.type.provider.ProviderState;
 import me.whereareiam.identica.util.NetworkUtil;
@@ -155,16 +155,16 @@ public class DefaultProviderOperations implements ProviderOperations {
 	@Override
 	public @NotNull List<InternalProvider> eligibleProviders(
 			@NotNull ScenarioContext context,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
-		return eligibleProviders(context, PipelineType.AUTHENTICATION, flow);
+		return eligibleProviders(context, PipelineType.AUTHENTICATION, journeyMode);
 	}
 
 	@Override
 	public @NotNull List<InternalProvider> eligibleProviders(
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
 		List<InternalProvider> providers = sortedEnabledProviders();
 		if (providers.isEmpty())
@@ -173,7 +173,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 		List<InternalProvider> eligible = new ArrayList<>();
 		for (InternalProvider provider : providers) {
 			if (provider == null) continue;
-			if (isEligible(context, provider, pipelineType, flow))
+			if (isEligible(context, provider, pipelineType, journeyMode))
 				eligible.add(provider);
 		}
 
@@ -184,9 +184,9 @@ public class DefaultProviderOperations implements ProviderOperations {
 	public boolean isEligible(
 			@NotNull ScenarioContext context,
 			@NotNull InternalProvider provider,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
-		return isEligible(context, provider, PipelineType.AUTHENTICATION, flow);
+		return isEligible(context, provider, PipelineType.AUTHENTICATION, journeyMode);
 	}
 
 	@Override
@@ -194,16 +194,16 @@ public class DefaultProviderOperations implements ProviderOperations {
 			@NotNull ScenarioContext context,
 			@NotNull InternalProvider provider,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
 		if (provider.getState() != ProviderState.ENABLED) return false;
 
 		ProviderDescriptor descriptor = provider.getDescriptor();
 		if (descriptor == null || isBlank(descriptor.getId())) return false;
-		if (!supportsJourney(context, provider, pipelineType, flow)) return false;
-		if (!resolversAllow(context, provider, flow)) return false;
+		if (!supportsJourney(context, provider, pipelineType, journeyMode)) return false;
+		if (!resolversAllow(context, provider, journeyMode)) return false;
 
-		ProviderEligibilityEvent event = new ProviderEligibilityEvent(context, provider, flow);
+		ProviderEligibilityEvent event = new ProviderEligibilityEvent(context, provider, journeyMode);
 		eventManager.call(event);
 
 		return !event.isCancelled();
@@ -213,7 +213,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 			@NotNull ScenarioContext context,
 			@NotNull InternalProvider provider,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
 		JourneyRegistry journeyRegistry = pipelineType == PipelineType.REGISTRATION
 				? registrationJourneyRegistry
@@ -223,7 +223,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 
 		if (journeyRegistry == null) return false;
 		JourneyPlan plan = journeyRegistry.resolvePlan(
-				context, pipelineType, flow, provider.getDescriptor().getId()
+				context, pipelineType, journeyMode, provider.getDescriptor().getId()
 		);
 
 		boolean hasProviderSteps = false;
@@ -234,9 +234,9 @@ public class DefaultProviderOperations implements ProviderOperations {
 			if (stageEntry.steps().isEmpty()) continue;
 
 			hasProviderSteps = true;
-			if (flow != JourneyType.SEAMLESS) continue;
+			if (journeyMode != JourneyMode.SEAMLESS) continue;
 			for (JourneyStep step : stageEntry.steps()) {
-				if (step.getFlows().size() == 1 && step.getFlows().contains(JourneyType.INTERACTIVE))
+				if (step.getJourneyModes().size() == 1 && step.getJourneyModes().contains(JourneyMode.INTERACTIVE))
 					return false;
 			}
 		}
@@ -247,13 +247,13 @@ public class DefaultProviderOperations implements ProviderOperations {
 	private boolean resolversAllow(
 			@NotNull ScenarioContext context,
 			@NotNull InternalProvider provider,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
 		Set<ProviderEligibilityResolver> resolvers = provider.getEligibilityResolvers();
 		if (resolvers == null || resolvers.isEmpty()) return true;
 
 		for (ProviderEligibilityResolver resolver : resolvers) {
-			if (!resolver.isEligible(context, provider, flow)) return false;
+			if (!resolver.isEligible(context, provider, journeyMode)) return false;
 		}
 
 		return true;

@@ -25,7 +25,7 @@ import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttrib
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.provider.premium.resolver.PremiumProfileLookup;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 
 import java.util.List;
@@ -103,8 +103,8 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		Settings settings = settingsProvider.get();
 		Settings.Connection connection = settings != null ? settings.getConnection() : null;
 		Settings.Scenario scenario = connection != null ? connection.getAuthentication() : null;
-		JourneyType preferredFlow = scenario != null ? scenario.getFlow() : null;
-		if (preferredFlow == JourneyType.INTERACTIVE) {
+		JourneyMode preferredJourneyMode = scenario != null ? scenario.getJourneyMode() : null;
+		if (preferredJourneyMode == JourneyMode.INTERACTIVE) {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 

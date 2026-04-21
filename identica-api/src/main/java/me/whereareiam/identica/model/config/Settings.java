@@ -7,7 +7,8 @@ import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 
@@ -154,7 +155,7 @@ public class Settings {
 		public static class Targets {
 			private @NotNull Target step = Target.step();
 			/**
-			 * Routing target used when a scenario flow fully completes.
+			 * Routing target used when a scenario journeyMode fully completes.
 			 */
 			private @NotNull Target complete = Target.complete();
 			private @NotNull Overrides overrides = new Overrides();
@@ -206,9 +207,13 @@ public class Settings {
 		 */
 		private boolean allowResume;
 		/**
-		 * Preferred flow type for this scenario.
+		 * Preferred journey mode for this scenario.
 		 */
-		private @NotNull JourneyType flow;
+		private @NotNull JourneyMode journeyMode;
+		/**
+		 * Policy for applying the preferred journey mode.
+		 */
+		private @NotNull JourneyPolicy journeyPolicy;
 
 		/**
 		 * Returns pipeline TTL in milliseconds with validation.

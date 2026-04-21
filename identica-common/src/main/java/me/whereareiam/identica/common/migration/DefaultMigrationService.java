@@ -40,7 +40,7 @@ import me.whereareiam.identica.type.migration.MigrationCancelScope;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.identica.util.UniqueIdGenerator;
@@ -243,7 +243,7 @@ public class DefaultMigrationService implements MigrationService {
 		long ttlMs = settingsProvider.get().getConnection().getMigration().pipelineTtlMillis();
 		if (ttlMs <= 0) return false;
 
-		JourneyType flow = settingsProvider.get().getConnection().getMigration().getFlow();
+		JourneyMode journeyMode = settingsProvider.get().getConnection().getMigration().getJourneyMode();
 		MigrationContext context = MigrationContext.builder()
 				.connectionUniqueId(pendingMigration.connectionUniqueId())
 				.identity(new ConnectionIdentity(
@@ -267,18 +267,18 @@ public class DefaultMigrationService implements MigrationService {
 				pendingMigration.initiator(),
 				pendingMigration.initiatorUniqueId()
 		), ttlMs);
-		pipelineState.putItem(new JourneyStateItem(flow, null, 0), ttlMs);
+		pipelineState.putItem(new JourneyStateItem(journeyMode, null, 0), ttlMs);
 
 		PipelineStateReference reference = PipelineStateReference.from(context);
 		pipelineStateStore.save(reference, pipelineState, ttlMs);
 		Logger.debug(
-				"Stored migration pending connection=%s identica=%s target=%s username=%s ip=%s flow=%s",
+				"Stored migration pending connection=%s identica=%s target=%s username=%s ip=%s journeyMode=%s",
 				pendingMigration.connectionUniqueId(),
 				identicaUniqueId,
 				pendingMigration.targetProviderId(),
 				pendingMigration.username(),
 				pendingMigration.ip(),
-				flow
+				journeyMode
 		);
 
 		return true;

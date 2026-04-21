@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Shared registry runner for flow groups and phases.
+ * Shared registry runner for pipeline groups and phases.
  */
 public abstract class AbstractPipelineGroupRegistry implements PipelineRegistry {
 	private final List<PipelineGroup<?>> groups = new CopyOnWriteArrayList<>();
@@ -32,7 +32,7 @@ public abstract class AbstractPipelineGroupRegistry implements PipelineRegistry 
 
 		unregister(groupId);
 		groups.add(group);
-		Logger.debug("Registered flow group %s in %s", groupId, registryLabel());
+		Logger.debug("Registered pipeline group %s in %s", groupId, registryLabel());
 		phasesByGroup.computeIfAbsent(normalize(groupId), ignored -> new CopyOnWriteArrayList<>());
 	}
 
@@ -48,7 +48,7 @@ public abstract class AbstractPipelineGroupRegistry implements PipelineRegistry 
 		boolean removed = groups.removeIf(group ->
 				group != null && groupId.equalsIgnoreCase(group.id()));
 		if (removed) {
-			Logger.debug("Unregistered flow group %s in %s", groupId, registryLabel());
+			Logger.debug("Unregistered pipeline group %s in %s", groupId, registryLabel());
 			phasesByGroup.remove(normalize(groupId));
 		}
 

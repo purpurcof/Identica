@@ -24,7 +24,7 @@ import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
@@ -73,10 +73,10 @@ public class SelectProvidersRule implements JourneyRule {
 
 		ScenarioContext context = ctx.getContext();
 		PipelineType pipelineType = ctx.getPipelineType();
-		JourneyType flow = ctx.getFlow();
+		JourneyMode journeyMode = ctx.getJourneyMode();
 
 		List<InternalProvider> eligibleProviders = new ArrayList<>(
-				providerOperations.eligibleProviders(context, pipelineType, flow)
+				providerOperations.eligibleProviders(context, pipelineType, journeyMode)
 		);
 		if (pipelineType == PipelineType.MIGRATION) {
 			eligibleProviders.removeIf(provider -> provider == null
@@ -100,19 +100,18 @@ public class SelectProvidersRule implements JourneyRule {
 		JourneyRegistry registry = resolveRegistry(pipelineType);
 		List<JourneyExecutionBlock> resolvedBlocks = new ArrayList<>();
 		for (String providerId : orderedProviderIds) {
-			if (providerId == null || providerId.isBlank())
-				continue;
-			JourneyPlan providerPlan = registry.resolvePlan(context, pipelineType, flow, providerId);
+			if (providerId == null || providerId.isBlank()) continue;
+			JourneyPlan providerPlan = registry.resolvePlan(context, pipelineType, journeyMode, providerId);
+
 			List<JourneyExecutionStage> providerStages = new ArrayList<>();
 			for (JourneyPlan.StageEntry entry : providerPlan.stages()) {
-				if (entry == null)
-					continue;
-				if (!entry.stage().providerStage())
-					continue;
+				if (entry == null) continue;
+				if (!entry.stage().providerStage()) continue;
+
 				providerStages.add(new JourneyExecutionStage(entry.stage(), entry.steps()));
 			}
-			if (providerStages.isEmpty())
-				continue;
+
+			if (providerStages.isEmpty()) continue;
 			resolvedBlocks.add(new JourneyExecutionBlock(
 					id(),
 					JourneyExecutionPolicy.FALLBACK,
@@ -121,8 +120,7 @@ public class SelectProvidersRule implements JourneyRule {
 			));
 		}
 
-		if (resolvedBlocks.isEmpty())
-			return current;
+		if (resolvedBlocks.isEmpty()) return current;
 
 		return new JourneyExecutionPlan(resolvedBlocks);
 	}

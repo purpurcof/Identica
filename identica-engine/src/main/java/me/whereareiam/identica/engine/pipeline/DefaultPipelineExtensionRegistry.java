@@ -20,7 +20,7 @@ import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourne
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.type.pipeline.PipelineScope;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -188,11 +188,11 @@ public class DefaultPipelineExtensionRegistry implements PipelineExtensionRegist
 				@Nullable String providerId,
 				@NotNull StageType stageType,
 				@NotNull PipelineType pipelineType,
-				@NotNull JourneyType flow,
+				@NotNull JourneyMode journeyMode,
 				@NotNull Step step
 		) {
 			JourneyRegistry registry = resolveJourneyRegistry(scope);
-			registry.registerStep(providerId, stageType, step.order(), pipelineType, flow, step);
+			registry.registerStep(providerId, stageType, step.order(), pipelineType, journeyMode, step);
 			recordStepRollback(registry, stageType.id(), providerId, pipelineType, step);
 		}
 
@@ -209,10 +209,10 @@ public class DefaultPipelineExtensionRegistry implements PipelineExtensionRegist
 		public void registerStep(
 				@Nullable String providerId,
 				@NotNull StageType stageType,
-				@NotNull JourneyType flow,
+				@NotNull JourneyMode journeyMode,
 				@NotNull Step step
 		) {
-			PipelineExtensionBuilder.super.registerStep(providerId, stageType, flow, step);
+			PipelineExtensionBuilder.super.registerStep(providerId, stageType, journeyMode, step);
 		}
 
 		private void recordStepRollback(

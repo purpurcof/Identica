@@ -23,7 +23,7 @@ public final class ScenarioSelection {
 		return new ScenarioSelection(runner, resumeRequest, true);
 	}
 
-	public static @NotNull ScenarioSelection newFlow(@NotNull AbstractScenarioPipeline runner) {
+	public static @NotNull ScenarioSelection newScenario(@NotNull AbstractScenarioPipeline runner) {
 		return new ScenarioSelection(runner, null, false);
 	}
 }

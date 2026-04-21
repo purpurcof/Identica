@@ -22,7 +22,7 @@ import me.whereareiam.identica.pipeline.journey.rule.JourneyRuleScope;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -66,10 +66,10 @@ public class ApplyRulesPhase implements PipelinePhase<JourneyState> {
 
 		ScenarioContext context = state.getContext();
 		PipelineType pipelineType = pipelineState.getPipelineType();
-		JourneyType flow = state.getFlow();
+		JourneyMode journeyMode = state.getJourneyMode();
 		JourneyStateItem pending = state.getPending();
 		JourneyExecutionPlan executionPlan = state.getExecutionPlan();
-		if (context == null || pipelineType == null || flow == null) {
+		if (context == null || pipelineType == null || journeyMode == null) {
 			state.setResult(PipelineResult.failed(journeyMissingContextMessage(pipelineState)));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
@@ -78,7 +78,7 @@ public class ApplyRulesPhase implements PipelinePhase<JourneyState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		JourneyRuleContext ruleContext = new JourneyRuleContext(context, pipelineType, flow, pending, pipelineState);
+		JourneyRuleContext ruleContext = new JourneyRuleContext(context, pipelineType, journeyMode, pending, pipelineState);
 		for (JourneyRule rule : resolveRules()) {
 			if (rule == null || !rule.supports(ruleContext))
 				continue;

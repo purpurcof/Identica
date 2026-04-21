@@ -6,7 +6,7 @@ import lombok.ToString;
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
 import me.whereareiam.identica.model.registration.RegistrationContext;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -17,6 +17,6 @@ import org.jetbrains.annotations.NotNull;
 @RequiredArgsConstructor
 public class RegistrationScenarioStartedEvent implements Event, SynchronousEvent {
 	private final @NotNull RegistrationContext context;
-	private final @NotNull JourneyType flow;
+	private final @NotNull JourneyMode journeyMode;
 	private final boolean resumed;
 }

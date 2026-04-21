@@ -8,7 +8,7 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.type.pipeline.PipelineScope;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,7 +54,7 @@ public interface PipelineExtensionBuilder {
 			@Nullable String providerId,
 			@NotNull StageType stageType,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@NotNull Step step
 	) {
 		registerStep(JourneyStep.builder()
@@ -62,7 +62,7 @@ public interface PipelineExtensionBuilder {
 				.providerId(providerId)
 				.order(step.order())
 				.scenarios(EnumSet.of(pipelineType))
-				.flows(EnumSet.of(flow))
+				.journeyModes(EnumSet.of(journeyMode))
 				.step(step)
 				.build());
 	}
@@ -79,11 +79,11 @@ public interface PipelineExtensionBuilder {
 	default void registerStep(
 			@Nullable String providerId,
 			@NotNull StageType stageType,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@NotNull Step step
 	) {
-		registerStep(PipelineScope.AUTHENTICATION, providerId, stageType, PipelineType.AUTHENTICATION, flow, step);
-		registerStep(PipelineScope.REGISTRATION, providerId, stageType, PipelineType.REGISTRATION, flow, step);
+		registerStep(PipelineScope.AUTHENTICATION, providerId, stageType, PipelineType.AUTHENTICATION, journeyMode, step);
+		registerStep(PipelineScope.REGISTRATION, providerId, stageType, PipelineType.REGISTRATION, journeyMode, step);
 	}
 
 }

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * Lightweight identity representation for connection/authentication flows.
+ * Lightweight identity representation for connection/authentication identities.
  */
 @Getter
 @Setter

@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import me.whereareiam.identica.pipeline.state.PipelineStateItem;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 @NoArgsConstructor
 @AllArgsConstructor
 public final class JourneyStateItem implements PipelineStateItem {
-	private @Nullable JourneyType flow;
+	private @Nullable JourneyMode journeyMode;
 	private @Nullable String stageId;
 	private int stepIndex;
 }

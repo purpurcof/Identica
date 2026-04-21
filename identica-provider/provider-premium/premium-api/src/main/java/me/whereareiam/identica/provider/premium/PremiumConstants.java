@@ -11,7 +11,7 @@ public final class PremiumConstants {
 	 */
 	public static final @NotNull String PROVIDER_ID = "premium";
 	/**
-	 * Attempt scope for premium verification flow.
+	 * Attempt scope for premium verification journeyMode.
 	 */
 	public static final @NotNull String ATTEMPT_SCOPE_VERIFY = "verify";
 }

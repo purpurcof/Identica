@@ -36,7 +36,9 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
+import me.whereareiam.identica.type.pipeline.journey.step.StepContextRequirement;
+import me.whereareiam.identica.type.pipeline.journey.step.StepWaitReason;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -89,9 +91,9 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 		ScenarioContext context = state.getContext();
 		PipelineType pipelineType = pipelineState.getPipelineType();
-		JourneyType flow = state.getFlow();
+		JourneyMode journeyMode = state.getJourneyMode();
 		JourneyExecutionPlan plan = state.getExecutionPlan();
-		if (context == null || pipelineType == null || flow == null) {
+		if (context == null || pipelineType == null || journeyMode == null) {
 			state.setResult(PipelineResult.failed(journeyMissingContextMessage(pipelineState)));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
@@ -108,7 +110,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		PipelineResult result = executePlan(pipelineState, context, pipelineType, flow, pending, plan);
+		PipelineResult result = executePlan(pipelineState, context, pipelineType, journeyMode, pending, plan);
 		state.setResult(result != null ? result : PipelineResult.complete());
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}
@@ -146,7 +148,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			@NotNull PipelineState pipelineState,
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@Nullable JourneyStateItem pending,
 			@NotNull JourneyExecutionPlan plan
 	) {
@@ -168,7 +170,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 							pipelineState,
 							context,
 							pipelineType,
-							flow,
+							journeyMode,
 							pending,
 							pendingProviderId,
 							region.blocks()
@@ -198,7 +200,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 						pipelineState,
 						context,
 						pipelineType,
-						flow,
+						journeyMode,
 						pending,
 						pendingProviderId,
 						block
@@ -217,7 +219,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			@NotNull PipelineState pipelineState,
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@Nullable JourneyStateItem pending,
 			@Nullable String pendingProviderId,
 			@NotNull List<JourneyExecutionBlock> blocks
@@ -232,7 +234,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 					pipelineState,
 					context,
 					pipelineType,
-					flow,
+					journeyMode,
 					pending,
 					pendingProviderId,
 					block
@@ -254,6 +256,9 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			if (status == PipelineStatus.FAILED
 					|| status == PipelineStatus.DENIED
 					|| status == PipelineStatus.NO_PENDING) {
+				if (pipelineType == PipelineType.MIGRATION)
+					return new FallbackOutcome(blockResult, null);
+
 				return new FallbackOutcome(blockResult, block.providerId());
 			}
 		}
@@ -268,7 +273,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			@NotNull PipelineState pipelineState,
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@Nullable JourneyStateItem pending,
 			@Nullable String pendingProviderId,
 			@NotNull JourneyExecutionBlock block
@@ -281,14 +286,14 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 		InternalProvider provider = resolveProvider(effectiveProviderId);
 		if (blockProviderId != null && provider != null) {
-			eventManager.call(new ProviderSelectedEvent(context, provider, flow));
+			eventManager.call(new ProviderSelectedEvent(context, provider, journeyMode));
 		}
 
 		return executeStageEntries(
 				pipelineState,
 				context,
 				pipelineType,
-				flow,
+				journeyMode,
 				pending,
 				pendingProviderId,
 				block.stages(),
@@ -357,7 +362,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		merged.addAll(excludedProviders);
 
 		JourneyOverrideItem updated = new JourneyOverrideItem(
-				current != null ? current.getFlow() : null,
+				current != null ? current.getJourneyMode() : null,
 				current != null ? current.getStageId() : null,
 				current != null ? current.getStepIndex() : -1,
 				current != null && current.isClearProvider(),
@@ -411,7 +416,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			@NotNull PipelineState pipelineState,
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@Nullable JourneyStateItem pending,
 			@Nullable String pendingProviderId,
 			@NotNull List<JourneyExecutionStage> stages,
@@ -453,7 +458,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				StepResult stepResult = executeStep(
 						context,
 						pipelineType,
-						flow,
+						journeyMode,
 						stage,
 						journeyStep,
 						provider
@@ -475,7 +480,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				}
 
 				if (status == PipelineStatus.WAITING || status == PipelineStatus.REQUIRE_RECONNECT)
-					persistPending(pipelineState, context, flow, stage.getId(), index);
+					persistPending(pipelineState, context, journeyMode, stage.getId(), index);
 
 				return PipelineResult.fromStepResult(stepResult);
 			}
@@ -489,13 +494,12 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	private @NotNull StepResult executeStep(
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@NotNull JourneyStage stage,
 			@NotNull JourneyStep journeyStep,
 			@Nullable InternalProvider provider
 	) {
-		if (flow == JourneyType.INTERACTIVE
-				&& requiresOnlinePresence(journeyStep)
+		if (requiresOnlinePresence(journeyStep)
 				&& !isOnline(context)) {
 			Logger.debug(
 					"Journey step waiting for online presence pipeline=%s stage=%s step=%s username=%s connection=%s",
@@ -505,7 +509,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 					context.getUsername(),
 					context.getConnectionUniqueId()
 			);
-			StepResult result = StepResult.waiting("");
+			StepResult result = StepResult.waiting("", StepWaitReason.ONLINE);
 			routingCoordinator.accept(RoutingSignal.stepFinished(
 					context,
 					pipelineType,
@@ -524,7 +528,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				journeyStep.getStep(),
 				context,
 				pipelineType,
-				flow,
+				journeyMode,
 				stage.getType()
 		));
 		eventManager.call(new StepStartedEvent(
@@ -615,11 +619,11 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	private void persistPending(
 			@NotNull PipelineState pipelineState,
 			@NotNull ScenarioContext context,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@NotNull String stageId,
 			int stepIndex
 	) {
-		JourneyType resolvedFlow = flow;
+		JourneyMode resolvedJourneyMode = journeyMode;
 		String resolvedStageId = stageId;
 		int resolvedStepIndex = stepIndex;
 		boolean clearProvider = false;
@@ -631,8 +635,8 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 			if (stored != null) {
 				JourneyOverrideItem override = stored.item(JourneyOverrideItem.class).orElse(null);
 				if (override != null) {
-					if (override.getFlow() != null)
-						resolvedFlow = override.getFlow();
+					if (override.getJourneyMode() != null)
+						resolvedJourneyMode = override.getJourneyMode();
 					if (override.getStageId() != null && !override.getStageId().isBlank())
 						resolvedStageId = override.getStageId();
 					if (override.getStepIndex() >= 0)
@@ -653,7 +657,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		}
 
 		long ttlMs = scenarioSettings(pipelineState.getPipelineType()).pipelineTtlMillis();
-		pipelineState.putItem(new JourneyStateItem(resolvedFlow, resolvedStageId, resolvedStepIndex), ttlMs);
+		pipelineState.putItem(new JourneyStateItem(resolvedJourneyMode, resolvedStageId, resolvedStepIndex), ttlMs);
 	}
 
 	private boolean isOnline(@NotNull ScenarioContext context) {
@@ -669,10 +673,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private boolean requiresOnlinePresence(@NotNull JourneyStep step) {
-		Set<JourneyType> flows = step.getFlows();
-		if (flows.isEmpty()) return true;
-
-		return flows.contains(JourneyType.INTERACTIVE);
+		return step.getStep().contextRequirement() == StepContextRequirement.ONLINE;
 	}
 
 	private @NotNull Settings.Scenario scenarioSettings(@Nullable PipelineType pipelineType) {

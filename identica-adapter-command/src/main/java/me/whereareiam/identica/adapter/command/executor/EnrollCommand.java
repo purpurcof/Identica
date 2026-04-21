@@ -122,7 +122,7 @@ public class EnrollCommand {
 		long ttlMs = settingsProvider.get().getConnection().getRegistration().pipelineTtlMillis();
 		if (ttlMs > 0) {
 			stored.putItem(new JourneyStateItem(
-					pending.getFlow(),
+					pending.getJourneyMode(),
 					StageType.PROVIDER.id(),
 					0
 			), ttlMs);

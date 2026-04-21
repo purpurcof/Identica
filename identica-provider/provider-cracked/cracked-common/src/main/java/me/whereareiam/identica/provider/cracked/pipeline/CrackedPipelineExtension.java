@@ -20,7 +20,7 @@ import me.whereareiam.identica.provider.cracked.pipeline.scenario.registration.C
 import me.whereareiam.identica.provider.cracked.pipeline.scenario.registration.CrackedRegistrationStep;
 import me.whereareiam.identica.type.pipeline.PipelineScope;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
 
@@ -69,21 +69,21 @@ public class CrackedPipelineExtension implements PipelineExtension {
 				&& settings.getScenario().getRegistration() != null
 				&& settings.getScenario().getRegistration().isRequireRepeat();
 
-		registerForBothFlows(
+		registerForBothJourneyModes(
 				builder,
 				PipelineScope.REGISTRATION,
 				providerId,
 				PipelineType.REGISTRATION,
 				validationStep
 		);
-		registerForBothFlows(
+		registerForBothJourneyModes(
 				builder,
 				PipelineScope.REGISTRATION,
 				providerId,
 				PipelineType.REGISTRATION,
 				crackedAccountPresenceStep
 		);
-		registerForBothFlows(
+		registerForBothJourneyModes(
 				builder,
 				PipelineScope.REGISTRATION,
 				providerId,
@@ -91,7 +91,7 @@ public class CrackedPipelineExtension implements PipelineExtension {
 				crackedRegistrationStep
 		);
 		if (requireRepeat) {
-			registerForBothFlows(
+			registerForBothJourneyModes(
 					builder,
 					PipelineScope.REGISTRATION,
 					providerId,
@@ -100,14 +100,14 @@ public class CrackedPipelineExtension implements PipelineExtension {
 			);
 		}
 
-		registerForBothFlows(
+		registerForBothJourneyModes(
 				builder,
 				PipelineScope.AUTHENTICATION,
 				providerId,
 				PipelineType.AUTHENTICATION,
 				validationStep
 		);
-		registerForBothFlows(
+		registerForBothJourneyModes(
 				builder,
 				PipelineScope.AUTHENTICATION,
 				providerId,
@@ -115,14 +115,14 @@ public class CrackedPipelineExtension implements PipelineExtension {
 				sessionReuseStep
 		);
 
-		registerForBothFlows(
+		registerForBothJourneyModes(
 				builder,
 				PipelineScope.AUTHENTICATION,
 				providerId,
 				PipelineType.AUTHENTICATION,
 				authenticationPasswordStep
 		);
-		registerForBothFlows(
+		registerForBothJourneyModes(
 				builder,
 				PipelineScope.AUTHENTICATION,
 				providerId,
@@ -162,14 +162,14 @@ public class CrackedPipelineExtension implements PipelineExtension {
 		}
 	}
 
-	private void registerForBothFlows(
+	private void registerForBothJourneyModes(
 			@NotNull PipelineExtensionBuilder builder,
 			@NotNull PipelineScope scope,
 			@NotNull String providerId,
 			@NotNull PipelineType pipelineType,
 			@NotNull Step step
 	) {
-		builder.registerStep(scope, providerId, StageType.PROVIDER, pipelineType, JourneyType.SEAMLESS, step);
-		builder.registerStep(scope, providerId, StageType.PROVIDER, pipelineType, JourneyType.INTERACTIVE, step);
+		builder.registerStep(scope, providerId, StageType.PROVIDER, pipelineType, JourneyMode.SEAMLESS, step);
+		builder.registerStep(scope, providerId, StageType.PROVIDER, pipelineType, JourneyMode.INTERACTIVE, step);
 	}
 }

@@ -103,8 +103,19 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		String targetProviderId = migration.getTargetProviderId();
-		if (targetProviderId == null || !targetProviderId.equalsIgnoreCase(providerId))
+		if (targetProviderId == null) return CompletableFuture.completedFuture(PhaseResult.pass(state));
+		if (!targetProviderId.equalsIgnoreCase(providerId)) {
+			pipelineStateStore.clear(PipelineStateReference.builder()
+					.connectionKey(connectionKey)
+					.build());
+			Logger.debug(
+					"Prepare cleared pending migration for provider mismatch requested=%s observed=%s key=%s",
+					targetProviderId,
+					providerId,
+					connectionKey
+			);
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
+		}
 
 		UUID identicaUniqueId = migration.getIdenticaUniqueId();
 		if (identicaUniqueId == null)

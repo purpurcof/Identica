@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Service for orchestrating provider migration flows.
+ * Service for orchestrating provider migration journeys.
  */
 public interface MigrationService {
 	@NotNull MigrationResult request(@NotNull MigrationRequest request);

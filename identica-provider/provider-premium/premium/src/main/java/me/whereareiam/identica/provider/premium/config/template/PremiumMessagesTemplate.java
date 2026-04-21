@@ -21,14 +21,6 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		verification.setInvalidSession(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>Invalid Mojang session.",
-				"<white>Rejoin with your premium account",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
 		PremiumMessages.Verification.Authentication authenticationVerification = new PremiumMessages.Verification.Authentication();
 		authenticationVerification.setPrompt(List.of(
 				" ",

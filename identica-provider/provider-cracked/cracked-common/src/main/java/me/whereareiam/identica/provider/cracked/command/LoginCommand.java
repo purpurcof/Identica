@@ -45,7 +45,7 @@ public class LoginCommand {
 		PipelineType pipelineType = pendingPipelineType(identity);
 		long ttlMs = resolveTtl(pipelineType);
 		storeAuthenticationAttempt(identity, new CrackedAuthenticationAttempt(password), ttlMs);
-		handleDecision(identity, messages, advanceFlow(identity));
+		handleDecision(identity, messages, advanceJourneyMode(identity));
 	}
 
 	private void handleDecision(
@@ -66,7 +66,7 @@ public class LoginCommand {
 		}
 	}
 
-	private ConnectionDecision advanceFlow(@NotNull Identity identity) {
+	private ConnectionDecision advanceJourneyMode(@NotNull Identity identity) {
 		AdvanceRequest request = AdvanceRequest.builder()
 				.connectionUniqueId(identity.getUniqueId())
 				.identity(identity)

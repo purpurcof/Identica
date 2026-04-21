@@ -35,16 +35,15 @@ public class ProfilePresenceStep extends AbstractProfileVerificationStep {
 
 	@Override
 	public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
-		PremiumMessages.Verification verification = verification();
-		String username = context.getUsername();
+        String username = context.getUsername();
 		String ip = context.getIp();
 		if (username == null || username.isBlank() || ip == null || ip.isBlank())
-			return CompletableFuture.completedFuture(failed(verification));
+			return CompletableFuture.completedFuture(failed());
 
 		String providerSubject = readProfileId(username);
 		if (providerSubject == null || providerSubject.isBlank()) {
 			Logger.debug("Premium profile verification missing snapshot username=%s ip=%s", username, ip);
-			return CompletableFuture.completedFuture(failed(verification));
+			return CompletableFuture.completedFuture(failed());
 		}
 		Logger.debug("Premium profile verification found snapshot username=%s ip=%s subject=%s", username, ip, providerSubject);
 

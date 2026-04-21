@@ -63,6 +63,6 @@ public class PreparePipelineRegistry extends AbstractPipelineGroupRegistry imple
 
 	@Override
 	protected @NotNull String phaseLabel() {
-		return "prepare flow phase";
+		return "prepare pipeline phase";
 	}
 }

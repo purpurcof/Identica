@@ -22,7 +22,7 @@ import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.pha
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.BuildExecutionPlanPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.ExecutePlanPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.LoadContextPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.ResolveFlowPhase;
+import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.ResolveJourneyModePhase;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import org.jetbrains.annotations.NotNull;
@@ -38,7 +38,7 @@ public class RegistrationPipelineRegistry extends AbstractPipelineGroupRegistry 
 			PolicyGroup policyGroup,
 			SessionGroup sessionGroup,
 			LoadContextPhase loadContextPhase,
-			ResolveFlowPhase resolveFlowPhase,
+			ResolveJourneyModePhase resolveJourneyModePhase,
 			BuildExecutionPlanPhase buildExecutionPlanPhase,
 			ApplyRulesPhase applyRulesPhase,
 			ExecutePlanPhase executePlanPhase,
@@ -60,8 +60,8 @@ public class RegistrationPipelineRegistry extends AbstractPipelineGroupRegistry 
 		register(finalizeGroup);
 
 		registerPhase(journeyGroup.id(), loadContextPhase, PhasePlacement.first());
-		registerPhase(journeyGroup.id(), resolveFlowPhase, PhasePlacement.after(loadContextPhase.id()));
-		registerPhase(journeyGroup.id(), buildExecutionPlanPhase, PhasePlacement.after(resolveFlowPhase.id()));
+		registerPhase(journeyGroup.id(), resolveJourneyModePhase, PhasePlacement.after(loadContextPhase.id()));
+		registerPhase(journeyGroup.id(), buildExecutionPlanPhase, PhasePlacement.after(resolveJourneyModePhase.id()));
 		registerPhase(journeyGroup.id(), applyRulesPhase, PhasePlacement.after(buildExecutionPlanPhase.id()));
 		registerPhase(journeyGroup.id(), executePlanPhase, PhasePlacement.last());
 
@@ -80,6 +80,6 @@ public class RegistrationPipelineRegistry extends AbstractPipelineGroupRegistry 
 
 	@Override
 	protected @NotNull String phaseLabel() {
-		return "registration flow phase";
+		return "registration pipeline phase";
 	}
 }

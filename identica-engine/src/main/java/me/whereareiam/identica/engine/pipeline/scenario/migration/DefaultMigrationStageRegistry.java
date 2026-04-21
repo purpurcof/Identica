@@ -6,7 +6,7 @@ import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractJourneyRe
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 
 import java.util.EnumSet;
@@ -22,7 +22,7 @@ public class DefaultMigrationStageRegistry extends AbstractJourneyRegistry imple
 				.type(StageType.PRE)
 				.order(100)
 				.pipelineTypes(EnumSet.of(pipelineType))
-				.flows(EnumSet.allOf(JourneyType.class))
+				.journeyModes(EnumSet.allOf(JourneyMode.class))
 				.allowFallback(true)
 				.build());
 
@@ -31,7 +31,7 @@ public class DefaultMigrationStageRegistry extends AbstractJourneyRegistry imple
 				.type(StageType.PROVIDER)
 				.order(200)
 				.pipelineTypes(EnumSet.of(pipelineType))
-				.flows(EnumSet.allOf(JourneyType.class))
+				.journeyModes(EnumSet.allOf(JourneyMode.class))
 				.requireCompletion(true)
 				.usesCompletionResult(true)
 				.allowFallback(true)
@@ -42,7 +42,7 @@ public class DefaultMigrationStageRegistry extends AbstractJourneyRegistry imple
 				.type(StageType.END)
 				.order(300)
 				.pipelineTypes(EnumSet.of(pipelineType))
-				.flows(EnumSet.allOf(JourneyType.class))
+				.journeyModes(EnumSet.allOf(JourneyMode.class))
 				.allowFallback(true)
 				.build());
 	}

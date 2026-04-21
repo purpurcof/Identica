@@ -6,9 +6,8 @@ import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
-import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,7 +57,7 @@ public abstract class AbstractJourneyRegistry implements JourneyRegistry {
 		if (step.getStageId().isBlank() || step.getStep().getName().isBlank())
 			return;
 
-		JourneyStep normalized = normalizeFlows(step);
+		JourneyStep normalized = normalizeJourneyModes(step);
 		boolean replaced = steps.removeIf(existing -> isDuplicate(existing, normalized));
 		if (replaced) {
 			Logger.warn(
@@ -87,8 +86,8 @@ public abstract class AbstractJourneyRegistry implements JourneyRegistry {
 				return false;
 			if (!step.getStep().getName().equalsIgnoreCase(stepName))
 				return false;
-			if (!step.supports(pipelineType, JourneyType.SEAMLESS, providerId)
-					&& !step.supports(pipelineType, JourneyType.INTERACTIVE, providerId))
+			if (!step.supports(pipelineType, JourneyMode.SEAMLESS, providerId)
+					&& !step.supports(pipelineType, JourneyMode.INTERACTIVE, providerId))
 				return false;
 			return matchesProvider(step.getProviderId(), providerId);
 		});
@@ -98,14 +97,14 @@ public abstract class AbstractJourneyRegistry implements JourneyRegistry {
 	public @NotNull JourneyPlan resolvePlan(
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@Nullable String providerId
 	) {
 		List<JourneyStage> sortedStages = new ArrayList<>();
 		for (JourneyStage stage : stages) {
 			if (stage == null)
 				continue;
-			if (!stage.supports(pipelineType, flow))
+			if (!stage.supports(pipelineType, journeyMode))
 				continue;
 			sortedStages.add(stage);
 		}
@@ -117,7 +116,7 @@ public abstract class AbstractJourneyRegistry implements JourneyRegistry {
 
 		List<JourneyPlan.StageEntry> entries = new ArrayList<>();
 		for (JourneyStage stage : sortedStages) {
-			List<JourneyStep> resolvedSteps = resolveStageSteps(stage, pipelineType, flow, providerId);
+			List<JourneyStep> resolvedSteps = resolveStageSteps(stage, pipelineType, journeyMode, providerId);
 			entries.add(new JourneyPlan.StageEntry(stage, resolvedSteps));
 		}
 
@@ -137,7 +136,7 @@ public abstract class AbstractJourneyRegistry implements JourneyRegistry {
 	private @NotNull List<JourneyStep> resolveStageSteps(
 			@NotNull JourneyStage stage,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@Nullable String providerId
 	) {
 		Map<String, JourneyStep> selected = new LinkedHashMap<>();
@@ -148,12 +147,12 @@ public abstract class AbstractJourneyRegistry implements JourneyRegistry {
 				continue;
 			if (!normalize(candidate.getStageId()).equals(stageId))
 				continue;
-			if (!candidate.supports(pipelineType, flow, providerId))
+			if (!candidate.supports(pipelineType, journeyMode, providerId))
 				continue;
 
 			String stepName = candidate.getStep().getName().toLowerCase(Locale.ROOT);
 			JourneyStep existing = selected.get(stepName);
-			if (existing == null || comparePriority(candidate, existing, flow) > 0)
+			if (existing == null || comparePriority(candidate, existing, journeyMode) > 0)
 				selected.put(stepName, candidate);
 		}
 
@@ -167,18 +166,18 @@ public abstract class AbstractJourneyRegistry implements JourneyRegistry {
 	private int comparePriority(
 			@NotNull JourneyStep candidate,
 			@NotNull JourneyStep existing,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
 		int candidateScore = 0;
 		if (candidate.isProviderSpecific())
 			candidateScore += 2;
-		if (candidate.isFlowSpecific(flow))
+		if (candidate.isJourneyModeSpecific(journeyMode))
 			candidateScore += 1;
 
 		int existingScore = 0;
 		if (existing.isProviderSpecific())
 			existingScore += 2;
-		if (existing.isFlowSpecific(flow))
+		if (existing.isJourneyModeSpecific(journeyMode))
 			existingScore += 1;
 
 		return Integer.compare(candidateScore, existingScore);
@@ -193,7 +192,7 @@ public abstract class AbstractJourneyRegistry implements JourneyRegistry {
 			return false;
 		if (!safeScenarios(existing.getScenarios()).equals(safeScenarios(incoming.getScenarios())))
 			return false;
-		return safeFlows(existing.getFlows()).equals(safeFlows(incoming.getFlows()));
+		return safeJourneyModes(existing.getJourneyModes()).equals(safeJourneyModes(incoming.getJourneyModes()));
 	}
 
 	private boolean matchesProvider(@Nullable String registeredProviderId, @Nullable String providerId) {
@@ -214,26 +213,23 @@ public abstract class AbstractJourneyRegistry implements JourneyRegistry {
 		return values;
 	}
 
-	private @NotNull Set<JourneyType> safeFlows(@Nullable Set<JourneyType> values) {
+	private @NotNull Set<JourneyMode> safeJourneyModes(@Nullable Set<JourneyMode> values) {
 		if (values == null || values.isEmpty())
-			return EnumSet.allOf(JourneyType.class);
+			return EnumSet.allOf(JourneyMode.class);
 		return values;
 	}
 
-	private @NotNull JourneyStep normalizeFlows(@NotNull JourneyStep step) {
-		Set<JourneyType> flows = step.getFlows();
-		if (!flows.isEmpty())
-			return step;
+	private @NotNull JourneyStep normalizeJourneyModes(@NotNull JourneyStep step) {
+		Set<JourneyMode> journeyModes = step.getJourneyModes();
+		if (!journeyModes.isEmpty()) return step;
 
-		boolean interactive = step.getStep() instanceof InteractiveStep;
-		EnumSet<JourneyType> resolved;
-		if (interactive)
-			resolved = EnumSet.of(JourneyType.INTERACTIVE);
-		else
-			resolved = EnumSet.allOf(JourneyType.class);
+		Set<JourneyMode> stepModes = step.getStep().journeyModes();
+		EnumSet<JourneyMode> resolved = stepModes.isEmpty()
+				? EnumSet.allOf(JourneyMode.class)
+				: EnumSet.copyOf(stepModes);
 
 		return step.toBuilder()
-				.flows(resolved)
+				.journeyModes(resolved)
 				.build();
 	}
 

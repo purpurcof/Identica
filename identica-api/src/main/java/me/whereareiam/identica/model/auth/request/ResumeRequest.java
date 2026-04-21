@@ -10,10 +10,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * Resume request details for pending authentication flows.
+ * Resume request details for pending authentication journeys.
  *
  * <p>The resume request should include the latest connection identity so pending
- * flows can re-evaluate IP-sensitive steps. When {@code identity}
+ * journeyModes can re-evaluate IP-sensitive steps. When {@code identity}
  * is omitted, the stored context data is reused.</p>
  */
 @Getter

@@ -288,6 +288,66 @@ class PreparePipelineTest {
 		verify(registrationAccountService, never()).reserve(any());
 	}
 
+	@Test
+	void profileStageClearsPendingMigrationWhenObservedProviderDiffers() {
+		UUID identicaUniqueId = UUID.randomUUID();
+		ConnectionIdentity identity = identity("MigratingPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratingPlayer|127.0.0.1|premium.example.com|25565";
+		identity.setObservedUniqueId(UUID.randomUUID());
+
+		PipelineState pendingMigrationState = PipelineState.initial();
+		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
+		pendingMigrationState.setScenario(MigrationContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(identicaUniqueId, "MigratingPlayer", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build());
+		pendingMigrationState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.USER,
+				identicaUniqueId
+		), 1_000L);
+
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of());
+		when(providerOperations.resolveProfile(any()))
+				.thenReturn(ProfileResolution.builder()
+						.providerId("cracked")
+						.providerSubject("cracked-subject")
+						.build());
+		when(providerOperations.resolveEntrypoint("premium.example.com", 25565))
+				.thenReturn(ResolvedEntrypoint.builder()
+						.providerId("premium")
+						.host("premium.example.com")
+						.port(25565)
+						.build());
+		when(pipelineStateStore.find(org.mockito.ArgumentMatchers.<PipelineStateReference>any())).thenReturn(Optional.empty());
+		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
+				.thenReturn(Optional.of(pendingMigrationState));
+		when(registrationAccountService.reserve(any())).thenReturn(identicaUniqueId);
+		when(providerLinkPersistenceService.findBySubject("cracked", "cracked-subject"))
+				.thenReturn(Optional.empty());
+		when(accountPersistenceService.findByUniqueId(identicaUniqueId))
+				.thenReturn(Optional.empty());
+		when(providerProfilePersistenceService.findBySubject("cracked", "cracked-subject"))
+				.thenReturn(Optional.empty());
+
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.PROFILE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(identicaUniqueId, decision.getUniqueId());
+		verify(pipelineStateStore).clear(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey())));
+	}
+
 	private @NotNull PreparePipeline pipeline(@NotNull PrepareStateStore prepareStateStore) {
 		ConnectionProviderContextResolver contextResolver = new ConnectionProviderContextResolver(providerOperations);
 		PreparePipelineRegistry registry = new PreparePipelineRegistry(

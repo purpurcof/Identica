@@ -8,8 +8,9 @@ import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.type.event.EventPriority;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
+import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -61,7 +62,8 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		scenario.setAllowResume(true);
 		scenario.setSessionConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
-		scenario.setFlow(JourneyType.SEAMLESS);
+		scenario.setJourneyMode(JourneyMode.SEAMLESS);
+		scenario.setJourneyPolicy(JourneyPolicy.PREFER);
 		return scenario;
 	}
 
@@ -72,7 +74,8 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		scenario.setAllowResume(true);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
 		scenario.setAutoSelectSingleProvider(false);
-		scenario.setFlow(JourneyType.SEAMLESS);
+		scenario.setJourneyMode(JourneyMode.SEAMLESS);
+		scenario.setJourneyPolicy(JourneyPolicy.PREFER);
 		return scenario;
 	}
 
@@ -81,7 +84,8 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
 		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
-		scenario.setFlow(JourneyType.INTERACTIVE);
+		scenario.setJourneyMode(JourneyMode.INTERACTIVE);
+		scenario.setJourneyPolicy(JourneyPolicy.PREFER);
 		return scenario;
 	}
 

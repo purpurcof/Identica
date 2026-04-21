@@ -33,7 +33,7 @@ public class ConnectionDecisionResolver {
 	) {
 		AbstractScenarioPipeline runner = scenarioRegistry.resolve(pipelineType);
 		if (error != null) {
-			Logger.severe("Connection flow failed %s", error);
+			Logger.severe("Connection journeyMode failed %s", error);
 			return failureDecision(runner);
 		}
 

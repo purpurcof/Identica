@@ -15,7 +15,7 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.provider.premium.resolver.PremiumProfileLookup;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.provider.ProviderState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -119,7 +119,7 @@ class PremiumHandshakePolicyTest {
 
 	private Settings settings() {
 		Settings.AuthenticationScenario authentication = new Settings.AuthenticationScenario();
-		authentication.setFlow(JourneyType.SEAMLESS);
+		authentication.setJourneyMode(JourneyMode.SEAMLESS);
 
 		Settings.Connection connection = new Settings.Connection();
 		connection.setHandshakeInstructionTtl(Duration.ofSeconds(30));

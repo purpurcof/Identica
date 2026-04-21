@@ -7,7 +7,7 @@ import lombok.Setter;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
 public class JourneyRuleContext {
 	private @NotNull ScenarioContext context;
 	private @NotNull PipelineType pipelineType;
-	private @NotNull JourneyType flow;
+	private @NotNull JourneyMode journeyMode;
 	private @Nullable JourneyStateItem pending;
 	private @Nullable PipelineState pipelineState;
 }

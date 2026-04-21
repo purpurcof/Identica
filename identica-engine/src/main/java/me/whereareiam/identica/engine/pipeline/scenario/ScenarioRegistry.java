@@ -56,20 +56,20 @@ public class ScenarioRegistry {
 			}
 		}
 
-		AbstractScenarioPipeline runner = selectNewFlow(request);
+		AbstractScenarioPipeline runner = selectNewScenario(request);
 		Logger.debug(
-				"Scenario select chose new flow pipeline=%s connection=%s identity=%s key=%s",
+				"Scenario select chose new pipeline pipeline=%s connection=%s identity=%s key=%s",
 				runner.type(),
 				request != null ? request.getConnectionUniqueId() : null,
                 request != null ? request.getIdentity().getUniqueId() : null,
                 request != null ? request.getIdentity().connectionKey() : null
 		);
-		return ScenarioSelection.newFlow(runner);
+		return ScenarioSelection.newScenario(runner);
 	}
 
-	public @NotNull AbstractScenarioPipeline selectNewFlow(@Nullable ConnectionRequest request) {
+	public @NotNull AbstractScenarioPipeline selectNewScenario(@Nullable ConnectionRequest request) {
 		for (AbstractScenarioPipeline runner : runners) {
-			if (runner.matchesNewFlow(request))
+			if (runner.matchesNewScenario(request))
 				return runner;
 		}
 
@@ -83,7 +83,7 @@ public class ScenarioRegistry {
 			return resumeRunner;
 
 		ConnectionRequest fallbackRequest = toConnectionRequest(request);
-		return selectNewFlow(fallbackRequest);
+		return selectNewScenario(fallbackRequest);
 	}
 
 	public @NotNull AbstractScenarioPipeline selectForAdvance(@NotNull AdvanceRequest request) {
@@ -92,7 +92,7 @@ public class ScenarioRegistry {
 			return advanceRunner;
 
 		ConnectionRequest fallbackRequest = toConnectionRequest(request);
-		return selectNewFlow(fallbackRequest);
+		return selectNewScenario(fallbackRequest);
 	}
 
 	public @Nullable AbstractScenarioPipeline resolve(@NotNull PipelineType type) {

@@ -1,9 +1,9 @@
 package me.whereareiam.identica.type.pipeline.journey;
 
 /**
- * Stage/step flow type for a single connection scenario attempt.
+ * Stage/step journey mode type for a single connection scenario attempt.
  */
-public enum JourneyType {
+public enum JourneyMode {
 	/**
 	 * Runs without player interaction.
 	 */

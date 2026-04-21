@@ -12,6 +12,8 @@ import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckContext;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckResult;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
+import me.whereareiam.identica.provider.ProviderAttemptStore;
+import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
 import org.jetbrains.annotations.NotNull;
@@ -22,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PremiumMigrationPrecheck implements ProviderMigrationPrecheck {
 	private final HandshakeStore handshakeStore;
+	private final ProviderAttemptStore attemptStore;
 	private final Provider<Settings> settingsProvider;
 	private final Provider<PremiumMessages> messagesProvider;
 
@@ -49,8 +52,9 @@ public class PremiumMigrationPrecheck implements ProviderMigrationPrecheck {
 		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE, true);
 
 		handshakeStore.putInstruction(instruction);
+		attemptStore.markAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
 		Logger.debug(
-				"Premium migration precheck queued force-online instruction username=%s ip=%s ttl=%d provider=%s",
+				"Premium migration precheck queued force-online instruction and marked verify attempt username=%s ip=%s ttl=%d provider=%s",
 				username,
 				ip,
 				ttlMs,

@@ -65,8 +65,8 @@ public abstract class AbstractProfileVerificationStep extends SeamlessStep {
 		profileStore.clear(username);
 	}
 
-	protected StepResult failed(PremiumMessages.Verification verification) {
-		return StepResult.failed(joinLines(verification.getInvalidSession()));
+	protected StepResult failed() {
+		return StepResult.failed("");
 	}
 
 	protected long ttlMillis() {

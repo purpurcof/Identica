@@ -1,6 +1,7 @@
 package me.whereareiam.identica.engine.pipeline.scenario;
 
 import com.google.inject.Provider;
+import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
 import me.whereareiam.identica.event.pipeline.attempt.ScenarioContextBuiltEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
@@ -30,6 +31,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+@RequiredArgsConstructor
 public abstract class AbstractScenarioPipeline {
 	private static final long ADVANCE_LOCK_FALLBACK_MS = 5_000L;
 
@@ -39,22 +41,6 @@ public abstract class AbstractScenarioPipeline {
 	private final PipelineStateStore pipelineStateStore;
 	private final PipelineType pipelineType;
 	private final PipelineExecutor executor;
-
-	protected AbstractScenarioPipeline(
-			@NotNull PipelineRegistry registry,
-			@NotNull Provider<Messages> messagesProvider,
-			@NotNull Provider<Settings> settingsProvider,
-			@NotNull PipelineStateStore pipelineStateStore,
-			@NotNull PipelineExecutor executor,
-			@NotNull PipelineType pipelineType
-	) {
-		this.registry = registry;
-		this.messagesProvider = messagesProvider;
-		this.settingsProvider = settingsProvider;
-		this.pipelineStateStore = pipelineStateStore;
-		this.executor = executor;
-		this.pipelineType = pipelineType;
-	}
 
 	public @NotNull CompletionStage<PipelineResult> execute(@Nullable ConnectionRequest request) {
 		return execute(request, null, PendingMode.RESUME);
@@ -106,7 +92,7 @@ public abstract class AbstractScenarioPipeline {
 		return resolveScenarioContext(result);
 	}
 
-	public boolean matchesNewFlow(@Nullable ConnectionRequest request) {
+	public boolean matchesNewScenario(@Nullable ConnectionRequest request) {
 		return false;
 	}
 

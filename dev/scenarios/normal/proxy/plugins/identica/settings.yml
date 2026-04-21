@@ -58,21 +58,24 @@ connection:
     pipelineTtl: "5m"
     advanceLockTtl: "5s"
     allowResume: true
-    flow: "INTERACTIVE"
+    journeyMode: "INTERACTIVE"
+    journeyPolicy: "PREFER"
     sessionConcurrencyPolicy: "REPLACE_EXISTING"
     pipelineConcurrencyPolicy: "DENY_NEW"
   registration:
     pipelineTtl: "5m"
     advanceLockTtl: "5s"
     allowResume: true
-    flow: "INTERACTIVE"
+    journeyMode: "INTERACTIVE"
+    journeyPolicy: "PREFER"
     pipelineConcurrencyPolicy: "DENY_NEW"
     autoSelectSingleProvider: false
   migration:
     pipelineTtl: "5m"
     advanceLockTtl: "5s"
     allowResume: true
-    flow: "INTERACTIVE"
+    journeyMode: "INTERACTIVE"
+    journeyPolicy: "PREFER"
   sentinels:
     resumeSpam:
       enabled: false

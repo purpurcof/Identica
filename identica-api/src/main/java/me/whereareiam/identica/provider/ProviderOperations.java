@@ -6,7 +6,7 @@ import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.provider.profile.ProfileResolveContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,63 +50,63 @@ public interface ProviderOperations {
 	boolean hasEntrypoints(@Nullable String providerId);
 
 	/**
-	 * Returns eligible providers for the context and flow.
+	 * Returns eligible providers for the context and journeyMode.
 	 *
 	 * @param context authentication context
-	 * @param flow flow type
+	 * @param journeyMode journeyMode type
 	 * @return eligible providers
 	 */
 	@NotNull List<InternalProvider> eligibleProviders(
 			@NotNull ScenarioContext context,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	);
 
 	/**
-	 * Returns eligible providers for the context, pipeline, and flow.
+	 * Returns eligible providers for the context, pipeline, and journeyMode.
 	 *
 	 * @param context authentication context
 	 * @param pipelineType pipeline type
-	 * @param flow flow type
+	 * @param journeyMode journeyMode type
 	 * @return eligible providers
 	 */
 	default @NotNull List<InternalProvider> eligibleProviders(
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
-		return eligibleProviders(context, flow);
+		return eligibleProviders(context, journeyMode);
 	}
 
 	/**
-	 * Checks whether the provider can handle the context for the flow.
+	 * Checks whether the provider can handle the context for the journeyMode.
 	 *
 	 * @param context authentication context
 	 * @param provider provider instance
-	 * @param flow flow type
+	 * @param journeyMode journeyMode type
 	 * @return {@code true} if eligible
 	 */
 	boolean isEligible(
 			@NotNull ScenarioContext context,
 			@NotNull InternalProvider provider,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	);
 
 	/**
-	 * Checks whether the provider can handle the context for the pipeline and flow.
+	 * Checks whether the provider can handle the context for the pipeline and journeyMode.
 	 *
 	 * @param context authentication context
 	 * @param provider provider instance
 	 * @param pipelineType pipeline type
-	 * @param flow flow type
+	 * @param journeyMode journeyMode type
 	 * @return {@code true} if eligible
 	 */
 	default boolean isEligible(
 			@NotNull ScenarioContext context,
 			@NotNull InternalProvider provider,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
-		return isEligible(context, provider, flow);
+		return isEligible(context, provider, journeyMode);
 	}
 
 	/**

@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,23 +19,23 @@ public class JourneyStage {
 	private final @NotNull StageType type;
 	private final int order;
 	private final @NotNull Set<PipelineType> pipelineTypes;
-	private final @NotNull Set<JourneyType> flows;
+	private final @NotNull Set<JourneyMode> journeyModes;
 	private final boolean requireCompletion;
 	private final boolean usesCompletionResult;
 	private final boolean allowFallback;
 
-	public boolean supports(@NotNull PipelineType pipelineType, @NotNull JourneyType flow) {
+	public boolean supports(@NotNull PipelineType pipelineType, @NotNull JourneyMode journeyMode) {
 		Set<PipelineType> supportedPipelines = pipelineTypes.isEmpty()
 				? EnumSet.allOf(PipelineType.class)
 				: pipelineTypes;
 		if (!supportedPipelines.contains(pipelineType))
 			return false;
 
-		Set<JourneyType> supportedFlows = flows.isEmpty()
-				? EnumSet.allOf(JourneyType.class)
-				: flows;
+		Set<JourneyMode> supportedJourneyModes = journeyModes.isEmpty()
+				? EnumSet.allOf(JourneyMode.class)
+				: journeyModes;
 
-		return supportedFlows.contains(flow);
+		return supportedJourneyModes.contains(journeyMode);
 	}
 
 	public boolean providerStage() {

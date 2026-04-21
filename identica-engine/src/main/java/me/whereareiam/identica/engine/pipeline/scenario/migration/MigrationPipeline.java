@@ -36,7 +36,7 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 			PipelineStateStore pipelineStateStore,
 			PipelineExecutor executor
 	) {
-		super(registry, messagesProvider, settingsProvider, pipelineStateStore, executor, PipelineType.MIGRATION);
+		super(registry, messagesProvider, settingsProvider, pipelineStateStore, PipelineType.MIGRATION, executor);
 	}
 
 	@Override

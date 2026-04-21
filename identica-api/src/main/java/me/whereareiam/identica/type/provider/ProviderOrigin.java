@@ -15,7 +15,7 @@ public enum ProviderOrigin {
 	MANUAL,
 
 	/**
-	 * Provider selected automatically by the platform or core flow.
+	 * Provider selected automatically by the platform or core journeyMode.
 	 */
 	AUTO
 }

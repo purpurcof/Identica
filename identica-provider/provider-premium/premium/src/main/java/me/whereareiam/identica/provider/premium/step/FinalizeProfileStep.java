@@ -37,15 +37,14 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 
 	@Override
 	public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
-		PremiumMessages.Verification verification = verification();
-		String username = context.getUsername();
+        String username = context.getUsername();
 		String ip = context.getIp();
 		if (username == null || username.isBlank() || ip == null || ip.isBlank())
-			return CompletableFuture.completedFuture(failed(verification));
+			return CompletableFuture.completedFuture(failed());
 
 		String providerSubject = readProfileId(username);
 		if (providerSubject == null || providerSubject.isBlank()) {
-			return CompletableFuture.completedFuture(failed(verification));
+			return CompletableFuture.completedFuture(failed());
 		}
 
 		if (hasAttempt(context)) clearAttempt(context);

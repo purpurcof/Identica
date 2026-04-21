@@ -238,7 +238,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 		identity.setGroupMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>" + label + " flow could not continue.</white>",
+				"<white>" + label + " journey could not continue.</white>",
 				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
@@ -291,7 +291,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 		policy.setGroupMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>" + label + " flow could not continue.</white>",
+				"<white>" + label + " journey could not continue.</white>",
 				"<white>Policy stage did not return a result.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
@@ -326,7 +326,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 		session.setGroupMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
-				"<white>" + label + " flow could not continue.</white>",
+				"<white>" + label + " journey could not continue.</white>",
 				"<white>Please contact a server administrator.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"

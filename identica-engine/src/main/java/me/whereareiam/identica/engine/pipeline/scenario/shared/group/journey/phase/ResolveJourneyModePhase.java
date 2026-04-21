@@ -4,13 +4,16 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
 import me.whereareiam.identica.event.pipeline.scenario.authentication.AuthenticationScenarioStartedEvent;
 import me.whereareiam.identica.event.pipeline.scenario.registration.RegistrationScenarioStartedEvent;
+import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
@@ -21,7 +24,8 @@ import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
+import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,7 +37,7 @@ import java.util.concurrent.CompletionStage;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
+public class ResolveJourneyModePhase implements PipelinePhase<JourneyState> {
 	private final ProviderOperations providerOperations;
 	private final AuthenticationJourneyRegistry authenticationJourneyRegistry;
 	private final RegistrationJourneyRegistry registrationJourneyRegistry;
@@ -42,7 +46,7 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 
 	@Override
 	public @NotNull String id() {
-		return "resolve-flow";
+		return "resolve-journey-mode";
 	}
 
 	@Override
@@ -60,32 +64,32 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 			@NotNull PipelineState pipelineState,
 			@NotNull JourneyState state
 	) {
-		if (state.getResult() != null)
-			return CompletableFuture.completedFuture(PhaseResult.pass(state));
+		if (state.getResult() != null) return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		ScenarioContext context = state.getContext();
 		PipelineType pipelineType = pipelineState.getPipelineType();
 		if (context == null || pipelineType == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		JourneyType flow = resolveFlow(context, pipelineType, state.getPending());
-		state.setFlow(flow);
-		fireScenarioStarted(context, flow, pipelineType, pipelineState);
+		JourneyMode journeyMode = resolveJourneyMode(context, pipelineType, state.getPending());
+		state.setJourneyMode(journeyMode);
+		fireScenarioStarted(context, journeyMode, pipelineType, pipelineState);
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}
 
 	private void fireScenarioStarted(
 			@NotNull ScenarioContext context,
-			@NotNull JourneyType flow,
+			@NotNull JourneyMode journeyMode,
 			@NotNull PipelineType pipelineType,
 			@NotNull PipelineState pipelineState
 	) {
 		boolean resumed = resolveResumed(pipelineType, pipelineState);
-		if (context instanceof me.whereareiam.identica.model.auth.AuthContext authContext) {
-			EventUtil.callEvent(new AuthenticationScenarioStartedEvent(authContext, flow, resumed));
+		if (context instanceof AuthContext authContext) {
+			EventUtil.callEvent(new AuthenticationScenarioStartedEvent(authContext, journeyMode, resumed));
 		}
-		if (context instanceof me.whereareiam.identica.model.registration.RegistrationContext registrationContext) {
-			EventUtil.callEvent(new RegistrationScenarioStartedEvent(registrationContext, flow, resumed));
+
+		if (context instanceof RegistrationContext registrationContext) {
+			EventUtil.callEvent(new RegistrationScenarioStartedEvent(registrationContext, journeyMode, resumed));
 		}
 	}
 
@@ -94,72 +98,63 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 			@NotNull PipelineState pipelineState
 	) {
 		if (pipelineType == PipelineType.AUTHENTICATION) {
-			me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem identity =
-					pipelineState.item(me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem.class)
-							.orElse(null);
+			IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
 			return identity != null && identity.isResumed();
 		}
 		if (pipelineType == PipelineType.REGISTRATION) {
-			me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityMetaItem identity =
-					pipelineState.item(me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityMetaItem.class)
-							.orElse(null);
+			IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
 			return identity != null && identity.isResumed();
 		}
 		if (pipelineType == PipelineType.MIGRATION) {
-			me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem identity =
-					pipelineState.item(me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem.class)
-							.orElse(null);
+			IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
 			return identity != null && identity.isResumed();
 		}
 		return false;
 	}
 
-	private @NotNull JourneyType resolveFlow(
+	private @NotNull JourneyMode resolveJourneyMode(
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
 			JourneyStateItem pending
 	) {
-		if (pending != null && pending.getFlow() != null)
-			return pending.getFlow();
+		if (pending != null && pending.getJourneyMode() != null)
+			return pending.getJourneyMode();
 
-		JourneyType preferred = preferredFlow(pipelineType);
-		if (isViable(context, pipelineType, preferred))
-			return preferred;
+		Settings.Scenario scenario = scenario(pipelineType);
+		JourneyMode preferred = scenario.getJourneyMode();
+		if (isViable(context, pipelineType, preferred)) return preferred;
 
-		JourneyType fallback = preferred == JourneyType.SEAMLESS
-				? JourneyType.INTERACTIVE
-				: JourneyType.SEAMLESS;
-		if (isViable(context, pipelineType, fallback))
-			return fallback;
+		if (scenario.getJourneyPolicy() != JourneyPolicy.STRICT) {
+			for (JourneyMode candidate : JourneyMode.values()) {
+				if (candidate == preferred) continue;
+				if (isViable(context, pipelineType, candidate))
+					return candidate;
+			}
+		}
 		return preferred;
 	}
 
 	private boolean isViable(
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType,
-			@NotNull JourneyType flow
+			@NotNull JourneyMode journeyMode
 	) {
 		JourneyRegistry registry = resolveRegistry(pipelineType);
-		JourneyPlan basePlan = registry.resolvePlan(context, pipelineType, flow, null);
+		JourneyPlan basePlan = registry.resolvePlan(context, pipelineType, journeyMode, null);
 		for (JourneyPlan.StageEntry entry : basePlan.stages()) {
-			if (entry == null)
-				continue;
-			if (entry.stage().providerStage())
-				continue;
-			if (!entry.steps().isEmpty())
-				return true;
+			if (entry == null) continue;
+			if (entry.stage().providerStage()) continue;
+			if (!entry.steps().isEmpty()) return true;
 		}
 
 		Set<String> checkedProviders = new HashSet<>();
-		List<InternalProvider> eligibleProviders = providerOperations.eligibleProviders(context, pipelineType, flow);
+		List<InternalProvider> eligibleProviders = providerOperations.eligibleProviders(context, pipelineType, journeyMode);
 		for (InternalProvider eligibleProvider : eligibleProviders) {
 			String providerId = providerId(eligibleProvider);
-			if (providerId.isBlank())
-				continue;
+			if (providerId.isBlank()) continue;
 			String normalized = providerId.toLowerCase();
-			if (!checkedProviders.add(normalized))
-				continue;
-			if (hasProviderSteps(registry.resolvePlan(context, pipelineType, flow, providerId)))
+			if (!checkedProviders.add(normalized)) continue;
+			if (hasProviderSteps(registry.resolvePlan(context, pipelineType, journeyMode, providerId)))
 				return true;
 		}
 
@@ -167,7 +162,7 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 		if (selectedProviderId != null && !selectedProviderId.isBlank()) {
 			String normalized = selectedProviderId.toLowerCase();
 			if (!checkedProviders.contains(normalized))
-				return hasProviderSteps(registry.resolvePlan(context, pipelineType, flow, selectedProviderId));
+				return hasProviderSteps(registry.resolvePlan(context, pipelineType, journeyMode, selectedProviderId));
 		}
 
 		return false;
@@ -175,36 +170,29 @@ public class ResolveFlowPhase implements PipelinePhase<JourneyState> {
 
 	private boolean hasProviderSteps(@NotNull JourneyPlan plan) {
 		for (JourneyPlan.StageEntry entry : plan.stages()) {
-			if (entry == null || !entry.stage().providerStage())
-				continue;
-			if (!entry.steps().isEmpty())
-				return true;
+			if (entry == null || !entry.stage().providerStage()) continue;
+			if (!entry.steps().isEmpty()) return true;
 		}
 		return false;
 	}
 
 	private @NotNull JourneyRegistry resolveRegistry(@NotNull PipelineType pipelineType) {
-		if (pipelineType == PipelineType.REGISTRATION)
-			return registrationJourneyRegistry;
-		if (pipelineType == PipelineType.MIGRATION)
-			return migrationJourneyRegistry;
+		if (pipelineType == PipelineType.REGISTRATION) return registrationJourneyRegistry;
+		if (pipelineType == PipelineType.MIGRATION) return migrationJourneyRegistry;
 		return authenticationJourneyRegistry;
 	}
 
-	private @NotNull JourneyType preferredFlow(@NotNull PipelineType pipelineType) {
+	private @NotNull Settings.Scenario scenario(@NotNull PipelineType pipelineType) {
 		Settings.Connection connection = settingsProvider.get().getConnection();
-		Settings.Scenario scenario = pipelineType == PipelineType.REGISTRATION
+		return pipelineType == PipelineType.REGISTRATION
 				? connection.getRegistration()
 				: pipelineType == PipelineType.MIGRATION
 						? connection.getMigration()
 						: connection.getAuthentication();
-		return scenario.getFlow();
 	}
 
 	private @NotNull String providerId(InternalProvider provider) {
-		if (provider == null || provider.getDescriptor() == null)
-			return "";
-
+		if (provider == null || provider.getDescriptor() == null) return "";
 		return provider.getDescriptor().getId();
 	}
 }

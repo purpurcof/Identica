@@ -12,13 +12,14 @@ import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.pipeline.journey.JourneyType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.identica.type.provider.ProviderState;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,18 +47,18 @@ class EnrollmentStepTest {
 
 	private static final SerializerEngine TEST_SERIALIZER = new SerializerEngine() {
 		@Override
-		public String serialize(Component component) {
+		public @NotNull String serialize(Component component) {
 			return component.toString();
 		}
 
 		@Override
-		public Component serialize(SerializerContent content) {
-			String message = content.getMessage() == null ? "" : content.getMessage();
+		public @NotNull Component serialize(SerializerContent content) {
+			String message = content.getMessage();
 			return Component.text(message);
 		}
 
 		@Override
-		public SerializerOptions.PlaceholderFormat getPlaceholderFormat() {
+		public @NotNull SerializerOptions.PlaceholderFormat getPlaceholderFormat() {
 			return SerializerOptions.PlaceholderFormat.CURLY_BRACES;
 		}
 	};
@@ -78,7 +79,7 @@ class EnrollmentStepTest {
 		);
 		RegistrationContext context = context("PlayerOne");
 
-		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyType.INTERACTIVE)))
+		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyMode.INTERACTIVE)))
 				.thenReturn(List.of(provider("premium", "Premium")));
 
 		StepResult result = step.execute(context).join();
@@ -104,7 +105,7 @@ class EnrollmentStepTest {
 		);
 		RegistrationContext context = context("PlayerOne");
 
-		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyType.INTERACTIVE)))
+		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyMode.INTERACTIVE)))
 				.thenReturn(List.of(provider("premium", "Premium")));
 
 		StepResult result = step.execute(context).join();
@@ -127,7 +128,7 @@ class EnrollmentStepTest {
 		);
 		RegistrationContext context = context("PlayerOne");
 
-		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyType.INTERACTIVE)))
+		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyMode.INTERACTIVE)))
 				.thenReturn(List.of(
 						provider("premium", "Premium"),
 						provider("cracked", "Cracked")

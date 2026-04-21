@@ -9,10 +9,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * Advance request details for in-session authentication flows.
+ * Advance request details for in-session authentication journeys.
  *
  * <p>The advance request should include the latest connection identity so pending
- * flows can re-evaluate IP-sensitive steps. When {@code identity}
+ * journeyModes can re-evaluate IP-sensitive steps. When {@code identity}
  * is omitted, the stored context data is reused.</p>
  */
 @Getter

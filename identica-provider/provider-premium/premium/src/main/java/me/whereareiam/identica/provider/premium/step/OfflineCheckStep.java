@@ -50,11 +50,11 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 		String username = context.getUsername();
 		String ip = context.getIp();
 		if (username == null || username.isBlank() || ip == null || ip.isBlank())
-			return CompletableFuture.completedFuture(failed(verification));
+			return CompletableFuture.completedFuture(failed());
 
 		String providerSubject = readProfileId(username);
 		if (providerSubject == null || providerSubject.isBlank()) {
-			return CompletableFuture.completedFuture(failed(verification));
+			return CompletableFuture.completedFuture(failed());
 		}
 
 		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
@@ -72,6 +72,7 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 			}
 
 			clearProfileItem(username);
+			clearHandshakeAttempt(username, ip);
 			handshakeStore.invalidateInstruction(username, ip);
 			Logger.debug(
 					"Premium offline verification rejected offline session username=%s ip=%s subject=%s offline=%s",
@@ -80,7 +81,7 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 					providerSubject,
 					offlineUuid
 			);
-			return CompletableFuture.completedFuture(StepResult.failed(joinLines(verification.getInvalidSession())));
+			return CompletableFuture.completedFuture(StepResult.failed(""));
 		}
 		Logger.debug(
 				"Premium offline verification accepted online session username=%s ip=%s subject=%s offline=%s",
@@ -121,5 +122,9 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 
 	private void markHandshakeAttempt(@NotNull String username, @NotNull String ip) {
 		attemptStore.markAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
+	}
+
+	private void clearHandshakeAttempt(@NotNull String username, @NotNull String ip) {
+		attemptStore.clearAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
 	}
 }

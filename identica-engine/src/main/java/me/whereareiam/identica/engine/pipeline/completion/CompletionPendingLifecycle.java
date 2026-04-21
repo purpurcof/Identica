@@ -2,7 +2,6 @@ package me.whereareiam.identica.engine.pipeline.completion;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.pipeline.completion.CompletionCoordinator;
 import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.event.EventListener;
@@ -20,20 +19,20 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 public class CompletionPendingLifecycle implements EventListener {
 	private final CompletionPendingStore completionPendingStore;
-	private final CompletionCoordinator completionCoordinator;
+	private final CompletionPipeline completionPipeline;
 	private final IdentityService identityService;
 	private final RoutingIntentStore routingIntentStore;
 
 	@Inject
 	public CompletionPendingLifecycle(
 			@NotNull CompletionPendingStore completionPendingStore,
-			@NotNull CompletionCoordinator completionCoordinator,
+			@NotNull CompletionPipeline completionPipeline,
 			@NotNull IdentityService identityService,
 			@NotNull RoutingIntentStore routingIntentStore,
 			@NotNull EventManager eventManager
 	) {
 		this.completionPendingStore = completionPendingStore;
-		this.completionCoordinator = completionCoordinator;
+		this.completionPipeline = completionPipeline;
 		this.identityService = identityService;
 		this.routingIntentStore = routingIntentStore;
 		eventManager.register(this);
@@ -54,7 +53,7 @@ public class CompletionPendingLifecycle implements EventListener {
 		if (completionPendingStore.peek(event.getIdentity().getUniqueId()).isEmpty()) return;
 		if (hasRoutingIntent(event.getIdentity().getUniqueId())) return;
 
-		completionCoordinator.consumeAndExecute(event.getIdentity());
+		completionPipeline.consumeAndExecute(event.getIdentity());
 	}
 
 	@IdenticEvent
@@ -63,7 +62,7 @@ public class CompletionPendingLifecycle implements EventListener {
 		if (intent.getReason() != RoutingReason.COMPLETION) return;
 
 		identityService.find(intent.getConnectionUniqueId())
-				.ifPresent(completionCoordinator::consumeAndExecute);
+				.ifPresent(completionPipeline::consumeAndExecute);
 	}
 
 	private boolean hasRoutingIntent(@NotNull java.util.UUID connectionUniqueId) {

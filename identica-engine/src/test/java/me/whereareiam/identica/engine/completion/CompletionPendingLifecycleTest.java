@@ -1,7 +1,7 @@
 package me.whereareiam.identica.engine.completion;
 
+import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
-import me.whereareiam.identica.pipeline.completion.CompletionCoordinator;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
@@ -37,13 +37,13 @@ class CompletionPendingLifecycleTest {
 	@Test
 	void sessionOpenedStoresPendingCompletion() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
-		CompletionCoordinator completionCoordinator = mock(CompletionCoordinator.class);
+		CompletionPipeline completionPipeline = mock(CompletionPipeline.class);
 		IdentityService identityService = mock(IdentityService.class);
 		RoutingIntentStore routingIntentStore = mock(RoutingIntentStore.class);
 		EventManager eventManager = mock(EventManager.class);
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				pendingStore,
-				completionCoordinator,
+				completionPipeline,
 				identityService,
 				routingIntentStore,
 				eventManager
@@ -63,19 +63,19 @@ class CompletionPendingLifecycleTest {
 		));
 
 		verify(pendingStore).put(any(), any());
-		verify(completionCoordinator, never()).consumeAndExecute(any());
+		verify(completionPipeline, never()).consumeAndExecute(any());
 	}
 
 	@Test
 	void identityAttachedConsumesPendingCompletionWithoutRoutingTarget() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
-		CompletionCoordinator completionCoordinator = mock(CompletionCoordinator.class);
+		CompletionPipeline completionPipeline = mock(CompletionPipeline.class);
 		IdentityService identityService = mock(IdentityService.class);
 		RoutingIntentStore routingIntentStore = mock(RoutingIntentStore.class);
 		EventManager eventManager = mock(EventManager.class);
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				pendingStore,
-				completionCoordinator,
+				completionPipeline,
 				identityService,
 				routingIntentStore,
 				eventManager
@@ -86,19 +86,19 @@ class CompletionPendingLifecycleTest {
 
 		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
 
-		verify(completionCoordinator).consumeAndExecute(identity);
+		verify(completionPipeline).consumeAndExecute(identity);
 	}
 
 	@Test
 	void identityAttachedDefersWhileCompletedRoutingTargetExists() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
-		CompletionCoordinator completionCoordinator = mock(CompletionCoordinator.class);
+		CompletionPipeline completionPipeline = mock(CompletionPipeline.class);
 		IdentityService identityService = mock(IdentityService.class);
 		RoutingIntentStore routingIntentStore = mock(RoutingIntentStore.class);
 		EventManager eventManager = mock(EventManager.class);
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				pendingStore,
-				completionCoordinator,
+				completionPipeline,
 				identityService,
 				routingIntentStore,
 				eventManager
@@ -109,19 +109,19 @@ class CompletionPendingLifecycleTest {
 
 		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
 
-		verify(completionCoordinator, never()).consumeAndExecute(identity);
+		verify(completionPipeline, never()).consumeAndExecute(identity);
 	}
 
 	@Test
 	void routingTargetReachedExecutesPendingCompletionForCompletedTarget() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
-		CompletionCoordinator completionCoordinator = mock(CompletionCoordinator.class);
+		CompletionPipeline completionPipeline = mock(CompletionPipeline.class);
 		IdentityService identityService = mock(IdentityService.class);
 		RoutingIntentStore routingIntentStore = mock(RoutingIntentStore.class);
 		EventManager eventManager = mock(EventManager.class);
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				pendingStore,
-				completionCoordinator,
+				completionPipeline,
 				identityService,
 				routingIntentStore,
 				eventManager
@@ -131,7 +131,7 @@ class CompletionPendingLifecycleTest {
 
 		lifecycle.onRoutingIntentReached(new RoutingIntentReachedEvent(completionIntent(identity.getUniqueId()), "lobby"));
 
-		verify(completionCoordinator).consumeAndExecute(identity);
+		verify(completionPipeline).consumeAndExecute(identity);
 	}
 
 	private static RoutingIntent completionIntent(UUID connectionUniqueId) {

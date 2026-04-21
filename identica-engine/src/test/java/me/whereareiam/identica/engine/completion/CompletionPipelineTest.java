@@ -1,11 +1,19 @@
 package me.whereareiam.identica.engine.completion;
 
-import me.whereareiam.identica.engine.pipeline.completion.DefaultCompletionCoordinator;
+import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
+import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
+import me.whereareiam.identica.engine.pipeline.completion.CompletionPipelineRegistry;
+import me.whereareiam.identica.engine.pipeline.completion.group.context.CompletionContextGroup;
+import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.BuildCompletionContextPhase;
+import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.ResolveCompletionProviderPhase;
+import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.ResolveCompletionSessionPhase;
+import me.whereareiam.identica.engine.pipeline.completion.group.step.CompletionStepGroup;
+import me.whereareiam.identica.engine.pipeline.completion.group.step.phase.ExecuteCompletionStepsPhase;
 import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
-import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
 import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
-import me.whereareiam.identica.pipeline.completion.step.CompletionStep;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
+import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
+import me.whereareiam.identica.pipeline.completion.step.CompletionStep;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
@@ -31,18 +39,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class DefaultCompletionCoordinatorTest {
+class CompletionPipelineTest {
 	@Test
 	void consumeAndExecuteResolvesSessionAndProviderSteps() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
 		CompletionExtensionRegistry extensionRegistry = mock(CompletionExtensionRegistry.class);
 		SessionService sessionService = mock(SessionService.class);
 		ProviderManager providerManager = mock(ProviderManager.class);
-		DefaultCompletionCoordinator coordinator = new DefaultCompletionCoordinator(
+		CompletionPipeline pipeline = new CompletionPipeline(
 				pendingStore,
-				extensionRegistry,
-				sessionService,
-				providerManager
+				registry(sessionService, providerManager, extensionRegistry),
+				new PipelineExecutor()
 		);
 
 		UUID connectionUniqueId = UUID.randomUUID();
@@ -76,7 +83,7 @@ class DefaultCompletionCoordinatorTest {
 		when(step.shouldExecute(org.mockito.ArgumentMatchers.any())).thenReturn(true);
 		when(step.getName()).thenReturn("test-step");
 
-		coordinator.consumeAndExecute(identity);
+		pipeline.consumeAndExecute(identity);
 
 		verify(step).execute(argThat((CompletionContext context) ->
 				context.getIdentity() == identity
@@ -85,6 +92,21 @@ class DefaultCompletionCoordinatorTest {
 						&& context.getProvider() == provider
 						&& context.isSessionReused()
 		));
+	}
+
+	private CompletionPipelineRegistry registry(
+			SessionService sessionService,
+			ProviderManager providerManager,
+			CompletionExtensionRegistry extensionRegistry
+	) {
+		return new CompletionPipelineRegistry(
+				new CompletionContextGroup(),
+				new CompletionStepGroup(),
+				new ResolveCompletionSessionPhase(sessionService),
+				new ResolveCompletionProviderPhase(providerManager),
+				new BuildCompletionContextPhase(),
+				new ExecuteCompletionStepsPhase(extensionRegistry)
+		);
 	}
 
 	private static final class TestIdentity extends Identity {

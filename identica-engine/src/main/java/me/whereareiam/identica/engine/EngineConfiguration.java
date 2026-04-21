@@ -3,10 +3,10 @@ package me.whereareiam.identica.engine;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.pipeline.completion.CompletionCoordinator;
 import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
+import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
+import me.whereareiam.identica.engine.pipeline.completion.CompletionPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
-import me.whereareiam.identica.engine.pipeline.completion.DefaultCompletionCoordinator;
 import me.whereareiam.identica.engine.pipeline.completion.DefaultCompletionExtensionRegistry;
 import me.whereareiam.identica.engine.pipeline.AccountClearPipelineListener;
 import me.whereareiam.identica.engine.pipeline.DefaultPipelineExtensionRegistry;
@@ -46,7 +46,8 @@ public class EngineConfiguration extends AbstractModule {
 		bind(PipelineRegistry.class).to(AuthenticationPipelineRegistry.class).asEagerSingleton();
 		bind(PipelineExtensionRegistry.class).to(DefaultPipelineExtensionRegistry.class).asEagerSingleton();
 		bind(CompletionExtensionRegistry.class).to(DefaultCompletionExtensionRegistry.class).asEagerSingleton();
-		bind(CompletionCoordinator.class).to(DefaultCompletionCoordinator.class).asEagerSingleton();
+		bind(CompletionPipelineRegistry.class).asEagerSingleton();
+		bind(CompletionPipeline.class).asEagerSingleton();
 		bind(CompletionPendingLifecycle.class).asEagerSingleton();
 
 		bind(ScenarioRegistry.class).asEagerSingleton();

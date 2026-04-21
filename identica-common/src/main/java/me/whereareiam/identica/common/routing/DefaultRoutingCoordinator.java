@@ -3,6 +3,7 @@ package me.whereareiam.identica.common.routing;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.routing.attempt.RoutingAttemptFinishedEvent;
 import me.whereareiam.identica.event.routing.attempt.RoutingAttemptStartedEvent;
@@ -42,14 +43,29 @@ public class DefaultRoutingCoordinator implements RoutingCoordinator, RoutingAtt
 
 	@Override
 	public void accept(@NotNull RoutingSignal signal) {
+		Logger.debug("Routing signal accepted type=%s pipeline=%s connection=%s stage=%s step=%s",
+				signal.getType(),
+				signal.getPipelineType(),
+				signal.connectionUniqueId(),
+				signal.getStage() != null ? signal.getStage().id() : null,
+				signal.getStep() != null ? signal.getStep().getName() : null);
 		apply(routingPlanner.plan(signal));
 	}
 
 	@Override
 	public void markReached(@NotNull UUID connectionUniqueId, @NotNull String serverName) {
 		RoutingIntent intent = routingIntentStore.markReached(connectionUniqueId, serverName).orElse(null);
-		if (intent == null) return;
+		if (intent == null) {
+			Logger.debug("Routing reached ignored connection=%s server=%s reason=no-matching-intent",
+					connectionUniqueId, serverName);
+			return;
+		}
 
+		Logger.debug("Routing reached connection=%s target=%s reason=%s attempts=%s",
+				connectionUniqueId,
+				serverName,
+				intent.getReason(),
+				intent.getAttemptState().getAttempts());
 		publishReached(intent, serverName);
 		if (intent.getAttemptPolicy().isConsumeOnReached())
 			clear(connectionUniqueId, RoutingClearReason.REACHED);
@@ -62,26 +78,50 @@ public class DefaultRoutingCoordinator implements RoutingCoordinator, RoutingAtt
 			intent.setStatus(RoutingIntentStatus.CLEARED);
 			intent.setUpdatedAt(System.currentTimeMillis());
 		}
-
+		Logger.debug("Routing intent cleared connection=%s reason=%s hadIntent=%s",
+				connectionUniqueId, reason, intent != null);
 		eventManager.call(new RoutingIntentClearedEvent(connectionUniqueId, intent, reason));
 	}
 
 	@Override
 	public @NotNull RoutingAttemptDecision decide(@NotNull RoutingAttemptRequest request) {
 		RoutingIntent intent = routingIntentStore.peek(request.getConnectionUniqueId()).orElse(null);
-		if (intent == null) return RoutingAttemptDecision.skipped("no-intent");
-		if (intent.getStatus() != RoutingIntentStatus.PENDING)
+		if (intent == null) {
+			Logger.debug("Routing attempt skipped connection=%s trigger=%s reason=no-intent current=%s",
+					request.getConnectionUniqueId(), request.getTrigger(), request.getCurrentServer());
+			return RoutingAttemptDecision.skipped("no-intent");
+		}
+		if (intent.getStatus() != RoutingIntentStatus.PENDING) {
+			Logger.debug("Routing attempt skipped connection=%s trigger=%s reason=intent-not-pending status=%s target=%s current=%s",
+					request.getConnectionUniqueId(), request.getTrigger(), intent.getStatus(), intent.getEndpoint().getServer(), request.getCurrentServer());
 			return RoutingAttemptDecision.skipped("intent-not-pending");
+		}
 
 		String currentServer = request.getCurrentServer();
-		if (currentServer != null && currentServer.equalsIgnoreCase(intent.getEndpoint().getServer()))
+		if (currentServer != null && currentServer.equalsIgnoreCase(intent.getEndpoint().getServer())) {
+			Logger.debug("Routing attempt skipped connection=%s trigger=%s reason=already-reached target=%s",
+					request.getConnectionUniqueId(), request.getTrigger(), intent.getEndpoint().getServer());
 			return RoutingAttemptDecision.skipped("already-reached");
+		}
 
 		if (!intent.getAttemptPolicy().allowsAttempt(intent.getAttemptState().getAttempts())) {
+			Logger.debug("Routing attempt exhausted connection=%s trigger=%s target=%s attempts=%s mode=%s",
+					request.getConnectionUniqueId(),
+					request.getTrigger(),
+					intent.getEndpoint().getServer(),
+					intent.getAttemptState().getAttempts(),
+					intent.getAttemptPolicy().getMode());
 			exhaust(intent);
 			return RoutingAttemptDecision.exhausted(intent);
 		}
 
+		Logger.debug("Routing attempt allowed connection=%s trigger=%s target=%s current=%s attempts=%s mode=%s",
+				request.getConnectionUniqueId(),
+				request.getTrigger(),
+				intent.getEndpoint().getServer(),
+				request.getCurrentServer(),
+				intent.getAttemptState().getAttempts(),
+				intent.getAttemptPolicy().getMode());
 		eventManager.call(new RoutingAttemptStartedEvent(intent, request));
 		return RoutingAttemptDecision.allowed(intent);
 	}
@@ -89,8 +129,19 @@ public class DefaultRoutingCoordinator implements RoutingCoordinator, RoutingAtt
 	@Override
 	public void record(@NotNull RoutingAttemptReport report) {
 		RoutingIntent intent = routingIntentStore.recordAttempt(report).orElse(null);
-		if (intent == null) return;
+		if (intent == null) {
+			Logger.debug("Routing attempt report ignored connection=%s trigger=%s accepted=%s server=%s reason=no-intent",
+					report.getConnectionUniqueId(), report.getTrigger(), report.isAccepted(), report.getServer());
+			return;
+		}
 
+		Logger.debug("Routing attempt recorded connection=%s trigger=%s accepted=%s server=%s attempts=%s message=%s",
+				report.getConnectionUniqueId(),
+				report.getTrigger(),
+				report.isAccepted(),
+				report.getServer(),
+				intent.getAttemptState().getAttempts(),
+				report.getMessage());
 		eventManager.call(new RoutingAttemptFinishedEvent(intent, report));
 	}
 
@@ -101,9 +152,14 @@ public class DefaultRoutingCoordinator implements RoutingCoordinator, RoutingAtt
 
 	private void apply(@NotNull RoutingPlan plan) {
 		RoutingPlanAction action = plan.getAction();
-		if (action == RoutingPlanAction.IGNORE) return;
+		if (action == RoutingPlanAction.IGNORE) {
+			Logger.debug("Routing plan ignored");
+			return;
+		}
 
 		if (action == RoutingPlanAction.CLEAR) {
+			Logger.debug("Routing plan clearing connection=%s reason=%s",
+					plan.getConnectionUniqueId(), plan.getClearReason());
 			if (plan.getConnectionUniqueId() != null && plan.getClearReason() != null)
 				clear(plan.getConnectionUniqueId(), plan.getClearReason());
 			return;
@@ -113,10 +169,23 @@ public class DefaultRoutingCoordinator implements RoutingCoordinator, RoutingAtt
 		if (intent == null) return;
 
 		RoutingIntent previous = routingIntentStore.consume(intent.getConnectionUniqueId()).orElse(null);
-		if (previous != null)
+		if (previous != null) {
+			Logger.debug("Routing intent replaced connection=%s oldTarget=%s newTarget=%s reason=%s",
+					intent.getConnectionUniqueId(),
+					previous.getEndpoint().getServer(),
+					intent.getEndpoint().getServer(),
+					intent.getReason());
 			eventManager.call(new RoutingIntentClearedEvent(intent.getConnectionUniqueId(), previous, RoutingClearReason.REPLACED));
+		}
 
 		routingIntentStore.put(intent);
+		Logger.debug("Routing intent stored connection=%s target=%s reason=%s provider=%s step=%s policy=%s",
+				intent.getConnectionUniqueId(),
+				intent.getEndpoint().getServer(),
+				intent.getReason(),
+				intent.getProviderId(),
+				intent.getStepName(),
+				intent.getAttemptPolicy().getMode());
 		if (action == RoutingPlanAction.START || previous == null) {
 			publishStarted(intent);
 			return;

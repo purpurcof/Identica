@@ -11,6 +11,7 @@ import me.whereareiam.identica.event.step.StepFinishedEvent;
 import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.event.step.StepStartedEvent;
 import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
@@ -496,6 +497,14 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		if (flow == JourneyType.INTERACTIVE
 				&& requiresOnlinePresence(journeyStep)
 				&& !isOnline(context)) {
+			Logger.debug(
+					"Journey step waiting for online presence pipeline=%s stage=%s step=%s username=%s connection=%s",
+					pipelineType,
+					stage.getType().id(),
+					journeyStep.getStep().getName(),
+					context.getUsername(),
+					context.getConnectionUniqueId()
+			);
 			return StepResult.waiting("");
 		}
 

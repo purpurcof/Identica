@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.routing.RoutingTargetMissingEvent;
 import me.whereareiam.identica.listener.DynamicListener;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
@@ -30,10 +31,22 @@ public class ServerPreConnectListener implements DynamicListener<ServerPreConnec
 	public void onEvent(ServerPreConnectEvent event) {
 		UUID connectionId = event.getPlayer().getUniqueId();
 		RoutingIntent currentIntent = routingAttemptService.current(connectionId).orElse(null);
-		if (currentIntent == null) return;
+		if (currentIntent == null) {
+			Logger.debug("Velocity pre-connect routing skipped player=%s username=%s original=%s reason=no-intent",
+					connectionId,
+					event.getPlayer().getUsername(),
+					event.getOriginalServer().getServerInfo().getName());
+			return;
+		}
 		String targetServer = currentIntent.getEndpoint().getServer();
-		if (targetServer.isBlank()) return;
+		if (targetServer.isBlank()) {
+			Logger.debug("Velocity pre-connect routing skipped player=%s reason=blank-target",
+					connectionId);
+			return;
+		}
 		if (event.getOriginalServer().getServerInfo().getName().equalsIgnoreCase(targetServer)) {
+			Logger.debug("Velocity pre-connect routing already targeted player=%s target=%s",
+					connectionId, targetServer);
 			return;
 		}
 
@@ -45,7 +58,16 @@ public class ServerPreConnectListener implements DynamicListener<ServerPreConnec
 				RoutingAttemptTrigger.PRE_CONNECT,
 				currentServer
 		));
-		if (!decision.isAllowed() || decision.getIntent() == null) return;
+		if (!decision.isAllowed() || decision.getIntent() == null) {
+			Logger.debug("Velocity pre-connect routing skipped player=%s original=%s current=%s target=%s reason=%s exhausted=%s",
+					connectionId,
+					event.getOriginalServer().getServerInfo().getName(),
+					currentServer,
+					targetServer,
+					decision.getReason(),
+					decision.isExhausted());
+			return;
+		}
 
 		RoutingIntent intent = decision.getIntent();
 		targetServer = intent.getEndpoint().getServer();
@@ -53,6 +75,8 @@ public class ServerPreConnectListener implements DynamicListener<ServerPreConnec
 
 		Optional<RegisteredServer> server = proxyServer.getServer(targetServer);
 		if (server.isEmpty()) {
+			Logger.debug("Velocity pre-connect routing target missing player=%s target=%s",
+					connectionId, targetServer);
 			RoutingTargetMissingEvent missingEvent = new RoutingTargetMissingEvent(
 					connectionId,
 					event.getPlayer().getUsername(),
@@ -73,6 +97,10 @@ public class ServerPreConnectListener implements DynamicListener<ServerPreConnec
 		}
 
 		event.setResult(ServerPreConnectEvent.ServerResult.allowed(server.get()));
+		Logger.debug("Velocity pre-connect routing applied player=%s original=%s target=%s",
+				connectionId,
+				event.getOriginalServer().getServerInfo().getName(),
+				targetServer);
 		routingAttemptService.record(new RoutingAttemptReport(
 				connectionId,
 				RoutingAttemptTrigger.PRE_CONNECT,

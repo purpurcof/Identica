@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
@@ -31,7 +32,11 @@ public class RoutingPlanner {
 
 	public @NotNull RoutingPlan plan(@NotNull RoutingSignal signal) {
 		UUID connectionId = signal.connectionUniqueId();
-		if (connectionId == null) return RoutingPlan.ignore();
+		if (connectionId == null) {
+			Logger.debug("Routing signal ignored because connection id is missing type=%s pipeline=%s",
+					signal.getType(), signal.getPipelineType());
+			return RoutingPlan.ignore();
+		}
 
 		return switch (signal.getType()) {
 			case STEP_FINISHED -> planStep(signal, connectionId);
@@ -41,29 +46,61 @@ public class RoutingPlanner {
 
 	private @NotNull RoutingPlan planStep(@NotNull RoutingSignal signal, @NotNull UUID connectionId) {
 		StepResult result = signal.getStepResult();
-		if (result == null) return RoutingPlan.ignore();
-		if (result.getStatus() == StepResult.StepStatus.COMPLETE) return RoutingPlan.ignore();
-		if (result.getStatus() != StepResult.StepStatus.WAITING)
+		if (result == null) {
+			Logger.debug("Step routing ignored because step result is missing connection=%s pipeline=%s stage=%s step=%s",
+					connectionId, signal.getPipelineType(), stageId(signal), stepName(signal));
+			return RoutingPlan.ignore();
+		}
+		if (result.getStatus() == StepResult.StepStatus.COMPLETE) {
+			Logger.debug("Step routing ignored for completed step connection=%s pipeline=%s stage=%s step=%s",
+					connectionId, signal.getPipelineType(), stageId(signal), stepName(signal));
+			return RoutingPlan.ignore();
+		}
+		if (result.getStatus() != StepResult.StepStatus.WAITING) {
+			Logger.debug("Step routing clearing because step status is terminal connection=%s pipeline=%s stage=%s step=%s status=%s",
+					connectionId, signal.getPipelineType(), stageId(signal), stepName(signal), result.getStatus());
 			return RoutingPlan.clear(connectionId, RoutingClearReason.PIPELINE_FAILED);
+		}
 
 		Settings.Routing.Target target = resolveStepTarget(signal);
-		if (target == null || isBlank(target.getTarget()))
+		if (target == null || isBlank(target.getTarget())) {
+			Logger.debug("Step routing clearing because target is missing connection=%s pipeline=%s stage=%s step=%s",
+					connectionId, signal.getPipelineType(), stageId(signal), stepName(signal));
 			return RoutingPlan.clear(connectionId, RoutingClearReason.NO_TARGET);
+		}
 
+		Logger.debug("Step routing planned connection=%s pipeline=%s stage=%s step=%s target=%s",
+				connectionId, signal.getPipelineType(), stageId(signal), stepName(signal), target.getTarget());
 		return RoutingPlan.replace(createIntent(signal, connectionId, target, RoutingReason.STEP));
 	}
 
 	private @NotNull RoutingPlan planPipeline(@NotNull RoutingSignal signal, @NotNull UUID connectionId) {
 		PipelineResult result = signal.getPipelineResult();
-		if (result == null) return RoutingPlan.ignore();
-		if (result.getStatus() == PipelineStatus.WAITING) return RoutingPlan.ignore();
-		if (result.getStatus() != PipelineStatus.COMPLETE)
+		if (result == null) {
+			Logger.debug("Completion routing ignored because pipeline result is missing connection=%s pipeline=%s",
+					connectionId, signal.getPipelineType());
+			return RoutingPlan.ignore();
+		}
+		if (result.getStatus() == PipelineStatus.WAITING) {
+			Logger.debug("Completion routing ignored for waiting pipeline connection=%s pipeline=%s",
+					connectionId, signal.getPipelineType());
+			return RoutingPlan.ignore();
+		}
+		if (result.getStatus() != PipelineStatus.COMPLETE) {
+			Logger.debug("Completion routing clearing because pipeline status is terminal connection=%s pipeline=%s status=%s",
+					connectionId, signal.getPipelineType(), result.getStatus());
 			return RoutingPlan.clear(connectionId, RoutingClearReason.PIPELINE_FAILED);
+		}
 
 		Settings.Routing.Target target = resolveCompletionTarget(signal);
-		if (target == null || isBlank(target.getTarget()))
+		if (isBlank(target.getTarget())) {
+			Logger.debug("Completion routing clearing because target is missing connection=%s pipeline=%s",
+					connectionId, signal.getPipelineType());
 			return RoutingPlan.clear(connectionId, RoutingClearReason.NO_TARGET);
+		}
 
+		Logger.debug("Completion routing planned connection=%s pipeline=%s target=%s",
+				connectionId, signal.getPipelineType(), target.getTarget());
 		return RoutingPlan.replace(createIntent(signal, connectionId, target, RoutingReason.COMPLETION));
 	}
 
@@ -168,5 +205,13 @@ public class RoutingPlanner {
 
 	private boolean isBlank(String value) {
 		return value == null || value.isBlank();
+	}
+
+	private String stageId(@NotNull RoutingSignal signal) {
+		return signal.getStage() != null ? signal.getStage().id() : null;
+	}
+
+	private String stepName(@NotNull RoutingSignal signal) {
+		return signal.getStep() != null ? signal.getStep().getName() : null;
 	}
 }

@@ -2,6 +2,7 @@ package me.whereareiam.identica.provider.premium.platform.velocity.handshake;
 
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import me.whereareiam.identica.handshake.HandshakeApplier;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import me.whereareiam.identica.platform.velocity.api.handshake.VelocityHandshakeContext;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
@@ -15,5 +16,9 @@ public class PremiumHandshakeApplier implements HandshakeApplier<VelocityHandsha
 
 		PreLoginEvent event = context.event();
 		event.setResult(PreLoginEvent.PreLoginComponentResult.forceOnlineMode());
+		Logger.debug(
+				"Premium handshake applied force-online username=%s",
+				event.getUsername()
+		);
 	}
 }

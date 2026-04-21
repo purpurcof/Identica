@@ -25,7 +25,7 @@ import me.whereareiam.identica.platform.velocity.listener.connection.LoginListen
 import me.whereareiam.identica.platform.velocity.listener.connection.PreLoginListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.PlayerChooseInitialServerListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.server.ServerPreConnectListener;
-import me.whereareiam.identica.platform.velocity.listener.connection.server.VelocityPostConnectListener;
+import me.whereareiam.identica.platform.velocity.listener.connection.server.ServerPostConnectListener;
 import me.whereareiam.identica.platform.velocity.util.VelocityUtil;
 
 @Singleton
@@ -57,7 +57,7 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 		registerAwaitingListener(PreLoginEvent.class, injector.getInstance(PreLoginListener.class));
 		registerListener(GameProfileRequestEvent.class, injector.getInstance(GameProfileRequestListener.class));
 		registerListener(LoginEvent.class, injector.getInstance(LoginListener.class));
-		registerListener(ServerPostConnectEvent.class, injector.getInstance(VelocityPostConnectListener.class));
+		registerListener(ServerPostConnectEvent.class, injector.getInstance(ServerPostConnectListener.class));
 		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(PlayerChooseInitialServerListener.class));
 		registerListener(ServerPreConnectEvent.class, injector.getInstance(ServerPreConnectListener.class));
 		registerListener(DisconnectEvent.class, injector.getInstance(DisconnectListener.class));

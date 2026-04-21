@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.routing.RoutingTargetMissingEvent;
 import me.whereareiam.identica.listener.DynamicListener;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
@@ -29,19 +30,30 @@ public class PlayerChooseInitialServerListener implements DynamicListener<Player
 	@Override
 	public void onEvent(PlayerChooseInitialServerEvent event) {
 		UUID connectionId = event.getPlayer().getUniqueId();
+		Logger.debug("Velocity initial server routing check player=%s username=%s",
+				connectionId, event.getPlayer().getUsername());
 		RoutingAttemptDecision decision = routingAttemptService.decide(new RoutingAttemptRequest(
 				connectionId,
 				RoutingAttemptTrigger.INITIAL_SERVER,
 				null
 		));
-		if (!decision.isAllowed() || decision.getIntent() == null) return;
+		if (!decision.isAllowed() || decision.getIntent() == null) {
+			Logger.debug("Velocity initial server routing skipped player=%s reason=%s exhausted=%s",
+					connectionId, decision.getReason(), decision.isExhausted());
+			return;
+		}
 
 		RoutingIntent intent = decision.getIntent();
 		String targetServer = intent.getEndpoint().getServer();
-		if (targetServer.isBlank()) return;
+		if (targetServer.isBlank()) {
+			Logger.debug("Velocity initial server routing skipped player=%s reason=blank-target", connectionId);
+			return;
+		}
 
 		Optional<RegisteredServer> server = proxyServer.getServer(targetServer);
 		if (server.isEmpty()) {
+			Logger.debug("Velocity initial server routing target missing player=%s target=%s",
+					connectionId, targetServer);
 			RoutingTargetMissingEvent missingEvent = new RoutingTargetMissingEvent(
 					connectionId,
 					event.getPlayer().getUsername(),
@@ -62,6 +74,8 @@ public class PlayerChooseInitialServerListener implements DynamicListener<Player
 		}
 
 		event.setInitialServer(server.get());
+		Logger.debug("Velocity initial server routing applied player=%s target=%s",
+				connectionId, targetServer);
 		routingAttemptService.record(new RoutingAttemptReport(
 				connectionId,
 				RoutingAttemptTrigger.INITIAL_SERVER,

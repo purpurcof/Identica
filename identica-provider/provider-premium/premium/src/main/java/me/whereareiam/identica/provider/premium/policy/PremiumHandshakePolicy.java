@@ -8,6 +8,7 @@ import me.whereareiam.identica.handshake.HandshakePolicy;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
@@ -59,18 +60,42 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 
 		ProviderContext provider = request.getProvider();
 		if (provider != null && PremiumConstants.PROVIDER_ID.equalsIgnoreCase(provider.getProviderId())) {
+			Logger.debug(
+					"Premium handshake forcing online for provider context username=%s ip=%s subject=%s",
+					username,
+					ip,
+					provider.getProviderSubject()
+			);
 			requestForceOnline(username, ip);
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 
 		if (attemptStore.hasAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip)) {
+			Logger.debug(
+					"Premium handshake allowed existing verify attempt username=%s ip=%s",
+					username,
+					ip
+			);
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 
 		String preferredProviderId = resolvePreferredLinkedProviderId(username);
 		if (preferredProviderId != null) {
 			if (PremiumConstants.PROVIDER_ID.equalsIgnoreCase(preferredProviderId)) {
+				Logger.debug(
+						"Premium handshake forcing online for preferred provider username=%s ip=%s provider=%s",
+						username,
+						ip,
+						preferredProviderId
+				);
 				requestForceOnline(username, ip);
+			} else {
+				Logger.debug(
+						"Premium handshake allowed non-premium preferred provider username=%s ip=%s provider=%s",
+						username,
+						ip,
+						preferredProviderId
+				);
 			}
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
@@ -89,6 +114,11 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 						return HandshakeDecision.allow();
 
 					attemptStore.markAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip);
+					Logger.debug(
+							"Premium handshake marked verify attempt after profile lookup username=%s ip=%s",
+							username,
+							ip
+					);
 					return requestAndAllow(username, ip);
 				});
 	}
@@ -111,6 +141,12 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 		);
 		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE, true);
 		handshakeStore.putInstruction(instruction);
+		Logger.debug(
+				"Premium handshake queued force-online instruction username=%s ip=%s ttl=%d",
+				username,
+				ip,
+				ttlMillis
+		);
 	}
 
 	private String resolvePreferredLinkedProviderId(String username) {

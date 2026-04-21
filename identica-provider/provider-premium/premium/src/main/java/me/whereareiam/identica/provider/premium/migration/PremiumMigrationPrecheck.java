@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckContext;
@@ -48,5 +49,12 @@ public class PremiumMigrationPrecheck implements ProviderMigrationPrecheck {
 		instruction.setAttribute(PremiumHandshakeAttributes.FORCE_ONLINE, true);
 
 		handshakeStore.putInstruction(instruction);
+		Logger.debug(
+				"Premium migration precheck queued force-online instruction username=%s ip=%s ttl=%d provider=%s",
+				username,
+				ip,
+				ttlMs,
+				context.getProviderId()
+		);
 	}
 }

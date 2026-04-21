@@ -5,13 +5,14 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListener;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityResumeDecisionAdapter;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class VelocityPostConnectListener implements DynamicListener<ServerPostConnectEvent> {
+public class ServerPostConnectListener implements DynamicListener<ServerPostConnectEvent> {
 	private final VelocityResumeDecisionAdapter resumeDecisionAdapter;
 	private final RoutingCoordinator routingCoordinator;
 
@@ -25,8 +26,16 @@ public class VelocityPostConnectListener implements DynamicListener<ServerPostCo
 		String currentServer = event.getPlayer().getCurrentServer()
 				.map(server -> server.getServerInfo().getName())
 				.orElse(null);
-		if (currentServer == null) return;
+		if (currentServer == null) {
+			Logger.debug("Velocity post-connect routing reached skipped player=%s reason=no-current-server",
+					event.getPlayer().getUniqueId());
+			return;
+		}
 
+		Logger.debug("Velocity post-connect routing reached check player=%s current=%s previous=%s",
+				event.getPlayer().getUniqueId(),
+				currentServer,
+				event.getPreviousServer() != null ? event.getPreviousServer().getServerInfo().getName() : null);
 		routingCoordinator.markReached(event.getPlayer().getUniqueId(), currentServer);
 	}
 }

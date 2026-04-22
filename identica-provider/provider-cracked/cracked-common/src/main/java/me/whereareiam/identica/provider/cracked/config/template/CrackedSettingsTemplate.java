@@ -32,6 +32,9 @@ public class CrackedSettingsTemplate implements TemplateProvider<CrackedSettings
 		CrackedSettings.Scenario scenario = new CrackedSettings.Scenario();
 		scenario.setRegistration(registration);
 		scenario.setAuthentication(authentication);
+		CrackedSettings.Scenario.ChangePassword changePassword = new CrackedSettings.Scenario.ChangePassword();
+		changePassword.setRequireRepeat(true);
+		scenario.setChangePassword(changePassword);
 		config.setScenario(scenario);
 
 		CrackedSettings.Scenario.Registration.Username username = new CrackedSettings.Scenario.Registration.Username();

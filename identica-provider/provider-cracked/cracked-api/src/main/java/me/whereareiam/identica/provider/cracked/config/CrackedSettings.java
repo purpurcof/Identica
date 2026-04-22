@@ -20,6 +20,7 @@ public class CrackedSettings {
 	public static class Scenario {
 		private Registration registration;
 		private Authentication authentication;
+		private ChangePassword changePassword;
 
 		@Getter
 		@Setter
@@ -82,7 +83,13 @@ public class CrackedSettings {
 					private int thresholdPercentage;
 				}
 			}
+		}
 
+		@Getter
+		@Setter
+		@ToString
+		public static class ChangePassword {
+			private boolean requireRepeat;
 		}
 	}
 

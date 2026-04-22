@@ -65,7 +65,7 @@ public class CrackedCommandsTemplate implements TemplateProvider<CrackedCommands
 				.aliases(List.of("changepassword", "changepass", "password"))
 				.permission("")
 				.description("Change cracked account password")
-				.usage("{alias} <current> <new> <repeat>")
+				.usage("{alias} <current> <new> [repeat]")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
 						.duration(2)

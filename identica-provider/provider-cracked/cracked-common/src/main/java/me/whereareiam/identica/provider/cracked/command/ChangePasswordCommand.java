@@ -3,16 +3,18 @@ package me.whereareiam.identica.provider.cracked.command;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
+import me.whereareiam.identica.annotation.Default;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.provider.cracked.CrackedConstants;
 import me.whereareiam.identica.provider.cracked.account.CrackedAccountService;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
+import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
 import me.whereareiam.identica.provider.cracked.cryptography.CryptographyService;
 import me.whereareiam.identica.provider.cracked.cryptography.PasswordCandidate;
 import me.whereareiam.identica.provider.cracked.model.CrackedAccount;
@@ -28,18 +30,19 @@ import java.util.UUID;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class ChangePasswordCommand {
 	private final Provider<CrackedMessages> messagesProvider;
+	private final Provider<CrackedSettings> settingsProvider;
 	private final SessionService sessionService;
 	private final CrackedAccountService accountService;
 	private final CryptographyService cryptographyService;
 	private final PasswordRules passwordPolicy;
 
 	@Definition("change-password")
-	@Command("changepassword <current> <new> <repeat>")
+	@Command("changepassword <current> <new> [repeat]")
 	public void changePassword(
 			@NotNull Actor sender,
 			@Argument(value = "current", parser = "password") String current,
 			@Argument(value = "new", parser = "password") String next,
-			@Argument(value = "repeat", parser = "password") String repeat
+			@Argument(value = "repeat", parser = "password") @Default("") String repeat
 	) {
 		if (!(sender instanceof Identity identity))
 			return;
@@ -51,7 +54,7 @@ public class ChangePasswordCommand {
 			return;
 		}
 
-		if (next == null || !next.equals(repeat)) {
+		if (next == null || isRepeatMismatch(next, repeat)) {
 			sendMessage(identity, messages.getMismatch());
 			return;
 		}
@@ -92,6 +95,22 @@ public class ChangePasswordCommand {
 			);
 		}
 		sendMessage(identity, messages.getSuccess());
+	}
+
+	private boolean isRepeatMismatch(@NotNull String next, String repeat) {
+		if (repeat != null && !repeat.isBlank())
+			return !next.equals(repeat);
+
+		return requiresRepeat();
+	}
+
+	private boolean requiresRepeat() {
+		CrackedSettings settings = settingsProvider.get();
+		if (settings == null || settings.getScenario() == null)
+			return true;
+
+		CrackedSettings.Scenario.ChangePassword changePassword = settings.getScenario().getChangePassword();
+		return changePassword == null || changePassword.isRequireRepeat();
 	}
 
 	private void sendMessage(@NotNull Identity identity, String message) {

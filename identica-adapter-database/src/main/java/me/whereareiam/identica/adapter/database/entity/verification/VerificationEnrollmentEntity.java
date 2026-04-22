@@ -19,7 +19,9 @@ import java.util.UUID;
 public class VerificationEnrollmentEntity implements EntitySchemaProvider {
 	private UUID uniqueId;
 	private String methodId;
-	private String payload;
+	private String enrollmentId;
+	private String credential;
+	private String label;
 	private long createdAt;
 	private long enabledAt;
 
@@ -32,17 +34,24 @@ public class VerificationEnrollmentEntity implements EntitySchemaProvider {
 			default -> "CHAR(36)";
 		};
 		String timeType = "SQLITE".equals(type) ? "INTEGER" : "BIGINT";
+		String credentialType = switch (type) {
+			case "POSTGRES" -> "TEXT";
+			case "H2" -> "CLOB";
+			default -> "TEXT";
+		};
 
 		return """
 				CREATE TABLE IF NOT EXISTS identica_verification_enrollments (
 					unique_id %s NOT NULL,
 					method_id VARCHAR(64) NOT NULL,
-					payload VARCHAR(1024) NOT NULL,
+					enrollment_id VARCHAR(64) NOT NULL,
+					credential %s NOT NULL,
+					label VARCHAR(64),
 					created_at %s,
 					enabled_at %s,
-					PRIMARY KEY (unique_id, method_id),
+					PRIMARY KEY (unique_id, method_id, enrollment_id),
 					FOREIGN KEY (unique_id) REFERENCES identica_accounts(unique_id) ON DELETE CASCADE
 				)
-				""".formatted(uuidType, timeType, timeType);
+				""".formatted(uuidType, credentialType, timeType, timeType);
 	}
 }

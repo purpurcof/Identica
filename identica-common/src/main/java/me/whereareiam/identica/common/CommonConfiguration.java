@@ -60,7 +60,9 @@ import me.whereareiam.identica.common.sentinel.SentinelRegistry;
 import me.whereareiam.identica.common.sentinel.ResumeSpamSentinelDefinition;
 import me.whereareiam.identica.common.verification.DefaultVerificationRegistry;
 import me.whereareiam.identica.common.verification.DefaultVerificationService;
+import me.whereareiam.identica.common.verification.challenge.VerificationChallengeStore;
 import me.whereareiam.identica.common.verification.enrollment.VerificationEnrollmentStore;
+import me.whereareiam.identica.common.verification.codec.VerificationStateCodec;
 import me.whereareiam.identica.common.verification.type.totp.TotpVerificationMethod;
 import me.whereareiam.identica.common.routing.DefaultRoutingCoordinator;
 import me.whereareiam.identica.common.routing.DefaultRoutingIntentStore;
@@ -151,6 +153,8 @@ public class CommonConfiguration extends AbstractModule {
 		bind(PrepareStateStore.class).to(DefaultPrepareStateStore.class).asEagerSingleton();
 		bind(CompletionPendingStore.class).to(DefaultCompletionPendingStore.class).asEagerSingleton();
 		bind(VerificationEnrollmentStore.class).asEagerSingleton();
+		bind(VerificationChallengeStore.class).asEagerSingleton();
+		bind(VerificationStateCodec.class).asEagerSingleton();
 
 		// Replication
 		OptionalBinder.newOptionalBinder(binder(), Key.get(ReplicationAdapter.class, Names.named("replicationAdapter")))

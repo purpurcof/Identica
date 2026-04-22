@@ -32,10 +32,10 @@ public class VerificationMethodSuggestions implements SuggestionProvider<Actor> 
 		String prefix = normalizePrefix(input);
 		List<Suggestion> suggestions = new ArrayList<>();
 		for (VerificationMethod method : verificationRegistry.values()) {
-			if (method == null || method.id().isBlank())
+			if (method == null || method.descriptor().getId().isBlank())
 				continue;
 
-			String id = method.id();
+			String id = method.descriptor().getId();
 			if (!prefix.isEmpty() && !id.toLowerCase(Locale.ROOT).startsWith(prefix))
 				continue;
 

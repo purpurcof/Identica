@@ -1,102 +1,50 @@
 package me.whereareiam.identica.common.verification.type.totp;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
+import me.whereareiam.identica.model.verification.VerificationMethodDescriptor;
+import me.whereareiam.identica.type.verification.VerificationMethodCapability;
+import me.whereareiam.identica.verification.VerificationChallengeProcess;
+import me.whereareiam.identica.verification.VerificationEnrollmentProcess;
 import me.whereareiam.identica.verification.VerificationMethod;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static me.whereareiam.identica.common.verification.RecoveryCodeGenerator.generateCodes;
+import java.util.Set;
 
 @Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class TotpVerificationMethod implements VerificationMethod {
-	private static final int SECRET_BYTES = 20;
+	private final Provider<Verification> verificationProvider;
+	private final TotpEnrollmentProcess enrollmentProcess;
+	private final TotpChallengeProcess challengeProcess;
 
 	@Override
-	public @NotNull String id() {
-		return "totp";
-	}
-
-	@Override
-	public @NotNull String displayName(@NotNull Verification config) {
-		String displayName = config.getTotp().getDisplayName();
-		return displayName.isBlank() ? id() : displayName;
-	}
-
-	@Override
-	public @NotNull VerificationEnrollmentSession beginEnrollment(
-			@NotNull UUID uniqueId,
-			@NotNull String username,
-			@Nullable String providerId,
-			@NotNull Verification config
-	) {
-		Verification.Totp totp = config.getTotp();
-		String resolvedProviderId = providerId == null || providerId.isBlank() ? "unknown" : providerId;
-		String secret = TotpCodec.generateSecret(SECRET_BYTES);
-		String label = totp.getLabelFormat()
-				.replace("{player}", username)
-				.replace("{providerId}", resolvedProviderId);
-
-		String uri = TotpCodec.buildOtpAuthUri(
-				totp.getIssuer(),
-				label,
-				secret,
-				totp.getDigits(),
-				totp.periodSeconds()
-		);
-
-		return VerificationEnrollmentSession.builder()
-				.uniqueId(uniqueId)
-				.username(username)
-				.providerId(resolvedProviderId)
-				.methodId(id())
-				.payload(secret)
-				.methodData(Map.of(
-						"secret", secret,
-						"uri", uri
+	public @NotNull VerificationMethodDescriptor descriptor() {
+		String displayName = verificationProvider.get().getTotp().getDisplayName();
+		return VerificationMethodDescriptor.builder()
+				.id("totp")
+				.displayName(displayName.isBlank() ? "totp" : displayName)
+				.builtIn(true)
+				.userEnrollable(true)
+				.capabilities(Set.of(
+						VerificationMethodCapability.USER_ENROLLABLE,
+						VerificationMethodCapability.CHALLENGE,
+						VerificationMethodCapability.RECOVERY_CODES,
+						VerificationMethodCapability.PROTECTED_ACTION
 				))
-				.createdAt(System.currentTimeMillis())
 				.build();
 	}
 
 	@Override
-	public boolean verifyEnrollment(
-			@NotNull VerificationEnrollmentSession pending,
-			@NotNull String input,
-			@NotNull Verification config
-	) {
-		return verifyChallenge(pending.getPayload(), input, config);
+	public @NotNull VerificationEnrollmentProcess<?> enrollment() {
+		return enrollmentProcess;
 	}
 
 	@Override
-	public boolean verifyChallenge(
-			@NotNull String payload,
-			@NotNull String input,
-			@NotNull Verification config
-	) {
-		Verification.Totp totp = config.getTotp();
-		return TotpCodec.verify(
-				payload,
-				input,
-				totp.getDigits(),
-				totp.periodSeconds(),
-				totp.getAllowedPastWindows(),
-				totp.getAllowedFutureWindows()
-		);
-	}
-
-	@Override
-	public @NotNull List<String> generateRecoveryCodes(@NotNull Verification config) {
-		Verification.RecoveryCodes recoveryCodes = config.getTotp().getRecoveryCodes();
-		return generateCodes(
-				recoveryCodes.getAmount(),
-				recoveryCodes.getLength(),
-				recoveryCodes.getGroupSize()
-		);
+	public @NotNull VerificationChallengeProcess<?> challenge() {
+		return challengeProcess;
 	}
 }

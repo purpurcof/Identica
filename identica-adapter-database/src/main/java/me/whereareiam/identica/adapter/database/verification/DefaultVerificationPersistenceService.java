@@ -58,12 +58,19 @@ public class DefaultVerificationPersistenceService implements VerificationPersis
 
 	@Override
 	public @NotNull VerificationEnrollment upsertEnrollment(@NotNull VerificationEnrollment enrollment) {
-		Optional<VerificationEnrollment> existing = findEnrollment(enrollment.getUniqueId(), enrollment.getMethodId());
+		Optional<VerificationEnrollment> existing = enrollmentRepository.find(
+						enrollment.getUniqueId(),
+						enrollment.getMethodId(),
+						enrollment.getEnrollmentId()
+				)
+				.map(VerificationEnrollmentMapper::toModel);
 		if (existing.isPresent()) {
 			enrollmentRepository.update(
 					enrollment.getUniqueId(),
 					enrollment.getMethodId(),
-					enrollment.getPayload(),
+					enrollment.getEnrollmentId(),
+					enrollment.getCredential(),
+					enrollment.getLabel(),
 					enrollment.getCreatedAt(),
 					enrollment.getEnabledAt()
 			);
@@ -73,7 +80,9 @@ public class DefaultVerificationPersistenceService implements VerificationPersis
 		enrollmentRepository.insert(
 				enrollment.getUniqueId(),
 				enrollment.getMethodId(),
-				enrollment.getPayload(),
+				enrollment.getEnrollmentId(),
+				enrollment.getCredential(),
+				enrollment.getLabel(),
 				enrollment.getCreatedAt(),
 				enrollment.getEnabledAt()
 		);

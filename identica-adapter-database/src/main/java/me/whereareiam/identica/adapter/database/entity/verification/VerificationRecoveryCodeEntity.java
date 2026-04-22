@@ -41,9 +41,7 @@ public class VerificationRecoveryCodeEntity implements EntitySchemaProvider {
 					created_at %s,
 					used_at %s,
 					PRIMARY KEY (unique_id, method_id, code_hash),
-					FOREIGN KEY (unique_id, method_id)
-						REFERENCES identica_verification_enrollments(unique_id, method_id)
-						ON DELETE CASCADE
+					FOREIGN KEY (unique_id) REFERENCES identica_accounts(unique_id) ON DELETE CASCADE
 				)
 				""".formatted(uuidType, timeType, timeType);
 	}

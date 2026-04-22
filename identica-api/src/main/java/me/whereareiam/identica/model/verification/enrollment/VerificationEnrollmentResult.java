@@ -6,17 +6,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.identica.type.verification.status.VerificationEnrollmentStatus;
+import me.whereareiam.identica.model.verification.process.VerificationProcessDisplay;
+import me.whereareiam.identica.type.verification.VerificationEnrollmentStatus;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * Result payload for verification enrollment start and confirmation operations.
+ * Result payload for verification enrollment operations.
  *
- * <p>Depending on {@link #status}, optional fields may describe method-specific
- * enrollment bootstrap data, generated recovery codes, or auto-selection side
- * effects.</p>
+ * @param <S> enrollment state type
  */
 @Getter
 @Setter
@@ -24,11 +25,34 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class VerificationEnrollmentResult {
+public class VerificationEnrollmentResult<S extends VerificationEnrollmentState> {
 	private VerificationEnrollmentStatus status;
+	private String enrollmentId;
 	private String methodId;
 	private String providerId;
 	private String autoSelectedProviderId;
+	private String credential;
+	private String label;
+	private @Nullable S state;
+	private @Nullable VerificationProcessDisplay display;
 	private Map<String, String> methodData;
 	private List<String> recoveryCodes;
+
+	public static <S extends VerificationEnrollmentState> @NotNull VerificationEnrollmentResult<S> waiting(
+			@NotNull String enrollmentId,
+			@NotNull String methodId,
+			@Nullable String providerId,
+			@Nullable S state,
+			@Nullable VerificationProcessDisplay display
+	) {
+		return VerificationEnrollmentResult.<S>builder()
+				.status(VerificationEnrollmentStatus.WAITING)
+				.enrollmentId(enrollmentId)
+				.methodId(methodId)
+				.providerId(providerId)
+				.state(state)
+				.display(display)
+				.methodData(display != null ? display.getPlaceholders() : null)
+				.build();
+	}
 }

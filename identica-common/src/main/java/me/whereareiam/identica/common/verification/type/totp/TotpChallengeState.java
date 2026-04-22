@@ -1,4 +1,4 @@
-package me.whereareiam.identica.model.verification.challenge;
+package me.whereareiam.identica.common.verification.type.totp;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.identica.pipeline.state.PipelineStateItem;
+import me.whereareiam.identica.model.verification.challenge.VerificationChallengeState;
 
 @Getter
 @Setter
@@ -14,6 +14,6 @@ import me.whereareiam.identica.pipeline.state.PipelineStateItem;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class VerificationChallengeAttempt implements PipelineStateItem {
-	private String value;
+public class TotpChallengeState implements VerificationChallengeState {
+	private int attempts;
 }

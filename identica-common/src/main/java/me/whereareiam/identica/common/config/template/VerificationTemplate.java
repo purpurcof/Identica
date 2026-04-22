@@ -24,6 +24,7 @@ public class VerificationTemplate implements TemplateProvider<Verification> {
 		totp.setAllowedFutureWindows(1);
 
 		Verification.RecoveryCodes recoveryCodes = new Verification.RecoveryCodes();
+		recoveryCodes.setEnabled(true);
 		recoveryCodes.setAmount(8);
 		recoveryCodes.setLength(10);
 		recoveryCodes.setGroupSize(4);

@@ -18,7 +18,9 @@ import java.util.UUID;
 public class VerificationEnrollment {
 	private UUID uniqueId;
 	private String methodId;
-	private String payload;
+	private String enrollmentId;
+	private String credential;
+	private String label;
 	private long createdAt;
 	private long enabledAt;
 }

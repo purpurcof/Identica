@@ -14,8 +14,10 @@ import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
+import me.whereareiam.identica.model.verification.interaction.CodeVerificationInteraction;
+import me.whereareiam.identica.model.verification.interaction.SavedVerificationInteraction;
 import me.whereareiam.identica.verification.VerificationService;
+import me.whereareiam.identica.verification.VerificationInteraction;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import org.jetbrains.annotations.NotNull;
@@ -79,13 +81,10 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 		Identity identity = requireIdentity(sender, verificationMessages().getPlayerOnly());
 		if (identity == null) return;
 
-		VerificationEnrollmentSession pendingEnrollment = verificationService.findPendingEnrollment(identity.getUniqueId()).orElse(null);
-		if (pendingEnrollment == null) {
-			sendMessage(sender, verificationMessages().getConfirm().getNoPending(), Map.of());
-			return;
-		}
-
-		messagePresenter.presentEnrollmentResult(sender, verificationService.confirmEnrollment(identity.getUniqueId(), input));
+		messagePresenter.presentEnrollmentResult(
+				sender,
+				verificationService.submitEnrollmentInteraction(identity.getUniqueId(), interaction(identity.getUniqueId(), input))
+		);
 	}
 
 	@Definition("verification-enroll-cancel")
@@ -104,6 +103,18 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 
 	private Messages.Commands.Verification verificationMessages() {
 		return messagesProvider.get().getCommands().getVerification();
+	}
+
+	private VerificationInteraction interaction(@NotNull java.util.UUID uniqueId, @NotNull String input) {
+		if ("saved".equalsIgnoreCase(input.trim()))
+			return SavedVerificationInteraction.builder()
+					.subjectUniqueId(uniqueId)
+					.build();
+
+		return CodeVerificationInteraction.builder()
+				.subjectUniqueId(uniqueId)
+				.code(input)
+				.build();
 	}
 
 	private void sendMessage(@NotNull Actor sender, @Nullable String message, @NotNull Map<String, String> placeholders) {

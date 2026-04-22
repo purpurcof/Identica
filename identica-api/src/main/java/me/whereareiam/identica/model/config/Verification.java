@@ -55,6 +55,7 @@ public class Verification {
 	@Setter
 	@ToString
 	public static class RecoveryCodes {
+		private boolean enabled;
 		private int amount;
 		private int length;
 		private int groupSize;

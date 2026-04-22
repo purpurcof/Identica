@@ -15,19 +15,44 @@ public interface VerificationEnrollmentRepository {
 	@SqlQuery("""
 			SELECT unique_id AS uniqueId,
 			       method_id AS methodId,
-			       payload AS payload,
+			       enrollment_id AS enrollmentId,
+			       credential AS credential,
+			       label AS label,
 			       created_at AS createdAt,
 			       enabled_at AS enabledAt
 			  FROM identica_verification_enrollments
 			 WHERE unique_id = :uniqueId
 			   AND method_id = :methodId
+			 ORDER BY enabled_at DESC
+			 LIMIT 1
 			""")
 	Optional<VerificationEnrollmentEntity> find(@Bind("uniqueId") UUID uniqueId, @Bind("methodId") String methodId);
 
 	@SqlQuery("""
 			SELECT unique_id AS uniqueId,
 			       method_id AS methodId,
-			       payload AS payload,
+			       enrollment_id AS enrollmentId,
+			       credential AS credential,
+			       label AS label,
+			       created_at AS createdAt,
+			       enabled_at AS enabledAt
+			  FROM identica_verification_enrollments
+			 WHERE unique_id = :uniqueId
+			   AND method_id = :methodId
+			   AND enrollment_id = :enrollmentId
+			""")
+	Optional<VerificationEnrollmentEntity> find(
+			@Bind("uniqueId") UUID uniqueId,
+			@Bind("methodId") String methodId,
+			@Bind("enrollmentId") String enrollmentId
+	);
+
+	@SqlQuery("""
+			SELECT unique_id AS uniqueId,
+			       method_id AS methodId,
+			       enrollment_id AS enrollmentId,
+			       credential AS credential,
+			       label AS label,
 			       created_at AS createdAt,
 			       enabled_at AS enabledAt
 			  FROM identica_verification_enrollments
@@ -37,31 +62,37 @@ public interface VerificationEnrollmentRepository {
 
 	@SqlUpdate("""
 			INSERT INTO identica_verification_enrollments (
-				unique_id, method_id, payload, created_at, enabled_at
+				unique_id, method_id, enrollment_id, credential, label, created_at, enabled_at
 			) VALUES (
-				:uniqueId, :methodId, :payload, :createdAt, :enabledAt
+				:uniqueId, :methodId, :enrollmentId, :credential, :label, :createdAt, :enabledAt
 			)
 			""")
 	void insert(
 			@Bind("uniqueId") UUID uniqueId,
 			@Bind("methodId") String methodId,
-			@Bind("payload") String payload,
+			@Bind("enrollmentId") String enrollmentId,
+			@Bind("credential") String credential,
+			@Bind("label") String label,
 			@Bind("createdAt") long createdAt,
 			@Bind("enabledAt") long enabledAt
 	);
 
 	@SqlUpdate("""
 			UPDATE identica_verification_enrollments
-			   SET payload = :payload,
+			   SET credential = :credential,
+			       label = :label,
 			       created_at = :createdAt,
 			       enabled_at = :enabledAt
 			 WHERE unique_id = :uniqueId
 			   AND method_id = :methodId
+			   AND enrollment_id = :enrollmentId
 			""")
 	void update(
 			@Bind("uniqueId") UUID uniqueId,
 			@Bind("methodId") String methodId,
-			@Bind("payload") String payload,
+			@Bind("enrollmentId") String enrollmentId,
+			@Bind("credential") String credential,
+			@Bind("label") String label,
 			@Bind("createdAt") long createdAt,
 			@Bind("enabledAt") long enabledAt
 	);

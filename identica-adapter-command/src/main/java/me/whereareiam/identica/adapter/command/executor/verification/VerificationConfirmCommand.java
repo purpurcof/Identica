@@ -19,8 +19,10 @@ import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.pipeline.verification.VerificationDisablePendingState;
-import me.whereareiam.identica.model.verification.challenge.VerificationChallengeAttempt;
+import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
+import me.whereareiam.identica.model.verification.interaction.CodeVerificationInteraction;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.type.verification.VerificationChallengeStatus;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
@@ -113,9 +115,17 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
 		if (state == null || state.item(JourneyStateItem.class).isEmpty()) return false;
 
-		long ttlMs = verificationProvider.get().challengeTtlMillis();
-		state.putItem(VerificationChallengeAttempt.builder().value(input).build(), ttlMs);
-		pipelineStateStore.save(reference, state, ttlMs);
+		VerificationChallengeResult<?> result = verificationService.submitChallengeInteraction(
+				identity.getUniqueId(),
+				currentProvider(state),
+				"authentication",
+				CodeVerificationInteraction.builder()
+						.subjectUniqueId(identity.getUniqueId())
+						.code(input)
+						.build()
+		);
+		if (result.getStatus() == VerificationChallengeStatus.METHOD_NOT_SELECTED)
+			return false;
 
 		ConnectionDecision decision = connectionCoordinator.advance(AdvanceRequest.builder()
 				.connectionUniqueId(identity.getUniqueId())
@@ -132,6 +142,13 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 		}
 
 		return true;
+	}
+
+	private @Nullable String currentProvider(@NotNull PipelineState state) {
+		if (state.getScenario() == null || state.getScenario().getProvider() == null)
+			return null;
+
+		return state.getScenario().getProvider().getProviderId();
 	}
 
 	private Messages.Commands.Verification verificationMessages() {

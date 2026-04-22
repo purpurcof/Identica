@@ -6,13 +6,12 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.verification.VerificationDisableResult;
 import me.whereareiam.identica.model.verification.VerificationResetResult;
 import me.whereareiam.identica.model.verification.selection.VerificationSelectionResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
 import me.whereareiam.identica.type.verification.status.VerificationDisableStatus;
-import me.whereareiam.identica.type.verification.status.VerificationEnrollmentStatus;
+import me.whereareiam.identica.type.verification.VerificationEnrollmentStatus;
 import me.whereareiam.identica.type.verification.status.VerificationResetStatus;
 import me.whereareiam.identica.type.verification.status.VerificationSelectionStatus;
 import me.whereareiam.identica.verification.VerificationRegistry;
@@ -35,7 +34,6 @@ import java.util.Objects;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class VerificationMessagePresenter {
 	private final Provider<Messages> messagesProvider;
-	private final Provider<Verification> verificationProvider;
 	private final VerificationRegistry verificationRegistry;
 
 	public void presentEnrollmentResult(@NotNull Actor sender, @NotNull VerificationEnrollmentResult result) {
@@ -47,7 +45,6 @@ public class VerificationMessagePresenter {
 
 		switch (status) {
 			case STARTED -> sendLines(sender, enrollMessages.getPending(), enrollmentPlaceholders(result.getMethodData()));
-			case PENDING_SAVED_CONFIRMATION -> sendRecoveryCodes(sender, result.getRecoveryCodes());
 			case ACTIVATED -> {
 				sendMessage(sender, confirmMessages.getEnabled(), methodPlaceholders(result.getMethodId()));
 				if (result.getAutoSelectedProviderId() != null && !result.getAutoSelectedProviderId().isBlank()) {
@@ -60,8 +57,15 @@ public class VerificationMessagePresenter {
 			case UNKNOWN_METHOD -> sendMessage(sender, enrollMessages.getUnknownMethod(), methodPlaceholders(result.getMethodId()));
 			case ALREADY_ENROLLED -> sendMessage(sender, enrollMessages.getAlreadyEnrolled(), methodPlaceholders(result.getMethodId()));
 			case METHOD_UNAVAILABLE -> sendMessage(sender, confirmMessages.getMethodUnavailable(), methodAndProviderPlaceholders(result.getMethodId(), result.getProviderId()));
-			case INVALID_CODE -> sendMessage(sender, confirmMessages.getInvalidCode(), Map.of());
 			case NOT_ALLOWED -> sendMessage(sender, messages.getNotAllowed(), Map.of());
+			case WAITING -> {
+				if (result.getRecoveryCodes() != null && !result.getRecoveryCodes().isEmpty()) {
+					sendRecoveryCodes(sender, result.getRecoveryCodes());
+				} else {
+					sendLines(sender, enrollMessages.getPending(), enrollmentPlaceholders(result.getMethodData()));
+				}
+			}
+			case INVALID -> sendMessage(sender, confirmMessages.getInvalidCode(), Map.of());
 		}
 	}
 
@@ -194,7 +198,7 @@ public class VerificationMessagePresenter {
 	private String displayMethod(@Nullable String methodId) {
 		if (methodId == null || methodId.isBlank()) return "";
 		return verificationRegistry.find(methodId)
-				.map(method -> method.displayName(verificationProvider.get()))
+				.map(method -> method.descriptor().getDisplayName())
 				.filter(value -> !value.isBlank())
 				.orElse(methodId);
 	}

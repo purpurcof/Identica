@@ -4,19 +4,15 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
-import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.model.verification.VerificationTarget;
-import me.whereareiam.identica.model.verification.VerificationAttemptResult;
-import me.whereareiam.identica.model.verification.challenge.VerificationChallengeAttempt;
+import me.whereareiam.identica.model.verification.VerificationGateRequest;
+import me.whereareiam.identica.model.verification.VerificationGateResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
+import me.whereareiam.identica.type.verification.VerificationGateStatus;
 import me.whereareiam.identica.verification.VerificationService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,23 +24,17 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 public class PremiumVerificationStep extends InteractiveStep {
 	private final Provider<PremiumMessages> messagesProvider;
-	private final Provider<Verification> verificationProvider;
-	private final PipelineStateStore pipelineStateStore;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final VerificationService verificationService;
 
 	@Inject
 	public PremiumVerificationStep(
 			Provider<PremiumMessages> messagesProvider,
-			Provider<Verification> verificationProvider,
-			PipelineStateStore pipelineStateStore,
 			ProviderLinkPersistenceService providerLinkPersistenceService,
 			VerificationService verificationService
 	) {
 		super("premium-authentication-verification");
 		this.messagesProvider = messagesProvider;
-		this.verificationProvider = verificationProvider;
-		this.pipelineStateStore = pipelineStateStore;
 		this.providerLinkPersistenceService = providerLinkPersistenceService;
 		this.verificationService = verificationService;
 	}
@@ -63,52 +53,35 @@ public class PremiumVerificationStep extends InteractiveStep {
 		UUID uniqueId = providerLinkPersistenceService.findBySubject(provider.getProviderId(), provider.getProviderSubject())
 				.map(AccountProviderLink::getUniqueId)
 				.orElse(null);
-
 		if (uniqueId == null) return CompletableFuture.completedFuture(StepResult.complete(context));
 
-		String input = consumeAttempt(context, verificationProvider.get().challengeTtlMillis());
-		VerificationAttemptResult result = verificationService.verify(
-				VerificationTarget.providerSelection(uniqueId, provider.getProviderId(), "authentication"),
-				input
-		);
-		if (result.getStatus() == null)
-			return CompletableFuture.completedFuture(StepResult.complete(context));
+		VerificationGateResult result = verificationService.evaluateGate(VerificationGateRequest.builder()
+				.uniqueId(uniqueId)
+				.providerId(provider.getProviderId())
+				.purpose("authentication")
+				.build());
 
 		PremiumMessages.Verification.Authentication messages = messagesProvider.get().getVerification().getAuthentication();
-		return CompletableFuture.completedFuture(switch (result.getStatus()) {
-			case PROVIDER_UNSUPPORTED, PROVIDER_VERIFICATION_DISABLED -> StepResult.complete(context);
-			case METHOD_NOT_SELECTED -> result.isRequired()
-					? StepResult.denied(messages.getRequired())
-					: StepResult.complete(context);
-			case INPUT_REQUIRED -> StepResult.waiting(joinLines(messages.getPrompt()));
-			case VERIFIED -> StepResult.complete(context);
-			case INVALID_INPUT -> StepResult.waiting(joinInvalid(messages));
-			case METHOD_UNAVAILABLE -> StepResult.denied(messages.getUnavailable());
-		});
+		return CompletableFuture.completedFuture(toStepResult(result, context, messages));
 	}
 
-	private @Nullable String consumeAttempt(@NotNull ScenarioContext context, long ttlMs) {
-		PipelineStateReference reference = PipelineStateReference.from(context);
-		PipelineState stored = pipelineStateStore.find(reference).orElse(null);
-		if (stored == null) return null;
+	private StepResult toStepResult(
+			@NotNull VerificationGateResult result,
+			@NotNull ScenarioContext context,
+			PremiumMessages.Verification.@NotNull Authentication messages
+	) {
+		VerificationGateStatus status = result.getStatus();
+		if (status == VerificationGateStatus.SATISFIED || status == VerificationGateStatus.SKIPPED)
+			return StepResult.complete(context);
+		if (status == VerificationGateStatus.WAITING)
+			return StepResult.waiting(joinLines(messages.getPrompt()));
 
-		VerificationChallengeAttempt input = stored.item(VerificationChallengeAttempt.class).orElse(null);
-		if (input == null) return null;
+		if (status == VerificationGateStatus.DENIED)
+			return StepResult.denied(result.getMethodId() == null
+					? messages.getRequired()
+					: messages.getUnavailable());
 
-		stored.removeItem(VerificationChallengeAttempt.class);
-		if (ttlMs > 0)
-			pipelineStateStore.save(reference, stored, ttlMs);
-
-		return input.getValue();
-	}
-
-	private String joinInvalid(PremiumMessages.Verification.Authentication messages) {
-		String invalid = messages.getInvalid();
-		String prompt = joinLines(messages.getPrompt());
-		if (invalid.isBlank()) return prompt;
-		if (prompt.isBlank()) return invalid;
-
-		return invalid + "\n" + prompt;
+		return StepResult.failed("");
 	}
 
 	private static @NotNull String joinLines(@Nullable List<String> lines) {

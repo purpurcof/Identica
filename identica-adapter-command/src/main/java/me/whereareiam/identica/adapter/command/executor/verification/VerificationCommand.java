@@ -3,6 +3,7 @@ package me.whereareiam.identica.adapter.command.executor.verification;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
@@ -32,29 +33,14 @@ import java.util.Map;
 import java.util.Objects;
 
 @Singleton
+@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class VerificationCommand extends SessionBoundCommand {
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.systemDefault());
 
 	private final Provider<Messages> messagesProvider;
-	private final Provider<Verification> verificationProvider;
 	private final VerificationService verificationService;
 	private final VerificationRegistry verificationRegistry;
 	private final SessionService sessionService;
-
-	@Inject
-	public VerificationCommand(
-			Provider<Messages> messagesProvider,
-			Provider<Verification> verificationProvider,
-			VerificationService verificationService,
-			VerificationRegistry verificationRegistry,
-			SessionService sessionService
-	) {
-		this.messagesProvider = messagesProvider;
-		this.verificationProvider = verificationProvider;
-		this.verificationService = verificationService;
-		this.verificationRegistry = verificationRegistry;
-		this.sessionService = sessionService;
-	}
 
 	@Override
 	protected @NotNull SessionService sessionService() {
@@ -182,7 +168,7 @@ public class VerificationCommand extends SessionBoundCommand {
 	private String displayMethod(@Nullable String methodId) {
 		if (methodId == null || methodId.isBlank()) return "";
 		return verificationRegistry.find(methodId)
-				.map(method -> method.displayName(verificationProvider.get()))
+				.map(method -> method.descriptor().getDisplayName())
 				.filter(value -> !value.isBlank())
 				.orElse(methodId);
 	}

@@ -1,15 +1,13 @@
 package me.whereareiam.identica.command;
 
 import me.whereareiam.identica.model.Session;
-import me.whereareiam.identica.model.verification.VerificationTarget;
-import me.whereareiam.identica.model.verification.VerificationAttemptResult;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
-import me.whereareiam.identica.type.verification.status.VerificationAttemptStatus;
+import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
+import me.whereareiam.identica.model.verification.interaction.CodeVerificationInteraction;
+import me.whereareiam.identica.type.verification.VerificationChallengeStatus;
 import me.whereareiam.identica.verification.VerificationService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.UUID;
 
 public abstract class ProtectedActionCommand<T> extends SessionBoundCommand {
@@ -32,28 +30,19 @@ public abstract class ProtectedActionCommand<T> extends SessionBoundCommand {
 		if (session == null || session.getProviderId() == null || session.getProviderId().isBlank())
 			return StepUpResult.currentSessionRequired();
 
-		VerificationAttemptResult attempt = verificationService.verify(
-				VerificationTarget.providerSelection(uniqueId, session.getProviderId(), purpose),
-				input
+		VerificationChallengeResult<?> attempt = verificationService.submitChallengeInteraction(
+				uniqueId,
+				session.getProviderId(),
+				purpose,
+				CodeVerificationInteraction.builder()
+						.subjectUniqueId(uniqueId)
+						.code(input)
+						.build()
 		);
-		if (attempt.getStatus() == VerificationAttemptStatus.METHOD_NOT_SELECTED) {
-			List<VerificationEnrollment> enrollments = verificationService.findEnrollments(uniqueId);
-			if (enrollments.size() == 1) {
-				attempt = verificationService.verify(
-						VerificationTarget.methodEnrollment(
-								uniqueId,
-								enrollments.getFirst().getMethodId(),
-								session.getProviderId(),
-								purpose
-						),
-						input
-				);
-			} else {
-				return StepUpResult.selectionRequired();
-			}
-		}
+		if (attempt.getStatus() == VerificationChallengeStatus.METHOD_NOT_SELECTED)
+			return StepUpResult.selectionRequired();
 
-		if (attempt.getStatus() != VerificationAttemptStatus.VERIFIED)
+		if (attempt.getStatus() != VerificationChallengeStatus.VERIFIED)
 			return StepUpResult.invalidCode();
 
 		return StepUpResult.verified();

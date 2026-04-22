@@ -8,7 +8,9 @@ public final class VerificationEnrollmentMapper {
 		return VerificationEnrollment.builder()
 				.uniqueId(entity.getUniqueId())
 				.methodId(entity.getMethodId())
-				.payload(entity.getPayload())
+				.enrollmentId(entity.getEnrollmentId())
+				.credential(entity.getCredential())
+				.label(entity.getLabel())
 				.createdAt(entity.getCreatedAt())
 				.enabledAt(entity.getEnabledAt())
 				.build();
@@ -18,7 +20,9 @@ public final class VerificationEnrollmentMapper {
 		return VerificationEnrollmentEntity.builder()
 				.uniqueId(model.getUniqueId())
 				.methodId(model.getMethodId())
-				.payload(model.getPayload())
+				.enrollmentId(model.getEnrollmentId())
+				.credential(model.getCredential())
+				.label(model.getLabel())
 				.createdAt(model.getCreatedAt())
 				.enabledAt(model.getEnabledAt())
 				.build();

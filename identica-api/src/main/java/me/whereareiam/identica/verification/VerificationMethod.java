@@ -1,86 +1,35 @@
 package me.whereareiam.identica.verification;
 
-import me.whereareiam.identica.model.config.Verification;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentSession;
+import me.whereareiam.identica.model.verification.VerificationMethodDescriptor;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.UUID;
 
 /**
- * Handler for a concrete verification method implementation.
+ * Public contract for a verification method.
  *
- * <p>Method handlers own the method-specific logic for enrollment bootstrap,
- * code validation, challenge verification, and recovery-code generation.</p>
+ * <p>Methods provide their own enrollment and challenge processes. Identica
+ * core decides when a method is allowed for a provider and persists the
+ * resulting enrollment, selection, and challenge state.</p>
  */
 public interface VerificationMethod {
 	/**
-	 * Returns the stable method id.
+	 * Returns stable method metadata used for configuration, commands, and UI.
 	 *
-	 * @return method id
+	 * @return method descriptor
 	 */
-	@NotNull String id();
+	@NotNull VerificationMethodDescriptor descriptor();
 
 	/**
-	 * Returns the user-facing display name for this method.
+	 * Returns the enrollment process for this method.
 	 *
-	 * @param config shared verification configuration
-	 * @return display name
+	 * @return enrollment process
 	 */
-	default @NotNull String displayName(@NotNull Verification config) {
-		return id();
-	}
+	@NotNull VerificationEnrollmentProcess<?> enrollment();
 
 	/**
-	 * Starts a new enrollment for the method.
+	 * Returns the challenge process for this method.
 	 *
-	 * @param uniqueId Identica identity id
-	 * @param username current username used for display labels
-	 * @param providerId optional provider context for the enrollment
-	 * @param config shared verification configuration
-	 * @return pending enrollment state
+	 * @return challenge process
 	 */
-	@NotNull VerificationEnrollmentSession beginEnrollment(
-			@NotNull UUID uniqueId,
-			@NotNull String username,
-			@Nullable String providerId,
-			@NotNull Verification config
-	);
+	@NotNull VerificationChallengeProcess<?> challenge();
 
-	/**
-	 * Verifies a method-specific enrollment confirmation input.
-	 *
-	 * @param pending pending enrollment state
-	 * @param input user-provided input
-	 * @param config shared verification configuration
-	 * @return {@code true} when the enrollment confirmation is valid
-	 */
-	boolean verifyEnrollment(
-			@NotNull VerificationEnrollmentSession pending,
-			@NotNull String input,
-			@NotNull Verification config
-	);
-
-	/**
-	 * Verifies a login-time challenge input.
-	 *
-	 * @param payload persisted method payload
-	 * @param input user-provided challenge input
-	 * @param config shared verification configuration
-	 * @return {@code true} when the challenge input is valid
-	 */
-	boolean verifyChallenge(
-			@NotNull String payload,
-			@NotNull String input,
-			@NotNull Verification config
-	);
-
-	/**
-	 * Generates recovery codes for a newly completed enrollment.
-	 *
-	 * @param config shared verification configuration
-	 * @return generated recovery codes
-	 */
-	@NotNull List<String> generateRecoveryCodes(@NotNull Verification config);
 }

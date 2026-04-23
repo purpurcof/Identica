@@ -27,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      checks: write
       packages: write
 
     steps:
@@ -57,17 +58,17 @@ jobs:
             **/build/test-results/test/*.xml
             **/build/reports/tests/test/
 
-      - name: Test summary
-        if: always()
-        run: |
-          echo "## Test Results" >> $GITHUB_STEP_SUMMARY
-          find . -name "TEST-*.xml" -type f | while read file; do
-            suite=$(grep -oP 'name="\K[^"]+' "$file" | head -1)
-            tests=$(grep -oP 'tests="\K[^"]+' "$file" | head -1)
-            failures=$(grep -oP 'failures="\K[^"]+' "$file" | head -1)
-            errors=$(grep -oP 'errors="\K[^"]+' "$file" | head -1)
-            echo "- **$suite**: $tests tests, $failures failures, $errors errors" >> $GITHUB_STEP_SUMMARY
-          done
+      - name: Test report
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@v3
+        with:
+          name: Gradle test report
+          path: '**/build/test-results/test/*.xml'
+          reporter: java-junit
+          use-actions-summary: 'true'
+          list-suites: failed
+          list-tests: failed
+          fail-on-error: 'false'
 
       - name: Create output directory
         run: mkdir output

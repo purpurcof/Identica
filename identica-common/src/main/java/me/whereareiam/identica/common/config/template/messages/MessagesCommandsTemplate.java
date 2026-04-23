@@ -333,7 +333,17 @@ public class MessagesCommandsTemplate {
 
 		admin.setDelete(delete);
 		admin.setReservation(reservation);
+		admin.setVerification(adminVerification());
 		commands.setAdmin(admin);
+	}
+
+	private Messages.Commands.Admin.Verification adminVerification() {
+		Messages.Commands.Admin.Verification verification = new Messages.Commands.Admin.Verification();
+		Messages.Commands.Admin.Verification.Reset reset = new Messages.Commands.Admin.Verification.Reset();
+		reset.setTargetNotFound("{prefix}<white>No account found for <gray>{target}</gray>.</white>");
+		reset.setCompleted("{prefix}<white>Verification state reset for <gray>{target}</gray>.</white>");
+		verification.setReset(reset);
+		return verification;
 	}
 
 	private void applyVerification(Messages.Commands commands) {
@@ -436,17 +446,12 @@ public class MessagesCommandsTemplate {
 		cancel.setCancelled("{prefix}<white>Pending verification enrollment cancelled.</white>");
 		cancel.setCancelledProtectedAction("{prefix}<white>Pending protected action cancelled.</white>");
 
-		Messages.Commands.Verification.Reset reset = new Messages.Commands.Verification.Reset();
-		reset.setTargetNotFound("{prefix}<white>No account found for <gray>{target}</gray>.</white>");
-		reset.setCompleted("{prefix}<white>Verification state reset for <gray>{target}</gray>.</white>");
-
 		verification.setStatus(status);
 		verification.setEnroll(enroll);
 		verification.setConfirm(confirm);
 		verification.setUse(use);
 		verification.setDisable(disable);
 		verification.setCancel(cancel);
-		verification.setReset(reset);
 		commands.setVerification(verification);
 	}
 }

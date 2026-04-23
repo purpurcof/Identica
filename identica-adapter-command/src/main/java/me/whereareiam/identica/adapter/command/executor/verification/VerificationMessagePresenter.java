@@ -8,12 +8,10 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.verification.VerificationDisableResult;
-import me.whereareiam.identica.model.verification.VerificationResetResult;
 import me.whereareiam.identica.model.verification.selection.VerificationSelectionResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
 import me.whereareiam.identica.type.verification.status.VerificationDisableStatus;
 import me.whereareiam.identica.type.verification.status.VerificationEnrollmentStatus;
-import me.whereareiam.identica.type.verification.status.VerificationResetStatus;
 import me.whereareiam.identica.type.verification.status.VerificationSelectionStatus;
 import me.whereareiam.identica.verification.VerificationRegistry;
 import me.whereareiam.keystone.Actor;
@@ -96,11 +94,6 @@ public class VerificationMessagePresenter {
 
 	public void presentDisablePrompt(@NotNull Actor sender, @Nullable String methodId) {
 		sendMessage(sender, verificationMessages().getDisable().getProtectedPrompt(), methodPlaceholders(methodId));
-	}
-
-	public void presentResetResult(@NotNull Actor sender, @NotNull VerificationResetResult result) {
-		if (result.getStatus() != VerificationResetStatus.RESET) return;
-		sendMessage(sender, verificationMessages().getReset().getCompleted(), Map.of("target", Objects.toString(result.getProviderId(), "")));
 	}
 
 	private void sendRecoveryCodes(@NotNull Actor sender, @Nullable List<String> recoveryCodes) {

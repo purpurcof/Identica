@@ -206,6 +206,7 @@ public class Messages {
 			private @NotNull Delete delete;
 			private @NotNull Reservation reservation;
 			private @NotNull Sessions sessions;
+			private @NotNull Verification verification;
 
 			@Getter
 			@Setter
@@ -471,6 +472,21 @@ public class Messages {
 					private @NotNull EntryFormat entry;
 				}
 			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Verification {
+				private @NotNull Reset reset;
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Reset {
+					private @NotNull String targetNotFound;
+					private @NotNull String completed;
+				}
+			}
 		}
 		/**
 		 * Configuration for reload command messages.
@@ -507,7 +523,6 @@ public class Messages {
 			private @NotNull Use use;
 			private @NotNull Disable disable;
 			private @NotNull Cancel cancel;
-			private @NotNull Reset reset;
 
 			@Getter
 			@Setter
@@ -588,14 +603,6 @@ public class Messages {
 				private @NotNull String noPending;
 				private @NotNull String cancelled;
 				private @NotNull String cancelledProtectedAction;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Reset {
-				private @NotNull String targetNotFound;
-				private @NotNull String completed;
 			}
 		}
 

@@ -6,6 +6,7 @@ import lombok.ToString;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
+import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
@@ -50,6 +51,10 @@ public class Settings {
 		 * Time-to-live for transient prepare-state bridge entries.
 		 */
 		private @NotNull Duration prepareStateTtl;
+		/**
+		 * Strategy used to assign UUIDs to newly discovered accounts.
+		 */
+		private @NotNull UniqueIdMode uniqueIdMode;
 		private @NotNull Routing routing;
 		private @NotNull Sessions sessions;
 		private @NotNull AuthenticationScenario authentication;

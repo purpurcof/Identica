@@ -5,12 +5,13 @@ import me.whereareiam.configura.TemplateProvider;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
-import me.whereareiam.identica.type.event.EventPriority;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
+import me.whereareiam.identica.type.event.EventPriority;
+import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
-import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -46,6 +47,7 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		connection.setAttemptTtl(Duration.ofMinutes(10));
 		connection.setReservationTtl(Duration.ofMinutes(15));
 		connection.setPrepareStateTtl(Duration.ofMinutes(10));
+		connection.setUniqueIdMode(UniqueIdMode.RANDOM);
 		connection.setAuthentication(defaultAuthenticationScenario());
 		connection.setRegistration(defaultRegistrationScenario());
 		connection.setMigration(defaultMigrationScenario());

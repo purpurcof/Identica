@@ -8,6 +8,8 @@ import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
+import me.whereareiam.identica.type.identity.UniqueIdMode;
+import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -21,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -96,11 +99,63 @@ class DefaultRegistrationAccountServiceTest {
 		assertEquals(clearedUniqueId, reserved);
 	}
 
+	@Test
+	void reserveUsesOfflineModeForNewAccountId() {
+		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.OFFLINE);
+
+		UUID reserved = service.reserve(request("OfflinePlayer", "1.1.1.1", "subject-new"));
+
+		assertEquals(UniqueIdGenerator.offlinePlayerUniqueId("OfflinePlayer"), reserved);
+	}
+
+	@Test
+	void reserveUsesPremiumModeProviderSubjectForNewAccountId() {
+		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.PREMIUM);
+		UUID providerUniqueId = UUID.randomUUID();
+
+		UUID reserved = service.reserve(request("PremiumPlayer", "1.1.1.1", providerUniqueId.toString()));
+
+		assertEquals(providerUniqueId, reserved);
+	}
+
+	@Test
+	void reserveUsesPremiumModeObservedUniqueIdWhenSubjectIsNotUuid() {
+		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.PREMIUM);
+		UUID observedUniqueId = UUID.randomUUID();
+
+		UUID reserved = service.reserve(request("PremiumPlayer", "1.1.1.1", "subject-new", observedUniqueId));
+
+		assertEquals(observedUniqueId, reserved);
+	}
+
+	@Test
+	void reserveDoesNotFallbackWhenPremiumModeHasNoPremiumUniqueId() {
+		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.PREMIUM);
+
+		UUID reserved = service.reserve(request("PremiumPlayer", "1.1.1.1", "subject-new"));
+
+		assertNull(reserved);
+	}
+
+	@Test
+	void reserveDoesNotUseOfflineObservedUniqueIdInPremiumMode() {
+		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.PREMIUM);
+		UUID offlineUniqueId = UniqueIdGenerator.offlinePlayerUniqueId("PremiumPlayer");
+
+		UUID reserved = service.reserve(request("PremiumPlayer", "1.1.1.1", "subject-new", offlineUniqueId));
+
+		assertNull(reserved);
+	}
+
 	private DefaultRegistrationAccountService service(ReservationCache reservationCache) {
+		return service(reservationCache, UniqueIdMode.RANDOM);
+	}
+
+	private DefaultRegistrationAccountService service(ReservationCache reservationCache, UniqueIdMode uniqueIdMode) {
 		AccountReservationPersistenceService accountReservationPersistenceService = mock(AccountReservationPersistenceService.class);
 		ProviderLinkPersistenceService providerLinkPersistenceService = mock(ProviderLinkPersistenceService.class);
 		SessionService sessionService = mockSessionService();
-		return service(reservationCache, accountReservationPersistenceService, providerLinkPersistenceService, sessionService);
+		return service(reservationCache, accountReservationPersistenceService, providerLinkPersistenceService, sessionService, uniqueIdMode);
 	}
 
 	private DefaultRegistrationAccountService service(
@@ -109,9 +164,26 @@ class DefaultRegistrationAccountServiceTest {
 			ProviderLinkPersistenceService providerLinkPersistenceService,
 			SessionService sessionService
 	) {
+		return service(
+				reservationCache,
+				accountReservationPersistenceService,
+				providerLinkPersistenceService,
+				sessionService,
+				UniqueIdMode.RANDOM
+		);
+	}
+
+	private DefaultRegistrationAccountService service(
+			ReservationCache reservationCache,
+			AccountReservationPersistenceService accountReservationPersistenceService,
+			ProviderLinkPersistenceService providerLinkPersistenceService,
+			SessionService sessionService,
+			UniqueIdMode uniqueIdMode
+	) {
 		Settings settings = new Settings();
 		Settings.Connection connection = new Settings.Connection();
 		connection.setReservationTtl(Duration.ofMinutes(1));
+		connection.setUniqueIdMode(uniqueIdMode);
 		settings.setConnection(connection);
 
 		return new DefaultRegistrationAccountService(
@@ -119,13 +191,21 @@ class DefaultRegistrationAccountServiceTest {
 				providerLinkPersistenceService,
 				sessionService,
 				reservationCache,
-				() -> settings
+				() -> settings,
+				new UniqueIdGenerator(() -> settings)
 		);
 	}
 
 	private ProfileRequest request(String username, String ip, String providerSubject) {
+		return request(username, ip, providerSubject, null);
+	}
+
+	private ProfileRequest request(String username, String ip, String providerSubject, UUID observedUniqueId) {
+		ConnectionIdentity identity = new ConnectionIdentity(username, ip);
+		identity.setObservedUniqueId(observedUniqueId);
+
 		return ProfileRequest.builder()
-				.identity(new ConnectionIdentity(username, ip))
+				.identity(identity)
 				.providerId("premium")
 				.providerSubject(providerSubject)
 				.build();

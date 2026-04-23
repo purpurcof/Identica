@@ -73,6 +73,9 @@ const config = {
   ],
 
   themeConfig: {
+    colorMode: {
+      respectPrefersColorScheme: true
+    },
     navbar: {
       title: "Identica",
       items: [

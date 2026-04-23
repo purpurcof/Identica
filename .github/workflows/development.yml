@@ -39,7 +39,7 @@ jobs:
           distribution: 'temurin'
           check-latest: true
 
-      - name: Test, build, and publish
+      - name: Build
         env:
           PUBLISH_USER: ${{ secrets.PUBLISH_USER }}
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}

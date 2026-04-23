@@ -3,7 +3,6 @@ package me.whereareiam.identica.util;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.identity.UniqueIdMode;
 import org.jetbrains.annotations.NotNull;
@@ -17,11 +16,20 @@ import java.util.UUID;
  * Utility for generating Identica and offline-mode UUIDs.
  */
 @Singleton
-@RequiredArgsConstructor(onConstructor_ = @Inject)
 public class UniqueIdGenerator {
 	private static final SplittableRandom RNG = new SplittableRandom();
 
 	private final Provider<Settings> settingsProvider;
+
+	/**
+	 * Creates a UUID generator backed by the live settings provider.
+	 *
+	 * @param settingsProvider settings provider used to resolve the configured UUID mode
+	 */
+	@Inject
+	public UniqueIdGenerator(@NotNull Provider<Settings> settingsProvider) {
+		this.settingsProvider = settingsProvider;
+	}
 
 	/**
 	 * Resolves a new account UUID using the configured assignment mode.

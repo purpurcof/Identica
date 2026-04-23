@@ -13,6 +13,7 @@ import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -22,7 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("Default Session Service")
 class DefaultSessionServiceTest {
+	@DisplayName("Closing a session publishes the request and emits a session-closed event")
 	@Test
 	void closePublishesRequestAndEmitsEventWithMessage() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -49,6 +52,7 @@ class DefaultSessionServiceTest {
 		assertTrue(service.findByUniqueId(uniqueId).join().isEmpty());
 	}
 
+	@DisplayName("Remote session-close events are applied without being republished")
 	@Test
 	void remoteCloseIsAppliedWithoutRepublishing() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -79,6 +83,7 @@ class DefaultSessionServiceTest {
 		assertEquals("remote close", secondCapture.event.getRequest().getDisconnectMessage());
 	}
 
+	@DisplayName("A node ignores the session-close events that it published itself")
 	@Test
 	void ownPublishedCloseIsIgnoredWhenReceivedBack() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();

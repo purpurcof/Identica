@@ -5,6 +5,7 @@ import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -16,7 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Default Completion-Pending Store")
 class DefaultCompletionPendingStoreTest {
+	@DisplayName("Stores pending completions until they are consumed")
 	@Test
 	void storesAndConsumesPendingCompletion() {
 		DefaultCompletionPendingStore store = new DefaultCompletionPendingStore(

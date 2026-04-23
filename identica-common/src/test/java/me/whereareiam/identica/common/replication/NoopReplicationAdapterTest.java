@@ -1,13 +1,16 @@
 package me.whereareiam.identica.common.replication;
 
 import me.whereareiam.identica.model.replication.ReplicationPage;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DisplayName("No-Op Replication Adapter")
 class NoopReplicationAdapterTest {
+	@DisplayName("The no-op adapter stays unavailable and returns empty results everywhere")
 	@Test
 	void noopAdapterReturnsEmptyAndUnavailable() {
 		NoopReplicationAdapter adapter = new NoopReplicationAdapter();

@@ -18,6 +18,7 @@ import me.whereareiam.identica.provider.premium.resolver.PremiumProfileLookup;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.provider.ProviderState;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Premium Handshake Policy")
 class PremiumHandshakePolicyTest {
 	@Mock
 	private AccountPersistenceService accountPersistenceService;
@@ -67,6 +69,7 @@ class PremiumHandshakePolicyTest {
 		);
 	}
 
+	@DisplayName("Prefers a primary link over provider priority during premium handshake decisions")
 	@Test
 	void primaryLinkWinsOverProviderPriority() {
 		UUID uniqueId = UUID.randomUUID();
@@ -88,6 +91,7 @@ class PremiumHandshakePolicyTest {
 		verify(profileLookup, never()).hasPremiumProfile(username);
 	}
 
+	@DisplayName("Falls back to provider priority when no primary link exists")
 	@Test
 	void providerPriorityBreaksTiesWhenNoPrimaryLinkExists() {
 		UUID uniqueId = UUID.randomUUID();

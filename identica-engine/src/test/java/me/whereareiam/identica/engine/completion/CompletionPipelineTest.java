@@ -26,6 +26,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.jspecify.annotations.NonNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -39,7 +40,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Completion Pipeline")
 class CompletionPipelineTest {
+	@DisplayName("Completion pipelines resolve the session, provider, and completion steps before execution")
 	@Test
 	void consumeAndExecuteResolvesSessionAndProviderSteps() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);

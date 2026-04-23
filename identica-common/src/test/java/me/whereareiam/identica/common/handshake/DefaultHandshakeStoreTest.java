@@ -6,6 +6,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import me.whereareiam.identica.model.config.Replication;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -16,7 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
+@DisplayName("Default Handshake Store")
 class DefaultHandshakeStoreTest {
+	@DisplayName("Consumes handshake instructions only when username and IP both match")
 	@Test
 	void consumeUsesMatchingUsernameAndIp() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -38,6 +41,7 @@ class DefaultHandshakeStoreTest {
 		assertEquals("PlayerOne", resolved.get().getIdentity().getUsername());
 	}
 
+	@DisplayName("Does not consume a handshake instruction for the wrong IP address")
 	@Test
 	void consumeRequiresMatchingIp() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();

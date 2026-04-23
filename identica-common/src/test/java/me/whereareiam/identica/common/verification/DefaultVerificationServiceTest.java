@@ -31,6 +31,7 @@ import me.whereareiam.identica.type.verification.status.VerificationSelectionSta
 import me.whereareiam.identica.verification.VerificationRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -50,7 +51,9 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Default Verification Service")
 class DefaultVerificationServiceTest {
+	@DisplayName("Enrollment stays pending until the user confirms that recovery codes were saved")
 	@Test
 	void enrollmentRequiresSavedConfirmationBeforeActivation() {
 		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
@@ -86,6 +89,7 @@ class DefaultVerificationServiceTest {
 				persistenceService.findRecoveryCodes(uniqueId, "totp").size());
 	}
 
+	@DisplayName("Recovery codes can be redeemed only once")
 	@Test
 	void recoveryCodeCanBeUsedOnlyOnce() {
 		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
@@ -117,6 +121,7 @@ class DefaultVerificationServiceTest {
 		assertEquals(VerificationAttemptStatus.INVALID_INPUT, second.getStatus());
 	}
 
+	@DisplayName("Optional providers skip verification when no method has been selected")
 	@Test
 	void optionalProviderWithoutSelectionSkipsChallenge() {
 		DefaultVerificationService service = service();
@@ -129,6 +134,7 @@ class DefaultVerificationServiceTest {
 		assertFalse(result.isRequired());
 	}
 
+	@DisplayName("Required providers still deny access when no method has been selected")
 	@Test
 	void requiredProviderWithoutSelectionDeniesChallenge() {
 		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
@@ -157,6 +163,7 @@ class DefaultVerificationServiceTest {
 		assertTrue(result.isRequired());
 	}
 
+	@DisplayName("Clear-selection policy removes selections for unavailable methods")
 	@Test
 	void clearSelectionPolicyRemovesUnavailableSelection() {
 		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
@@ -209,6 +216,7 @@ class DefaultVerificationServiceTest {
 		assertTrue(persistenceService.findSelection(uniqueId, "cracked").isEmpty());
 	}
 
+	@DisplayName("Keep-locked policy preserves selections for unavailable methods")
 	@Test
 	void keepLockedPolicyPreservesUnavailableSelection() {
 		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
@@ -256,6 +264,7 @@ class DefaultVerificationServiceTest {
 		assertTrue(persistenceService.findSelection(uniqueId, "cracked").isPresent());
 	}
 
+	@DisplayName("Activation auto-selects the current provider when it is eligible")
 	@Test
 	void activationAutoSelectsCurrentProviderWhenEligible() {
 		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
@@ -287,6 +296,7 @@ class DefaultVerificationServiceTest {
 		assertEquals("totp", persistenceService.findSelection(uniqueId, "cracked").orElseThrow().getMethodId());
 	}
 
+	@DisplayName("Selecting a method reports unsupported when the provider lacks verification capability")
 	@Test
 	void selectMethodReturnsProviderUnsupportedWhenCapabilityMissing() {
 		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();
@@ -316,6 +326,7 @@ class DefaultVerificationServiceTest {
 		assertEquals(VerificationSelectionStatus.PROVIDER_UNSUPPORTED, result.getStatus());
 	}
 
+	@DisplayName("Provider-selection verification targets require a selected method")
 	@Test
 	void resolveProviderSelectionTargetRequiresSelection() {
 		DefaultVerificationService service = service();
@@ -327,6 +338,7 @@ class DefaultVerificationServiceTest {
 		assertEquals(VerificationAttemptStatus.METHOD_NOT_SELECTED, result.getStatus());
 	}
 
+	@DisplayName("Method-enrollment verification targets use the enrolled method directly")
 	@Test
 	void verifyMethodEnrollmentTargetUsesEnrolledMethodDirectly() {
 		TestVerificationPersistenceService persistenceService = new TestVerificationPersistenceService();

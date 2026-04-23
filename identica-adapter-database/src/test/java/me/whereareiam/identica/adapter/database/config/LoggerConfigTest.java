@@ -7,6 +7,7 @@ import org.jdbi.v3.core.statement.SqlLogger;
 import org.jdbi.v3.core.statement.SqlStatements;
 import org.jdbi.v3.core.statement.StatementContext;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
@@ -17,12 +18,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Database Logger Configuration")
 class LoggerConfigTest {
 	@AfterEach
 	void tearDown() {
 		Logger.init(null);
 	}
 
+	@DisplayName("Logs SQL execution at trace level before and after the statement runs")
 	@Test
 	void configuresTraceLoggingForSqlExecution() {
 		Jdbi jdbi = mock(Jdbi.class);
@@ -43,6 +46,7 @@ class LoggerConfigTest {
 		assertEquals("SQL completed: select 1", loggingHelper.afterExecutionMessage);
 	}
 
+	@DisplayName("Keeps SQL exceptions at warn level")
 	@Test
 	void keepsSqlExceptionsAtWarnLevel() {
 		Jdbi jdbi = mock(Jdbi.class);

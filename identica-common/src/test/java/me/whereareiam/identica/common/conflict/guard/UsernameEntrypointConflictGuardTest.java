@@ -14,6 +14,7 @@ import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJour
 import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -28,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Username Entrypoint Conflict Guard")
 class UsernameEntrypointConflictGuardTest {
 	@Mock
 	private ProviderManager providerManager;
@@ -40,6 +42,7 @@ class UsernameEntrypointConflictGuardTest {
 	@Mock
 	private EventManager eventManager;
 
+	@DisplayName("Denies the conflict when the entrypoint was auto-detected and remains ambiguous")
 	@Test
 	void deniesWhenEntrypointAmbiguous() {
 		Providers providers = new Providers();
@@ -73,6 +76,7 @@ class UsernameEntrypointConflictGuardTest {
 		assertTrue(resolution.getMessage().contains("cracked.example.com"));
 	}
 
+	@DisplayName("Allows the conflict when the user has already selected an entrypoint")
 	@Test
 	void allowsWhenEntrypointSelected() {
 		Providers providers = new Providers();

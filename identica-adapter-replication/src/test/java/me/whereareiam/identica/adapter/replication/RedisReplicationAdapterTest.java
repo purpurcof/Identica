@@ -2,6 +2,7 @@ package me.whereareiam.identica.adapter.replication;
 
 import me.whereareiam.identica.adapter.replication.provider.JedisPoolProvider;
 import me.whereareiam.identica.model.replication.ReplicationPage;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -11,7 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+@DisplayName("Redis Replication Adapter")
 class RedisReplicationAdapterTest {
+	@DisplayName("Acts as a no-op when replication is disabled")
 	@Test
 	void unavailableAdapterNoopsAllCalls() {
 		JedisPoolProvider poolProvider = mock(JedisPoolProvider.class);
@@ -29,6 +32,7 @@ class RedisReplicationAdapterTest {
 		verifyNoInteractions(poolProvider);
 	}
 
+	@DisplayName("Ignores publish requests with a blank channel or null payload")
 	@Test
 	void publishWithBlankChannelOrNullPayloadNoops() {
 		JedisPoolProvider poolProvider = mock(JedisPoolProvider.class);

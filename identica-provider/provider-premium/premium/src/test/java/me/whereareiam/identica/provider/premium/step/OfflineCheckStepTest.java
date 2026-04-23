@@ -12,6 +12,7 @@ import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -25,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Offline-Check Step")
 class OfflineCheckStepTest {
 	@Mock
 	private PipelineStateStore pipelineStateStore;
@@ -49,6 +51,7 @@ class OfflineCheckStepTest {
 		);
 	}
 
+	@DisplayName("Clears pending premium verification when the stored session is still offline")
 	@Test
 	void rejectedOfflineSessionClearsVerifyAttempt() {
 		String username = "whereareiam";

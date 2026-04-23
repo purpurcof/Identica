@@ -13,6 +13,7 @@ import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -24,7 +25,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Open-Session Completion Pending")
 class OpenSessionCompletionPendingTest {
+	@DisplayName("Opening an authentication session emits a pending-completion event for the new session")
 	@Test
 	void authenticationOpenSessionStoresPendingCompletionInvocation() {
 		SessionService sessionService = mock(SessionService.class);

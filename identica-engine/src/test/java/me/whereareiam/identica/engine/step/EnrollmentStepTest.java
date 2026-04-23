@@ -21,6 +21,7 @@ import me.whereareiam.keystone.serializer.SerializerEngine;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Enrollment Step")
 class EnrollmentStepTest {
 	@BeforeAll
 	static void initializeSerializer() {
@@ -68,6 +70,7 @@ class EnrollmentStepTest {
 	@Mock
 	private EventManager eventManager;
 
+	@DisplayName("Automatically selects the only eligible provider when auto-selection is enabled")
 	@Test
 	void autoSelectsSingleProviderWhenEnabled() {
 		Settings settings = settings(true);
@@ -94,6 +97,7 @@ class EnrollmentStepTest {
 		verify(eventManager).call(any());
 	}
 
+	@DisplayName("Keeps the enrollment prompt open when auto-selection is disabled")
 	@Test
 	void keepsWaitingPromptWhenAutoSelectionDisabled() {
 		Settings settings = settings(false);
@@ -117,6 +121,7 @@ class EnrollmentStepTest {
 		verify(eventManager).call(any());
 	}
 
+	@DisplayName("Keeps the enrollment prompt open when more than one provider is available")
 	@Test
 	void keepsWaitingPromptWhenMultipleProvidersRemain() {
 		Settings settings = settings(true);

@@ -8,6 +8,7 @@ import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.replication.codec.SnapshotCodecFactory;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -15,7 +16,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("Default Replication System")
 class DefaultReplicationSystemTest {
+	@DisplayName("Local caches remain usable without replication")
 	@Test
 	void localCacheIsFunctional() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -27,6 +30,7 @@ class DefaultReplicationSystemTest {
 		assertEquals(Optional.of("value"), cache.get("key").join());
 	}
 
+	@DisplayName("Replicated caches route writes through the adapter")
 	@Test
 	void replicatedCacheUsesAdapter() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -42,6 +46,7 @@ class DefaultReplicationSystemTest {
 		assertEquals("key", adapter.lastKey);
 	}
 
+	@DisplayName("Updating the default codec factory affects existing channels")
 	@Test
 	void updatedCodecFactoryAffectsExistingChannels() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();

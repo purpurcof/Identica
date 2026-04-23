@@ -11,6 +11,7 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.type.UsernameSource;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Default Account Persistence Service")
 class DefaultAccountPersistenceServiceTest {
 	@Mock
 	private AccountRepository accountRepository;
@@ -43,6 +45,7 @@ class DefaultAccountPersistenceServiceTest {
 		service = new DefaultAccountPersistenceService(accountRepository, eventManager);
 	}
 
+	@DisplayName("Maps stored account entities back to domain models")
 	@Test
 	void findByUniqueIdMapsEntityToModel() {
 		UUID uniqueId = UUID.randomUUID();
@@ -65,6 +68,7 @@ class DefaultAccountPersistenceServiceTest {
 		assertEquals(TestDataFactory.LAST_SEEN_AT, result.get().getLastSeenAt());
 	}
 
+	@DisplayName("Returns an empty result when loading an account throws")
 	@Test
 	void findByUniqueIdReturnsEmptyOnException() {
 		UUID uniqueId = UUID.randomUUID();
@@ -73,6 +77,7 @@ class DefaultAccountPersistenceServiceTest {
 		assertTrue(service.findByUniqueId(uniqueId).isEmpty());
 	}
 
+	@DisplayName("Ignores blank usernames when searching")
 	@Test
 	void findByUsernameReturnsEmptyForBlankInput() {
 		List<Account> result = service.findByUsername("  ");
@@ -81,6 +86,7 @@ class DefaultAccountPersistenceServiceTest {
 		verifyNoInteractions(accountRepository);
 	}
 
+	@DisplayName("Returns no username matches when the repository throws")
 	@Test
 	void findByUsernameReturnsEmptyOnException() {
 		when(accountRepository.findByUsername("Player")).thenThrow(new RuntimeException("boom"));
@@ -90,6 +96,7 @@ class DefaultAccountPersistenceServiceTest {
 		assertTrue(result.isEmpty());
 	}
 
+	@DisplayName("Persists new accounts through the repository")
 	@Test
 	void createDelegatesToRepository() {
 		UUID uniqueId = UUID.randomUUID();
@@ -107,6 +114,7 @@ class DefaultAccountPersistenceServiceTest {
 		assertEquals(uniqueId, created.getUniqueId());
 	}
 
+	@DisplayName("Swallows repository errors when updating the last-seen timestamp")
 	@Test
 	void updateLastSeenSwallowsExceptions() {
 		UUID uniqueId = UUID.randomUUID();
@@ -115,6 +123,7 @@ class DefaultAccountPersistenceServiceTest {
 		assertDoesNotThrow(() -> service.updateLastSeen(uniqueId, 123L));
 	}
 
+	@DisplayName("Skips username updates when the new username is blank")
 	@Test
 	void updateUsernameIgnoresBlankInput() {
 		service.updateUsername(UUID.randomUUID(), " ");
@@ -122,6 +131,7 @@ class DefaultAccountPersistenceServiceTest {
 		verify(accountRepository, never()).updateUsername(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
 	}
 
+	@DisplayName("Delegates username updates to the repository")
 	@Test
 	void updateUsernameCallsRepository() {
 		UUID uniqueId = UUID.randomUUID();
@@ -131,6 +141,7 @@ class DefaultAccountPersistenceServiceTest {
 		verify(accountRepository).updateUsername(uniqueId, "PlayerTwo");
 	}
 
+	@DisplayName("Stores the username source as its configured identifier")
 	@Test
 	void updateUsernameSourceDelegatesId() {
 		UUID uniqueId = UUID.randomUUID();
@@ -140,6 +151,7 @@ class DefaultAccountPersistenceServiceTest {
 		verify(accountRepository).updateUsernameSource(uniqueId, UsernameSource.SYSTEM.getId());
 	}
 
+	@DisplayName("Swallows repository errors when deleting an account")
 	@Test
 	void deleteSwallowsExceptions() {
 		UUID uniqueId = UUID.randomUUID();
@@ -148,6 +160,7 @@ class DefaultAccountPersistenceServiceTest {
 		assertDoesNotThrow(() -> service.delete(uniqueId));
 	}
 
+	@DisplayName("Deletes persisted account data when an account is cleared")
 	@Test
 	void onAccountLifecycleDeletesOnClear() {
 		UUID uniqueId = UUID.randomUUID();
@@ -159,6 +172,7 @@ class DefaultAccountPersistenceServiceTest {
 		verify(accountRepository).delete(uniqueId);
 	}
 
+	@DisplayName("Deletes persisted account data when an account is deleted")
 	@Test
 	void onAccountLifecycleDeletesOnDelete() {
 		UUID uniqueId = UUID.randomUUID();
@@ -170,6 +184,7 @@ class DefaultAccountPersistenceServiceTest {
 		verify(accountRepository).delete(uniqueId);
 	}
 
+	@DisplayName("Ignores lifecycle events that do not carry an account UUID")
 	@Test
 	void onAccountLifecycleIgnoresNullUniqueId() {
 		ConnectionIdentity identity = new ConnectionIdentity(null, "Player", null);

@@ -12,6 +12,7 @@ import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -25,7 +26,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Prepare Request Connection Keys")
 class PrepareRequestConnectionKeyTest {
+	@DisplayName("Profile rewrites forward the full connection key into prepare requests")
 	@Test
 	void profileRewritePassesConnectionKeyIntoPrepareRequest() {
 		ConnectionCoordinator connectionCoordinator = mock(ConnectionCoordinator.class);
@@ -48,6 +51,7 @@ class PrepareRequestConnectionKeyTest {
 		assertEquals(identity.connectionKey(), captured.getConnectionKey());
 	}
 
+	@DisplayName("Handshake preparation forwards the full connection key into prepare requests")
 	@Test
 	void handshakePassesConnectionKeyIntoPrepareRequest() {
 		ConnectionCoordinator connectionCoordinator = mock(ConnectionCoordinator.class);

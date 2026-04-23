@@ -21,6 +21,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.jspecify.annotations.NonNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Locale;
@@ -33,7 +34,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Completion Pending Lifecycle")
 class CompletionPendingLifecycleTest {
+	@DisplayName("Opening a session stores pending completion state")
 	@Test
 	void sessionOpenedStoresPendingCompletion() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
@@ -66,6 +69,7 @@ class CompletionPendingLifecycleTest {
 		verify(completionPipeline, never()).complete(any());
 	}
 
+	@DisplayName("Attaching an identity completes pending work when no routing target blocks it")
 	@Test
 	void identityAttachedConsumesPendingCompletionWithoutRoutingTarget() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
@@ -89,6 +93,7 @@ class CompletionPendingLifecycleTest {
 		verify(completionPipeline).complete(identity);
 	}
 
+	@DisplayName("Attaching an identity waits while a completion routing target still exists")
 	@Test
 	void identityAttachedDefersWhileCompletedRoutingTargetExists() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
@@ -112,6 +117,7 @@ class CompletionPendingLifecycleTest {
 		verify(completionPipeline, never()).complete(identity);
 	}
 
+	@DisplayName("Reaching the completion target executes pending completion work")
 	@Test
 	void routingTargetReachedExecutesPendingCompletionForCompletedTarget() {
 		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);

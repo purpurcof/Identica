@@ -11,6 +11,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.jspecify.annotations.NonNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -19,7 +20,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("Premium Completion Step")
 class PremiumCompletionStepTest {
+	@DisplayName("Uses the reused-session completion message for authentication resumes")
 	@Test
 	void authenticationUsesReusedSessionMessageWhenSessionWasReused() {
 		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
@@ -30,6 +33,7 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getSession().getBody(), lines);
 	}
 
+	@DisplayName("Keeps the migration completion message even when the session was reused")
 	@Test
 	void migrationIgnoresReusedSessionMessage() {
 		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
@@ -40,6 +44,7 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getMigration().getBody(), lines);
 	}
 
+	@DisplayName("Uses the registration completion message when one is configured")
 	@Test
 	void registrationUsesRegistrationMessageWhenConfigured() {
 		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
@@ -50,6 +55,7 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
 
+	@DisplayName("Falls back to the authentication completion message when registration text is missing")
 	@Test
 	void registrationFallsBackToAuthenticationWhenMissing() {
 		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());

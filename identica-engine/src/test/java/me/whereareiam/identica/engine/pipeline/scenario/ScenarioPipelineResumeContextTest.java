@@ -15,6 +15,7 @@ import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -22,7 +23,9 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
+@DisplayName("Scenario Pipeline Resume Context")
 class ScenarioPipelineResumeContextTest {
+	@DisplayName("Registration resumes preserve the account UUID from the original context")
 	@Test
 	void registrationResumePreservesIdenticaUniqueId() {
 		UUID connectionId = UUID.randomUUID();
@@ -45,6 +48,7 @@ class ScenarioPipelineResumeContextTest {
 		assertEquals(identicaUniqueId, merged.getIdenticaUniqueId(), "resume should keep the account UUID");
 	}
 
+	@DisplayName("Authentication resumes preserve the account UUID from the original context")
 	@Test
 	void authenticationResumePreservesIdenticaUniqueId() {
 		UUID connectionId = UUID.randomUUID();
@@ -67,6 +71,7 @@ class ScenarioPipelineResumeContextTest {
 		assertEquals(identicaUniqueId, merged.getIdenticaUniqueId(), "resume should keep the account UUID");
 	}
 
+	@DisplayName("Migration resumes preserve the account UUID from the original context")
 	@Test
 	void migrationResumePreservesIdenticaUniqueId() {
 		UUID connectionId = UUID.randomUUID();

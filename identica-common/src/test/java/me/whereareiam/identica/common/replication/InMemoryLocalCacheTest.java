@@ -3,6 +3,7 @@ package me.whereareiam.identica.common.replication;
 import me.whereareiam.identica.common.replication.cache.InMemoryLocalCache;
 import me.whereareiam.identica.model.replication.ReplicationPage;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("In-Memory Local Cache")
 class InMemoryLocalCacheTest {
 	private InMemoryLocalCache<String> cache;
 
@@ -19,12 +21,14 @@ class InMemoryLocalCacheTest {
 		cache = new InMemoryLocalCache<>();
 	}
 
+	@DisplayName("Returns stored values while their TTL is still valid")
 	@Test
 	void putGetReturnsValueWhenTtlPositive() {
 		cache.put("key", "value", 500).join();
 		assertEquals(Optional.of("value"), cache.get("key").join());
 	}
 
+	@DisplayName("Removing a value via a zero TTL clears the cache entry")
 	@Test
 	void putWithZeroTtlRemovesEntry() {
 		cache.put("key", "value", 500).join();
@@ -32,6 +36,7 @@ class InMemoryLocalCacheTest {
 		assertEquals(Optional.empty(), cache.get("key").join());
 	}
 
+	@DisplayName("Invalidating a key removes its cached value")
 	@Test
 	void invalidateRemovesEntry() {
 		cache.put("key", "value", 500).join();
@@ -39,6 +44,7 @@ class InMemoryLocalCacheTest {
 		assertEquals(Optional.empty(), cache.get("key").join());
 	}
 
+	@DisplayName("Consuming a key returns the value and removes it from the cache")
 	@Test
 	void consumeReturnsAndRemovesEntry() {
 		cache.put("key", "value", 500).join();
@@ -46,6 +52,7 @@ class InMemoryLocalCacheTest {
 		assertEquals(Optional.empty(), cache.get("key").join());
 	}
 
+	@DisplayName("Expired entries are evicted on read")
 	@Test
 	void expiredEntryIsRemoved() {
 		cache.put("key", "value", 30).join();
@@ -53,6 +60,7 @@ class InMemoryLocalCacheTest {
 		assertEquals(Optional.empty(), cache.get("key").join());
 	}
 
+	@DisplayName("Listing keys sorts entries and applies pagination")
 	@Test
 	void listKeysSortsAndPaginates() {
 		cache.put("b", "value", 500).join();
@@ -68,6 +76,7 @@ class InMemoryLocalCacheTest {
 		assertEquals(3, page2.getTotal());
 	}
 
+	@DisplayName("Listing keys also clears expired entries")
 	@Test
 	void listKeysCleansExpiredEntries() {
 		cache.put("alive", "value", 500).join();

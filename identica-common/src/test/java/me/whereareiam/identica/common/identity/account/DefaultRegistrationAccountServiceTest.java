@@ -11,6 +11,7 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 
@@ -27,7 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Default Registration-Account Service")
 class DefaultRegistrationAccountServiceTest {
+	@DisplayName("Reuses an existing reservation when the provider subject is the same")
 	@Test
 	void reserveReusesExistingReservationForSameProviderSubject() {
 		DefaultRegistrationAccountService service = service(new TestReservationCache());
@@ -38,6 +41,7 @@ class DefaultRegistrationAccountServiceTest {
 		assertEquals(first, second);
 	}
 
+	@DisplayName("Does not reuse a reservation when only username and IP match")
 	@Test
 	void reserveDoesNotReuseReservationForSameUsernameAndIpWhenProviderSubjectDiffers() {
 		DefaultRegistrationAccountService service = service(new TestReservationCache());
@@ -48,6 +52,7 @@ class DefaultRegistrationAccountServiceTest {
 		assertNotEquals(first, second);
 	}
 
+	@DisplayName("Reuses the existing account UUID when the provider subject is already linked")
 	@Test
 	void reserveReusesExistingProviderLinkUniqueId() {
 		TestReservationCache reservationCache = new TestReservationCache();
@@ -78,6 +83,7 @@ class DefaultRegistrationAccountServiceTest {
 		assertEquals(existingUniqueId, reserved);
 	}
 
+	@DisplayName("Reuses the cleared-account reservation stored under the username")
 	@Test
 	void reserveReusesAccountReservationByUsername() {
 		TestReservationCache reservationCache = new TestReservationCache();
@@ -99,6 +105,7 @@ class DefaultRegistrationAccountServiceTest {
 		assertEquals(clearedUniqueId, reserved);
 	}
 
+	@DisplayName("Generates offline UUIDs for new accounts in offline mode")
 	@Test
 	void reserveUsesOfflineModeForNewAccountId() {
 		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.OFFLINE);
@@ -108,6 +115,7 @@ class DefaultRegistrationAccountServiceTest {
 		assertEquals(UniqueIdGenerator.offlinePlayerUniqueId("OfflinePlayer"), reserved);
 	}
 
+	@DisplayName("Uses the provider subject as the account UUID in premium mode when it is already a UUID")
 	@Test
 	void reserveUsesPremiumModeProviderSubjectForNewAccountId() {
 		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.PREMIUM);
@@ -118,6 +126,7 @@ class DefaultRegistrationAccountServiceTest {
 		assertEquals(providerUniqueId, reserved);
 	}
 
+	@DisplayName("Falls back to the observed premium UUID when the provider subject is not a UUID")
 	@Test
 	void reserveUsesPremiumModeObservedUniqueIdWhenSubjectIsNotUuid() {
 		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.PREMIUM);
@@ -128,6 +137,7 @@ class DefaultRegistrationAccountServiceTest {
 		assertEquals(observedUniqueId, reserved);
 	}
 
+	@DisplayName("Returns no reservation when premium mode has no premium UUID to use")
 	@Test
 	void reserveDoesNotFallbackWhenPremiumModeHasNoPremiumUniqueId() {
 		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.PREMIUM);
@@ -137,6 +147,7 @@ class DefaultRegistrationAccountServiceTest {
 		assertNull(reserved);
 	}
 
+	@DisplayName("Ignores offline-mode observed UUIDs while reserving premium-mode accounts")
 	@Test
 	void reserveDoesNotUseOfflineObservedUniqueIdInPremiumMode() {
 		DefaultRegistrationAccountService service = service(new TestReservationCache(), UniqueIdMode.PREMIUM);

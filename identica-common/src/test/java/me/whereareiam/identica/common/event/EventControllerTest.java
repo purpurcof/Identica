@@ -10,6 +10,7 @@ import me.whereareiam.identica.model.routing.RoutingEndpoint;
 import me.whereareiam.identica.model.routing.RoutingIntent;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.routing.RoutingReason;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -17,7 +18,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("Event Controller")
 class EventControllerTest {
+	@DisplayName("Interface-based routing listeners receive concrete routing intent events")
 	@Test
 	void routingIntentInterfaceListenerReceivesConcreteIntentEvent() {
 		EventController eventController = new EventController();

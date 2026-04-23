@@ -10,6 +10,7 @@ import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.util.EventUtil;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -20,13 +21,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Default Pipeline-State Store")
 class DefaultPipelineStateStoreTest {
+	@DisplayName("A pipeline-state reference is empty when it carries no lookup key")
 	@Test
 	void emptyReferenceRequiresKey() {
 		PipelineStateReference reference = PipelineStateReference.builder().build();
 		assertTrue(reference.isEmpty());
 	}
 
+	@DisplayName("Stores and loads pipeline state by connection UUID")
 	@Test
 	void saveAndFindByConnectionUniqueId() {
 		EventUtil.initialize(mock(EventManager.class));
@@ -48,6 +52,7 @@ class DefaultPipelineStateStoreTest {
 		assertEquals(Optional.of(state), store.find(reference));
 	}
 
+	@DisplayName("Stores and loads pipeline state by connection key")
 	@Test
 	void saveAndFindByConnectionKey() {
 		EventUtil.initialize(mock(EventManager.class));
@@ -68,6 +73,7 @@ class DefaultPipelineStateStoreTest {
 		assertEquals(Optional.of(state), store.find(reference));
 	}
 
+	@DisplayName("Origin-aware resumes can find snapshots that were saved without origin information")
 	@Test
 	void saveWithoutOriginFindsByOriginAwareConnectionKey() {
 		EventUtil.initialize(mock(EventManager.class));
@@ -91,6 +97,7 @@ class DefaultPipelineStateStoreTest {
 		assertEquals(Optional.of(state), store.find(resumeReference));
 	}
 
+	@DisplayName("Origin-agnostic resumes can find snapshots that were saved with origin information")
 	@Test
 	void saveWithOriginFindsByOriginAgnosticConnectionKey() {
 		EventUtil.initialize(mock(EventManager.class));
@@ -114,6 +121,7 @@ class DefaultPipelineStateStoreTest {
 		assertEquals(Optional.of(state), store.find(resumeReference));
 	}
 
+	@DisplayName("Replacing a snapshot clears stale aliases for older connection keys")
 	@Test
 	void replacingSnapshotInvalidatesStaleConnectionKeyAliases() {
 		EventUtil.initialize(mock(EventManager.class));

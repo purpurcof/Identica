@@ -11,6 +11,7 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.provider.ProviderState;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Default Provider Operations")
 class DefaultProviderOperationsTest {
 	@Mock
 	private ProviderManager providerManager;
@@ -36,6 +38,7 @@ class DefaultProviderOperationsTest {
 	@Mock
 	private EventManager eventManager;
 
+	@DisplayName("Matches entrypoints by host name regardless of case")
 	@Test
 	void resolvesExactHostMatch() {
 		Providers providers = new Providers();
@@ -49,6 +52,7 @@ class DefaultProviderOperationsTest {
 		assertEquals("alpha", resolved.getProviderId());
 	}
 
+	@DisplayName("Requires the configured port when an entrypoint includes one")
 	@Test
 	void resolvesHostAndPortMatch() {
 		Providers providers = new Providers();
@@ -64,6 +68,7 @@ class DefaultProviderOperationsTest {
 		assertEquals("alpha", resolved.getProviderId());
 	}
 
+	@DisplayName("Prefers higher-priority providers before falling back to provider ID ordering")
 	@Test
 	void resolvesHighestPriorityThenProviderId() {
 		Providers providers = new Providers();
@@ -79,6 +84,7 @@ class DefaultProviderOperationsTest {
 		assertEquals("alpha", resolved.getProviderId());
 	}
 
+	@DisplayName("Uses the configured provider display name when present")
 	@Test
 	void resolvesConfiguredProviderDisplayName() {
 		Providers providers = new Providers();
@@ -90,6 +96,7 @@ class DefaultProviderOperationsTest {
 		assertEquals("Alpha Network", operations.displayProviderName("alpha"));
 	}
 
+	@DisplayName("Falls back to the provider descriptor name when no display name is configured")
 	@Test
 	void fallsBackToDescriptorNameWhenConfiguredDisplayNameMissing() {
 		Providers providers = new Providers();

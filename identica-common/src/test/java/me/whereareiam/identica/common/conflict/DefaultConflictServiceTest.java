@@ -11,6 +11,7 @@ import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -22,7 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("Default Conflict Service")
 class DefaultConflictServiceTest {
+	@DisplayName("Conflict guards run before resolvers and can short-circuit resolution")
 	@Test
 	void guardRunsBeforeResolver() {
 		Providers providers = new Providers();
@@ -59,6 +62,7 @@ class DefaultConflictServiceTest {
 		assertFalse(resolverCalled.get());
 	}
 
+	@DisplayName("Falls back to the default rule after pair-specific resolvers pass")
 	@Test
 	void fallsBackToDefaultRuleWhenPairResolversPass() {
 		Providers providers = new Providers();

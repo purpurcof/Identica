@@ -5,6 +5,7 @@ import me.whereareiam.identica.adapter.replication.provider.JedisPoolProvider;
 import me.whereareiam.identica.model.replication.ReplicationPage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -20,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Testcontainers
+@DisplayName("Redis Replication Adapter Integration")
 class RedisReplicationAdapterIntegrationTest {
 	@Container
 	private static final RedisContainer REDIS = new RedisContainer(
@@ -41,6 +43,7 @@ class RedisReplicationAdapterIntegrationTest {
 		poolProvider.close();
 	}
 
+	@DisplayName("Stores a payload in Redis and reads it back")
 	@Test
 	void putAndGetRoundTrip() {
 		adapter.put("ns", "key", "value".getBytes(StandardCharsets.UTF_8), 500).join();
@@ -50,6 +53,7 @@ class RedisReplicationAdapterIntegrationTest {
 		assertEquals("value", new String(payload.get(), StandardCharsets.UTF_8));
 	}
 
+	@DisplayName("Lists stored keys from the Redis index")
 	@Test
 	void listKeysIncludesStoredKey() {
 		adapter.put("ns", "key", "value".getBytes(StandardCharsets.UTF_8), 500).join();
@@ -59,6 +63,7 @@ class RedisReplicationAdapterIntegrationTest {
 		assertEquals(1, page.getTotal());
 	}
 
+	@DisplayName("Removes expired entries from both the cache and the key index")
 	@Test
 	void expiredEntriesAreRemovedFromIndex() {
 		adapter.put("ns", "key", "value".getBytes(StandardCharsets.UTF_8), 120).join();
@@ -69,6 +74,7 @@ class RedisReplicationAdapterIntegrationTest {
 		assertEquals(0, page.getTotal());
 	}
 
+	@DisplayName("Consumes an entry and removes it from Redis")
 	@Test
 	void consumeRemovesEntryAndIndex() {
 		adapter.put("ns", "key", "value".getBytes(StandardCharsets.UTF_8), 500).join();
@@ -80,6 +86,7 @@ class RedisReplicationAdapterIntegrationTest {
 		assertEquals(0, page.getTotal());
 	}
 
+	@DisplayName("Invalidates an entry and removes it from the key index")
 	@Test
 	void invalidateRemovesEntryAndIndex() {
 		adapter.put("ns", "key", "value".getBytes(StandardCharsets.UTF_8), 500).join();
@@ -90,6 +97,7 @@ class RedisReplicationAdapterIntegrationTest {
 		assertEquals(0, page.getTotal());
 	}
 
+	@DisplayName("Delivers published payloads to subscribers")
 	@Test
 	void publishAndSubscribeDeliversPayload() throws Exception {
 		String channel = "channel-test";

@@ -7,6 +7,7 @@ import me.whereareiam.identica.model.replication.ReplicationPage;
 import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -15,7 +16,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("Default Replicated Cache")
 class DefaultReplicatedCacheTest {
+	@DisplayName("Returns a local hit without contacting the adapter")
 	@Test
 	void getReturnsLocalHitWithoutAdapterCall() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();
@@ -34,6 +37,7 @@ class DefaultReplicatedCacheTest {
 		assertEquals(0, adapter.getCalls);
 	}
 
+	@DisplayName("Returns empty from getFresh when the key is null")
 	@Test
 	void getFreshReturnsEmptyOnNullKey() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -48,6 +52,7 @@ class DefaultReplicatedCacheTest {
 		assertEquals(Optional.empty(), cache.getFresh(null).join());
 	}
 
+	@DisplayName("Falls back to the local cache when the adapter is unavailable")
 	@Test
 	void getFreshFallsBackToLocalWhenAdapterUnavailable() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();
@@ -68,6 +73,7 @@ class DefaultReplicatedCacheTest {
 		assertEquals(0, adapter.getCalls);
 	}
 
+	@DisplayName("Populates the local cache from a fresh remote value")
 	@Test
 	void remoteHitPopulatesLocalCache() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();
@@ -91,6 +97,7 @@ class DefaultReplicatedCacheTest {
 		assertEquals(1, adapter.getCalls);
 	}
 
+	@DisplayName("Invalidates local state when the remote envelope is expired")
 	@Test
 	void remoteHitExpiredEnvelopeInvalidatesLocal() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();
@@ -115,6 +122,7 @@ class DefaultReplicatedCacheTest {
 		assertTrue(adapter.invalidateCalls > 0);
 	}
 
+	@DisplayName("Invalidates local state when the remote envelope version does not match")
 	@Test
 	void remoteHitVersionMismatchInvalidatesLocal() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();
@@ -139,6 +147,7 @@ class DefaultReplicatedCacheTest {
 		assertTrue(adapter.invalidateCalls > 0);
 	}
 
+	@DisplayName("Invalidates local state when the remote payload cannot be decoded")
 	@Test
 	void remoteHitDecodeFailureInvalidatesLocal() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();
@@ -174,6 +183,7 @@ class DefaultReplicatedCacheTest {
 		assertTrue(adapter.invalidateCalls > 0);
 	}
 
+	@DisplayName("Stores values both locally and remotely when a TTL is provided")
 	@Test
 	void putWithTtlStoresLocallyAndRemotely() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();
@@ -200,6 +210,7 @@ class DefaultReplicatedCacheTest {
 		assertEquals("value", SnapshotCodec.string().decode(envelope.getPayload()));
 	}
 
+	@DisplayName("Treats a zero TTL as a remote invalidation")
 	@Test
 	void putWithZeroTtlInvalidatesRemote() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();
@@ -224,6 +235,7 @@ class DefaultReplicatedCacheTest {
 		assertEquals("key", adapter.lastKey);
 	}
 
+	@DisplayName("Consumes a remote value and clears the local copy")
 	@Test
 	void consumeReturnsMappedValueAndInvalidatesLocal() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();
@@ -248,6 +260,7 @@ class DefaultReplicatedCacheTest {
 		assertEquals(1, adapter.consumeCalls);
 	}
 
+	@DisplayName("Delegates listKeys to the adapter when replication is available")
 	@Test
 	void listKeysDelegatesToAdapterWhenAvailable() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -266,6 +279,7 @@ class DefaultReplicatedCacheTest {
 		assertEquals(1, adapter.listKeysCalls);
 	}
 
+	@DisplayName("Falls back to local listKeys results when replication is unavailable")
 	@Test
 	void listKeysFallsBackToLocalWhenUnavailable() {
 		InMemoryLocalCache<String> local = new InMemoryLocalCache<>();

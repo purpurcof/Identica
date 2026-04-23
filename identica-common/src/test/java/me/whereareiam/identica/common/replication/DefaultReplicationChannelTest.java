@@ -5,6 +5,7 @@ import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.replication.SnapshotMapper;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CompletableFuture;
@@ -15,7 +16,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@DisplayName("Default Replication Channel")
 class DefaultReplicationChannelTest {
+	@DisplayName("Publishing wraps snapshots in a replication envelope using the configured codec")
 	@Test
 	void publishUsesMapperCodecAndEnvelope() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -35,6 +38,7 @@ class DefaultReplicationChannelTest {
 		assertEquals("hello", SnapshotCodec.string().decode(envelope.getPayload()));
 	}
 
+	@DisplayName("Publishing becomes a no-op when the adapter is unavailable")
 	@Test
 	void publishNoopsWhenAdapterUnavailable() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -52,6 +56,7 @@ class DefaultReplicationChannelTest {
 		assertEquals(0, adapter.publishCalls);
 	}
 
+	@DisplayName("Subscriptions ignore invalid payloads and mismatched envelope versions")
 	@Test
 	void subscribeIgnoresInvalidPayloads() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -74,6 +79,7 @@ class DefaultReplicationChannelTest {
 		assertThrows(TimeoutException.class, () -> received.get(80, TimeUnit.MILLISECONDS));
 	}
 
+	@DisplayName("Subscriptions ignore snapshot decode failures")
 	@Test
 	void subscribeIgnoresDecodeErrors() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
@@ -107,6 +113,7 @@ class DefaultReplicationChannelTest {
 		assertThrows(TimeoutException.class, () -> received.get(80, TimeUnit.MILLISECONDS));
 	}
 
+	@DisplayName("Subscriptions wait for asynchronous snapshot mapping to finish")
 	@Test
 	void subscribeWaitsForMapperCompletion() throws Exception {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();

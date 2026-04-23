@@ -9,6 +9,7 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.type.UsernameSource;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,12 +26,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Apply-Provider-Link Phase")
 class ApplyProviderLinkPhaseTest {
 	@Mock
 	private ProviderLinkPersistenceService providerLinkPersistenceService;
 	@Mock
 	private ProviderProfilePersistenceService providerProfilePersistenceService;
 
+	@DisplayName("Links the premium profile back to the existing account UUID")
 	@Test
 	void linksPremiumProviderToExistingAccountUuid() {
 		UUID existingAccountUniqueId = UUID.randomUUID();

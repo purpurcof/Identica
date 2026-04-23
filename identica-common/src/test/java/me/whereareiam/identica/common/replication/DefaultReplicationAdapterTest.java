@@ -2,6 +2,7 @@ package me.whereareiam.identica.common.replication;
 
 import me.whereareiam.identica.model.replication.ReplicationPage;
 import me.whereareiam.identica.replication.ReplicationAdapter;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -18,7 +19,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Default Replication Adapter")
 class DefaultReplicationAdapterTest {
+	@DisplayName("Returns empty results without delegating when the provider is unavailable")
 	@Test
 	void unavailableProviderReturnsEmptyWithoutDelegation() {
 		ReplicationAdapter provider = mock(ReplicationAdapter.class);
@@ -47,6 +50,7 @@ class DefaultReplicationAdapterTest {
 		verify(provider, never()).subscribe(anyString(), any());
 	}
 
+	@DisplayName("Delegates all calls once the provider is available")
 	@Test
 	void availableProviderDelegatesCalls() {
 		ReplicationAdapter provider = mock(ReplicationAdapter.class);

@@ -52,6 +52,10 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    ignoreFailures = providers.gradleProperty("ignoreTestFailures")
+        .map(String::toBoolean)
+        .orElse(false)
+        .get()
 }
 
 extensions.configure<PublishingExtension> {

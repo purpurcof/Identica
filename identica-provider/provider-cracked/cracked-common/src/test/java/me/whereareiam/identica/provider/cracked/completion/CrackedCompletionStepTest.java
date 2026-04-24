@@ -11,6 +11,7 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.jspecify.annotations.NonNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -19,7 +20,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("Cracked Completion Step")
 class CrackedCompletionStepTest {
+	@DisplayName("Uses the authentication completion message for authentication pipelines")
 	@Test
 	void authenticationUsesAuthenticationCompletionMessage() {
 		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
@@ -30,6 +33,7 @@ class CrackedCompletionStepTest {
 		assertEquals(messages.getCompletion().getAuthentication().getBody(), lines);
 	}
 
+	@DisplayName("Uses the registration completion message for registration pipelines")
 	@Test
 	void registrationUsesRegistrationCompletionMessage() {
 		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
@@ -40,6 +44,7 @@ class CrackedCompletionStepTest {
 		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
 
+	@DisplayName("Uses the migration completion message for migration pipelines")
 	@Test
 	void migrationUsesMigrationCompletionMessage() {
 		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());

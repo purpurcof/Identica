@@ -19,6 +19,7 @@ import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -30,6 +31,7 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 	private final AccountPersistenceService accountPersistenceService;
 	private final AccountReservationPersistenceService accountReservationPersistenceService;
 	private final Provider<Messages> messagesProvider;
+	private final UniqueIdGenerator uniqueIdGenerator;
 
 	@Override
 	public @NotNull String id() {
@@ -63,8 +65,13 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 		}
 
 		UUID uniqueId = context.getIdenticaUniqueId();
-		if (uniqueId == null)
-			uniqueId = UniqueIdGenerator.newIdenticaUniqueId();
+		if (uniqueId == null || uniqueIdGenerator.requiresConfiguredUniqueId())
+			uniqueId = resolveNewAccountId(context, profile);
+
+		if (uniqueId == null) {
+			state.setResult(PipelineResult.failed(accountCreationMissingMessage()));
+			return CompletableFuture.completedFuture(PhaseResult.pass(state));
+		}
 
 		long now = System.currentTimeMillis();
 		Account existing = accountPersistenceService.findByUniqueId(uniqueId).orElse(null);
@@ -113,5 +120,16 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 		if (username.isBlank()) return null;
 
 		return "username:" + username.trim().toLowerCase();
+	}
+
+	private @Nullable UUID resolveNewAccountId(
+			@NotNull RegistrationContext context,
+			@NotNull AccountProviderProfile profile
+	) {
+		return uniqueIdGenerator.resolveConfiguredUniqueId(
+				profile.getProviderUsername(),
+				profile.getProviderSubject(),
+				context.getIdentity().getObservedUniqueId()
+		);
 	}
 }

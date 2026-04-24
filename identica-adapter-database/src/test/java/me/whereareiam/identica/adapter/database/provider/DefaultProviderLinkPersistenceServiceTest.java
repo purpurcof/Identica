@@ -10,6 +10,7 @@ import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Default Provider-Link Persistence Service")
 class DefaultProviderLinkPersistenceServiceTest {
 	@Mock
 	private ProviderLinkRepository repository;
@@ -40,6 +42,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		service = new DefaultProviderLinkPersistenceService(repository, eventManager);
 	}
 
+	@DisplayName("Refuses blank provider IDs and subjects when looking up links by subject")
 	@Test
 	void findBySubjectReturnsEmptyForBlankValues() {
 		assertTrue(service.findBySubject("", "subject").isEmpty());
@@ -47,6 +50,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		verifyNoInteractions(repository);
 	}
 
+	@DisplayName("Requires a provider ID when looking up a link by account and provider")
 	@Test
 	void findByUniqueIdAndProviderIdReturnsEmptyForBlankProviderId() {
 		UUID uniqueId = UUID.randomUUID();
@@ -54,6 +58,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		verifyNoInteractions(repository);
 	}
 
+	@DisplayName("Rejects upserts with a blank provider ID")
 	@Test
 	void upsertRejectsBlankProviderId() {
 		AccountProviderLink link = TestDataFactory.providerLink(UUID.randomUUID(), " ", "subject", false);
@@ -61,6 +66,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		assertThrows(IllegalArgumentException.class, () -> service.upsert(link));
 	}
 
+	@DisplayName("Rejects upserts with a blank provider subject")
 	@Test
 	void upsertRejectsBlankProviderSubject() {
 		AccountProviderLink link = TestDataFactory.providerLink(UUID.randomUUID(), "provider", " ", false);
@@ -68,6 +74,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		assertThrows(IllegalArgumentException.class, () -> service.upsert(link));
 	}
 
+	@DisplayName("Updates an existing provider link and refreshes primary-link state")
 	@Test
 	void upsertUpdatesExistingLink() {
 		UUID uniqueId = UUID.randomUUID();
@@ -93,6 +100,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		assertEquals(999L, result.getLastSeenAt());
 	}
 
+	@DisplayName("Inserts a new provider link when no existing subject is found")
 	@Test
 	void upsertInsertsNewLink() {
 		UUID uniqueId = UUID.randomUUID();
@@ -106,6 +114,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		assertEquals(uniqueId, result.getUniqueId());
 	}
 
+	@DisplayName("Delegates provider-link deletion by account UUID")
 	@Test
 	void deleteAllDelegatesToRepository() {
 		UUID uniqueId = UUID.randomUUID();
@@ -115,6 +124,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		verify(repository).deleteAll(uniqueId);
 	}
 
+	@DisplayName("Deletes provider links when an account is cleared")
 	@Test
 	void onAccountLifecycleDeletesOnClear() {
 		UUID uniqueId = UUID.randomUUID();
@@ -126,6 +136,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		verify(repository).deleteAll(uniqueId);
 	}
 
+	@DisplayName("Deletes provider links when an account is deleted")
 	@Test
 	void onAccountLifecycleDeletesOnDelete() {
 		UUID uniqueId = UUID.randomUUID();
@@ -137,6 +148,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 		verify(repository).deleteAll(uniqueId);
 	}
 
+	@DisplayName("Ignores lifecycle events without an account UUID when deleting links")
 	@Test
 	void onAccountLifecycleIgnoresNullUniqueId() {
 		ConnectionIdentity identity = new ConnectionIdentity(null, "Player", null);

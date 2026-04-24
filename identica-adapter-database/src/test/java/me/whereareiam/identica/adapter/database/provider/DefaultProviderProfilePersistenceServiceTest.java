@@ -5,6 +5,7 @@ import me.whereareiam.identica.adapter.database.repository.provider.ProviderProf
 import me.whereareiam.identica.adapter.database.testing.TestDataFactory;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -21,6 +22,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Default Provider-Profile Persistence Service")
 class DefaultProviderProfilePersistenceServiceTest {
 	@Mock
 	private ProviderProfileRepository repository;
@@ -32,6 +34,7 @@ class DefaultProviderProfilePersistenceServiceTest {
 		service = new DefaultProviderProfilePersistenceService(repository);
 	}
 
+	@DisplayName("Refuses blank provider IDs and subjects when looking up profiles")
 	@Test
 	void findBySubjectReturnsEmptyForBlankValues() {
 		assertTrue(service.findBySubject("", "subject").isEmpty());
@@ -39,6 +42,7 @@ class DefaultProviderProfilePersistenceServiceTest {
 		verifyNoInteractions(repository);
 	}
 
+	@DisplayName("Rejects profile upserts with a blank provider ID")
 	@Test
 	void upsertRejectsBlankProviderId() {
 		AccountProviderProfile profile = TestDataFactory.providerProfile(" ", "subject", "user");
@@ -46,6 +50,7 @@ class DefaultProviderProfilePersistenceServiceTest {
 		assertThrows(IllegalArgumentException.class, () -> service.upsert(profile));
 	}
 
+	@DisplayName("Rejects profile upserts with a blank provider subject")
 	@Test
 	void upsertRejectsBlankProviderSubject() {
 		AccountProviderProfile profile = TestDataFactory.providerProfile("provider", " ", "user");
@@ -53,6 +58,7 @@ class DefaultProviderProfilePersistenceServiceTest {
 		assertThrows(IllegalArgumentException.class, () -> service.upsert(profile));
 	}
 
+	@DisplayName("Updates an existing provider profile when the subject already exists")
 	@Test
 	void upsertUpdatesExistingProfile() {
 		AccountProviderProfile profile = TestDataFactory.providerProfile("provider", "subject", "user");
@@ -69,6 +75,7 @@ class DefaultProviderProfilePersistenceServiceTest {
 		assertEquals("user", result.getProviderUsername());
 	}
 
+	@DisplayName("Inserts a new provider profile when no subject exists yet")
 	@Test
 	void upsertInsertsNewProfile() {
 		AccountProviderProfile profile = TestDataFactory.providerProfile("provider", "subject", "user");
@@ -80,6 +87,7 @@ class DefaultProviderProfilePersistenceServiceTest {
 		assertEquals("user", result.getProviderUsername());
 	}
 
+	@DisplayName("Ignores delete requests with blank provider identifiers")
 	@Test
 	void deleteIgnoresBlankInputs() {
 		service.delete(" ", "subject");

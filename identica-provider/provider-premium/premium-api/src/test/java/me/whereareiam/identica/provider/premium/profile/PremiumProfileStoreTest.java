@@ -12,6 +12,7 @@ import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.replication.cache.base.ReplicationCacheBuilder;
 import me.whereareiam.identica.replication.codec.SnapshotCodecFactory;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -24,7 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@DisplayName("Premium Profile Store")
 class PremiumProfileStoreTest {
+	@DisplayName("Stores, loads, and clears premium profiles by username")
 	@Test
 	void saveFindAndClearByUsernameOnly() {
 		PremiumProfileStore store = new PremiumProfileStore(

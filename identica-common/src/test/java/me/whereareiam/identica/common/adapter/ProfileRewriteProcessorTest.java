@@ -10,6 +10,7 @@ import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -20,7 +21,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("Profile Rewrite Processor")
 class ProfileRewriteProcessorTest {
+	@DisplayName("Stores denied prepare decisions with both the observed UUID and connection key")
 	@Test
 	void deniedPrepareStoresStateAndCallsDenyTarget() {
 		UUID observedUniqueId = UUID.randomUUID();

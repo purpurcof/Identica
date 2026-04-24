@@ -1,6 +1,7 @@
 package me.whereareiam.identica.adapter.database.integration;
 
 import me.whereareiam.identica.adapter.database.testing.DatabaseFixture;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -9,7 +10,9 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("Account SQL Behavior")
 class AccountSqlBehaviorIntegrationTest extends DatabaseIntegrationTestBase {
+	@DisplayName("Matches usernames case-insensitively")
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("fixtures")
 	void findByUsernameIsCaseInsensitive(DatabaseFixture fixture) {

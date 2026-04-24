@@ -4,6 +4,7 @@ import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.provider.ProviderOperations;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -12,7 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@DisplayName("Format-Username Conflict Resolver")
 class FormatUsernameConflictResolverTest {
+	@DisplayName("Formats the username when a custom pattern is provided")
 	@Test
 	void formatsUsernameWhenPatternProvided() {
 		ProviderOperations providerOperations = mock(ProviderOperations.class);
@@ -33,6 +36,7 @@ class FormatUsernameConflictResolverTest {
 		assertEquals("Player*", resolution.getOverrideValue());
 	}
 
+	@DisplayName("Expands provider names and IDs inside username format patterns")
 	@Test
 	void formatsDisplayNamesAndProviderIdsWhenAvailable() {
 		ProviderOperations providerOperations = mock(ProviderOperations.class);

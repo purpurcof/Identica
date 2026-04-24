@@ -6,6 +6,7 @@ import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckContext;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -18,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Premium Migration Precheck")
 class PremiumMigrationPrecheckTest {
 	@Mock
 	private HandshakeStore handshakeStore;
@@ -36,6 +38,7 @@ class PremiumMigrationPrecheckTest {
 		);
 	}
 
+	@DisplayName("Marks a premium verification attempt when online migration is forced")
 	@Test
 	void forceOnlineMigrationMarksVerifyAttempt() {
 		precheck.precheck(MigrationPrecheckContext.builder()

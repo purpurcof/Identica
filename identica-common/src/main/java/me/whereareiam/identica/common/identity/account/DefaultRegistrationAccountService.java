@@ -32,9 +32,11 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 	private final SessionService sessionService;
 	private final ReservationCache reservationCache;
 	private final Provider<Settings> settingsProvider;
+	private final UniqueIdGenerator uniqueIdGenerator;
 
 	@Override
 	public @Nullable UUID reserve(@NotNull ProfileRequest request) {
+		String requestedUsername = request.getUsername();
 		String username = UniqueIdResolutionSupport.normalize(request.getUsername());
 		if (username == null) return null;
 
@@ -47,7 +49,12 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 				() -> resolveFromProviderLink(providerId, providerSubject),
 				() -> resolveFromReservation(providerId, providerSubject),
 				() -> resolveFromAccountReservation(username),
-				() -> reserveNewAccountId(providerId, providerSubject)
+				() -> reserveNewAccountId(
+						requestedUsername,
+						providerId,
+						providerSubject,
+						request.getIdentity().getObservedUniqueId()
+				)
 		));
 	}
 
@@ -86,8 +93,15 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 		return null;
 	}
 
-	private UUID reserveNewAccountId(String providerId, String providerSubject) {
-		UUID generated = UniqueIdGenerator.newIdenticaUniqueId();
+	private @Nullable UUID reserveNewAccountId(
+			String username,
+			String providerId,
+			String providerSubject,
+			@Nullable UUID observedUniqueId
+	) {
+		UUID generated = resolveNewAccountId(username, providerSubject, observedUniqueId);
+		if (generated == null) return null;
+
 		long ttlMs = pendingTtlMillis();
 
 		String subjectKey = UniqueIdResolutionSupport.buildSubjectKey(providerId, providerSubject);
@@ -95,6 +109,14 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 			reservationCache.put(subjectKey, generated, ttlMs).join();
 
 		return generated;
+	}
+
+	private @Nullable UUID resolveNewAccountId(String username, String providerSubject, @Nullable UUID observedUniqueId) {
+		return uniqueIdGenerator.resolveConfiguredUniqueId(
+				username,
+				providerSubject,
+				observedUniqueId
+		);
 	}
 
 	@Nullable

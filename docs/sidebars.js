@@ -1,11 +1,10 @@
 const sidebars = {
   docs: [
     "intro",
-    {
-      type: "category",
-      label: "Reference",
-      items: ["configuration", "release-docs"]
-    }
+    "installation/index",
+    "providers/index",
+    "configuration/index",
+    "developer/index"
   ]
 };
 

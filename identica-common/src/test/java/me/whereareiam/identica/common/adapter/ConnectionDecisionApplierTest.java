@@ -10,6 +10,7 @@ import me.whereareiam.keystone.serializer.SerializerEngine;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@DisplayName("Connection Decision Applier")
 class ConnectionDecisionApplierTest {
 	@BeforeAll
 	static void initializeSerializer() {
@@ -45,6 +47,7 @@ class ConnectionDecisionApplierTest {
 		}
 	};
 
+	@DisplayName("Sends waiting decisions back to the actor as a message")
 	@Test
 	void waitDecisionSendsActorMessage() {
 		ConnectionDecisionApplier applier = new ConnectionDecisionApplier(this::messages);
@@ -58,6 +61,7 @@ class ConnectionDecisionApplierTest {
 		assertNull(target.reconnect.get());
 	}
 
+	@DisplayName("Delegates denied decisions to the target")
 	@Test
 	void denyDecisionUsesTarget() {
 		ConnectionDecisionApplier applier = new ConnectionDecisionApplier(this::messages);
@@ -69,6 +73,7 @@ class ConnectionDecisionApplierTest {
 		assertNotNull(target.denied.get());
 	}
 
+	@DisplayName("Delegates reconnect decisions to the target")
 	@Test
 	void reconnectDecisionUsesTarget() {
 		ConnectionDecisionApplier applier = new ConnectionDecisionApplier(this::messages);

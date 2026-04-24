@@ -26,6 +26,7 @@ import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -46,6 +47,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Default Migration Service")
 class DefaultMigrationServiceTest {
 	@Mock
 	private ProviderManager providerManager;
@@ -60,6 +62,7 @@ class DefaultMigrationServiceTest {
 	@Mock
 	private IdentityService identityService;
 
+	@DisplayName("Denies migration when the requested username is still occupied")
 	@Test
 	void deniesMigrationWhenUsernameNotFree() {
 		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());
@@ -112,6 +115,7 @@ class DefaultMigrationServiceTest {
 		assertEquals("locked", result.getMessage());
 	}
 
+	@DisplayName("Stores account and connection identifiers in separate pending-migration fields")
 	@Test
 	void requestStoresAccountAndConnectionIdsInTheirOwnFields() {
 		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());
@@ -151,6 +155,7 @@ class DefaultMigrationServiceTest {
 		assertEquals(PendingMigration.Phase.CONFIRMATION, pendingMigration.getPhase());
 	}
 
+	@DisplayName("Rebuilds pending migration details from an active migration pipeline state")
 	@Test
 	void findPendingMigrationReturnsStartedMigrationFromPipelineState() {
 		UUID connectionUniqueId = UUID.randomUUID();
@@ -197,6 +202,7 @@ class DefaultMigrationServiceTest {
 		assertEquals(PendingMigration.Phase.STARTED, pendingMigration.getPhase());
 	}
 
+	@DisplayName("Starts migration even when the target provider is already linked")
 	@Test
 	void confirmStoresPendingMigrationEvenWhenTargetProviderAlreadyLinked() {
 		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());

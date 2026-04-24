@@ -4,13 +4,16 @@ import me.whereareiam.identica.model.config.persistence.H2Persistence;
 import me.whereareiam.identica.model.config.persistence.SqlitePersistence;
 import me.whereareiam.identica.model.config.persistence.external.MysqlPersistence;
 import me.whereareiam.identica.model.config.persistence.external.PostgresPersistence;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("JDBC URL Factory")
 class JdbcUrlFactoryTest {
+	@DisplayName("Uses identica.db when the SQLite file name is blank")
 	@Test
 	void sqliteDefaultsToIdenticaDbWhenBlank() {
 		Path dataPath = Path.of("build", "test-data");
@@ -22,6 +25,7 @@ class JdbcUrlFactoryTest {
 		assertEquals("jdbc:sqlite:" + dataPath.resolve("identica.db"), url);
 	}
 
+	@DisplayName("Uses the configured SQLite file name")
 	@Test
 	void sqliteUsesCustomFileName() {
 		Path dataPath = Path.of("build", "test-data");
@@ -33,6 +37,7 @@ class JdbcUrlFactoryTest {
 		assertEquals("jdbc:sqlite:" + dataPath.resolve("custom.db"), url);
 	}
 
+	@DisplayName("Builds an in-memory H2 JDBC URL when a mem target is provided")
 	@Test
 	void h2UsesMemTargetWhenProvided() {
 		Path dataPath = Path.of("build", "test-data");
@@ -45,6 +50,7 @@ class JdbcUrlFactoryTest {
 		assertEquals("jdbc:h2:mem:identica_test", url);
 	}
 
+	@DisplayName("Builds a file-based H2 JDBC URL and appends options")
 	@Test
 	void h2UsesFileTargetWithOptions() {
 		Path dataPath = Path.of("build", "test-data");
@@ -57,6 +63,7 @@ class JdbcUrlFactoryTest {
 		assertEquals("jdbc:h2:file:" + dataPath.resolve("identica") + ";MODE=PostgreSQL", url);
 	}
 
+	@DisplayName("Formats the external PostgreSQL JDBC URL")
 	@Test
 	void postgresExternalUrlIsFormatted() {
 		Path dataPath = Path.of("build", "test-data");
@@ -70,6 +77,7 @@ class JdbcUrlFactoryTest {
 		assertEquals("jdbc:postgresql://db.local:5433/identica", url);
 	}
 
+	@DisplayName("Formats the external MariaDB JDBC URL")
 	@Test
 	void mysqlExternalUrlIsFormatted() {
 		Path dataPath = Path.of("build", "test-data");

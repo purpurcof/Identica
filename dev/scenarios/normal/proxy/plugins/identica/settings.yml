@@ -4,6 +4,7 @@ connection:
   attemptTtl: "10m"
   reservationTtl: "15m"
   prepareStateTtl: "10m"
+  uniqueIdMode: "RANDOM"
   routing:
     defaults:
       step:

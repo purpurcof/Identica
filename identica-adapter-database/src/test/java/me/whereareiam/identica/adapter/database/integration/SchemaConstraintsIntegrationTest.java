@@ -1,6 +1,7 @@
 package me.whereareiam.identica.adapter.database.integration;
 
 import me.whereareiam.identica.adapter.database.testing.DatabaseFixture;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -9,7 +10,9 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@DisplayName("Schema Constraints")
 class SchemaConstraintsIntegrationTest extends DatabaseIntegrationTestBase {
+	@DisplayName("Deleting an account cascades to provider links and profiles")
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("fixtures")
 	void cascadesDeletesFromAccounts(DatabaseFixture fixture) {
@@ -55,6 +58,7 @@ class SchemaConstraintsIntegrationTest extends DatabaseIntegrationTestBase {
 		});
 	}
 
+	@DisplayName("A single account cannot own two subjects for the same provider")
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("fixtures")
 	void enforcesUniqueProviderLinkConstraint(DatabaseFixture fixture) {

@@ -49,6 +49,7 @@ import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.UsernameSource;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -70,6 +71,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Prepare Pipeline")
 class PreparePipelineTest {
 	@Mock
 	private HandshakeStore handshakeStore;
@@ -88,6 +90,7 @@ class PreparePipelineTest {
 	@Mock
 	private PipelineStateStore pipelineStateStore;
 
+	@DisplayName("Profile preparation builds a transient account and applies the event decision")
 	@Test
 	void profileStageBuildsTransientAccountAndHonorsPrepareDecision() {
 		UUID identicaUniqueId = UUID.randomUUID();
@@ -143,6 +146,7 @@ class PreparePipelineTest {
 		verify(eventManager).call(any(AccountPrepareEvent.class));
 	}
 
+	@DisplayName("Handshake preparation reuses the decision that was already stored for the connection")
 	@Test
 	void handshakeStageReusesPreviousHandshakeDecision() {
 		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
@@ -169,6 +173,7 @@ class PreparePipelineTest {
 		assertNotNull(decision.getHandshake());
 	}
 
+	@DisplayName("Premium profile preparation reuses the UUID from an existing linked account")
 	@Test
 	void profileStageReusesExistingLinkedUuidForPremiumJoin() {
 		UUID identicaUniqueId = UUID.randomUUID();
@@ -225,6 +230,7 @@ class PreparePipelineTest {
 		assertNotNull(prepareStateStore.peek(identicaUniqueId).orElse(null));
 	}
 
+	@DisplayName("Pending migration state can supply the target account UUID during profile preparation")
 	@Test
 	void profileStageReusesPendingMigrationAccountForTargetProvider() {
 		UUID identicaUniqueId = UUID.randomUUID();
@@ -288,6 +294,7 @@ class PreparePipelineTest {
 		verify(registrationAccountService, never()).reserve(any());
 	}
 
+	@DisplayName("Profile preparation clears stale migration state when the observed provider no longer matches")
 	@Test
 	void profileStageClearsPendingMigrationWhenObservedProviderDiffers() {
 		UUID identicaUniqueId = UUID.randomUUID();

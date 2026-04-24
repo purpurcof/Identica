@@ -5,7 +5,6 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.adapter.command.executor.verification.VerificationMessagePresenter;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Default;
@@ -17,6 +16,7 @@ import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
+import me.whereareiam.identica.type.verification.status.VerificationResetStatus;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
@@ -30,10 +30,9 @@ import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class VerificationCommand {
+public class VerificationResetCommand {
 	private final Provider<Messages> messagesProvider;
 	private final VerificationService verificationService;
-	private final VerificationMessagePresenter messagePresenter;
 	private final IdentityService identityService;
 	private final AccountPersistenceService accountPersistenceService;
 
@@ -47,7 +46,10 @@ public class VerificationCommand {
 		ResolvedTarget resolved = resolveTarget(sender, target);
 		if (resolved == null) return;
 
-		messagePresenter.presentResetResult(sender, verificationService.reset(resolved.uniqueId(), providerId.isBlank() ? null : providerId));
+		if (verificationService.reset(resolved.uniqueId(), providerId.isBlank() ? null : providerId).getStatus() != VerificationResetStatus.RESET)
+			return;
+
+		sendMessage(sender, resetMessages().getCompleted(), Map.of("target", resolved.display()));
 	}
 
 	private @Nullable ResolvedTarget resolveTarget(@NotNull Actor sender, @NotNull String target) {
@@ -59,7 +61,7 @@ public class VerificationCommand {
 
 		List<Account> matches = accountPersistenceService.findByUsername(target);
 		if (matches.isEmpty()) {
-			sendMessage(sender, verificationMessages().getReset().getTargetNotFound(), Map.of("target", target));
+			sendMessage(sender, resetMessages().getTargetNotFound(), Map.of("target", target));
 			return null;
 		}
 
@@ -67,8 +69,8 @@ public class VerificationCommand {
 		return new ResolvedTarget(account.getUniqueId(), account.getUsername());
 	}
 
-	private Messages.Commands.Verification verificationMessages() {
-		return messagesProvider.get().getCommands().getVerification();
+	private Messages.Commands.Admin.Verification.Reset resetMessages() {
+		return messagesProvider.get().getCommands().getAdmin().getVerification().getReset();
 	}
 
 	private void sendMessage(@NotNull Actor sender, @Nullable String message, @NotNull Map<String, String> placeholders) {

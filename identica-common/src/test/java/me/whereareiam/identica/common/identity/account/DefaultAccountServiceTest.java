@@ -13,6 +13,7 @@ import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.AccountOperationRequest;
 import me.whereareiam.identica.type.UsernameSource;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Default Account Service")
 class DefaultAccountServiceTest {
 	@Mock
 	private AccountPersistenceService accountPersistenceService;
@@ -53,6 +55,7 @@ class DefaultAccountServiceTest {
 		);
 	}
 
+	@DisplayName("Clearing an account closes its session, reserves the username, and publishes a clear event")
 	@Test
 	void clearClosesSessionAndFiresClearLifecycleEvent() {
 		Account account = account();
@@ -81,6 +84,7 @@ class DefaultAccountServiceTest {
 		assertEquals(account.getUniqueId(), eventCaptor.getValue().getIdentity().getUniqueId());
 	}
 
+	@DisplayName("Deleting an account closes its session and publishes a delete event")
 	@Test
 	void deleteClosesSessionAndFiresDeleteLifecycleEvent() {
 		Account account = account();

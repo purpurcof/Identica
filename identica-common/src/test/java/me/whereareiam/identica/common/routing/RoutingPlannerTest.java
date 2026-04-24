@@ -19,6 +19,7 @@ import me.whereareiam.identica.type.routing.RoutingPlanAction;
 import me.whereareiam.identica.type.routing.RoutingReason;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -28,7 +29,9 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("Routing Planner")
 class RoutingPlannerTest {
+	@DisplayName("A waiting step produces a step-based routing intent")
 	@Test
 	void waitingStepCreatesStepIntent() {
 		RoutingPlanner planner = new RoutingPlanner(this::settings);
@@ -45,6 +48,7 @@ class RoutingPlannerTest {
 		assertEquals("auth", plan.getIntent().getEndpoint().getServer());
 	}
 
+	@DisplayName("A completed pipeline produces a completion routing intent")
 	@Test
 	void completedPipelineCreatesCompletionIntent() {
 		RoutingPlanner planner = new RoutingPlanner(this::settings);
@@ -59,6 +63,7 @@ class RoutingPlannerTest {
 		assertEquals("lobby", plan.getIntent().getEndpoint().getServer());
 	}
 
+	@DisplayName("A failed pipeline clears the current routing intent")
 	@Test
 	void failedPipelineClearsIntent() {
 		UUID connectionId = UUID.randomUUID();
@@ -74,6 +79,7 @@ class RoutingPlannerTest {
 		assertEquals(RoutingClearReason.PIPELINE_FAILED, plan.getClearReason());
 	}
 
+	@DisplayName("Step-specific overrides win over stage and scenario defaults")
 	@Test
 	void stepOverrideBeatsStageAndScenarioDefaults() {
 		Settings settings = settings();
@@ -97,6 +103,7 @@ class RoutingPlannerTest {
 		assertEquals("step-server", plan.getIntent().getEndpoint().getServer());
 	}
 
+	@DisplayName("Blank routing targets clear the current intent")
 	@Test
 	void blankTargetClearsIntent() {
 		Settings settings = settings();

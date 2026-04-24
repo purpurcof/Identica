@@ -9,6 +9,7 @@ import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.routing.RoutingAttemptTrigger;
 import me.whereareiam.identica.type.routing.RoutingIntentStatus;
 import me.whereareiam.identica.type.routing.RoutingReason;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -17,7 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("Default Routing-Intent Store")
 class DefaultRoutingIntentStoreTest {
+	@DisplayName("Replacing an intent clears the previous attempt state")
 	@Test
 	void replacingIntentResetsAttemptState() {
 		DefaultRoutingIntentStore store = new DefaultRoutingIntentStore();
@@ -34,6 +37,7 @@ class DefaultRoutingIntentStoreTest {
 		assertEquals(0, current.getAttemptState().getAttempts());
 	}
 
+	@DisplayName("Marks an intent as reached when the server matches")
 	@Test
 	void markReachedUpdatesStatusForMatchingServer() {
 		DefaultRoutingIntentStore store = new DefaultRoutingIntentStore();
@@ -44,6 +48,7 @@ class DefaultRoutingIntentStoreTest {
 		assertEquals(RoutingIntentStatus.REACHED, store.peek(connectionId).orElseThrow().getStatus());
 	}
 
+	@DisplayName("Leaves the intent pending when a different server is reported")
 	@Test
 	void markReachedIgnoresDifferentServer() {
 		DefaultRoutingIntentStore store = new DefaultRoutingIntentStore();
@@ -54,6 +59,7 @@ class DefaultRoutingIntentStoreTest {
 		assertEquals(RoutingIntentStatus.PENDING, store.peek(connectionId).orElseThrow().getStatus());
 	}
 
+	@DisplayName("Clearing an intent removes it from the store")
 	@Test
 	void clearRemovesIntent() {
 		DefaultRoutingIntentStore store = new DefaultRoutingIntentStore();

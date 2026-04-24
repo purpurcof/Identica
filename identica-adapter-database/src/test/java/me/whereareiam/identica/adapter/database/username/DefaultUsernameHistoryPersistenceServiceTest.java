@@ -5,6 +5,7 @@ import me.whereareiam.identica.adapter.database.testing.TestDataFactory;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.UsernameHistoryEntry;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -16,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Default Username-History Persistence Service")
 class DefaultUsernameHistoryPersistenceServiceTest {
 	@Mock
 	private UsernameHistoryRepository repository;
@@ -29,6 +31,7 @@ class DefaultUsernameHistoryPersistenceServiceTest {
 		service = new DefaultUsernameHistoryPersistenceService(repository, eventManager);
 	}
 
+	@DisplayName("Rejects history entries with a blank previous username")
 	@Test
 	void recordRejectsBlankOldUsername() {
 		UsernameHistoryEntry entry = TestDataFactory.usernameHistoryEntry(UUID.randomUUID(), "provider", " ", "new", "source");
@@ -36,6 +39,7 @@ class DefaultUsernameHistoryPersistenceServiceTest {
 		assertThrows(IllegalArgumentException.class, () -> service.record(entry));
 	}
 
+	@DisplayName("Rejects history entries with a blank new username")
 	@Test
 	void recordRejectsBlankNewUsername() {
 		UsernameHistoryEntry entry = TestDataFactory.usernameHistoryEntry(UUID.randomUUID(), "provider", "old", " ", "source");
@@ -43,6 +47,7 @@ class DefaultUsernameHistoryPersistenceServiceTest {
 		assertThrows(IllegalArgumentException.class, () -> service.record(entry));
 	}
 
+	@DisplayName("Rejects history entries with a blank source")
 	@Test
 	void recordRejectsBlankSource() {
 		UsernameHistoryEntry entry = TestDataFactory.usernameHistoryEntry(UUID.randomUUID(), "provider", "old", "new", " ");
@@ -50,6 +55,7 @@ class DefaultUsernameHistoryPersistenceServiceTest {
 		assertThrows(IllegalArgumentException.class, () -> service.record(entry));
 	}
 
+	@DisplayName("Persists username history entries through the repository")
 	@Test
 	void recordInsertsEntry() {
 		UUID uniqueId = UUID.randomUUID();
@@ -60,6 +66,7 @@ class DefaultUsernameHistoryPersistenceServiceTest {
 		verify(repository).insert(uniqueId, "provider", "old", "new", "source", TestDataFactory.CHANGED_AT);
 	}
 
+	@DisplayName("Deletes all username history entries for an account")
 	@Test
 	void deleteAllDelegatesToRepository() {
 		UUID uniqueId = UUID.randomUUID();

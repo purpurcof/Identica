@@ -24,10 +24,10 @@ const versionConfig = Object.fromEntries(
 
 const config = {
   title: "Identica",
-  tagline: "Authentication and identity toolkit documentation.",
+  tagline: "Modular next-gen Minecraft identity plugin with pluggable providers",
   favicon: "img/favicon.ico",
 
-  url: "https://identica-docs.arcadeya.com",
+  url: "https://identica.whereareiam.me",
   baseUrl: "/",
 
   organizationName: "whereareiam",
@@ -73,6 +73,9 @@ const config = {
   ],
 
   themeConfig: {
+    colorMode: {
+      respectPrefersColorScheme: true
+    },
     navbar: {
       title: "Identica",
       items: [

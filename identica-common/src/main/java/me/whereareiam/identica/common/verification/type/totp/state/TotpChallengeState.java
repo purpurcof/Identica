@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.verification.type.totp;
+package me.whereareiam.identica.common.verification.type.totp.state;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,5 +15,7 @@ import me.whereareiam.identica.model.verification.challenge.VerificationChalleng
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class TotpChallengeState implements VerificationChallengeState {
+	private String stepId;
 	private int attempts;
+	private boolean recoveryCodeUsed;
 }

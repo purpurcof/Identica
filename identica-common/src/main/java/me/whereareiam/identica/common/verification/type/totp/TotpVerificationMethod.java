@@ -10,6 +10,8 @@ import me.whereareiam.identica.type.verification.VerificationMethodCapability;
 import me.whereareiam.identica.verification.VerificationChallengeProcess;
 import me.whereareiam.identica.verification.VerificationEnrollmentProcess;
 import me.whereareiam.identica.verification.VerificationMethod;
+import me.whereareiam.identica.common.verification.type.totp.process.TotpChallengeProcess;
+import me.whereareiam.identica.common.verification.type.totp.process.TotpEnrollmentProcess;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Set;

@@ -1,9 +1,13 @@
 package me.whereareiam.identica.common.verification;
 
 import me.whereareiam.identica.common.config.template.VerificationTemplate;
-import me.whereareiam.identica.common.verification.type.totp.TotpChallengeProcess;
-import me.whereareiam.identica.common.verification.type.totp.TotpEnrollmentProcess;
 import me.whereareiam.identica.common.verification.type.totp.TotpVerificationMethod;
+import me.whereareiam.identica.common.verification.type.totp.process.TotpChallengeProcess;
+import me.whereareiam.identica.common.verification.type.totp.process.TotpEnrollmentProcess;
+import me.whereareiam.identica.common.verification.type.totp.step.TotpChallengeVerificationStep;
+import me.whereareiam.identica.common.verification.type.totp.step.TotpConfirmCodeStep;
+import me.whereareiam.identica.common.verification.type.totp.step.TotpConfirmSavedStep;
+import me.whereareiam.identica.common.verification.type.totp.step.TotpSetupStep;
 import me.whereareiam.identica.database.VerificationPersistenceService;
 import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.type.verification.VerificationMethodCapability;
@@ -20,10 +24,14 @@ class DefaultVerificationServiceTest {
 	void registryFindsRegisteredMethodByDescriptorId() {
 		Verification verification = new VerificationTemplate().supply(new Verification());
 		VerificationPersistenceService persistenceService = mock(VerificationPersistenceService.class);
+		TotpSetupStep setupStep = new TotpSetupStep(() -> verification);
+		TotpConfirmCodeStep confirmCodeStep = new TotpConfirmCodeStep(() -> verification);
+		TotpConfirmSavedStep confirmSavedStep = new TotpConfirmSavedStep();
+		TotpChallengeVerificationStep challengeStep = new TotpChallengeVerificationStep(() -> verification, persistenceService);
 		TotpVerificationMethod method = new TotpVerificationMethod(
 				() -> verification,
-				new TotpEnrollmentProcess(() -> verification),
-				new TotpChallengeProcess(() -> verification, persistenceService)
+				new TotpEnrollmentProcess(setupStep, confirmCodeStep, confirmSavedStep),
+				new TotpChallengeProcess(challengeStep)
 		);
 
 		DefaultVerificationRegistry registry = new DefaultVerificationRegistry(Set.of(method));
@@ -36,10 +44,14 @@ class DefaultVerificationServiceTest {
 	void builtInTotpDescriptorAdvertisesProcessCapabilities() {
 		Verification verification = new VerificationTemplate().supply(new Verification());
 		VerificationPersistenceService persistenceService = mock(VerificationPersistenceService.class);
+		TotpSetupStep setupStep = new TotpSetupStep(() -> verification);
+		TotpConfirmCodeStep confirmCodeStep = new TotpConfirmCodeStep(() -> verification);
+		TotpConfirmSavedStep confirmSavedStep = new TotpConfirmSavedStep();
+		TotpChallengeVerificationStep challengeStep = new TotpChallengeVerificationStep(() -> verification, persistenceService);
 		TotpVerificationMethod method = new TotpVerificationMethod(
 				() -> verification,
-				new TotpEnrollmentProcess(() -> verification),
-				new TotpChallengeProcess(() -> verification, persistenceService)
+				new TotpEnrollmentProcess(setupStep, confirmCodeStep, confirmSavedStep),
+				new TotpChallengeProcess(challengeStep)
 		);
 
 		assertTrue(method.descriptor().isBuiltIn());

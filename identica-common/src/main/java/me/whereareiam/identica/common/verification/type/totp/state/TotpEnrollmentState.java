@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.verification.type.totp;
+package me.whereareiam.identica.common.verification.type.totp.state;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class TotpEnrollmentState implements VerificationEnrollmentState {
+	private @NotNull String stepId;
 	private @NotNull String secret;
 	private @NotNull String uri;
 	@Builder.Default

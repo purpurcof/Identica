@@ -6,11 +6,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.identica.type.verification.VerificationGateStatus;
+import me.whereareiam.identica.type.verification.VerificationResolutionStatus;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Result returned by the provider verification gate.
+ * Result returned when resolving the provider verification requirement.
  */
 @Getter
 @Setter
@@ -18,8 +18,8 @@ import org.jetbrains.annotations.Nullable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class VerificationGateResult {
-	private VerificationGateStatus status;
+public class VerificationResolutionResult {
+	private VerificationResolutionStatus status;
 	private String challengeId;
 	private String methodId;
 	private boolean required;

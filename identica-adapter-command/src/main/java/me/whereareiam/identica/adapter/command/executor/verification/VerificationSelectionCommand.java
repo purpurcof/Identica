@@ -17,7 +17,7 @@ import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.pipeline.verification.VerificationDisablePendingState;
-import me.whereareiam.identica.model.verification.VerificationGateRequest;
+import me.whereareiam.identica.model.verification.VerificationResolutionRequest;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.verification.VerificationService;
@@ -98,7 +98,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 		PipelineState state = pipelineStateStore.find(reference).orElse(PipelineState.initial());
 		state.putItem(new VerificationDisablePendingState(methodId, System.currentTimeMillis()), ttlMs);
 		pipelineStateStore.save(reference, state, ttlMs);
-		verificationService.evaluateGate(VerificationGateRequest.builder()
+		verificationService.resolveVerification(VerificationResolutionRequest.builder()
 				.uniqueId(identity.getUniqueId())
 				.providerId(sessionService.findByUniqueId(identity.getUniqueId()).join()
 						.map(Session::getProviderId)

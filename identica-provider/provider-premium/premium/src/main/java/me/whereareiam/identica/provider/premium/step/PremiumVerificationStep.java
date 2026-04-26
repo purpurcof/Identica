@@ -7,12 +7,12 @@ import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.model.verification.VerificationGateRequest;
-import me.whereareiam.identica.model.verification.VerificationGateResult;
+import me.whereareiam.identica.model.verification.VerificationResolutionRequest;
+import me.whereareiam.identica.model.verification.VerificationResolutionResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
-import me.whereareiam.identica.type.verification.VerificationGateStatus;
+import me.whereareiam.identica.type.verification.VerificationResolutionStatus;
 import me.whereareiam.identica.verification.VerificationService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -55,7 +55,7 @@ public class PremiumVerificationStep extends InteractiveStep {
 				.orElse(null);
 		if (uniqueId == null) return CompletableFuture.completedFuture(StepResult.complete(context));
 
-		VerificationGateResult result = verificationService.evaluateGate(VerificationGateRequest.builder()
+		VerificationResolutionResult result = verificationService.resolveVerification(VerificationResolutionRequest.builder()
 				.uniqueId(uniqueId)
 				.providerId(provider.getProviderId())
 				.purpose("authentication")
@@ -66,17 +66,17 @@ public class PremiumVerificationStep extends InteractiveStep {
 	}
 
 	private StepResult toStepResult(
-			@NotNull VerificationGateResult result,
+			@NotNull VerificationResolutionResult result,
 			@NotNull ScenarioContext context,
 			PremiumMessages.Verification.@NotNull Authentication messages
 	) {
-		VerificationGateStatus status = result.getStatus();
-		if (status == VerificationGateStatus.SATISFIED || status == VerificationGateStatus.SKIPPED)
+		VerificationResolutionStatus status = result.getStatus();
+		if (status == VerificationResolutionStatus.SATISFIED || status == VerificationResolutionStatus.SKIPPED)
 			return StepResult.complete(context);
-		if (status == VerificationGateStatus.WAITING)
+		if (status == VerificationResolutionStatus.WAITING)
 			return StepResult.waiting(joinLines(messages.getPrompt()));
 
-		if (status == VerificationGateStatus.DENIED)
+		if (status == VerificationResolutionStatus.DENIED)
 			return StepResult.denied(result.getMethodId() == null
 					? messages.getRequired()
 					: messages.getUnavailable());

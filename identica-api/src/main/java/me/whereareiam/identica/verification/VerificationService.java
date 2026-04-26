@@ -1,8 +1,8 @@
 package me.whereareiam.identica.verification;
 
 import me.whereareiam.identica.model.verification.VerificationDisableResult;
-import me.whereareiam.identica.model.verification.VerificationGateRequest;
-import me.whereareiam.identica.model.verification.VerificationGateResult;
+import me.whereareiam.identica.model.verification.VerificationResolutionRequest;
+import me.whereareiam.identica.model.verification.VerificationResolutionResult;
 import me.whereareiam.identica.model.verification.VerificationResetResult;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
@@ -18,18 +18,18 @@ import java.util.UUID;
 /**
  * Service for enrollment, selection, and verification challenge operations.
  *
- * <p>Provider pipelines use {@link #evaluateGate(VerificationGateRequest)}.
+ * <p>Provider pipelines use {@link #resolveVerification(VerificationResolutionRequest)}.
  * Commands and external plugins advance pending work by submitting typed
  * {@link VerificationInteraction} instances.</p>
  */
 public interface VerificationService {
 	/**
-	 * Evaluates a provider verification gate.
+	 * Resolves the provider verification requirement.
 	 *
-	 * @param request gate request
-	 * @return gate result
+	 * @param request verification resolution request
+	 * @return verification resolution result
 	 */
-	@NotNull VerificationGateResult evaluateGate(@NotNull VerificationGateRequest request);
+	@NotNull VerificationResolutionResult resolveVerification(@NotNull VerificationResolutionRequest request);
 
 	/**
 	 * Submits an interaction to a pending challenge by id.

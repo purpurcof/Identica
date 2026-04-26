@@ -33,10 +33,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -130,7 +127,7 @@ class DefaultVerificationServiceEnrollmentFlowTest {
 		verify(persistenceService).upsertEnrollment(any());
 		ArgumentCaptor<List<VerificationRecoveryCode>> recoveryCodesCaptor = ArgumentCaptor.forClass(List.class);
 		verify(persistenceService).replaceRecoveryCodes(eq(uniqueId), eq("totp"), recoveryCodesCaptor.capture());
-		assertTrue(!recoveryCodesCaptor.getValue().isEmpty());
+        assertFalse(recoveryCodesCaptor.getValue().isEmpty());
 		verify(enrollmentStore).clear(uniqueId);
 		verify(sessionService, never()).findByUniqueId(any());
 		verify(eventManager, atLeastOnce()).call(any());

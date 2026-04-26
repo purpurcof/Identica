@@ -1,9 +1,9 @@
 package me.whereareiam.identica.type.verification;
 
 /**
- * Result status for a provider verification gate.
+ * Result status for resolving a provider verification requirement.
  */
-public enum VerificationGateStatus {
+public enum VerificationResolutionStatus {
 	SATISFIED,
 	WAITING,
 	DENIED,

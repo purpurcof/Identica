@@ -21,9 +21,9 @@ import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.verification.VerificationDisableResult;
-import me.whereareiam.identica.model.verification.VerificationGateRequest;
-import me.whereareiam.identica.model.verification.VerificationGateResult;
 import me.whereareiam.identica.model.verification.VerificationRecoveryCode;
+import me.whereareiam.identica.model.verification.VerificationResolutionRequest;
+import me.whereareiam.identica.model.verification.VerificationResolutionResult;
 import me.whereareiam.identica.model.verification.VerificationResetResult;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeContext;
 import me.whereareiam.identica.model.verification.challenge.PendingVerificationChallenge;
@@ -41,8 +41,8 @@ import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import me.whereareiam.identica.type.verification.VerificationChallengeStatus;
 import me.whereareiam.identica.type.verification.VerificationEnrollmentStatus;
-import me.whereareiam.identica.type.verification.VerificationGateStatus;
 import me.whereareiam.identica.type.verification.VerificationMethodCapability;
+import me.whereareiam.identica.type.verification.VerificationResolutionStatus;
 import me.whereareiam.identica.type.verification.status.VerificationDisableStatus;
 import me.whereareiam.identica.type.verification.status.VerificationResetStatus;
 import me.whereareiam.identica.type.verification.status.VerificationSelectionStatus;
@@ -74,45 +74,44 @@ public class DefaultVerificationService implements VerificationService {
 	private final EventManager eventManager;
 
 	@Override
-	public @NotNull VerificationGateResult evaluateGate(@NotNull VerificationGateRequest request) {
+	public @NotNull VerificationResolutionResult resolveVerification(@NotNull VerificationResolutionRequest request) {
 		String providerId = request.getProviderId();
 		VerificationPolicyResolver.ResolvedProviderPolicy providerPolicy = policyResolver.resolveProviderPolicy(providerId);
 		if (!supportsVerification(providerId))
-			return gate(VerificationGateStatus.SKIPPED, null, null, false, false);
+			return resolution(VerificationResolutionStatus.SKIPPED, null, null, false, false);
 		if (providerPolicy == null || !providerPolicy.enabled())
-			return gate(VerificationGateStatus.SKIPPED, null, null, false, false);
+			return resolution(VerificationResolutionStatus.SKIPPED, null, null, false, false);
 
 		if (challengeStore.consumeVerified(request.getUniqueId(), providerId, request.getPurpose()))
-			return gate(VerificationGateStatus.SATISFIED, null, null, providerPolicy.required(), false);
+			return resolution(VerificationResolutionStatus.SATISFIED, null, null, providerPolicy.required(), false);
 
 		VerificationSelection selection = persistenceService.findSelection(request.getUniqueId(), providerId).orElse(null);
 		if (selection == null || selection.getMethodId() == null || selection.getMethodId().isBlank()) {
-			VerificationGateStatus status = providerPolicy.required() ? VerificationGateStatus.DENIED : VerificationGateStatus.SKIPPED;
-			return gate(status, null, null, providerPolicy.required(), false);
+			VerificationResolutionStatus status = providerPolicy.required() ? VerificationResolutionStatus.DENIED : VerificationResolutionStatus.SKIPPED;
+			return resolution(status, null, null, providerPolicy.required(), false);
 		}
 
 		VerificationPolicyResolver.ResolvedMethodPolicy methodPolicy =
 				policyResolver.resolveMethodPolicy(providerId, selection.getMethodId());
 		if (methodPolicy == null || !methodPolicy.enabled())
-			return handleGateUnavailable(request.getUniqueId(), providerId, selection.getMethodId(), providerPolicy, methodPolicy);
+			return handleResolutionUnavailable(request.getUniqueId(), providerId, selection.getMethodId(), providerPolicy, methodPolicy);
 
 		List<VerificationEnrollment> enrollments = persistenceService.findEnrollments(request.getUniqueId()).stream()
 				.filter(enrollment -> enrollment != null && selection.getMethodId().equalsIgnoreCase(enrollment.getMethodId()))
 				.toList();
 		if (enrollments.isEmpty())
-			return handleGateUnavailable(request.getUniqueId(), providerId, selection.getMethodId(), providerPolicy, methodPolicy);
+			return handleResolutionUnavailable(request.getUniqueId(), providerId, selection.getMethodId(), providerPolicy, methodPolicy);
 
 		VerificationMethod method = methodRegistry.find(selection.getMethodId()).orElse(null);
 		if (method == null)
-			return handleGateUnavailable(request.getUniqueId(), providerId, selection.getMethodId(), providerPolicy, methodPolicy);
+			return handleResolutionUnavailable(request.getUniqueId(), providerId, selection.getMethodId(), providerPolicy, methodPolicy);
 
 		PendingVerificationChallenge existing = challengeStore.findActive(
 				request.getUniqueId(),
 				providerId,
 				request.getPurpose()
 		).orElse(null);
-		if (existing != null)
-			return gate(VerificationGateStatus.WAITING, existing.getChallengeId(), existing.getMethodId(), methodPolicy.required(), false);
+		if (existing != null) return resolution(VerificationResolutionStatus.WAITING, existing.getChallengeId(), existing.getMethodId(), methodPolicy.required(), false);
 
 		VerificationChallengeResult<?> challenge = startChallenge(
 				request.getUniqueId(),
@@ -123,8 +122,8 @@ public class DefaultVerificationService implements VerificationService {
 				methodPolicy.required()
 		);
 
-		return gate(
-				toGateStatus(challenge.getStatus()),
+		return resolution(
+				toResolutionStatus(challenge.getStatus()),
 				challenge.getChallengeId(),
 				challenge.getMethodId(),
 				challenge.isRequired(),
@@ -139,7 +138,7 @@ public class DefaultVerificationService implements VerificationService {
 	) {
 		PendingVerificationChallenge record = challengeStore.find(challengeId).orElse(null);
 		if (record == null)
-			return challenge(VerificationChallengeStatus.EXPIRED, challengeId, null, null, false, false, null);
+			return challenge(VerificationChallengeStatus.EXPIRED, challengeId, null, null, false);
 
 		return submit(record, interaction);
 	}
@@ -153,7 +152,7 @@ public class DefaultVerificationService implements VerificationService {
 	) {
 		PendingVerificationChallenge record = challengeStore.findActive(uniqueId, providerId, purpose).orElse(null);
 		if (record == null)
-			return challenge(VerificationChallengeStatus.METHOD_NOT_SELECTED, null, null, providerId, false, false, null);
+			return challenge(VerificationChallengeStatus.METHOD_NOT_SELECTED, null, null, providerId, false);
 
 		return submit(record, interaction);
 	}
@@ -487,7 +486,7 @@ public class DefaultVerificationService implements VerificationService {
 	private VerificationChallengeResult<?> submit(PendingVerificationChallenge record, VerificationInteraction interaction) {
 		VerificationMethod method = methodRegistry.find(record.getMethodId()).orElse(null);
 		if (method == null)
-			return challenge(VerificationChallengeStatus.METHOD_UNAVAILABLE, record.getChallengeId(), record.getMethodId(), record.getProviderId(), record.isRequired(), false, null);
+			return challenge(VerificationChallengeStatus.METHOD_UNAVAILABLE, record.getChallengeId(), record.getMethodId(), record.getProviderId(), record.isRequired());
 
 		VerificationChallengeResult<?> result = submitTyped(record, method.challenge(), interaction);
 		if (result.getStatus() == VerificationChallengeStatus.VERIFIED) {
@@ -528,7 +527,7 @@ public class DefaultVerificationService implements VerificationService {
 				.filter(enrollment -> enrollment != null && record.getMethodId().equalsIgnoreCase(enrollment.getMethodId()))
 				.toList();
 		if (state == null || enrollments.isEmpty())
-			return challenge(VerificationChallengeStatus.METHOD_UNAVAILABLE, record.getChallengeId(), record.getMethodId(), record.getProviderId(), record.isRequired(), false, null);
+			return challenge(VerificationChallengeStatus.METHOD_UNAVAILABLE, record.getChallengeId(), record.getMethodId(), record.getProviderId(), record.isRequired());
 
 		VerificationChallengeContext<S> context = VerificationChallengeContext.<S>builder()
 				.challengeId(record.getChallengeId())
@@ -563,7 +562,7 @@ public class DefaultVerificationService implements VerificationService {
 		enrollmentStore.put(record.getUniqueId(), record);
 	}
 
-	private VerificationGateResult handleGateUnavailable(
+	private VerificationResolutionResult handleResolutionUnavailable(
 			UUID uniqueId,
 			String providerId,
 			String methodId,
@@ -579,7 +578,7 @@ public class DefaultVerificationService implements VerificationService {
 			persistenceService.deleteSelection(uniqueId, providerId);
 
 		boolean required = methodPolicy != null ? methodPolicy.required() : providerPolicy.required();
-		return gate(required ? VerificationGateStatus.DENIED : VerificationGateStatus.SKIPPED, null, methodId, required, false);
+		return resolution(required ? VerificationResolutionStatus.DENIED : VerificationResolutionStatus.SKIPPED, null, methodId, required, false);
 	}
 
 	private boolean supportsVerification(@Nullable String providerId) {
@@ -591,24 +590,24 @@ public class DefaultVerificationService implements VerificationService {
 						&& provider.getDescriptor().hasCapability(ProviderCapability.VERIFICATION));
 	}
 
-	private VerificationGateStatus toGateStatus(VerificationChallengeStatus status) {
-		if (status == VerificationChallengeStatus.VERIFIED) return VerificationGateStatus.SATISFIED;
+	private VerificationResolutionStatus toResolutionStatus(VerificationChallengeStatus status) {
+		if (status == VerificationChallengeStatus.VERIFIED) return VerificationResolutionStatus.SATISFIED;
 		if (status == VerificationChallengeStatus.WAITING || status == VerificationChallengeStatus.INVALID)
-			return VerificationGateStatus.WAITING;
+			return VerificationResolutionStatus.WAITING;
 		if (status == VerificationChallengeStatus.PROVIDER_UNSUPPORTED
 				|| status == VerificationChallengeStatus.PROVIDER_VERIFICATION_DISABLED)
-			return VerificationGateStatus.SKIPPED;
-		return VerificationGateStatus.DENIED;
+			return VerificationResolutionStatus.SKIPPED;
+		return VerificationResolutionStatus.DENIED;
 	}
 
-	private VerificationGateResult gate(
-			VerificationGateStatus status,
+	private VerificationResolutionResult resolution(
+			VerificationResolutionStatus status,
 			String challengeId,
 			String methodId,
 			boolean required,
 			boolean recoveryCodeUsed
 	) {
-		return VerificationGateResult.builder()
+		return VerificationResolutionResult.builder()
 				.status(status)
 				.challengeId(challengeId)
 				.methodId(methodId)
@@ -622,9 +621,7 @@ public class DefaultVerificationService implements VerificationService {
 			String challengeId,
 			String methodId,
 			String providerId,
-			boolean required,
-			boolean recoveryCodeUsed,
-			S state
+			boolean required
 	) {
 		return VerificationChallengeResult.<S>builder()
 				.status(status)
@@ -632,8 +629,8 @@ public class DefaultVerificationService implements VerificationService {
 				.methodId(methodId)
 				.providerId(providerId)
 				.required(required)
-				.recoveryCodeUsed(recoveryCodeUsed)
-				.state(state)
+				.recoveryCodeUsed(false)
+				.state(null)
 				.build();
 	}
 

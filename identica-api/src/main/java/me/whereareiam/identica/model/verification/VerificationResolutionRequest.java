@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.UUID;
 
 /**
- * Request evaluated by the provider verification gate.
+ * Request used to resolve the provider verification requirement.
  */
 @Getter
 @Setter
@@ -20,7 +20,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class VerificationGateRequest {
+public class VerificationResolutionRequest {
 	private @NotNull UUID uniqueId;
 	private @NotNull String providerId;
 	private @Nullable String purpose;

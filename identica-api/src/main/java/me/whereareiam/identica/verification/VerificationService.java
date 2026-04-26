@@ -38,7 +38,7 @@ public interface VerificationService {
 	 * @param interaction typed interaction
 	 * @return challenge result
 	 */
-	@NotNull VerificationChallengeResult<?> submitChallengeInteraction(
+	@NotNull VerificationChallengeResult<?> submitChallenge(
 			@NotNull String challengeId,
 			@NotNull VerificationInteraction interaction
 	);
@@ -52,7 +52,7 @@ public interface VerificationService {
 	 * @param interaction typed interaction
 	 * @return challenge result
 	 */
-	@NotNull VerificationChallengeResult<?> submitChallengeInteraction(
+	@NotNull VerificationChallengeResult<?> submitChallenge(
 			@NotNull UUID uniqueId,
 			@Nullable String providerId,
 			@Nullable String purpose,
@@ -82,7 +82,7 @@ public interface VerificationService {
 	 * @param interaction typed interaction
 	 * @return enrollment result
 	 */
-	@NotNull VerificationEnrollmentResult<?> submitEnrollmentInteraction(
+	@NotNull VerificationEnrollmentResult<?> submitEnrollment(
 			@NotNull UUID uniqueId,
 			@NotNull VerificationInteraction interaction
 	);

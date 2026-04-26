@@ -83,7 +83,7 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 
 		messagePresenter.presentEnrollmentResult(
 				sender,
-				verificationService.submitEnrollmentInteraction(identity.getUniqueId(), interaction(identity.getUniqueId(), input))
+				verificationService.submitEnrollment(identity.getUniqueId(), interaction(identity.getUniqueId(), input))
 		);
 	}
 

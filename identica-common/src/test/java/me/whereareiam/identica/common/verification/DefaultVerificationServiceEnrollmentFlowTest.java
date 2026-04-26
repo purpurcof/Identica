@@ -1,9 +1,13 @@
 package me.whereareiam.identica.common.verification;
 
 import me.whereareiam.identica.common.config.template.VerificationTemplate;
+import me.whereareiam.identica.common.verification.challenge.VerificationChallengeLifecycle;
+import me.whereareiam.identica.common.verification.enrollment.VerificationEnrollmentActivator;
 import me.whereareiam.identica.common.verification.challenge.VerificationChallengeStore;
 import me.whereareiam.identica.common.verification.codec.VerificationStateCodec;
+import me.whereareiam.identica.common.verification.enrollment.VerificationEnrollmentLifecycle;
 import me.whereareiam.identica.common.verification.enrollment.VerificationEnrollmentStore;
+import me.whereareiam.identica.common.verification.resolution.VerificationRequirementResolver;
 import me.whereareiam.identica.common.verification.type.totp.TotpCodec;
 import me.whereareiam.identica.common.verification.type.totp.TotpVerificationMethod;
 import me.whereareiam.identica.common.verification.type.totp.process.TotpChallengeProcess;
@@ -53,25 +57,56 @@ class DefaultVerificationServiceEnrollmentFlowTest {
 		VerificationEnrollmentStore enrollmentStore = mock(VerificationEnrollmentStore.class);
 		VerificationChallengeStore challengeStore = mock(VerificationChallengeStore.class);
 		VerificationStateCodec stateCodec = new VerificationStateCodec();
-		VerificationPolicyResolver policyResolver = mock(VerificationPolicyResolver.class);
-		ProviderManager providerManager = mock(ProviderManager.class);
-		SessionService sessionService = mock(SessionService.class);
-		EventManager eventManager = mock(EventManager.class);
-		UUID uniqueId = UUID.randomUUID();
-		AtomicReference<PendingVerificationEnrollment> pending = new AtomicReference<>();
-		TotpVerificationMethod method = method(verification, persistenceService);
-		DefaultVerificationService service = new DefaultVerificationService(
-				persistenceService,
-				enrollmentStore,
-				challengeStore,
-				stateCodec,
-				new DefaultVerificationRegistry(Set.of(method)),
-				() -> verification,
-				policyResolver,
-				providerManager,
-				sessionService,
-				eventManager
-		);
+			VerificationPolicyResolver policyResolver = mock(VerificationPolicyResolver.class);
+			ProviderManager providerManager = mock(ProviderManager.class);
+			SessionService sessionService = mock(SessionService.class);
+			EventManager eventManager = mock(EventManager.class);
+			UUID uniqueId = UUID.randomUUID();
+			AtomicReference<PendingVerificationEnrollment> pending = new AtomicReference<>();
+			TotpVerificationMethod method = method(verification, persistenceService);
+			DefaultVerificationRegistry registry = new DefaultVerificationRegistry(Set.of(method));
+			VerificationChallengeLifecycle challengeLifecycle = new VerificationChallengeLifecycle(
+					persistenceService,
+					challengeStore,
+					stateCodec,
+					registry,
+					() -> verification,
+					eventManager
+			);
+			VerificationEnrollmentActivator enrollmentActivator = new VerificationEnrollmentActivator(
+					persistenceService,
+					eventManager
+			);
+			VerificationEnrollmentLifecycle enrollmentLifecycle = new VerificationEnrollmentLifecycle(
+					persistenceService,
+					enrollmentStore,
+					stateCodec,
+					registry,
+					() -> verification,
+					eventManager,
+					enrollmentActivator
+			);
+			VerificationRequirementResolver verificationRequirementResolver = new VerificationRequirementResolver(
+					persistenceService,
+					challengeStore,
+					policyResolver,
+					registry,
+					providerManager,
+					challengeLifecycle
+			);
+			DefaultVerificationService service = new DefaultVerificationService(
+					persistenceService,
+					enrollmentStore,
+					() -> verification,
+					registry,
+					providerManager,
+					policyResolver,
+					sessionService,
+					eventManager,
+					verificationRequirementResolver,
+					challengeLifecycle,
+					enrollmentLifecycle
+			);
 
 		when(persistenceService.findEnrollment(uniqueId, "totp")).thenReturn(Optional.empty());
 		doAnswer(invocation -> {
@@ -97,7 +132,7 @@ class DefaultVerificationServiceEnrollmentFlowTest {
 				verification.getTotp().getDigits(),
 				verification.getTotp().periodSeconds()
 		);
-		VerificationEnrollmentResult<?> awaitingSavedConfirmation = service.submitEnrollmentInteraction(
+		VerificationEnrollmentResult<?> awaitingSavedConfirmation = service.submitEnrollment(
 				uniqueId,
 				CodeVerificationInteraction.builder()
 						.subjectUniqueId(uniqueId)
@@ -114,7 +149,7 @@ class DefaultVerificationServiceEnrollmentFlowTest {
 		assertNotNull(resumedAfterCode);
 		assertEquals("totp-confirm-saved", resumedAfterCode.getStepId());
 
-		VerificationEnrollmentResult<?> activated = service.submitEnrollmentInteraction(
+		VerificationEnrollmentResult<?> activated = service.submitEnrollment(
 				uniqueId,
 				SavedVerificationInteraction.builder()
 						.subjectUniqueId(uniqueId)

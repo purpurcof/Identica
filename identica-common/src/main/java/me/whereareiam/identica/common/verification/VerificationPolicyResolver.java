@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 public class VerificationPolicyResolver {
 	private final Provider<Providers> providersProvider;
 
-	@Nullable ResolvedProviderPolicy resolveProviderPolicy(@Nullable String providerId) {
+	public @Nullable ResolvedProviderPolicy resolveProviderPolicy(@Nullable String providerId) {
 		if (providerId == null || providerId.isBlank()) return null;
 
 		Providers providers = providersProvider.get();
@@ -36,7 +36,7 @@ public class VerificationPolicyResolver {
 		return null;
 	}
 
-	boolean hasConfiguredProvider(@Nullable String providerId) {
+	public boolean hasConfiguredProvider(@Nullable String providerId) {
 		if (providerId == null || providerId.isBlank()) return false;
 
 		Providers providers = providersProvider.get();
@@ -51,7 +51,7 @@ public class VerificationPolicyResolver {
 		return false;
 	}
 
-	@Nullable ResolvedMethodPolicy resolveMethodPolicy(@Nullable String providerId, @Nullable String methodId) {
+	public @Nullable ResolvedMethodPolicy resolveMethodPolicy(@Nullable String providerId, @Nullable String methodId) {
 		if (providerId == null || providerId.isBlank() || methodId == null || methodId.isBlank()) return null;
 
 		Providers providers = providersProvider.get();
@@ -78,14 +78,14 @@ public class VerificationPolicyResolver {
 		return null;
 	}
 
-	record ResolvedProviderPolicy(
+	public record ResolvedProviderPolicy(
 			boolean enabled,
 			boolean required,
 			UnavailableSelectionPolicy unavailableSelectionPolicy
 	) {
 	}
 
-	record ResolvedMethodPolicy(
+	public record ResolvedMethodPolicy(
 			boolean enabled,
 			boolean required,
 			UnavailableSelectionPolicy unavailableSelectionPolicy

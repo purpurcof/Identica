@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.type.verification.status.VerificationSelectionStatus;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Result payload for provider verification-method selection changes.
@@ -21,4 +22,24 @@ public class VerificationSelectionResult {
 	private VerificationSelectionStatus status;
 	private String methodId;
 	private String providerId;
+
+	/**
+	 * Creates a selection result.
+	 *
+	 * @param status selection status
+	 * @param methodId method id
+	 * @param providerId provider id
+	 * @return selection result
+	 */
+	public static VerificationSelectionResult of(
+			VerificationSelectionStatus status,
+			@Nullable String methodId,
+			@Nullable String providerId
+	) {
+		return VerificationSelectionResult.builder()
+				.status(status)
+				.methodId(methodId)
+				.providerId(providerId)
+				.build();
+	}
 }

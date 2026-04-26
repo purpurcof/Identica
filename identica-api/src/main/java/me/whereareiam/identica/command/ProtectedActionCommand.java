@@ -30,7 +30,7 @@ public abstract class ProtectedActionCommand<T> extends SessionBoundCommand {
 		if (session == null || session.getProviderId() == null || session.getProviderId().isBlank())
 			return StepUpResult.currentSessionRequired();
 
-		VerificationChallengeResult<?> attempt = verificationService.submitChallengeInteraction(
+		VerificationChallengeResult<?> attempt = verificationService.submitChallenge(
 				uniqueId,
 				session.getProviderId(),
 				purpose,

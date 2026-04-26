@@ -32,6 +32,43 @@ public class VerificationChallengeResult<S extends VerificationChallengeState> {
 	private @Nullable S state;
 	private @Nullable VerificationProcessDisplay display;
 
+	/**
+	 * Creates a challenge result.
+	 *
+	 * @param status challenge status
+	 * @param challengeId challenge id
+	 * @param methodId method id
+	 * @param providerId provider id
+	 * @param required whether the challenge is required
+	 * @param <S> challenge state type
+	 * @return challenge result
+	 */
+	public static <S extends VerificationChallengeState> @NotNull VerificationChallengeResult<S> of(
+			@NotNull VerificationChallengeStatus status,
+			@Nullable String challengeId,
+			@Nullable String methodId,
+			@Nullable String providerId,
+			boolean required
+	) {
+		return VerificationChallengeResult.<S>builder()
+				.status(status)
+				.challengeId(challengeId)
+				.methodId(methodId)
+				.providerId(providerId)
+				.required(required)
+				.recoveryCodeUsed(false)
+				.state(null)
+				.build();
+	}
+
+	/**
+	 * Creates a waiting challenge result.
+	 *
+	 * @param state challenge state
+	 * @param display challenge display payload
+	 * @param <S> challenge state type
+	 * @return waiting challenge result
+	 */
 	public static <S extends VerificationChallengeState> @NotNull VerificationChallengeResult<S> waiting(
 			@Nullable S state,
 			@Nullable VerificationProcessDisplay display
@@ -39,10 +76,17 @@ public class VerificationChallengeResult<S extends VerificationChallengeState> {
 		return VerificationChallengeResult.<S>builder()
 				.status(VerificationChallengeStatus.WAITING)
 				.state(state)
-				.display(display)
-				.build();
+					.display(display)
+					.build();
 	}
 
+	/**
+	 * Creates a verified challenge result.
+	 *
+	 * @param state challenge state
+	 * @param <S> challenge state type
+	 * @return verified challenge result
+	 */
 	public static <S extends VerificationChallengeState> @NotNull VerificationChallengeResult<S> verified(@Nullable S state) {
 		return VerificationChallengeResult.<S>builder()
 				.status(VerificationChallengeStatus.VERIFIED)

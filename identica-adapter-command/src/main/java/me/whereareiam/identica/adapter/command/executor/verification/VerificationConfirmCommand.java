@@ -115,7 +115,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
 		if (state == null || state.item(JourneyStateItem.class).isEmpty()) return false;
 
-		VerificationChallengeResult<?> result = verificationService.submitChallengeInteraction(
+		VerificationChallengeResult<?> result = verificationService.submitChallenge(
 				identity.getUniqueId(),
 				currentProvider(state),
 				"authentication",

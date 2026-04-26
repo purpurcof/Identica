@@ -1,12 +1,15 @@
 package me.whereareiam.identica.adapter.database.repository.provider;
 
 import me.whereareiam.identica.adapter.database.entity.account.AccountProviderLinkEntity;
+import org.jdbi.v3.sqlobject.config.KeyColumn;
 import org.jdbi.v3.sqlobject.config.RegisterBeanMapper;
+import org.jdbi.v3.sqlobject.config.ValueColumn;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -55,6 +58,16 @@ public interface ProviderLinkRepository {
 			 WHERE unique_id = :uniqueId
 			""")
 	List<AccountProviderLinkEntity> findByUniqueId(@Bind("uniqueId") UUID uniqueId);
+
+	@SqlQuery("""
+			SELECT provider_id AS providerId,
+			       COUNT(*) AS usageCount
+			  FROM identica_provider_links
+			 GROUP BY provider_id
+			""")
+	@KeyColumn("providerId")
+	@ValueColumn("usageCount")
+	Map<String, Long> countByProvider();
 
 	@SqlUpdate("""
 			INSERT INTO identica_provider_links (

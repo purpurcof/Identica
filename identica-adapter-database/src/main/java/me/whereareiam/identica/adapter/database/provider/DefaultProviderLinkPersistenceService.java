@@ -14,7 +14,9 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,6 +52,11 @@ public class DefaultProviderLinkPersistenceService implements ProviderLinkPersis
 		return repository.findByUniqueId(uniqueId).stream()
 				.map(AccountProviderLinkMapper::toModel)
 				.toList();
+	}
+
+	@Override
+	public @NotNull Map<String, Long> countByProvider() {
+		return Collections.unmodifiableMap(repository.countByProvider());
 	}
 
 	@Override

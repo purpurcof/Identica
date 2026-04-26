@@ -3,6 +3,7 @@ package me.whereareiam.identica.database.provider;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,6 +38,16 @@ public interface ProviderLinkPersistenceService {
 	 * @return list of links
 	 */
 	@NotNull List<AccountProviderLink> findByUniqueId(@NotNull UUID uniqueId);
+
+	/**
+	 * Counts stored provider links grouped by provider id.
+	 *
+	 * <p>Each entry represents the number of accounts linked to a provider.
+	 * The returned map is a snapshot of the current persisted state.</p>
+	 *
+	 * @return immutable provider-id to usage-count map
+	 */
+	@NotNull Map<String, Long> countByProvider();
 
 	/**
 	 * Create or update a provider link.

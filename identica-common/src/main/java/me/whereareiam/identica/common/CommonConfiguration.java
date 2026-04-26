@@ -78,6 +78,7 @@ import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
+import me.whereareiam.identica.logging.BannerContributor;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.identity.IdentityService;
@@ -218,6 +219,7 @@ public class CommonConfiguration extends AbstractModule {
 		// Core services
 		bind(EventManager.class).to(EventController.class);
 		bind(SerializerEngine.class).toProvider(SerializerEngineProvider.class);
+		Multibinder.newSetBinder(binder(), BannerContributor.class);
 		bind(Identica.class).asEagerSingleton();
 	}
 

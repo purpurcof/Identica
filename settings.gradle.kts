@@ -44,6 +44,12 @@ project(":identica-adapter-database").projectDir = file("identica-adapter-databa
 include(":identica-adapter-replication")
 project(":identica-adapter-replication").projectDir = file("identica-adapter-replication")
 
+include(":identica-integration")
+project(":identica-integration").projectDir = file("identica-integration")
+
+include(":integration-bstats")
+project(":integration-bstats").projectDir = file("identica-integration/integration-bstats")
+
 include(":identica-platform")
 project(":identica-platform").projectDir = file("identica-platform")
 

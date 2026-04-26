@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -72,6 +73,18 @@ class DefaultProviderLinkPersistenceServiceTest {
 		AccountProviderLink link = TestDataFactory.providerLink(UUID.randomUUID(), "provider", " ", false);
 
 		assertThrows(IllegalArgumentException.class, () -> service.upsert(link));
+	}
+
+	@DisplayName("Returns grouped provider-link usage counts")
+	@Test
+	void countByProviderReturnsRepositorySnapshot() {
+		Map<String, Long> counts = Map.of("premium", 4L, "cracked", 2L);
+		when(repository.countByProvider()).thenReturn(counts);
+
+		Map<String, Long> result = service.countByProvider();
+
+		assertEquals(counts, result);
+		verify(repository).countByProvider();
 	}
 
 	@DisplayName("Updates an existing provider link and refreshes primary-link state")

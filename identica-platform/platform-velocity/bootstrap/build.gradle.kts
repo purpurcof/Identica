@@ -10,6 +10,7 @@ tasks.named<Jar>("shadowJar").configure {
 
 dependencies {
     implementation(projects.platformVelocityApi)
+    implementation(libs.bundles.bStats.velocity)
     compileOnly(libs.velocity)
     annotationProcessor(libs.velocity)
     compileOnly(libs.cloud.velocity)

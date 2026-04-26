@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.type.AnsiColor;
 import me.whereareiam.identica.Constants;
+import me.whereareiam.identica.logging.BannerContributor;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.model.config.Commands;
@@ -12,18 +13,24 @@ import me.whereareiam.identica.type.PlatformType;
 import me.whereareiam.identica.type.PluginType;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class WelcomeBannerPrinter {
 	private final LoggingHelper loggingHelper;
 	private final Provider<Commands> commandsProvider;
 	private final ProviderManager providerManager;
+	private final Set<BannerContributor> contributors;
 
 	public void print() {
 		List<String> lines = new ArrayList<>();
 		lines.addAll(buildTitleLines());
 		lines.addAll(buildSummaryLines());
+		contributors.stream()
+				.sorted(Comparator.comparing(left -> left.getClass().getName()))
+				.forEach(contributor -> contributor.contribute(lines));
 		lines.forEach(loggingHelper::info);
 	}
 

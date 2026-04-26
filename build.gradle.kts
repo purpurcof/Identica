@@ -3,6 +3,8 @@ plugins {
     id("identica.dev-scenarios")
 }
 
+version = providers.environmentVariable("VERSION").orElse("dev").get()
+
 defaultTasks("pluginJars")
 
 tasks.register("pluginJars") {

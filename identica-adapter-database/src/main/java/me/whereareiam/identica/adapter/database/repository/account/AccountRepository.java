@@ -34,6 +34,9 @@ public interface AccountRepository {
 			""")
 	List<AccountEntity> findByUsername(@Bind("username") String username);
 
+	@SqlQuery("SELECT COUNT(*) FROM identica_accounts")
+	long count();
+
 	@SqlUpdate("""
 			INSERT INTO identica_accounts (unique_id, username, username_source, created_at, last_seen_at)
 			VALUES (:uniqueId, :username, :usernameSource, :createdAt, :lastSeenAt)

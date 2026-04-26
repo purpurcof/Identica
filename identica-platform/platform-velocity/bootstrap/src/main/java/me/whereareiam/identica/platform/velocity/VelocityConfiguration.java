@@ -1,12 +1,24 @@
 package me.whereareiam.identica.platform.velocity;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.TypeLiteral;
 import com.velocitypowered.api.event.EventManager;
 import com.velocitypowered.api.plugin.PluginContainer;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.integration.bstats.BStatsBootstrap;
+import me.whereareiam.identica.integration.bstats.TelemetryRegistrar;
+import me.whereareiam.identica.integration.bstats.chart.provider.ProvidersChart;
+import me.whereareiam.identica.integration.bstats.chart.provider.ProviderUsageChart;
+import me.whereareiam.identica.integration.bstats.chart.system.AccountCountChart;
+import me.whereareiam.identica.integration.bstats.chart.system.PersistenceTypeChart;
+import me.whereareiam.identica.integration.bstats.chart.system.ReplicationTypeChart;
+import me.whereareiam.identica.integration.bstats.chart.system.UniqueIdModeChart;
+import me.whereareiam.identica.integration.bstats.chart.type.Chart;
+import me.whereareiam.identica.integration.bstats.chart.verification.VerificationMethodsChart;
 import me.whereareiam.identica.listener.ListenerRegistrar;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.platform.velocity.listener.VelocityListenerRegistrar;
@@ -21,15 +33,19 @@ import me.whereareiam.keystone.Actor;
 import org.incendo.cloud.CommandManager;
 import org.slf4j.Logger;
 
+import java.nio.file.Path;
+
 @RequiredArgsConstructor
 public class VelocityConfiguration extends AbstractModule {
 	private final ProxyServer proxyServer;
 	private final VelocityIdentica plugin;
 	private final PluginContainer pluginContainer;
+	private final Path dataPath;
 	private final Logger logger;
 
 	@Override
 	protected void configure() {
+		bind(Path.class).annotatedWith(DataDirectory.class).toInstance(dataPath);
 		bind(ProxyServer.class).toInstance(proxyServer);
 		bind(EventManager.class).toInstance(proxyServer.getEventManager());
 		bind(VelocityIdentica.class).toInstance(plugin);
@@ -49,5 +65,21 @@ public class VelocityConfiguration extends AbstractModule {
 				.asEagerSingleton();
 
 		bind(new TypeLiteral<CommandManager<Actor>>() {}).toProvider(VelocityCommandManagerProvider.class);
+
+		configureBStats();
+	}
+
+	private void configureBStats() {
+		bind(TelemetryRegistrar.class).to(VelocityMetrics.class);
+		bind(BStatsBootstrap.class).asEagerSingleton();
+
+		Multibinder<Chart> charts = Multibinder.newSetBinder(binder(), Chart.class);
+		charts.addBinding().to(ProvidersChart.class);
+		charts.addBinding().to(ProviderUsageChart.class);
+		charts.addBinding().to(VerificationMethodsChart.class);
+		charts.addBinding().to(PersistenceTypeChart.class);
+		charts.addBinding().to(ReplicationTypeChart.class);
+		charts.addBinding().to(UniqueIdModeChart.class);
+		charts.addBinding().to(AccountCountChart.class);
 	}
 }

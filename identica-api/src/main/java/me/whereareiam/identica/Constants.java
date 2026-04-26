@@ -8,6 +8,13 @@ public final class Constants {
 	public static final String VERSION = BuildConfig.VERSION;
 
 	/**
+	 * bStats identifiers used by platform integrations.
+	 */
+	public static final class BStats {
+		public static final int VELOCITY_ID = 30854;
+	}
+
+	/**
 	 * Version constants for runtime dependencies.
 	 */
 	public static final class Dependency {

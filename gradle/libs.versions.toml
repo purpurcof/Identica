@@ -18,6 +18,7 @@ dialectica = "dev-332d268"
 guice = "7.0.0"
 annotations = "26.0.1"
 jedis = "7.0.0"
+bStats = "3.2.1"
 
 # adventure
 adventure = "4.25.0"
@@ -65,6 +66,8 @@ commandant = { group = "me.whereareiam", name = "commandant", version.ref = "com
 keystone = { group = "me.whereareiam", name = "keystone", version.ref = "keystone" }
 dialectica = { group = "me.whereareiam", name = "dialectica", version.ref = "dialectica" }
 jedis = { group = "redis.clients", name = "jedis", version.ref = "jedis" }
+bStats = { group = "org.bstats", name = "bstats-base", version.ref = "bStats" }
+bStats-velocity = { group = "org.bstats", name = "bstats-velocity", version.ref = "bStats" }
 
 guice = { group = "com.google.inject", name = "guice", version.ref = "guice" }
 annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
@@ -113,6 +116,7 @@ bcrypt = { group = "at.favre.lib", name = "bcrypt", version.ref = "bcrypt" }
 adventure = ["adventure", "adventure-minimessage", "adventure-plain"]
 cloud = ["cloud-core", "cloud-annotations", "cloud-cooldowns", "cloud-minecraft-extras"]
 database = ["jdbi-core", "jdbi-sqlobject", "hikaricp", "postgresql", "mariadb", "sqlite", "h2"]
+bStats-velocity = ["bStats", "bStats-velocity"]
 
 [plugins]
 

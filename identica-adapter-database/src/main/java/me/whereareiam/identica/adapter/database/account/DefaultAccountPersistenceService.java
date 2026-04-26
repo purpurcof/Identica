@@ -57,6 +57,16 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 	}
 
 	@Override
+	public long count() {
+		try {
+			return accountRepository.count();
+		} catch (Exception e) {
+			Logger.warn("Failed to count accounts: %s", e.getMessage());
+			return 0L;
+		}
+	}
+
+	@Override
 	public @NotNull Account create(@NotNull Account account) {
 		AccountEntity entity = AccountMapper.toEntity(account);
 

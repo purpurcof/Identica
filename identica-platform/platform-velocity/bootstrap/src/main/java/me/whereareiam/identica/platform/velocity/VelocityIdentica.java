@@ -64,7 +64,7 @@ public class VelocityIdentica {
 		Injector injector = Guice.createInjector(
 				new CommonConfiguration(dataPath),
 				new EngineConfiguration(),
-				new VelocityConfiguration(proxyServer, this, pluginContainer, logger),
+				new VelocityConfiguration(proxyServer, this, pluginContainer, dataPath, logger),
 				new CommandConfiguration(),
 				new DatabaseConfiguration(),
 				new ReplicationConfiguration()

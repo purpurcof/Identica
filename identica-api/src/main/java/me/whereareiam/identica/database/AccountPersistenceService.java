@@ -30,6 +30,13 @@ public interface AccountPersistenceService {
 	@NotNull List<Account> findByUsername(@NotNull String username);
 
 	/**
+	 * Counts stored account records.
+	 *
+	 * @return total persisted accounts
+	 */
+	long count();
+
+	/**
 	 * Create a new account record.
 	 *
 	 * @param account account to create

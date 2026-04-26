@@ -9,6 +9,7 @@ plugins {
 tasks.withType<ShadowJar>().configureEach {
     archiveBaseName.set(rootProject.name)
 
+    relocate("org.bstats", "me.whereareiam.identica.library.bstats")
     relocate("org.jdbi", "me.whereareiam.identica.library.jdbi")
     relocate("me.whereareiam.dialectica", "me.whereareiam.identica.library.dialectica")
 

@@ -8,7 +8,7 @@ import me.whereareiam.identica.model.verification.challenge.VerificationChalleng
 import me.whereareiam.identica.model.verification.process.VerificationProcessContext;
 import me.whereareiam.identica.model.verification.process.VerificationProcessResult;
 import me.whereareiam.identica.type.verification.VerificationChallengeStatus;
-import me.whereareiam.identica.verification.VerificationChallengeProcess;
+import me.whereareiam.identica.verification.process.VerificationChallengeProcess;
 import me.whereareiam.identica.verification.VerificationInteraction;
 import me.whereareiam.identica.common.verification.type.totp.state.TotpChallengeState;
 import me.whereareiam.identica.common.verification.type.totp.step.TotpChallengeVerificationStep;

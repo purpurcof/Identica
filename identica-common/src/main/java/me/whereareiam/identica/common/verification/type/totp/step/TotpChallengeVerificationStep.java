@@ -13,7 +13,7 @@ import me.whereareiam.identica.model.verification.process.VerificationProcessCon
 import me.whereareiam.identica.model.verification.process.VerificationProcessResult;
 import me.whereareiam.identica.type.verification.VerificationProcessStatus;
 import me.whereareiam.identica.verification.VerificationInteraction;
-import me.whereareiam.identica.verification.VerificationProcessStep;
+import me.whereareiam.identica.verification.process.VerificationProcessStep;
 import me.whereareiam.identica.common.verification.type.totp.TotpCodec;
 import me.whereareiam.identica.common.verification.type.totp.state.TotpChallengeState;
 import org.jetbrains.annotations.NotNull;

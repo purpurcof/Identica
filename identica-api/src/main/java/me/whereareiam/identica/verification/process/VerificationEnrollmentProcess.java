@@ -1,8 +1,9 @@
-package me.whereareiam.identica.verification;
+package me.whereareiam.identica.verification.process;
 
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentContext;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentState;
+import me.whereareiam.identica.verification.VerificationInteraction;
 import org.jetbrains.annotations.NotNull;
 
 /**

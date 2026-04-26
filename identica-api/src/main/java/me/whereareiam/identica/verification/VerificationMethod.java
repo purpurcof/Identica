@@ -1,6 +1,8 @@
 package me.whereareiam.identica.verification;
 
 import me.whereareiam.identica.model.verification.VerificationMethodDescriptor;
+import me.whereareiam.identica.verification.process.VerificationChallengeProcess;
+import me.whereareiam.identica.verification.process.VerificationEnrollmentProcess;
 import org.jetbrains.annotations.NotNull;
 
 /**

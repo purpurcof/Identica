@@ -1,8 +1,9 @@
-package me.whereareiam.identica.verification;
+package me.whereareiam.identica.verification.process;
 
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeContext;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeState;
+import me.whereareiam.identica.verification.VerificationInteraction;
 import org.jetbrains.annotations.NotNull;
 
 /**

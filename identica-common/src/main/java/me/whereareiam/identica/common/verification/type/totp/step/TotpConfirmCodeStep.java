@@ -9,7 +9,7 @@ import me.whereareiam.identica.model.verification.interaction.CodeVerificationIn
 import me.whereareiam.identica.model.verification.process.VerificationProcessContext;
 import me.whereareiam.identica.model.verification.process.VerificationProcessResult;
 import me.whereareiam.identica.model.verification.process.VerificationProcessTransition;
-import me.whereareiam.identica.verification.VerificationProcessStep;
+import me.whereareiam.identica.verification.process.VerificationProcessStep;
 import me.whereareiam.identica.common.verification.type.totp.TotpCodec;
 import me.whereareiam.identica.common.verification.type.totp.state.TotpEnrollmentState;
 import org.jetbrains.annotations.NotNull;

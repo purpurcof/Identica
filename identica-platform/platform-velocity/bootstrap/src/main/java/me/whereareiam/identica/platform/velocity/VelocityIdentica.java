@@ -22,6 +22,7 @@ import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
 import me.whereareiam.identica.platform.velocity.logging.VelocityLoggingHelper;
 import me.whereareiam.identica.type.PluginType;
+import me.whereareiam.attache.platform.velocity.VelocityLibraryManager;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -57,9 +58,7 @@ public class VelocityIdentica {
 		PluginType.setPluginType(PluginType.VELOCITY);
 		VelocityLoggingHelper.setLogger(logger);
 
-		VelocityDependencyResolver resolver = new VelocityDependencyResolver(proxyServer, pluginContainer, logger, dataPath);
-		resolver.loadLibraries();
-		resolver.resolveDependencies();
+		new VelocityLibraryManager(proxyServer, pluginContainer, logger, dataPath, ".libraries");
 
 		Injector injector = Guice.createInjector(
 				new CommonConfiguration(dataPath),

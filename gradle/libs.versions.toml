@@ -9,7 +9,7 @@ spawner = "dev-56440cd"
 lombok = "1.18.42"
 
 # general
-attache = "dev-69791b2"
+attache = "dev-d4e1e5f"
 configura = "dev-edb606f"
 commandant = "dev-294fd68"
 keystone = "dev-9add0ca"
@@ -123,3 +123,4 @@ bStats-velocity = ["bStats", "bStats-velocity"]
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 spawner = { id = "me.whereareiam.spawner", version.ref = "spawner" }
+attache = { id = "me.whereareiam.attache", version.ref = "attache" }

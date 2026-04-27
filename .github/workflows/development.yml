@@ -93,7 +93,7 @@ jobs:
       - prepare
       - build
     if: github.repository == 'whereareiam/Identica' && github.event_name == 'push' && github.ref == 'refs/heads/dev'
-    runs-on: [self-hosted, linux, identica-docs-k8s]
+    runs-on: [identica-docs-k8s]
     permissions:
       contents: read
     env:

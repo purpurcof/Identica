@@ -1,5 +1,6 @@
 package me.whereareiam.identica.handshake;
 
+import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import org.jetbrains.annotations.NotNull;
 

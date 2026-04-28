@@ -5,7 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.handshake.HandshakePolicy;
+import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;

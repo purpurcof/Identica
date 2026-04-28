@@ -12,7 +12,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.handshake.HandshakeInstructionEvent;
-import me.whereareiam.identica.handshake.HandshakePolicy;
+import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;

@@ -2,20 +2,22 @@ package me.whereareiam.identica.provider.premium.policy;
 
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
-import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.provider.premium.resolver.PremiumProfileLookup;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
+import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.identica.type.provider.ProviderState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -117,8 +119,29 @@ class PremiumHandshakePolicyTest {
 		verify(profileLookup, never()).hasPremiumProfile(username);
 	}
 
+	@DisplayName("Forces premium when provider context is explicitly set to the premium provider")
+	@Test
+	void manualPremiumProviderContextForcesPremiumHandshake() {
+		String username = "PlayerOne";
+
+		HandshakeDecision decision = policy.evaluate(request(username, ProviderContext.of(
+				"premium",
+				null,
+				username,
+				ProviderOrigin.MANUAL
+		))).toCompletableFuture().join();
+
+		assertEquals(HandshakeDecision.Status.ALLOW, decision.getStatus());
+		verify(handshakeStore).putInstruction(any());
+		verify(profileLookup, never()).hasPremiumProfile(username);
+	}
+
 	private HandshakeRequest request(String username) {
-		return new HandshakeRequest(new ConnectionIdentity(username, "127.0.0.1"), null);
+		return request(username, null);
+	}
+
+	private HandshakeRequest request(String username, ProviderContext provider) {
+		return new HandshakeRequest(new ConnectionIdentity(username, "127.0.0.1"), provider);
 	}
 
 	private Settings settings() {

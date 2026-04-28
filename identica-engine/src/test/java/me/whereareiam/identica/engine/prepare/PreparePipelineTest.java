@@ -15,6 +15,7 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
 import me.whereareiam.identica.engine.pipeline.prepare.group.context.ContextGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.context.phase.ResolveEntrypointPhase;
+import me.whereareiam.identica.engine.pipeline.prepare.group.context.phase.ResolvePendingMigrationContextPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.context.phase.RestorePrepareStatePhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.finalize.FinalizeGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.finalize.phase.StorePrepareDecisionPhase;
@@ -28,6 +29,8 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.LoadP
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePendingMigrationAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePreparedAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolveProfilePhase;
+import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
+import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
@@ -43,12 +46,14 @@ import me.whereareiam.identica.model.identity.AccountDecision;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.UsernameSource;
+import me.whereareiam.identica.type.provider.ProviderOrigin;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -172,6 +177,90 @@ class PreparePipelineTest {
 		assertNotNull(decision);
 		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
 		assertNotNull(decision.getHandshake());
+	}
+
+	@DisplayName("Handshake preparation exposes pending migration provider context before policy evaluation")
+	@Test
+	void handshakeStageUsesPendingMigrationProviderContext() {
+		ConnectionIdentity identity = identity("MigratingPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratingPlayer|127.0.0.1|premium.example.com|25565";
+
+		PipelineState pendingMigrationState = PipelineState.initial();
+		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
+		MigrationContext migrationContext = MigrationContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "MigratingPlayer", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build();
+		migrationContext.setProvider(ProviderContext.of("premium", null, "MigratingPlayer", ProviderOrigin.MANUAL));
+		pendingMigrationState.setScenario(migrationContext);
+		pendingMigrationState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.USER,
+				UUID.randomUUID()
+		), 1_000L);
+
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of());
+		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
+				.thenReturn(Optional.of(pendingMigrationState));
+
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.HANDSHAKE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertNotNull(decision.getProvider());
+		assertEquals("premium", decision.getProvider().getProviderId());
+	}
+
+	@DisplayName("Handshake preparation evaluates only the policy for the selected provider")
+	@Test
+	void handshakeStageSkipsScopedPoliciesForOtherProviders() {
+		ConnectionIdentity identity = identity("MigratingPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratingPlayer|127.0.0.1|premium.example.com|25565";
+
+		PipelineState pendingMigrationState = PipelineState.initial();
+		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
+		MigrationContext migrationContext = MigrationContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "MigratingPlayer", "127.0.0.1"))
+				.targetProviderId("cracked")
+				.build();
+		migrationContext.setProvider(ProviderContext.of("cracked", "offline-subject", "MigratingPlayer", ProviderOrigin.MANUAL));
+		pendingMigrationState.setScenario(migrationContext);
+		pendingMigrationState.putItem(new MigrationPendingState(
+				"cracked",
+				1234L,
+				MigrationInitiator.USER,
+				UUID.randomUUID()
+		), 1_000L);
+
+		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
+		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
+				.thenReturn(Optional.of(pendingMigrationState));
+
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.HANDSHAKE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(0, premiumPolicy.invocations);
 	}
 
 	@DisplayName("Premium profile preparation reuses the UUID from an existing linked account")
@@ -428,6 +517,7 @@ class PreparePipelineTest {
 				new FinalizeGroup(),
 				new RestorePrepareStatePhase(prepareStateStore),
 				new ResolveEntrypointPhase(providerOperations, contextResolver),
+				new ResolvePendingMigrationContextPhase(pipelineStateStore),
 				new EvaluateHandshakePhase(handshakeStore),
 				new FinalizeHandshakePhase(eventManager, Messages::new),
 				new ResolveProfilePhase(providerOperations, contextResolver),
@@ -490,6 +580,28 @@ class PreparePipelineTest {
 		@Override
 		public boolean clear(@NotNull UUID uniqueId) {
 			return byUniqueId.remove(uniqueId) != null;
+		}
+	}
+
+	private static final class CountingScopedHandshakePolicy implements ProviderScopedHandshakePolicy {
+		private final String providerId;
+		private int invocations;
+
+		private CountingScopedHandshakePolicy(String providerId) {
+			this.providerId = providerId;
+		}
+
+		@Override
+		public @NotNull String providerId() {
+			return providerId;
+		}
+
+		@Override
+		public java.util.concurrent.CompletionStage<HandshakeDecision> evaluate(
+				HandshakeRequest request
+		) {
+			invocations++;
+			return java.util.concurrent.CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 	}
 }

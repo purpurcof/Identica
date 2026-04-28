@@ -4,7 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
-import me.whereareiam.identica.handshake.HandshakePolicy;
+import me.whereareiam.identica.handshake.policy.HandshakePolicy;
+import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
@@ -13,6 +14,7 @@ import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import org.jetbrains.annotations.NotNull;
 
@@ -66,12 +68,20 @@ public class EvaluateHandshakePhase implements PipelinePhase<PrepareGroupState> 
 		);
 		HandshakeDecision decision = HandshakeDecision.allow();
 		for (HandshakePolicy policy : handshakeStore.policies()) {
+			if (!shouldEvaluate(policy, context.getProvider())) continue;
 			decision = merge(decision, evaluatePolicy(policy, request));
 		}
 
 		context.applyHandshake(decision);
 		pipelineState.putItem(context, 0L);
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
+	}
+
+	private boolean shouldEvaluate(@NotNull HandshakePolicy policy, ProviderContext provider) {
+		if (!(policy instanceof ProviderScopedHandshakePolicy scoped)) return true;
+		if (provider == null || provider.getProviderId() == null || provider.getProviderId().isBlank()) return true;
+
+		return scoped.providerId().equalsIgnoreCase(provider.getProviderId());
 	}
 
 	private @NotNull HandshakeDecision evaluatePolicy(

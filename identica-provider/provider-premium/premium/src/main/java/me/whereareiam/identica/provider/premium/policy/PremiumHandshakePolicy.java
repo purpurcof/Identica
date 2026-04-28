@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.handshake.HandshakePolicy;
 import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.logging.Logger;
@@ -27,6 +27,7 @@ import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.provider.premium.resolver.PremiumProfileLookup;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.util.UniqueIdGenerator;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Comparator;
@@ -36,7 +37,7 @@ import java.util.concurrent.CompletionStage;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class PremiumHandshakePolicy implements HandshakePolicy {
+public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 	private final AccountPersistenceService accountPersistenceService;
 	private final PremiumProfileLookup profileLookup;
 	private final ProviderManager providerManager;
@@ -45,6 +46,11 @@ public class PremiumHandshakePolicy implements HandshakePolicy {
 	private final ProviderAttemptStore attemptStore;
 	private final Provider<Settings> settingsProvider;
 	private final HandshakeStore handshakeStore;
+
+	@Override
+	public @NotNull String providerId() {
+		return PremiumConstants.PROVIDER_ID;
+	}
 
 	@Override
 	public CompletionStage<HandshakeDecision> evaluate(HandshakeRequest request) {

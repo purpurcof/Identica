@@ -1,4 +1,4 @@
-package me.whereareiam.identica.handshake;
+package me.whereareiam.identica.handshake.policy;
 
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;

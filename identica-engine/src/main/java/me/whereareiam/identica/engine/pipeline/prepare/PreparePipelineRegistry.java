@@ -16,6 +16,7 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyP
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.ProfileGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.LoadPrepareAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePendingMigrationAccountPhase;
+import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePreparedAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolveProfilePhase;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
@@ -36,6 +37,7 @@ public class PreparePipelineRegistry extends AbstractPipelineGroupRegistry imple
 			FinalizeHandshakePhase finalizeHandshakePhase,
 			ResolveProfilePhase resolveProfilePhase,
 			ResolvePendingMigrationAccountPhase resolvePendingMigrationAccountPhase,
+			ResolvePreparedAccountPhase resolvePreparedAccountPhase,
 			LoadPrepareAccountPhase loadPrepareAccountPhase,
 			ApplyPreparePolicyPhase applyPreparePolicyPhase,
 			StorePrepareDecisionPhase storePrepareDecisionPhase
@@ -54,6 +56,7 @@ public class PreparePipelineRegistry extends AbstractPipelineGroupRegistry imple
 
 		registerPhase(profileGroup.id(), resolveProfilePhase, PhasePlacement.first());
 		registerPhase(profileGroup.id(), resolvePendingMigrationAccountPhase, PhasePlacement.after(resolveProfilePhase.id()));
+		registerPhase(profileGroup.id(), resolvePreparedAccountPhase, PhasePlacement.after(resolvePendingMigrationAccountPhase.id()));
 		registerPhase(profileGroup.id(), loadPrepareAccountPhase, PhasePlacement.last());
 
 		registerPhase(policyGroup.id(), applyPreparePolicyPhase, PhasePlacement.first());

@@ -7,20 +7,19 @@ import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
-import me.whereareiam.identica.identity.account.RegistrationAccountService;
-import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.type.UsernameSource;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import me.whereareiam.identica.type.UsernameSource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -30,20 +29,20 @@ import java.util.concurrent.CompletionStage;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState> {
-	private final RegistrationAccountService registrationAccountService;
+public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupState> {
+	private final PrepareStateStore prepareStateStore;
 	private final AccountPersistenceService accountPersistenceService;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final ProviderProfilePersistenceService providerProfilePersistenceService;
 
 	@Override
 	public @NotNull String id() {
-		return "load-prepare-account";
+		return "resolve-prepared-account";
 	}
 
 	@Override
 	public int order() {
-		return 200;
+		return 175;
 	}
 
 	@Override
@@ -57,12 +56,19 @@ public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState>
 		if (pipelineState.item(PrepareAccountCandidateItem.class).isPresent()) return false;
 
 		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(null);
-		return context != null
-				&& context.getProvider() != null
-				&& context.getProvider().getProviderId() != null
-				&& !context.getProvider().getProviderId().isBlank()
-				&& context.getProvider().getProviderSubject() != null
-				&& !context.getProvider().getProviderSubject().isBlank();
+		if (context == null) return false;
+
+		ProviderContext provider = context.getProvider();
+		if (provider == null) return false;
+		if (provider.getProviderId() == null || provider.getProviderId().isBlank()) return false;
+		if (provider.getProviderSubject() == null || provider.getProviderSubject().isBlank()) return false;
+
+		String connectionKey = state.getRequest() != null ? state.getRequest().getConnectionKey() : null;
+		if (connectionKey == null || connectionKey.isBlank()) return false;
+
+		return prepareStateStore.peek(connectionKey)
+				.map(PrepareDecision::getUniqueId)
+				.isPresent();
 	}
 
 	@Override
@@ -73,33 +79,22 @@ public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState>
 		PrepareContextItem context = pipelineState.item(PrepareContextItem.class).orElse(new PrepareContextItem());
 		var request = state.getRequest();
 		ProviderContext provider = context.getProvider();
-		if (request == null || provider == null
-				|| provider.getProviderId() == null || provider.getProviderId().isBlank()
-				|| provider.getProviderSubject() == null || provider.getProviderSubject().isBlank()) {
+		if (request == null || provider == null) {
+			return CompletableFuture.completedFuture(PhaseResult.pass(state));
+		}
+
+		String connectionKey = request.getConnectionKey();
+		UUID identicaUniqueId = connectionKey == null || connectionKey.isBlank()
+				? null
+				: prepareStateStore.peek(connectionKey)
+						.map(PrepareDecision::getUniqueId)
+						.orElse(null);
+		if (identicaUniqueId == null) {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
 		String requestedUsername = request.getIdentity().getUsername();
-		UUID identicaUniqueId = registrationAccountService.reserve(ProfileRequest.builder()
-				.identity(request.getIdentity())
-				.providerId(provider.getProviderId())
-				.providerSubject(provider.getProviderSubject())
-				.build());
-
-		if (identicaUniqueId == null) {
-			Logger.warn("Prepare reservation missing username=%s provider=%s",
-					requestedUsername,
-					provider.getProviderId());
-			pipelineState.putItem(PrepareDecisionItem.allow(
-					context,
-					null,
-					requestedUsername
-			), 0L);
-
-			return CompletableFuture.completedFuture(PhaseResult.pass(state));
-		}
-
-        Optional<AccountProviderLink> storedLink = providerLinkPersistenceService.findBySubject(
+		Optional<AccountProviderLink> storedLink = providerLinkPersistenceService.findBySubject(
 				provider.getProviderId(),
 				provider.getProviderSubject()
 		);
@@ -135,11 +130,6 @@ public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState>
 				profile,
 				created
 		), 0L);
-		if (created) {
-			Logger.debug("Prepare using transient account username=%s provider=%s",
-					requestedUsername,
-					provider.getProviderId());
-		}
 
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}

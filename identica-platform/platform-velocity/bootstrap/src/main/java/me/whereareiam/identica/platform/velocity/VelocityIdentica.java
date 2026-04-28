@@ -60,7 +60,7 @@ public class VelocityIdentica {
 		VelocityLoggingHelper.setLogger(logger);
 
 		VelocityLibraryManager libraryManager = new VelocityLibraryManager(proxyServer, pluginContainer, logger, dataPath, ".libraries");
-		libraryManager.setVerbosityMode(VerbosityMode.QUIET);
+		libraryManager.setVerbosityMode(VerbosityMode.SUMMARY);
 		libraryManager.loadDescriptors();
 
 		Injector injector = Guice.createInjector(

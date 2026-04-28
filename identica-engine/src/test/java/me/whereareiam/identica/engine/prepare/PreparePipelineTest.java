@@ -26,6 +26,7 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyP
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.ProfileGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.LoadPrepareAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePendingMigrationAccountPhase;
+import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePreparedAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolveProfilePhase;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
@@ -230,6 +231,68 @@ class PreparePipelineTest {
 		assertNotNull(prepareStateStore.peek(identicaUniqueId).orElse(null));
 	}
 
+	@DisplayName("Profile preparation reuses the UUID already prepared for the same connection")
+	@Test
+	void profileStageReusesPreparedUuidForSameConnectionKey() {
+		UUID preparedUniqueId = UUID.randomUUID();
+		ConnectionIdentity firstIdentity = identity("whereareiam");
+		ConnectionIdentity secondIdentity = identity("whereareiam");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "whereareiam|127.0.0.1|premium.example.com|25565";
+		firstIdentity.setObservedUniqueId(UUID.randomUUID());
+		secondIdentity.setObservedUniqueId(UUID.randomUUID());
+
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of());
+		when(providerOperations.resolveEntrypoint("premium.example.com", 25565))
+				.thenReturn(ResolvedEntrypoint.builder()
+						.providerId("premium")
+						.host("premium.example.com")
+						.port(25565)
+						.build());
+		when(providerOperations.resolveProfile(any()))
+				.thenReturn(ProfileResolution.builder()
+						.providerId("cracked")
+						.providerSubject("offline-subject")
+						.build())
+				.thenReturn(ProfileResolution.builder()
+						.providerId("premium")
+						.providerSubject("premium-subject")
+						.build());
+		when(registrationAccountService.reserve(any())).thenReturn(preparedUniqueId);
+		when(providerLinkPersistenceService.findBySubject("cracked", "offline-subject"))
+				.thenReturn(Optional.empty());
+		when(providerLinkPersistenceService.findBySubject("premium", "premium-subject"))
+				.thenReturn(Optional.empty());
+		when(accountPersistenceService.findByUniqueId(preparedUniqueId))
+				.thenReturn(Optional.empty());
+		when(providerProfilePersistenceService.findBySubject("cracked", "offline-subject"))
+				.thenReturn(Optional.empty());
+		when(providerProfilePersistenceService.findBySubject("premium", "premium-subject"))
+				.thenReturn(Optional.empty());
+
+		PrepareDecision first = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.PROFILE)
+						.connectionKey(connectionKey)
+						.identity(firstIdentity)
+						.build())
+				.toCompletableFuture()
+				.join();
+		PrepareDecision second = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.PROFILE)
+						.connectionKey(connectionKey)
+						.identity(secondIdentity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(first);
+		assertNotNull(second);
+		assertEquals(preparedUniqueId, first.getUniqueId());
+		assertEquals(preparedUniqueId, second.getUniqueId());
+		verify(registrationAccountService).reserve(any());
+	}
+
 	@DisplayName("Pending migration state can supply the target account UUID during profile preparation")
 	@Test
 	void profileStageReusesPendingMigrationAccountForTargetProvider() {
@@ -370,6 +433,12 @@ class PreparePipelineTest {
 				new ResolveProfilePhase(providerOperations, contextResolver),
 				new ResolvePendingMigrationAccountPhase(
 						pipelineStateStore,
+						accountPersistenceService,
+						providerLinkPersistenceService,
+						providerProfilePersistenceService
+				),
+				new ResolvePreparedAccountPhase(
+						prepareStateStore,
 						accountPersistenceService,
 						providerLinkPersistenceService,
 						providerProfilePersistenceService

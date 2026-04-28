@@ -27,6 +27,7 @@ public class Commands {
 	@Setter
 	@ToString
 	public static class Behavior {
+		private @NotNull Help help;
 		private @NotNull Suggestions suggestions;
 		private @NotNull Clear clear;
 		private @NotNull Sessions sessions;
@@ -35,6 +36,19 @@ public class Commands {
 		 * Whether Velocity should register commands through Brigadier.
 		 */
 		private boolean useBrigadier;
+
+		/**
+		 * Configuration for help command behavior.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		public static class Help {
+			/**
+			 * Whether help entries should be sorted alphabetically.
+			 */
+			private boolean sortAlphabetically;
+		}
 
 		/**
 		 * Configuration for command suggestions.

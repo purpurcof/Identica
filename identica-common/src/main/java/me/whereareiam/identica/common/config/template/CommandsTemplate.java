@@ -33,6 +33,10 @@ public class CommandsTemplate implements TemplateProvider<Commands> {
 		Commands.Behavior behavior = new Commands.Behavior();
 		behavior.setUseBrigadier(false);
 
+		Commands.Behavior.Help help = new Commands.Behavior.Help();
+		help.setSortAlphabetically(true);
+		behavior.setHelp(help);
+
 		Commands.Behavior.Clear clearSettings = new Commands.Behavior.Clear();
 		clearSettings.setConfirmTtl(Duration.ofSeconds(60));
 		behavior.setClear(clearSettings);

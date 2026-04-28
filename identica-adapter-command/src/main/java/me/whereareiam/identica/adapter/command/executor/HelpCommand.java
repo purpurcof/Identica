@@ -18,6 +18,7 @@ import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.keystone.Actor;
+import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.keystone.model.SerializerOptions;
 import net.kyori.adventure.text.Component;
 import org.incendo.cloud.CommandManager;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class HelpCommand implements Reloadable {
+	private final Provider<Commands> commandsProvider;
 	private final Provider<Messages> messagesProvider;
 	private final Provider<CommandManager<Actor>> commandManagerProvider;
 	private final Provider<CommandService> commandServiceProvider;
@@ -37,11 +39,13 @@ public class HelpCommand implements Reloadable {
 
 	@Inject
 	public HelpCommand(
+			@NotNull Provider<Commands> commandsProvider,
 			@NotNull Provider<Messages> messagesProvider,
 			@NotNull Provider<CommandManager<Actor>> commandManagerProvider,
 			@NotNull Provider<CommandService> commandServiceProvider,
 			@NotNull Registry<Reloadable> reloadableRegistry
 	) {
+		this.commandsProvider = commandsProvider;
 		this.messagesProvider = messagesProvider;
 		this.commandManagerProvider = commandManagerProvider;
 		this.commandServiceProvider = commandServiceProvider;
@@ -59,13 +63,14 @@ public class HelpCommand implements Reloadable {
 	@NotNull
 	private HelpBuilder<Actor> getHelpBuilder() {
 		if (helpBuilder == null) {
+			Commands commands = commandsProvider.get();
 			Messages messages = messagesProvider.get();
 			SerializerOptions.PlaceholderFormat placeholderFormat = Serializer.getEngine().getPlaceholderFormat();
 
 			helpBuilder = Help.<Actor>builder(messages.getCommands().getHelp())
 					.customArgumentNames(collectArgumentDescriptions())
 					.paginationMessages(messages.getCommands().getPagination())
-					.sortAlphabetically(true)
+					.sortAlphabetically(commands.getBehavior().getHelp().isSortAlphabetically())
 					.dedupeByDefinitionId(true)
 					.placeholderFormat(placeholderFormat)
 					.build();

@@ -1,4 +1,4 @@
-import me.whereareiam.attache.plugin.gradle.extension.AttacheMetadataExtension
+import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
 
 plugins {
     id("identica.java-common")
@@ -12,23 +12,8 @@ dependencies {
     attache(libs.cloud.minecraft.extras)
 }
 
-extensions.configure<AttacheMetadataExtension>("attacheMetadata") {
+extensions.configure<AttacheExtension>("attache") {
+    transitive.set(true)
     repository("https://maven.whereareiam.me/release")
     repository("https://maven.whereareiam.me/development")
-
-    library(libs.cloud.core) {
-        transitive.set(true)
-    }
-
-    library(libs.cloud.annotations) {
-        transitive.set(true)
-    }
-
-    library(libs.cloud.cooldowns) {
-        transitive.set(true)
-    }
-
-    library(libs.cloud.minecraft.extras) {
-        transitive.set(true)
-    }
 }

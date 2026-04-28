@@ -1,4 +1,4 @@
-import me.whereareiam.attache.plugin.gradle.extension.AttacheMetadataExtension
+import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
 
 plugins {
     id("identica.java-common")
@@ -22,24 +22,22 @@ dependencies {
     testImplementation(libs.testcontainers.mariadb)
 }
 
-extensions.configure<AttacheMetadataExtension>("attacheMetadata") {
+extensions.configure<AttacheExtension>("attache") {
+    transitive.set(true)
     repository("https://maven.whereareiam.me/release")
     repository("https://maven.whereareiam.me/development")
 
     library(libs.dialectica) {
-        transitive.set(true)
         relocate("me{}whereareiam{}dialectica", "me.whereareiam.identica.library.dialectica")
         relocate("org{}jdbi", "me{}whereareiam{}identica{}library{}jdbi")
     }
 
     library(libs.jdbi.core) {
-        transitive.set(true)
         relocate("org{}jdbi", "me.whereareiam.identica.library.jdbi")
         relocate("io{}leangen{}geantyref", "me.whereareiam.identica.library.geantyref")
     }
 
     library(libs.jdbi.sqlobject) {
-        transitive.set(true)
         relocate("org{}jdbi", "me.whereareiam.identica.library.jdbi")
         relocate("io{}leangen{}geantyref", "me.whereareiam.identica.library.geantyref")
     }

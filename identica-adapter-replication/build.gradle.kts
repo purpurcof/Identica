@@ -1,4 +1,4 @@
-import me.whereareiam.attache.plugin.gradle.extension.AttacheMetadataExtension
+import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
 
 plugins {
     id("identica.java-common")
@@ -13,8 +13,6 @@ dependencies {
     testImplementation(libs.testcontainers.redis)
 }
 
-extensions.configure<AttacheMetadataExtension>("attacheMetadata") {
-    library(libs.jedis) {
-        transitive.set(true)
-    }
+extensions.configure<AttacheExtension>("attache") {
+    transitive.set(true)
 }

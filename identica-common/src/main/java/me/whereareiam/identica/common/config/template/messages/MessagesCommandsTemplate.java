@@ -370,18 +370,6 @@ public class MessagesCommandsTemplate {
 		Messages.Commands.Verification.Enroll enroll = new Messages.Commands.Verification.Enroll();
 		enroll.setUnknownMethod("{prefix}<white>Unknown verification method <gray>{methodDisplayName}</gray>.</white>");
 		enroll.setAlreadyEnrolled("{prefix}<white>Method <gray>{methodDisplayName}</gray> is already enrolled.</white>");
-		enroll.setPending(List.of(
-				" ",
-				" <green><bold>Identica</bold>",
-				" ",
-				"  <white>Scan or enter this TOTP secret:</white>",
-				"   <gray>{secret}</gray>",
-				" ",
-				"  <click:open_url:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={uriEncoded}'><green>[OPEN QR CODE]</green></click>",
-				" ",
-				"  <white>Use <yellow>/2fa enroll confirm</yellow> <gray>[Code]</gray> to continue.</white>",
-				" "
-		));
 
 		Messages.Commands.Verification.Confirm confirm = new Messages.Commands.Verification.Confirm();
 		confirm.setNoPending("{prefix}<white>No pending verification action.</white>");
@@ -446,6 +434,23 @@ public class MessagesCommandsTemplate {
 		cancel.setCancelled("{prefix}<white>Pending verification enrollment cancelled.</white>");
 		cancel.setCancelledProtectedAction("{prefix}<white>Pending protected action cancelled.</white>");
 
+		Messages.Commands.Verification.Methods.Totp totp = new Messages.Commands.Verification.Methods.Totp();
+		totp.setPending(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Scan or enter this TOTP secret:</white>",
+				"   <gray>{secret}</gray>",
+				" ",
+				"  <click:open_url:'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={uriEncoded}'><green>[OPEN QR CODE]</green></click>",
+				" ",
+				"  <white>Use <yellow>/2fa enroll confirm</yellow> <gray>[Code]</gray> to continue.</white>",
+				" "
+		));
+		Messages.Commands.Verification.Methods methods = new Messages.Commands.Verification.Methods();
+		methods.setTotp(totp);
+
+		verification.setMethods(methods);
 		verification.setStatus(status);
 		verification.setEnroll(enroll);
 		verification.setConfirm(confirm);

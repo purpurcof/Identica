@@ -1,11 +1,13 @@
 package me.whereareiam.identica.common.verification.type.totp.process;
 
 import me.whereareiam.identica.common.config.template.VerificationTemplate;
+import me.whereareiam.identica.common.config.template.messages.MessagesCommandsTemplate;
 import me.whereareiam.identica.common.verification.type.totp.TotpCodec;
 import me.whereareiam.identica.common.verification.type.totp.state.TotpEnrollmentState;
 import me.whereareiam.identica.common.verification.type.totp.step.TotpConfirmCodeStep;
 import me.whereareiam.identica.common.verification.type.totp.step.TotpConfirmSavedStep;
 import me.whereareiam.identica.common.verification.type.totp.step.TotpSetupStep;
+import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentContext;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
@@ -35,6 +37,8 @@ class TotpEnrollmentProcessTest {
 
 		assertEquals("totp-confirm-code", result.getState().getStepId());
 		assertNotNull(result.getDisplay());
+		assertFalse(result.getDisplay().getLines().isEmpty());
+		assertTrue(result.getDisplay().getLines().stream().anyMatch(line -> line.contains("TOTP secret")));
 		assertNotNull(result.getDisplay().getPlaceholders().get("secret"));
 		assertNotNull(result.getDisplay().getPlaceholders().get("uri"));
 	}
@@ -113,7 +117,7 @@ class TotpEnrollmentProcessTest {
 	@Test
 	void gotoTransitionJumpsToExplicitStep() {
 		Verification verification = verification();
-		TotpSetupStep setupStep = new TotpSetupStep(() -> verification);
+		TotpSetupStep setupStep = new TotpSetupStep(() -> verification, this::messages);
 		TotpConfirmSavedStep confirmSavedStep = new TotpConfirmSavedStep();
 		TotpEnrollmentProcess process = new TotpEnrollmentProcess(
 				setupStep,
@@ -161,7 +165,7 @@ class TotpEnrollmentProcessTest {
 
 	private @NotNull TotpEnrollmentProcess process(@NotNull Verification verification) {
 		return new TotpEnrollmentProcess(
-				new TotpSetupStep(() -> verification),
+				new TotpSetupStep(() -> verification, this::messages),
 				new TotpConfirmCodeStep(() -> verification),
 				new TotpConfirmSavedStep()
 		);
@@ -183,6 +187,14 @@ class TotpEnrollmentProcessTest {
 
 	private @NotNull Verification verification() {
 		return new VerificationTemplate().supply(new Verification());
+	}
+
+	private @NotNull Messages messages() {
+		Messages messages = new Messages();
+		Messages.Commands commands = new Messages.Commands();
+		new MessagesCommandsTemplate().supply(commands);
+		messages.setCommands(commands);
+		return messages;
 	}
 
 	private static final class RedirectingConfirmCodeStep extends TotpConfirmCodeStep {

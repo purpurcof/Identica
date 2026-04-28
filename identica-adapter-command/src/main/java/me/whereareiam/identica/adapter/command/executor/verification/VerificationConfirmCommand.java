@@ -39,7 +39,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 	private final VerificationService verificationService;
 	private final PipelineStateStore pipelineStateStore;
 	private final ConnectionCoordinator connectionCoordinator;
-	private final VerificationMessagePresenter messagePresenter;
+	private final VerificationResultRenderer resultRenderer;
 	private final SessionService sessionService;
 
 	@Inject
@@ -49,7 +49,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 			VerificationService verificationService,
 			PipelineStateStore pipelineStateStore,
 			ConnectionCoordinator connectionCoordinator,
-			VerificationMessagePresenter messagePresenter,
+			VerificationResultRenderer resultRenderer,
 			SessionService sessionService
 	) {
 		super(verificationService);
@@ -58,7 +58,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 		this.verificationService = verificationService;
 		this.pipelineStateStore = pipelineStateStore;
 		this.connectionCoordinator = connectionCoordinator;
-		this.messagePresenter = messagePresenter;
+		this.resultRenderer = resultRenderer;
 		this.sessionService = sessionService;
 	}
 
@@ -100,7 +100,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 				if (pendingDisable.getMethodId().isBlank()) {
 					sendMessage(identity, verificationMessages().getConfirm().getNoPending(), Map.of());
 				} else {
-					messagePresenter.presentDisableResult(identity, verificationService.disableMethod(identity.getUniqueId(), pendingDisable.getMethodId()));
+					resultRenderer.presentDisableResult(identity, verificationService.disableMethod(identity.getUniqueId(), pendingDisable.getMethodId()));
 				}
 			}
 			default -> {

@@ -5,8 +5,10 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.verification.VerificationDisableResult;
+import me.whereareiam.identica.model.verification.process.VerificationProcessDisplay;
 import me.whereareiam.identica.model.verification.selection.VerificationSelectionResult;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
 import me.whereareiam.identica.type.verification.status.VerificationDisableStatus;
@@ -30,7 +32,7 @@ import java.util.Objects;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class VerificationMessagePresenter {
+public class VerificationResultRenderer {
 	private final Provider<Messages> messagesProvider;
 	private final VerificationRegistry verificationRegistry;
 
@@ -42,7 +44,7 @@ public class VerificationMessagePresenter {
 		if (status == null) return;
 
 		switch (status) {
-			case STARTED -> sendLines(sender, enrollMessages.getPending(), enrollmentPlaceholders(result.getMethodData()));
+			case STARTED -> sendEnrollmentDisplay(sender, result);
 			case ACTIVATED -> {
 				sendMessage(sender, confirmMessages.getEnabled(), methodPlaceholders(result.getMethodId()));
 				if (result.getAutoSelectedProviderId() != null && !result.getAutoSelectedProviderId().isBlank()) {
@@ -60,7 +62,7 @@ public class VerificationMessagePresenter {
 				if (result.getRecoveryCodes() != null && !result.getRecoveryCodes().isEmpty()) {
 					sendRecoveryCodes(sender, result.getRecoveryCodes());
 				} else {
-					sendLines(sender, enrollMessages.getPending(), enrollmentPlaceholders(result.getMethodData()));
+					sendEnrollmentDisplay(sender, result);
 				}
 			}
 			case INVALID -> sendMessage(sender, confirmMessages.getInvalidCode(), Map.of());
@@ -159,6 +161,30 @@ public class VerificationMessagePresenter {
 		return Serializer.getEngine().getPlaceholderFormat();
 	}
 
+	private void sendEnrollmentDisplay(@NotNull Actor sender, @NotNull VerificationEnrollmentResult result) {
+		Map<String, String> placeholders = enrollmentPlaceholders(result);
+		VerificationProcessDisplay display = result.getDisplay();
+		if (display != null) {
+			List<String> lines = display.getLines();
+			if (lines != null && !lines.isEmpty()) {
+				sendLines(sender, lines, placeholders);
+				return;
+			}
+
+			String message = display.getMessage();
+			if (message != null && !message.isBlank()) {
+				sendMessage(sender, message, placeholders);
+				return;
+			}
+		}
+
+		String methodId = Objects.toString(result.getMethodId(), "");
+		Logger.severe("Verification enrollment display missing for method=%s status=%s",
+				methodId,
+				result.getStatus());
+		throw new IllegalStateException("Verification method " + methodId + " did not provide enrollment display");
+	}
+
 	private void sendLines(@NotNull Actor sender, @Nullable List<String> lines, @NotNull Map<String, String> placeholders) {
 		if (lines == null || lines.isEmpty()) return;
 		sendMessage(sender, String.join("\n", lines), placeholders);
@@ -196,9 +222,13 @@ public class VerificationMessagePresenter {
 				.orElse(methodId);
 	}
 
-	private Map<String, String> enrollmentPlaceholders(@Nullable Map<String, String> methodData) {
-		Map<String, String> placeholders = new LinkedHashMap<>();
-		if (methodData != null) placeholders.putAll(methodData);
+	private Map<String, String> enrollmentPlaceholders(@NotNull VerificationEnrollmentResult result) {
+		Map<String, String> placeholders = new LinkedHashMap<>(methodPlaceholders(result.getMethodId()));
+		VerificationProcessDisplay display = result.getDisplay();
+		if (display != null && display.getPlaceholders() != null)
+			placeholders.putAll(display.getPlaceholders());
+		if (result.getMethodData() != null)
+			placeholders.putAll(result.getMethodData());
 
 		String uri = firstNonBlank(placeholders.get("uri"), placeholders.get("otpauthUri"));
 		if (uri == null) {

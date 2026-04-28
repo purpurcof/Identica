@@ -517,6 +517,7 @@ public class Messages {
 		public static class Verification {
 			private @NotNull String playerOnly;
 			private @NotNull String notAllowed;
+			private @NotNull Methods methods;
 			private @NotNull Status status;
 			private @NotNull Enroll enroll;
 			private @NotNull Confirm confirm;
@@ -541,7 +542,6 @@ public class Messages {
 			public static class Enroll {
 				private @NotNull String unknownMethod;
 				private @NotNull String alreadyEnrolled;
-				private @NotNull List<String> pending;
 			}
 
 			@Getter
@@ -603,6 +603,20 @@ public class Messages {
 				private @NotNull String noPending;
 				private @NotNull String cancelled;
 				private @NotNull String cancelledProtectedAction;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Methods {
+				private @NotNull Totp totp;
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Totp {
+					private @NotNull List<String> pending;
+				}
 			}
 		}
 

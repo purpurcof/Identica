@@ -1,6 +1,7 @@
 package me.whereareiam.identica.common.verification;
 
 import me.whereareiam.identica.common.config.template.VerificationTemplate;
+import me.whereareiam.identica.common.config.template.messages.MessagesCommandsTemplate;
 import me.whereareiam.identica.common.verification.challenge.VerificationChallengeLifecycle;
 import me.whereareiam.identica.common.verification.enrollment.VerificationEnrollmentActivator;
 import me.whereareiam.identica.common.verification.challenge.VerificationChallengeStore;
@@ -20,6 +21,7 @@ import me.whereareiam.identica.common.verification.type.totp.step.TotpSetupStep;
 import me.whereareiam.identica.database.VerificationPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.verification.VerificationRecoveryCode;
 import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
@@ -48,6 +50,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class DefaultVerificationServiceEnrollmentFlowTest {
+	private final Messages commandsMessages = messages();
+
 	@Test
 	@SuppressWarnings("unchecked")
 	void beginEnrollmentPersistsStateAndResumesUntilActivation() {
@@ -172,7 +176,7 @@ class DefaultVerificationServiceEnrollmentFlowTest {
 			@NotNull Verification verification,
 			@NotNull VerificationPersistenceService persistenceService
 	) {
-		TotpSetupStep setupStep = new TotpSetupStep(() -> verification);
+		TotpSetupStep setupStep = new TotpSetupStep(() -> verification, () -> commandsMessages);
 		TotpConfirmCodeStep confirmCodeStep = new TotpConfirmCodeStep(() -> verification);
 		TotpConfirmSavedStep confirmSavedStep = new TotpConfirmSavedStep();
 		TotpChallengeVerificationStep challengeStep = new TotpChallengeVerificationStep(() -> verification, persistenceService);
@@ -181,5 +185,13 @@ class DefaultVerificationServiceEnrollmentFlowTest {
 				new TotpEnrollmentProcess(setupStep, confirmCodeStep, confirmSavedStep),
 				new TotpChallengeProcess(challengeStep)
 		);
+	}
+
+	private Messages messages() {
+		Messages messages = new Messages();
+		Messages.Commands commands = new Messages.Commands();
+		new MessagesCommandsTemplate().supply(commands);
+		messages.setCommands(commands);
+		return messages;
 	}
 }

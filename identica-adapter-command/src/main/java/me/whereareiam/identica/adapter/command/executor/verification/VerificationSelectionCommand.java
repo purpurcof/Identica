@@ -30,7 +30,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 	private final Provider<Messages> messagesProvider;
 	private final Provider<Verification> verificationProvider;
 	private final VerificationService verificationService;
-	private final VerificationMessagePresenter messagePresenter;
+	private final VerificationResultRenderer resultRenderer;
 	private final PipelineStateStore pipelineStateStore;
 	private final SessionService sessionService;
 
@@ -39,7 +39,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 			Provider<Messages> messagesProvider,
 			Provider<Verification> verificationProvider,
 			VerificationService verificationService,
-			VerificationMessagePresenter messagePresenter,
+			VerificationResultRenderer resultRenderer,
 			PipelineStateStore pipelineStateStore,
 			SessionService sessionService
 	) {
@@ -47,7 +47,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 		this.messagesProvider = messagesProvider;
 		this.verificationProvider = verificationProvider;
 		this.verificationService = verificationService;
-		this.messagePresenter = messagePresenter;
+		this.resultRenderer = resultRenderer;
 		this.pipelineStateStore = pipelineStateStore;
 		this.sessionService = sessionService;
 	}
@@ -73,7 +73,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 		if (identity == null) return;
 		if (requireCurrentSession(identity) == null) return;
 
-		messagePresenter.presentSelectionResult(sender, verificationService.selectMethod(identity.getUniqueId(), providerId, methodId));
+		resultRenderer.presentSelectionResult(sender, verificationService.selectMethod(identity.getUniqueId(), providerId, methodId));
 	}
 
 	@Definition("verification-disable")
@@ -89,7 +89,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 		boolean enrolled = verificationService.findEnrollments(identity.getUniqueId()).stream()
 				.anyMatch(entry -> entry != null && methodId.equalsIgnoreCase(entry.getMethodId()));
 		if (!enrolled) {
-			messagePresenter.presentDisableResult(sender, verificationService.disableMethod(identity.getUniqueId(), methodId));
+			resultRenderer.presentDisableResult(sender, verificationService.disableMethod(identity.getUniqueId(), methodId));
 			return;
 		}
 
@@ -106,7 +106,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 				.purpose("disable-method")
 				.build());
 
-		messagePresenter.presentDisablePrompt(sender, methodId);
+		resultRenderer.presentDisablePrompt(sender, methodId);
 	}
 
 	private @NotNull PipelineStateReference reference(@NotNull Identity identity) {

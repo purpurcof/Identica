@@ -1,6 +1,7 @@
 package me.whereareiam.identica.common.verification;
 
 import me.whereareiam.identica.common.config.template.VerificationTemplate;
+import me.whereareiam.identica.common.config.template.messages.MessagesCommandsTemplate;
 import me.whereareiam.identica.common.verification.type.totp.TotpVerificationMethod;
 import me.whereareiam.identica.common.verification.type.totp.process.TotpChallengeProcess;
 import me.whereareiam.identica.common.verification.type.totp.process.TotpEnrollmentProcess;
@@ -9,6 +10,7 @@ import me.whereareiam.identica.common.verification.type.totp.step.TotpConfirmCod
 import me.whereareiam.identica.common.verification.type.totp.step.TotpConfirmSavedStep;
 import me.whereareiam.identica.common.verification.type.totp.step.TotpSetupStep;
 import me.whereareiam.identica.database.VerificationPersistenceService;
+import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.type.verification.VerificationMethodCapability;
 import org.junit.jupiter.api.Test;
@@ -23,8 +25,9 @@ class DefaultVerificationServiceTest {
 	@Test
 	void registryFindsRegisteredMethodByDescriptorId() {
 		Verification verification = new VerificationTemplate().supply(new Verification());
+		Messages messages = messages();
 		VerificationPersistenceService persistenceService = mock(VerificationPersistenceService.class);
-		TotpSetupStep setupStep = new TotpSetupStep(() -> verification);
+		TotpSetupStep setupStep = new TotpSetupStep(() -> verification, () -> messages);
 		TotpConfirmCodeStep confirmCodeStep = new TotpConfirmCodeStep(() -> verification);
 		TotpConfirmSavedStep confirmSavedStep = new TotpConfirmSavedStep();
 		TotpChallengeVerificationStep challengeStep = new TotpChallengeVerificationStep(() -> verification, persistenceService);
@@ -43,8 +46,9 @@ class DefaultVerificationServiceTest {
 	@Test
 	void builtInTotpDescriptorAdvertisesProcessCapabilities() {
 		Verification verification = new VerificationTemplate().supply(new Verification());
+		Messages messages = messages();
 		VerificationPersistenceService persistenceService = mock(VerificationPersistenceService.class);
-		TotpSetupStep setupStep = new TotpSetupStep(() -> verification);
+		TotpSetupStep setupStep = new TotpSetupStep(() -> verification, () -> messages);
 		TotpConfirmCodeStep confirmCodeStep = new TotpConfirmCodeStep(() -> verification);
 		TotpConfirmSavedStep confirmSavedStep = new TotpConfirmSavedStep();
 		TotpChallengeVerificationStep challengeStep = new TotpChallengeVerificationStep(() -> verification, persistenceService);
@@ -58,5 +62,13 @@ class DefaultVerificationServiceTest {
 		assertTrue(method.descriptor().isUserEnrollable());
 		assertTrue(method.descriptor().getCapabilities().contains(VerificationMethodCapability.CHALLENGE));
 		assertTrue(method.descriptor().getCapabilities().contains(VerificationMethodCapability.RECOVERY_CODES));
+	}
+
+	private Messages messages() {
+		Messages messages = new Messages();
+		Messages.Commands commands = new Messages.Commands();
+		new MessagesCommandsTemplate().supply(commands);
+		messages.setCommands(commands);
+		return messages;
 	}
 }

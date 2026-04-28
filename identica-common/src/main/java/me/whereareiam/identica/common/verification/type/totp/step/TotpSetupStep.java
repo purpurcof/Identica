@@ -3,6 +3,7 @@ package me.whereareiam.identica.common.verification.type.totp.step;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.verification.interaction.CodeVerificationInteraction;
 import me.whereareiam.identica.model.verification.process.VerificationProcessContext;
@@ -24,10 +25,12 @@ public class TotpSetupStep implements VerificationProcessStep<CodeVerificationIn
 	private static final int SECRET_BYTES = 20;
 
 	private final Provider<Verification> verificationProvider;
+	private final Provider<Messages> messagesProvider;
 
 	@Inject
-	public TotpSetupStep(Provider<Verification> verificationProvider) {
+	public TotpSetupStep(Provider<Verification> verificationProvider, Provider<Messages> messagesProvider) {
 		this.verificationProvider = verificationProvider;
+		this.messagesProvider = messagesProvider;
 	}
 
 	@Override
@@ -85,6 +88,7 @@ public class TotpSetupStep implements VerificationProcessStep<CodeVerificationIn
 				.status(me.whereareiam.identica.type.verification.VerificationProcessStatus.WAITING)
 				.state(state)
 				.display(VerificationProcessDisplay.builder()
+						.lines(messagesProvider.get().getCommands().getVerification().getMethods().getTotp().getPending())
 						.placeholders(placeholders)
 						.build())
 				.transition(VerificationProcessTransition.advance())

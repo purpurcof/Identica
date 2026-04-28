@@ -29,20 +29,20 @@ import java.util.Map;
 public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> {
 	private final Provider<Messages> messagesProvider;
 	private final VerificationService verificationService;
-	private final VerificationMessagePresenter messagePresenter;
+	private final VerificationResultRenderer resultRenderer;
 	private final SessionService sessionService;
 
 	@Inject
 	public VerificationEnrollmentCommand(
 			Provider<Messages> messagesProvider,
 			VerificationService verificationService,
-			VerificationMessagePresenter messagePresenter,
+			VerificationResultRenderer resultRenderer,
 			SessionService sessionService
 	) {
 		super(verificationService);
 		this.messagesProvider = messagesProvider;
 		this.verificationService = verificationService;
-		this.messagePresenter = messagePresenter;
+		this.resultRenderer = resultRenderer;
 		this.sessionService = sessionService;
 	}
 
@@ -67,7 +67,7 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 		Session session = requireCurrentSession(identity);
 		if (session == null) return;
 
-		messagePresenter.presentEnrollmentResult(sender, verificationService.beginEnrollment(
+		resultRenderer.presentEnrollmentResult(sender, verificationService.beginEnrollment(
 				identity.getUniqueId(),
 				identity.getUsername(),
 				session.getProviderId(),
@@ -81,7 +81,7 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 		Identity identity = requireIdentity(sender, verificationMessages().getPlayerOnly());
 		if (identity == null) return;
 
-		messagePresenter.presentEnrollmentResult(
+		resultRenderer.presentEnrollmentResult(
 				sender,
 				verificationService.submitEnrollment(identity.getUniqueId(), interaction(identity.getUniqueId(), input))
 		);

@@ -9,7 +9,7 @@ spawner = "dev-56440cd"
 lombok = "1.18.42"
 
 # general
-attache = "dev-a16ef8c"
+attache = "dev-4e987ce"
 configura = "dev-edb606f"
 commandant = "dev-294fd68"
 keystone = "dev-9add0ca"

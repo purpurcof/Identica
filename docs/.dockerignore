@@ -1,8 +1,0 @@
-.git
-.github
-.gradle
-.idea
-node_modules
-**/out
-npm-debug.log
-Dockerfile*

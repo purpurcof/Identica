@@ -87,31 +87,3 @@ jobs:
         with:
           name: Build artifacts
           path: output/
-
-  publish-docs:
-    needs:
-      - prepare
-      - build
-    if: github.repository == 'whereareiam/Identica' && github.event_name == 'push' && github.ref == 'refs/heads/dev'
-    runs-on: [identica-docs-k8s]
-    permissions:
-      contents: read
-    env:
-      IMAGE: repository.arcadeya.com/whereareiam/identica-docs
-      VERSION: ${{ needs.prepare.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Publish docs site
-        uses: whereareiam/devops/actions/publish-docs-site@dev
-        with:
-          registry: repository.arcadeya.com
-          registry-username: ${{ secrets.REGISTRY_USER }}
-          registry-token: ${{ secrets.REGISTRY_TOKEN }}
-          image: ${{ env.IMAGE }}
-          tags: |
-            ${{ env.VERSION }}
-            dev-latest

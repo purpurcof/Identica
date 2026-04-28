@@ -1,0 +1,11 @@
+{
+  "title": "Docs",
+  "pages": [
+    "intro",
+    "installation",
+    "providers",
+    "configuration",
+    "developer"
+  ]
+}
+

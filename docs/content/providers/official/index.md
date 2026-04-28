@@ -1,8 +1,7 @@
 ---
-sidebar_position: 1
+title: Official Providers
+description: Built-in provider modules maintained with Identica.
 ---
-
-# Official Providers
 
 This page lists the official providers currently maintained for Identica.
 Each provider has its own landing page under this section.

@@ -1,6 +1,6 @@
 ---
-sidebar_position: 1
-slug: /
+title: Overview
+description: Provider-oriented Minecraft identity plugin documentation.
 ---
 
 # Identica

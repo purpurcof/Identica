@@ -1,8 +1,7 @@
 ---
-sidebar_position: 2
+title: Community Providers
+description: Entry point for unofficial and community-maintained providers.
 ---
-
-# Community Providers
 
 This page is the routing point for unofficial and community-maintained Identica providers.
 

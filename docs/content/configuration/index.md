@@ -1,8 +1,7 @@
 ---
-sidebar_position: 4
+title: Configuration
+description: Conceptual guide to Identica configuration areas and responsibilities.
 ---
-
-# Configuration
 
 This section explains Identica configuration as a set of concepts, not as one specific file syntax.
 That is intentional: Identica can choose its config representation at runtime, so the important thing is understanding what each config area means first.

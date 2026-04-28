@@ -1,0 +1,33 @@
+{
+  "name": "Identica",
+  "description": "Provider-oriented Minecraft identity plugin.",
+  "logo": "docs/assets/logo.svg",
+  "defaultRef": "dev",
+  "refRules": {
+    "defaultBranch": "dev",
+    "releaseBranchPrefix": "release/",
+    "includeDefaultRef": true,
+    "includeReleaseBranches": true,
+    "includeTags": true,
+    "extraRefs": []
+  },
+  "refs": {
+    "dev": {
+      "label": "Development",
+      "theme": {
+        "primary": "hsl(28 100% 56%)",
+        "primaryForeground": "hsl(0 0% 7%)",
+        "ring": "hsl(28 100% 56%)",
+        "accent": "hsla(28 100% 56% / 0.14)",
+        "accentForeground": "hsl(28 100% 86%)"
+      }
+    }
+  },
+  "links": [
+    {
+      "label": "Repository",
+      "url": "https://github.com/whereareiam/Identica"
+    }
+  ]
+}
+

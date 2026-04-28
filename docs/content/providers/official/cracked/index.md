@@ -1,6 +1,6 @@
 ---
-sidebar_position: 3
 title: Cracked
+description: Password-based provider overview for offline-mode players.
 ---
 
 # Cracked

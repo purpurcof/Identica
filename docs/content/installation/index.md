@@ -1,5 +1,6 @@
 ---
-sidebar_position: 2
+title: Installation
+description: Choose the right installation path for a standard or replicated setup.
 ---
 
 # Installation

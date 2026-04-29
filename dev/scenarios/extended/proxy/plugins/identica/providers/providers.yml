@@ -26,9 +26,13 @@ providers:
     enabled: true
     priority: 50
     verification:
-      enabled: false
+      enabled: true
       required: false
-      methods: []
+      methods:
+        - id: "totp"
+          enabled: true
+          priority: 100
+          unavailableSelectionPolicy: "KEEP_LOCKED"
     entrypoints:
       - "cracked.arcadeya.com"
   - id: "premium"

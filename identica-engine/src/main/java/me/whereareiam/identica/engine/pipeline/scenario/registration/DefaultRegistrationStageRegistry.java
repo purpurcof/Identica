@@ -42,7 +42,6 @@ public class DefaultRegistrationStageRegistry extends AbstractJourneyRegistry im
 				.pipelineTypes(EnumSet.of(pipelineType))
 				.journeyModes(EnumSet.allOf(JourneyMode.class))
 				.requireCompletion(true)
-				.usesCompletionResult(true)
 				.allowFallback(true)
 				.build());
 

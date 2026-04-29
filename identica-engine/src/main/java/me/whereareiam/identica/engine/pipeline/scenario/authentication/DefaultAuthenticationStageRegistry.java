@@ -33,7 +33,6 @@ public class DefaultAuthenticationStageRegistry extends AbstractJourneyRegistry 
 				.pipelineTypes(EnumSet.of(pipelineType))
 				.journeyModes(EnumSet.allOf(JourneyMode.class))
 				.requireCompletion(true)
-				.usesCompletionResult(true)
 				.allowFallback(true)
 				.build());
 

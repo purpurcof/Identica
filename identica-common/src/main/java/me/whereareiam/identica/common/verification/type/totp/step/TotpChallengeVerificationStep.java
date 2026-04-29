@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.common.verification.RecoveryCodeGenerator;
 import me.whereareiam.identica.database.VerificationPersistenceService;
 import me.whereareiam.identica.model.config.Verification;
@@ -68,12 +69,28 @@ public class TotpChallengeVerificationStep implements VerificationProcessStep<Ve
 		if (interaction instanceof RecoveryCodeVerificationInteraction recoveryInteraction)
 			code = recoveryInteraction.getCode();
 
-		if (code == null || code.isBlank())
+		if (code == null || code.isBlank()) {
+			Logger.debug(
+					"TOTP challenge rejected blank input uniqueId=%s provider=%s purpose=%s attempts=%s",
+					context.getSubjectUniqueId(),
+					context.getProviderId(),
+					context.getPurpose(),
+					state.getAttempts()
+			);
 			return VerificationProcessResult.waiting(state);
+		}
 
 		String secret = context.getEnrollments().isEmpty() ? "" : context.getEnrollments().getFirst().getCredential();
-		if (!secret.isBlank() && verify(secret, code))
+		if (!secret.isBlank() && verify(secret, code)) {
+			Logger.debug(
+					"TOTP challenge verified uniqueId=%s provider=%s purpose=%s attempts=%s",
+					context.getSubjectUniqueId(),
+					context.getProviderId(),
+					context.getPurpose(),
+					state.getAttempts()
+			);
 			return VerificationProcessResult.verified(state);
+		}
 
 		String codeHash = RecoveryCodeGenerator.hash(code);
 		boolean recoveryCodeUsed = persistenceService.markRecoveryCodeUsed(
@@ -84,10 +101,26 @@ public class TotpChallengeVerificationStep implements VerificationProcessStep<Ve
 		);
 		if (recoveryCodeUsed)
 			state.setRecoveryCodeUsed(true);
-		if (recoveryCodeUsed)
+		if (recoveryCodeUsed) {
+			Logger.debug(
+					"TOTP challenge verified with recovery code uniqueId=%s provider=%s purpose=%s attempts=%s",
+					context.getSubjectUniqueId(),
+					context.getProviderId(),
+					context.getPurpose(),
+					state.getAttempts()
+			);
 			return VerificationProcessResult.verified(state);
+		}
 
 		state.setAttempts(state.getAttempts() + 1);
+		Logger.debug(
+				"TOTP challenge invalid code uniqueId=%s provider=%s purpose=%s attempts=%s codeLength=%s",
+				context.getSubjectUniqueId(),
+				context.getProviderId(),
+				context.getPurpose(),
+				state.getAttempts(),
+				code.length()
+		);
 		return VerificationProcessResult.<TotpChallengeState>builder()
 				.status(VerificationProcessStatus.INVALID)
 				.state(state)

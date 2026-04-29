@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.verification.VerificationResolutionRequest;
@@ -50,13 +51,31 @@ public class CrackedAuthenticationVerificationStep extends AbstractCrackedStep {
 		UUID uniqueId = providerLinkPersistenceService.findBySubject(CrackedConstants.PROVIDER_ID, providerSubject)
 				.map(AccountProviderLink::getUniqueId)
 				.orElse(null);
-		if (uniqueId == null) return CompletableFuture.completedFuture(StepResult.complete(context));
+		if (uniqueId == null) {
+			Logger.debug(
+					"Cracked verification skipped missing provider link connection=%s username=%s subject=%s",
+					context.getConnectionUniqueId(),
+					context.getUsername(),
+					providerSubject
+			);
+			return CompletableFuture.completedFuture(StepResult.complete(context));
+		}
 
 		VerificationResolutionResult result = verificationService.resolveVerification(VerificationResolutionRequest.builder()
 				.uniqueId(uniqueId)
 				.providerId(CrackedConstants.PROVIDER_ID)
 				.purpose("authentication")
 				.build());
+		Logger.debug(
+				"Cracked verification resolved connection=%s username=%s uniqueId=%s status=%s method=%s challenge=%s required=%s",
+				context.getConnectionUniqueId(),
+				context.getUsername(),
+				uniqueId,
+				result.getStatus(),
+				result.getMethodId(),
+				result.getChallengeId(),
+				result.isRequired()
+		);
 
 		CrackedMessages.Scenario.Authentication.Verification messages = messagesProvider.get()
 				.getScenario()

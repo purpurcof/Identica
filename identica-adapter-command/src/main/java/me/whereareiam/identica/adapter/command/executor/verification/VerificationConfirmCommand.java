@@ -11,6 +11,7 @@ import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.command.ProtectedActionCommand;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.config.Messages;
@@ -115,17 +116,46 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
 		if (state == null || state.item(JourneyStateItem.class).isEmpty()) return false;
 
+		String providerId = currentProvider(state);
 		VerificationChallengeResult<?> result = verificationService.submitChallenge(
 				identity.getUniqueId(),
-				currentProvider(state),
+				providerId,
 				"authentication",
 				CodeVerificationInteraction.builder()
 						.subjectUniqueId(identity.getUniqueId())
 						.code(input)
 						.build()
 		);
-		if (result.getStatus() == VerificationChallengeStatus.METHOD_NOT_SELECTED)
-			return false;
+
+		Logger.debug(
+				"Verification confirm submitted uniqueId=%s provider=%s status=%s challenge=%s method=%s codeLength=%s",
+				identity.getUniqueId(),
+				providerId,
+				result.getStatus(),
+				result.getChallengeId(),
+				result.getMethodId(),
+				input.length()
+		);
+
+		if (result.getStatus() == VerificationChallengeStatus.METHOD_NOT_SELECTED) return false;
+
+		if (result.getStatus() == VerificationChallengeStatus.INVALID) {
+			sendMessage(identity, verificationMessages().getConfirm().getInvalidCode(), Map.of());
+			return true;
+		}
+
+		if (result.getStatus() == VerificationChallengeStatus.EXPIRED
+				|| result.getStatus() == VerificationChallengeStatus.METHOD_UNAVAILABLE
+				|| result.getStatus() == VerificationChallengeStatus.PROVIDER_UNSUPPORTED
+				|| result.getStatus() == VerificationChallengeStatus.PROVIDER_VERIFICATION_DISABLED) {
+			sendMessage(identity, verificationMessages().getConfirm().getNoPending(), Map.of());
+			return true;
+		}
+
+		if (result.getStatus() != VerificationChallengeStatus.VERIFIED) {
+			sendMessage(identity, verificationMessages().getConfirm().getNoPending(), Map.of());
+			return true;
+		}
 
 		ConnectionDecision decision = connectionCoordinator.advance(AdvanceRequest.builder()
 				.connectionUniqueId(identity.getUniqueId())

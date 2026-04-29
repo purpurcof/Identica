@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
@@ -53,13 +54,33 @@ public class PremiumVerificationStep extends InteractiveStep {
 		UUID uniqueId = providerLinkPersistenceService.findBySubject(provider.getProviderId(), provider.getProviderSubject())
 				.map(AccountProviderLink::getUniqueId)
 				.orElse(null);
-		if (uniqueId == null) return CompletableFuture.completedFuture(StepResult.complete(context));
+		if (uniqueId == null) {
+			Logger.debug(
+					"Premium verification skipped missing provider link connection=%s username=%s provider=%s subject=%s",
+					context.getConnectionUniqueId(),
+					context.getUsername(),
+					provider.getProviderId(),
+					provider.getProviderSubject()
+			);
+			return CompletableFuture.completedFuture(StepResult.complete(context));
+		}
 
 		VerificationResolutionResult result = verificationService.resolveVerification(VerificationResolutionRequest.builder()
 				.uniqueId(uniqueId)
 				.providerId(provider.getProviderId())
 				.purpose("authentication")
 				.build());
+		Logger.debug(
+				"Premium verification resolved connection=%s username=%s uniqueId=%s provider=%s status=%s method=%s challenge=%s required=%s",
+				context.getConnectionUniqueId(),
+				context.getUsername(),
+				uniqueId,
+				provider.getProviderId(),
+				result.getStatus(),
+				result.getMethodId(),
+				result.getChallengeId(),
+				result.isRequired()
+		);
 
 		PremiumMessages.Verification.Authentication messages = messagesProvider.get().getVerification().getAuthentication();
 		return CompletableFuture.completedFuture(toStepResult(result, context, messages));

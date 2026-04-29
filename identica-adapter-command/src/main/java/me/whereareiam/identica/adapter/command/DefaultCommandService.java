@@ -28,6 +28,7 @@ import me.whereareiam.identica.adapter.command.executor.admin.DeleteCommand;
 import me.whereareiam.identica.adapter.command.executor.admin.ReservationCommand;
 import me.whereareiam.identica.adapter.command.executor.admin.VerificationResetCommand;
 import me.whereareiam.identica.adapter.command.executor.verification.VerificationEnrollmentCommand;
+import me.whereareiam.identica.adapter.command.executor.verification.VerificationConfirmCommand;
 import me.whereareiam.identica.adapter.command.executor.verification.VerificationSelectionCommand;
 import me.whereareiam.identica.adapter.command.parser.PasswordParser;
 import me.whereareiam.identica.adapter.command.serializer.ScopedSerializerEngine;
@@ -99,6 +100,7 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(AvailabilityCommand.class),
 				injector.getInstance(me.whereareiam.identica.adapter.command.executor.verification.VerificationCommand.class),
 				injector.getInstance(VerificationEnrollmentCommand.class),
+				injector.getInstance(VerificationConfirmCommand.class),
 				injector.getInstance(VerificationSelectionCommand.class),
 				injector.getInstance(VerificationResetCommand.class)
 		);

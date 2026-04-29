@@ -37,6 +37,23 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 		messages.setVerification(verification);
 
 		PremiumMessages.Completion completion = new PremiumMessages.Completion();
+		PremiumMessages.Completion.Pipeline sessionCompletion = new PremiumMessages.Completion.Pipeline();
+		PremiumMessages.Completion.Pipeline.Title sessionTitle = new PremiumMessages.Completion.Pipeline.Title();
+		sessionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");
+		sessionTitle.setSubtitle("<dark_gray>Your premium session was reused.</dark_gray>");
+		sessionCompletion.setTitle(sessionTitle);
+		sessionCompletion.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Welcome back, <green>{player}</green>.</white>",
+				"  <white>Your existing <gold>premium session</gold> was reused.</white>",
+				" ",
+				"  <gray>No new verification was required.</gray>",
+				" "
+		));
+		completion.setSession(sessionCompletion);
+
 		PremiumMessages.Completion.Pipeline authenticationCompletion = new PremiumMessages.Completion.Pipeline();
 		PremiumMessages.Completion.Pipeline.Title authenticationTitle = new PremiumMessages.Completion.Pipeline.Title();
 		authenticationTitle.setTitle("<gold><bold>Verified</bold></gold>");
@@ -70,23 +87,6 @@ public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages
 				" "
 		));
 		completion.setRegistration(registrationCompletion);
-
-		PremiumMessages.Completion.Pipeline sessionCompletion = new PremiumMessages.Completion.Pipeline();
-		PremiumMessages.Completion.Pipeline.Title sessionTitle = new PremiumMessages.Completion.Pipeline.Title();
-		sessionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");
-		sessionTitle.setSubtitle("<dark_gray>Your premium session was reused.</dark_gray>");
-		sessionCompletion.setTitle(sessionTitle);
-		sessionCompletion.setBody(List.of(
-				" ",
-				" <green><bold>Identica</bold>",
-				" ",
-				"  <white>Welcome back, <green>{player}</green>.</white>",
-				"  <white>Your existing <gold>premium session</gold> was reused.</white>",
-				" ",
-				"  <gray>No new verification was required.</gray>",
-				" "
-		));
-		completion.setSession(sessionCompletion);
 
 		PremiumMessages.Completion.Pipeline migrationCompletion = new PremiumMessages.Completion.Pipeline();
 		PremiumMessages.Completion.Pipeline.Title migrationTitle = new PremiumMessages.Completion.Pipeline.Title();

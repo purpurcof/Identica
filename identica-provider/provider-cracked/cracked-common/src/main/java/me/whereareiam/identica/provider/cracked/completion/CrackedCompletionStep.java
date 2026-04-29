@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
 import me.whereareiam.identica.pipeline.completion.step.AbstractMessageCompletionStep;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,12 +44,14 @@ public class CrackedCompletionStep extends AbstractMessageCompletionStep {
 
 	private @Nullable CrackedMessages.Completion.Pipeline resolve(@NotNull CompletionContext context) {
 		CrackedMessages.Completion completion = messagesProvider.get().getCompletion();
-		if (completion == null) return null;
 
-		return switch (context.getPipelineType()) {
-			case AUTHENTICATION -> completion.getAuthentication();
-			case REGISTRATION -> completion.getRegistration();
-			case MIGRATION -> completion.getMigration();
-		};
+		if (context.getPipelineType() == PipelineType.MIGRATION)
+			return completion.getMigration();
+		if (context.getPipelineType() == PipelineType.REGISTRATION)
+			return completion.getRegistration();
+		if (context.isSessionReused())
+			return completion.getSession();
+
+		return completion.getAuthentication();
 	}
 }

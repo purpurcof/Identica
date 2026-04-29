@@ -20,9 +20,9 @@ public class PremiumMessages {
 	@Setter
 	@ToString
 	public static class Completion {
-		private @NotNull Pipeline authentication;
-		private @Nullable Pipeline registration;
 		private @NotNull Pipeline session;
+		private @NotNull Pipeline authentication;
+		private @NotNull Pipeline registration;
 		private @NotNull Pipeline migration;
 
 		@Getter

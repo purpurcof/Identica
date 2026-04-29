@@ -6,16 +6,16 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.identity.session.SessionClosedEvent;
-import me.whereareiam.identica.replication.cache.ReplicatedCache;
-import me.whereareiam.identica.replication.ReplicationSystem;
-import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.identity.session.SessionReplacedEvent;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.SessionCloseRequest;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
@@ -108,7 +108,7 @@ public class DefaultSessionService implements SessionService, EventListener {
 	public @NotNull CompletableFuture<Void> close(@NotNull SessionCloseRequest request) {
 		SessionCloseRequest prepared = prepareCloseRequest(request);
 
-        return dispatchClose(prepared);
+		return dispatchClose(prepared);
 	}
 
 	@Override
@@ -116,7 +116,7 @@ public class DefaultSessionService implements SessionService, EventListener {
 		if (uniqueId == null) return CompletableFuture.completedFuture(null);
 		return findByUniqueId(uniqueId)
 				.thenCompose(existing -> existing.<CompletionStage<Void>>map(session -> open(session)
-						.thenApply(ignored -> null))
+								.thenApply(ignored -> null))
 						.orElseGet(() -> CompletableFuture.completedFuture(null)));
 	}
 

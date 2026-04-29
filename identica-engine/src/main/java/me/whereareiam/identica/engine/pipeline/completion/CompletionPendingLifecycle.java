@@ -2,8 +2,6 @@ package me.whereareiam.identica.engine.pipeline.completion;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
-import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
@@ -11,7 +9,9 @@ import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
 import me.whereareiam.identica.event.routing.intent.RoutingIntentReachedEvent;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.routing.RoutingIntent;
+import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.routing.RoutingIntentStore;
 import me.whereareiam.identica.type.routing.RoutingReason;
 import org.jetbrains.annotations.NotNull;

@@ -66,6 +66,6 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 				providerSubject
 		);
 
-		return CompletableFuture.completedFuture(StepResult.complete(context));
+		return CompletableFuture.completedFuture(StepResult.proceed(context));
 	}
 }

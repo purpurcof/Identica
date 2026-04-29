@@ -94,6 +94,23 @@ public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages
 		messages.setScenario(scenario);
 
 		CrackedMessages.Completion completion = new CrackedMessages.Completion();
+		CrackedMessages.Completion.Pipeline sessionCompletion = new CrackedMessages.Completion.Pipeline();
+		CrackedMessages.Completion.Pipeline.Title sessionTitle = new CrackedMessages.Completion.Pipeline.Title();
+		sessionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");
+		sessionTitle.setSubtitle("<dark_gray>Your session was reused.</dark_gray>");
+		sessionCompletion.setTitle(sessionTitle);
+		sessionCompletion.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Welcome back, <green>{player}</green>.</white>",
+				"  <white>Your existing <gold>session</gold> was reused.</white>",
+				" ",
+				"  <gray>Enjoy your stay.</gray>",
+				" "
+		));
+		completion.setSession(sessionCompletion);
+
 		CrackedMessages.Completion.Pipeline authenticationCompletion = new CrackedMessages.Completion.Pipeline();
 		CrackedMessages.Completion.Pipeline.Title authenticationTitle = new CrackedMessages.Completion.Pipeline.Title();
 		authenticationTitle.setTitle("<gold><bold>Signed In</bold></gold>");

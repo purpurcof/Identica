@@ -474,9 +474,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 					continue;
 				if (status == PipelineStatus.COMPLETE) {
 					completedStage = true;
-					if (stage.isUsesCompletionResult())
-						return PipelineResult.fromStepResult(stepResult);
-					continue;
+					break;
 				}
 
 				if (status == PipelineStatus.WAITING || status == PipelineStatus.REQUIRE_RECONNECT)

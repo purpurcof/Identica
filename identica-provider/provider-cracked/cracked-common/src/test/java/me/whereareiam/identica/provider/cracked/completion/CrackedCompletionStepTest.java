@@ -22,13 +22,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DisplayName("Cracked Completion Step")
 class CrackedCompletionStepTest {
+	@DisplayName("Uses the reused-session completion message for authentication resumes")
+	@Test
+	void authenticationUsesReusedSessionMessageWhenSessionWasReused() {
+		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
+		InspectableCrackedCompletionStep step = new InspectableCrackedCompletionStep(() -> messages);
+
+		List<String> lines = step.lines(context(true, PipelineType.AUTHENTICATION));
+
+		assertEquals(messages.getCompletion().getSession().getBody(), lines);
+	}
+
 	@DisplayName("Uses the authentication completion message for authentication pipelines")
 	@Test
 	void authenticationUsesAuthenticationCompletionMessage() {
 		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
 		InspectableCrackedCompletionStep step = new InspectableCrackedCompletionStep(() -> messages);
 
-		List<String> lines = step.lines(context(PipelineType.AUTHENTICATION));
+		List<String> lines = step.lines(context(false, PipelineType.AUTHENTICATION));
 
 		assertEquals(messages.getCompletion().getAuthentication().getBody(), lines);
 	}
@@ -39,7 +50,7 @@ class CrackedCompletionStepTest {
 		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
 		InspectableCrackedCompletionStep step = new InspectableCrackedCompletionStep(() -> messages);
 
-		List<String> lines = step.lines(context(PipelineType.REGISTRATION));
+		List<String> lines = step.lines(context(false, PipelineType.REGISTRATION));
 
 		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
@@ -50,12 +61,12 @@ class CrackedCompletionStepTest {
 		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
 		InspectableCrackedCompletionStep step = new InspectableCrackedCompletionStep(() -> messages);
 
-		List<String> lines = step.lines(context(PipelineType.MIGRATION));
+		List<String> lines = step.lines(context(true, PipelineType.MIGRATION));
 
 		assertEquals(messages.getCompletion().getMigration().getBody(), lines);
 	}
 
-	private CompletionContext context(PipelineType pipelineType) {
+	private CompletionContext context(boolean sessionReused, PipelineType pipelineType) {
 		return CompletionContext.builder()
 				.identity(new TestIdentity())
 				.pipelineType(pipelineType)
@@ -66,6 +77,7 @@ class CrackedCompletionStepTest {
 						.originalUsername("PlayerOne")
 						.effectiveUsername("PlayerOne")
 						.build())
+				.sessionReused(sessionReused)
 				.build();
 	}
 

@@ -20,6 +20,7 @@ public class CrackedMessages {
 	@Setter
 	@ToString
 	public static class Completion {
+		private Pipeline session;
 		private Pipeline authentication;
 		private Pipeline registration;
 		private Pipeline migration;

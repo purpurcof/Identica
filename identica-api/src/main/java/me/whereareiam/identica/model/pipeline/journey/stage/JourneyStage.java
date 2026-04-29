@@ -21,7 +21,6 @@ public class JourneyStage {
 	private final @NotNull Set<PipelineType> pipelineTypes;
 	private final @NotNull Set<JourneyMode> journeyModes;
 	private final boolean requireCompletion;
-	private final boolean usesCompletionResult;
 	private final boolean allowFallback;
 
 	public boolean supports(@NotNull PipelineType pipelineType, @NotNull JourneyMode journeyMode) {

@@ -77,7 +77,7 @@ public class CrackedAuthenticationPasswordStep extends AbstractCrackedStep {
 		}
 
 		clearBruteForce(account, context);
-		return CompletableFuture.completedFuture(StepResult.complete(context));
+		return CompletableFuture.completedFuture(StepResult.proceed(context));
 	}
 
 	private @NotNull AuthenticationAttemptDecision recordBruteForceDecision(

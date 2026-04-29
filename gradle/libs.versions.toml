@@ -11,8 +11,8 @@ lombok = "1.18.42"
 # general
 attache = "dev-4e987ce"
 configura = "dev-edb606f"
-commandant = "dev-294fd68"
-keystone = "dev-9add0ca"
+commandant = "dev-c0692d3"
+keystone = "dev-90d39d2"
 dialectica = "dev-332d268"
 
 guice = "7.0.0"

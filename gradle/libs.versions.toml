@@ -3,7 +3,7 @@
 # plugins
 shadow = "9.3.0"
 buildconfig = "6.0.7"
-spawner = "dev-56440cd"
+spawner = "dev-471767e"
 
 # compile time processing
 lombok = "1.18.42"
@@ -26,8 +26,8 @@ adventure = "4.25.0"
 # cloud
 cloud-core = "2.0.0"
 cloud-cooldown = "1.0.0-rc.1"
-cloud-velocity = "dev-d20c642"
-cloud-minecraft-extras = "dev-d20c642"
+cloud-velocity = "dev-2ac9f72"
+cloud-minecraft-extras = "dev-2ac9f72"
 
 # platform api
 velocity = "3.5.0-SNAPSHOT"

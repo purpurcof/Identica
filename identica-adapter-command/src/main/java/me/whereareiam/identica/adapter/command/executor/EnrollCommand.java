@@ -7,9 +7,7 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.annotation.Suggestions;
 import me.whereareiam.identica.ConnectionCoordinator;
-import me.whereareiam.identica.adapter.command.suggestion.ProviderIdSuggestions;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
@@ -41,9 +39,7 @@ public class EnrollCommand {
 	@Definition("enroll")
 	@Command("identica enroll <eligibility>")
 	public void enroll(
-			@NotNull Actor sender,
-			@Argument("eligibility") @Suggestions(ProviderIdSuggestions.KEY) String providerId
-	) {
+			@NotNull Actor sender, @Argument("eligibility") String providerId) {
 		if (providerId == null || providerId.isBlank())
 			return;
 

@@ -4,8 +4,10 @@ import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
@@ -44,13 +46,50 @@ class FinalizeProfileStepTest {
 		);
 	}
 
-	@DisplayName("Finalize profile continues to later provider steps after applying provider context")
+	@DisplayName("Finalize profile completes the provider stage for registration")
 	@Test
-	void finalizeProfileContinues() {
+	void finalizeProfileCompletesRegistration() {
+		RegistrationContext context = RegistrationContext.builder()
+				.identity(new ConnectionIdentity("whereareiam", "127.0.0.1"))
+				.build();
+		context.setProvider(ProviderContext.of("premium", null, "whereareiam", null));
+		when(profileStore.find("whereareiam")).thenReturn(new PremiumProfileSnapshot("premium-subject", System.currentTimeMillis()));
+		when(pipelineStateStore.find(org.mockito.ArgumentMatchers.any(me.whereareiam.identica.model.pipeline.state.PipelineStateReference.class)))
+				.thenReturn(java.util.Optional.empty());
+
+		StepResult result = step.execute(context).join();
+
+		assertEquals(StepResult.StepStatus.COMPLETE, result.getStatus());
+		assertNotNull(context.getProvider());
+		assertEquals("premium-subject", context.getProvider().getProviderSubject());
+	}
+
+	@DisplayName("Finalize profile continues to later provider steps during authentication")
+	@Test
+	void finalizeProfileContinuesAuthentication() {
 		AuthContext context = AuthContext.builder()
 				.identity(new ConnectionIdentity("whereareiam", "127.0.0.1"))
 				.provider(ProviderContext.of("premium", null, "whereareiam", null))
 				.build();
+		when(profileStore.find("whereareiam")).thenReturn(new PremiumProfileSnapshot("premium-subject", System.currentTimeMillis()));
+		when(pipelineStateStore.find(org.mockito.ArgumentMatchers.any(me.whereareiam.identica.model.pipeline.state.PipelineStateReference.class)))
+				.thenReturn(java.util.Optional.empty());
+
+		StepResult result = step.execute(context).join();
+
+		assertEquals(StepResult.StepStatus.CONTINUE, result.getStatus());
+		assertNotNull(context.getProvider());
+		assertEquals("premium-subject", context.getProvider().getProviderSubject());
+	}
+
+	@DisplayName("Finalize profile continues to later provider steps during migration")
+	@Test
+	void finalizeProfileContinuesMigration() {
+		MigrationContext context = MigrationContext.builder()
+				.identity(new ConnectionIdentity("whereareiam", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build();
+		context.setProvider(ProviderContext.of("premium", null, "whereareiam", null));
 		when(profileStore.find("whereareiam")).thenReturn(new PremiumProfileSnapshot("premium-subject", System.currentTimeMillis()));
 		when(pipelineStateStore.find(org.mockito.ArgumentMatchers.any(me.whereareiam.identica.model.pipeline.state.PipelineStateReference.class)))
 				.thenReturn(java.util.Optional.empty());

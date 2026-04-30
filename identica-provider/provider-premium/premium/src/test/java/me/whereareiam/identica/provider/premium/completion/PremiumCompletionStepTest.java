@@ -55,16 +55,15 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
 
-	@DisplayName("Falls back to the authentication completion message when registration text is missing")
+	@DisplayName("Keeps the registration completion message even when the session was reused")
 	@Test
-	void registrationFallsBackToAuthenticationWhenMissing() {
+	void registrationIgnoresReusedSessionMessage() {
 		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
-		messages.getCompletion().setRegistration(null);
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
-		List<String> lines = step.lines(context(false, PipelineType.REGISTRATION));
+		List<String> lines = step.lines(context(true, PipelineType.REGISTRATION));
 
-		assertEquals(messages.getCompletion().getAuthentication().getBody(), lines);
+		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
 
 	private CompletionContext context(boolean sessionReused, PipelineType pipelineType) {

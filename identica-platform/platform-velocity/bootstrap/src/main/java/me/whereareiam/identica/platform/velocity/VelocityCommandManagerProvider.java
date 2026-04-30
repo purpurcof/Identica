@@ -12,7 +12,6 @@ import me.whereareiam.keystone.Actor;
 import org.incendo.cloud.CommandManager;
 import org.incendo.cloud.execution.ExecutionCoordinator;
 import org.incendo.cloud.velocity.VelocityCommandManager;
-import org.incendo.cloud.velocity.VelocityCommandRegistrationMode;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -37,9 +36,9 @@ public class VelocityCommandManagerProvider implements Provider<CommandManager<A
 		return manager;
 	}
 
-	private VelocityCommandRegistrationMode registrationMode() {
+	private VelocityCommandManager.RegistrationMode registrationMode() {
 		return commandsProvider.get().getBehavior().isUseBrigadier()
-				? VelocityCommandRegistrationMode.BRIGADIER
-				: VelocityCommandRegistrationMode.RAW;
+				? VelocityCommandManager.RegistrationMode.BRIGADIER
+				: VelocityCommandManager.RegistrationMode.RAW;
 	}
 }

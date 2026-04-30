@@ -87,9 +87,17 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 		MigrationResult result = migrationService.request(request);
 		PremiumMessages.Commands.Premium messages = messagesProvider.get().getCommands().getPremium();
 		if (result.getStatus() == MigrationResultStatus.PENDING_CONFIRMATION) {
-			sendMessage(identity, requiresStepUp(identity.getUniqueId())
-					? messages.getVerificationRequired()
-					: joinMessage(messages.getConfirm()));
+			if (!requiresStepUp(identity.getUniqueId())) {
+				sendMessage(identity, joinMessage(messages.getConfirm()));
+				return;
+			}
+
+			StepUpPreparation preparation = prepareStepUp(identity.getUniqueId(), "migration-confirm");
+			if (preparation.getStatus() == StepUpPreparation.Status.SELECTION_REQUIRED) {
+				sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+				return;
+			}
+			sendMessage(identity, messages.getVerificationRequired());
 			return;
 		}
 		if (result.getStatus() == MigrationResultStatus.PENDING_EXISTS) {
@@ -117,6 +125,16 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 				&& pendingMigration.getPhase() == PendingMigration.Phase.CONFIRMATION
 				&& requiresStepUp(identity.getUniqueId());
 		if (verificationRequired) {
+			StepUpPreparation preparation = prepareStepUp(identity.getUniqueId(), "migration-confirm");
+			if (preparation.getStatus() != StepUpPreparation.Status.READY) {
+				switch (preparation.getStatus()) {
+					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
+					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					default -> sendMessage(identity, messagesProvider.get().getCommands().getPremium().getNoPending());
+				}
+				return;
+			}
+
 			if (isBlank(input)) {
 				sendMessage(identity, messagesProvider.get().getCommands().getPremium().getVerificationRequired());
 				return;

@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
-import me.whereareiam.identica.annotation.Default;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.annotation.Suggestions;
 import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
@@ -41,12 +40,12 @@ public class VerificationResetCommand {
 	public void reset(
 			@NotNull Actor sender,
 			@Argument("target") @Suggestions(CrossPlayerSuggestions.KEY) String target,
-			@Argument("provider") @Default("") String providerId
+			@Argument("provider") @Nullable String providerId
 	) {
 		ResolvedTarget resolved = resolveTarget(sender, target);
 		if (resolved == null) return;
 
-		if (verificationService.reset(resolved.uniqueId(), providerId.isBlank() ? null : providerId).getStatus() != VerificationResetStatus.RESET)
+		if (verificationService.reset(resolved.uniqueId(), isBlank(providerId) ? null : providerId).getStatus() != VerificationResetStatus.RESET)
 			return;
 
 		sendMessage(sender, resetMessages().getCompleted(), Map.of("target", resolved.display()));
@@ -88,6 +87,10 @@ public class VerificationResetCommand {
 		} catch (IllegalArgumentException ignored) {
 			return null;
 		}
+	}
+
+	private boolean isBlank(@Nullable String value) {
+		return value == null || value.isBlank();
 	}
 
 	private record ResolvedTarget(@NotNull UUID uniqueId, @NotNull String display) {

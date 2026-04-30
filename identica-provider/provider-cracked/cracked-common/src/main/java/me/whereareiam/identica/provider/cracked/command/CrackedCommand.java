@@ -88,9 +88,19 @@ public class CrackedCommand extends ProtectedActionCommand<MigrationRequest> {
 
 		CrackedMessages.Commands.Cracked messages = messagesProvider.get().getCommands().getCracked();
 		switch (result.getStatus()) {
-			case PENDING_CONFIRMATION -> sendMessage(identity, requiresStepUp(identity.getUniqueId())
-					? messages.getVerificationRequired()
-					: joinMessage(messages.getConfirm()));
+			case PENDING_CONFIRMATION -> {
+				if (!requiresStepUp(identity.getUniqueId())) {
+					sendMessage(identity, joinMessage(messages.getConfirm()));
+					return;
+				}
+
+				StepUpPreparation preparation = prepareStepUp(identity.getUniqueId(), "migration-confirm");
+				if (preparation.getStatus() == StepUpPreparation.Status.SELECTION_REQUIRED) {
+					sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					return;
+				}
+				sendMessage(identity, messages.getVerificationRequired());
+			}
 			case PENDING_EXISTS -> sendMessage(identity, messages.getPendingExists());
 			case ALREADY_PRIMARY -> sendMessage(identity, messages.getAlreadyPrimary());
 			case PRECHECK_DENIED -> sendMessage(identity, result.getMessage());
@@ -112,6 +122,16 @@ public class CrackedCommand extends ProtectedActionCommand<MigrationRequest> {
 				&& pendingMigration.getPhase() == PendingMigration.Phase.CONFIRMATION
 				&& requiresStepUp(identity.getUniqueId());
 		if (verificationRequired) {
+			StepUpPreparation preparation = prepareStepUp(identity.getUniqueId(), "migration-confirm");
+			if (preparation.getStatus() != StepUpPreparation.Status.READY) {
+				switch (preparation.getStatus()) {
+					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
+					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					default -> sendMessage(identity, messagesProvider.get().getCommands().getCracked().getNoPending());
+				}
+				return;
+			}
+
 			if (isBlank(input)) {
 				sendMessage(identity, messagesProvider.get().getCommands().getCracked().getVerificationRequired());
 				return;

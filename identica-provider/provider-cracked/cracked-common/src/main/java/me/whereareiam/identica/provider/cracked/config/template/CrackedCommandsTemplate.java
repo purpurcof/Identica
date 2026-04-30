@@ -94,7 +94,8 @@ public class CrackedCommandsTemplate implements TemplateProvider<CrackedCommands
 				.aliases(List.of("cracked confirm"))
 				.permission("")
 				.description("Confirm cracked migration")
-				.usage("{alias} [code]")
+				.usage("{alias} [input]")
+				.arguments(Map.of("input", "Code"))
 				.hide(true)
 				.build();
 

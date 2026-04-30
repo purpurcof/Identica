@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
-import me.whereareiam.identica.annotation.Default;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -24,6 +23,7 @@ import me.whereareiam.identica.util.UniqueIdGenerator;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
@@ -42,7 +42,7 @@ public class ChangePasswordCommand {
 			@NotNull Actor sender,
 			@Argument(value = "current", parser = "password") String current,
 			@Argument(value = "new", parser = "password") String next,
-			@Argument(value = "repeat", parser = "password") @Default("") String repeat
+			@Argument(value = "repeat", parser = "password") @Nullable String repeat
 	) {
 		if (!(sender instanceof Identity identity))
 			return;

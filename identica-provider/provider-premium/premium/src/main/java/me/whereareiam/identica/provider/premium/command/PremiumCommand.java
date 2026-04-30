@@ -5,7 +5,6 @@ import com.google.inject.Provider;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
-import me.whereareiam.identica.annotation.Default;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.command.ProtectedActionCommand;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -106,9 +105,9 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 		}
 	}
 
-	@Command("premium confirm [input]")
 	@Definition("premium-confirm")
-	public void confirm(@NotNull Actor sender, @Argument("input") @Default("") String input) {
+	@Command("premium confirm [input]")
+	public void confirm(@NotNull Actor sender, @Argument("input") @Nullable String input) {
 		Identity identity = requireIdentity(sender, null);
 		if (identity == null) return;
 		if (requireCurrentSession(identity) == null) return;
@@ -118,7 +117,7 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 				&& pendingMigration.getPhase() == PendingMigration.Phase.CONFIRMATION
 				&& requiresStepUp(identity.getUniqueId());
 		if (verificationRequired) {
-			if (input.isBlank()) {
+			if (isBlank(input)) {
 				sendMessage(identity, messagesProvider.get().getCommands().getPremium().getVerificationRequired());
 				return;
 			}
@@ -197,5 +196,9 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 
 	private String joinMessage(List<String> lines) {
 		return lines == null ? "" : String.join("\n", lines);
+	}
+
+	private boolean isBlank(@Nullable String input) {
+		return input == null || input.isBlank();
 	}
 }

@@ -6,6 +6,7 @@ import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.provider.premium.config.PremiumCommands;
 
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class PremiumCommandsTemplate implements TemplateProvider<PremiumCommands> {
@@ -29,7 +30,8 @@ public class PremiumCommandsTemplate implements TemplateProvider<PremiumCommands
 				.aliases(List.of("premium confirm"))
 				.permission("")
 				.description("Confirm premium migration")
-				.usage("{alias} [code]")
+				.usage("{alias} [input]")
+				.arguments(Map.of("input", "Code"))
 				.hide(true)
 				.build();
 

@@ -16,6 +16,7 @@ import me.whereareiam.identica.provider.premium.platform.velocity.PremiumVelocit
 import me.whereareiam.identica.provider.premium.platform.velocity.listener.connection.PremiumGameProfileRequestListener;
 import me.whereareiam.identica.provider.premium.step.FinalizeProfileStep;
 import me.whereareiam.identica.provider.premium.step.OfflineCheckStep;
+import me.whereareiam.identica.provider.premium.step.PremiumMigrationCompleteStep;
 import me.whereareiam.identica.provider.premium.step.PremiumVerificationStep;
 import me.whereareiam.identica.provider.premium.step.ProfilePresenceStep;
 import org.jetbrains.annotations.NotNull;
@@ -36,6 +37,7 @@ public class PremiumProvider extends IdenticaProvider {
 	private ProfilePresenceStep profilePresenceStep;
 	private OfflineCheckStep offlineCheckStep;
 	private FinalizeProfileStep finalizeProfileStep;
+	private PremiumMigrationCompleteStep premiumMigrationCompleteStep;
 	private PremiumVerificationStep premiumVerificationStep;
 	private PremiumCompletionStep premiumCompletionStep;
 
@@ -55,6 +57,7 @@ public class PremiumProvider extends IdenticaProvider {
 				profilePresenceStep,
 				offlineCheckStep,
 				finalizeProfileStep,
+				premiumMigrationCompleteStep,
 				premiumVerificationStep
 		));
 		completionExtensionRegistry.register(new PremiumCompletionExtension(

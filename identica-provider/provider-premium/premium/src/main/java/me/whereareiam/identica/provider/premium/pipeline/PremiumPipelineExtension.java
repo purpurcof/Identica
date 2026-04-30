@@ -5,6 +5,7 @@ import me.whereareiam.identica.pipeline.extension.PipelineExtension;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
 import me.whereareiam.identica.provider.premium.step.FinalizeProfileStep;
 import me.whereareiam.identica.provider.premium.step.OfflineCheckStep;
+import me.whereareiam.identica.provider.premium.step.PremiumMigrationCompleteStep;
 import me.whereareiam.identica.provider.premium.step.PremiumVerificationStep;
 import me.whereareiam.identica.provider.premium.step.ProfilePresenceStep;
 import me.whereareiam.identica.type.pipeline.PipelineScope;
@@ -20,6 +21,7 @@ public class PremiumPipelineExtension implements PipelineExtension {
 	private final @NotNull ProfilePresenceStep profilePresenceStep;
 	private final @NotNull OfflineCheckStep offlineCheckStep;
 	private final @NotNull FinalizeProfileStep finalizeProfileStep;
+	private final @NotNull PremiumMigrationCompleteStep premiumMigrationCompleteStep;
 	private final @NotNull PremiumVerificationStep premiumVerificationStep;
 
 	public static @NotNull String extensionIdFor(@NotNull String providerId) {
@@ -81,6 +83,13 @@ public class PremiumPipelineExtension implements PipelineExtension {
 				StageType.PROVIDER,
 				PipelineType.MIGRATION,
 				finalizeProfileStep
+		);
+		builder.registerStep(
+				PipelineScope.MIGRATION,
+				providerId,
+				StageType.PROVIDER,
+				PipelineType.MIGRATION,
+				premiumMigrationCompleteStep
 		);
 	}
 }

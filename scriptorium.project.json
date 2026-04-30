@@ -1,7 +1,8 @@
 {
   "name": "Identica",
   "description": "Provider-oriented Minecraft identity plugin.",
-  "logo": "docs/assets/logo.svg",
+  "logo": "docs/assets/logo.png",
+  "favicon": "docs/assets/favicon.ico",
   "urls": {
     "github": "https://github.com/whereareiam/Identica"
   },

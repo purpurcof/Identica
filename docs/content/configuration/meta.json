@@ -3,7 +3,10 @@
   "pages": [
     "index",
     "commands",
+    "messages",
     "persistence",
-    "settings"
+    "replication",
+    "settings",
+    "verification"
   ]
 }

@@ -1,0 +1,188 @@
+---
+title: Replication
+description: Field-by-field explanation of Identica's replication configuration area.
+---
+
+The replication configuration controls how Identica shares state across multiple runtimes.
+
+When replication is disabled, Identica falls back to a no-op replication adapter.
+That means replication-backed reads return empty data, writes are ignored, and publish/subscribe channels do nothing.
+
+## enabled
+
+- Takes: `true` or `false`
+- Current template default: `false`
+- Affects: whether the Redis-backed replication adapter is considered available
+
+Set this to `true` only when you actually want shared cross-instance state and have a real Redis environment configured.
+
+## serverId
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: a string
+- Current template default: a generated random UUID string
+- Affects: how this runtime identifies itself in replicated events and other cross-instance coordination
+
+Each runtime in the same environment should have its own stable `serverId`.
+Do not leave a random generated value in place across restarts if you want predictable shared-state behavior.
+
+This value is especially important for replicated events, because Identica uses it to distinguish local-origin events from events coming from another runtime.
+
+## redis
+
+The `redis` section controls how Identica connects to Redis and which channels are used for publish/subscribe replication.
+
+### host
+
+- Takes: a string
+- Current template default: `"localhost"`
+- Affects: the Redis host used by the Redis replication adapter
+
+### port
+
+- Takes: an integer
+- Current template default: `6379`
+- Affects: the Redis port used by the Redis replication adapter
+
+### password
+
+- Takes: a string
+- Current template default: `""`
+- Affects: the Redis password used during connection
+
+If this is blank, Identica connects without a Redis password.
+
+### ssl
+
+- Takes: `true` or `false`
+- Current template default: `false`
+- Affects: whether the Redis connection uses SSL/TLS
+
+### timeout
+
+- Takes: an integer
+- Current template default: `0`
+- Affects: the Redis client timeout passed into the Jedis pool
+
+### channels
+
+The `channels` section defines the Redis pub/sub channel names used by replication.
+
+All runtimes that should share the same replication environment must agree on these channel names.
+Most setups should keep the defaults unless there is a naming collision or a deliberate environment-separation reason to change them.
+
+#### accountUpdates
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:accounts"`
+- Affects: the channel used for account-related replicated events
+
+#### sessions
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:sessions"`
+- Affects: the channel used for session-related replication
+
+#### conflicts
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:conflicts"`
+- Affects: the channel used for conflict-related replication
+
+#### events
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:events"`
+- Affects: the generic replicated-events channel
+
+When `events` is set, Identica prefers it for generic replicated events.
+If it is blank, the current event bridge falls back to `sessions`.
+
+## cache
+
+The `cache` section defines the shared namespace names used by replicated caches.
+
+All runtimes that should share the same logical Identica environment must agree on these namespace values.
+Most setups should keep the defaults unless there is a namespace collision or you intentionally want to isolate multiple environments inside the same Redis instance.
+
+#### reservations
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:reservation"`
+- Affects: the namespace used for account reservation replication
+
+#### instructions
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:handshake-instructions"`
+- Affects: the namespace used for handshake instruction replication
+
+#### pipelineState
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:pipeline-state"`
+- Affects: the namespace used for shared pending pipeline state
+
+#### attempts
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:provider-attempts"`
+- Affects: the namespace used for provider-attempt replication
+
+#### sentinels
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:sentinels"`
+- Affects: the namespace used for replicated sentinel state
+
+#### sessions
+
+The `sessions` subsection splits session replication into separate namespaces.
+
+##### user
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:sessions:user"`
+- Affects: the namespace used for session lookup by Identica account UUID
+
+##### session
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:sessions:session"`
+- Affects: the namespace used for session lookup by session id
+
+##### subject
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current template default: `"identica:sessions:subject"`
+- Affects: the namespace used for session lookup by provider subject
+
+## Connection behavior
+
+When replication is enabled, the Redis pool provider immediately tries to create and test a Redis connection.
+If the connection fails, the Redis adapter becomes unavailable and runtime operations fall back to the no-op behavior exposed by the default replication adapter wrapper.

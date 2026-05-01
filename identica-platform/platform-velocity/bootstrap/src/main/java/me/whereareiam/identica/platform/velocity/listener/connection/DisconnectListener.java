@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.routing.RoutingCoordinator;
-import me.whereareiam.identica.type.routing.RoutingClearReason;
+import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.identica.listener.DynamicListener;
 

@@ -1,4 +1,4 @@
-package me.whereareiam.identica.type.routing;
+package me.whereareiam.identica.type.routing.reason;
 
 /**
  * Reason a routing intent was cleared.

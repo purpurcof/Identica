@@ -64,7 +64,7 @@ public class DefaultRoutingIntentStore implements RoutingIntentStore {
 		state.setLastAttemptAt(System.currentTimeMillis());
 		state.setLastAccepted(report.isAccepted());
 		state.setLastServer(report.getServer());
-		state.setLastMessage(report.getMessage());
+		state.setLastFailureReason(report.getFailureReason());
 		intent.setUpdatedAt(System.currentTimeMillis());
 		return Optional.of(intent);
 	}

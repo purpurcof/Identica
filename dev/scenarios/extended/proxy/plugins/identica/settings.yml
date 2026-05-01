@@ -18,9 +18,9 @@ connection:
       complete:
         target: "lobby"
         attempts:
-          mode: "NONE"
+          mode: "UNTIL_REACHED"
           maxAttempts: 1
-          retryDelay: "0s"
+          retryDelay: "1s"
           consumeOnReached: true
           consumeOnExhausted: true
     scenarios:

@@ -6,7 +6,7 @@ import lombok.ToString;
 import me.whereareiam.identica.event.base.SynchronousEvent;
 import me.whereareiam.identica.event.routing.RoutingEvent;
 import me.whereareiam.identica.model.routing.RoutingIntent;
-import me.whereareiam.identica.type.routing.RoutingClearReason;
+import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;

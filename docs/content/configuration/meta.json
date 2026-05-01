@@ -1,0 +1,12 @@
+{
+  "title": "Configuration",
+  "pages": [
+    "index",
+    "commands",
+    "messages",
+    "persistence",
+    "replication",
+    "settings",
+    "verification"
+  ]
+}

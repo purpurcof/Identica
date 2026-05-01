@@ -9,7 +9,7 @@ import me.whereareiam.identica.model.routing.attempt.RoutingAttemptState;
 import me.whereareiam.identica.model.routing.RoutingEndpoint;
 import me.whereareiam.identica.model.routing.RoutingIntent;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.routing.RoutingReason;
+import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

@@ -12,6 +12,7 @@ import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -136,7 +137,7 @@ public class Settings {
 		@ToString
 		public static class Target {
 			private @NotNull String target = "";
-			private @NotNull RoutingAttemptPolicy attempts = RoutingAttemptPolicy.defaultStep();
+			private @Nullable RoutingAttemptPolicy attempts;
 
 			public static @NotNull Target step() {
 				Target target = new Target();
@@ -158,11 +159,11 @@ public class Settings {
 		@Setter
 		@ToString
 		public static class Targets {
-			private @NotNull Target step = Target.step();
+			private @NotNull Target step = new Target();
 			/**
 			 * Routing target used when a scenario journeyMode fully completes.
 			 */
-			private @NotNull Target complete = Target.complete();
+			private @NotNull Target complete = new Target();
 			private @NotNull Overrides overrides = new Overrides();
 
 			/**

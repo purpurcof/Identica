@@ -6,5 +6,6 @@ package me.whereareiam.identica.type.routing;
 public enum RoutingAttemptTrigger {
 	INITIAL_SERVER,
 	PRE_CONNECT,
-	ASYNC_CONNECT
+	ASYNC_CONNECT,
+	SCHEDULED_RETRY
 }

@@ -1,0 +1,156 @@
+---
+title: Events
+description: How to listen to, react to, and reason about Identica events.
+---
+
+Identica has its own event system for addon plugins, integrations, and internal components.
+
+## Basic listener pattern
+
+To consume Identica events from an addon plugin:
+
+- implement `EventListener`
+- annotate handler methods with `@IdenticEvent`
+- register the listener through `IdenticaAPI.getEventManager()`
+
+### Listener example
+
+```java
+import me.whereareiam.identica.IdenticaAPI;
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.event.pipeline.scenario.registration.RegistrationScenarioStartedEvent;
+
+public final class ExampleRegistrationListener implements EventListener {
+    @IdenticEvent
+    public void onRegistrationStarted(RegistrationScenarioStartedEvent event) {
+        System.out.println(
+            "Registration started with journey mode: " + event.getJourneyMode()
+        );
+    }
+
+    public void register() {
+        if (!IdenticaAPI.isInitialized()) {
+            return;
+        }
+
+        IdenticaAPI.getEventManager().register(this);
+    }
+}
+```
+
+## Event order
+
+If you need a specific execution order, pass it to `@IdenticEvent`.
+
+```java
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.event.identity.session.SessionOpenedEvent;
+import me.whereareiam.identica.type.event.EventOrder;
+
+public final class ExampleSessionListener implements EventListener {
+    @IdenticEvent(EventOrder.LOW)
+    public void onSessionOpened(SessionOpenedEvent event) {
+        System.out.println("Opened session for: " + event.getSession().getEffectiveUsername());
+    }
+}
+```
+
+## Common event categories
+
+The current API exposes event groups such as:
+
+- lifecycle events
+- scenario and pipeline events
+- routing events
+- session events
+- provider events
+- verification events
+- account and identity events
+
+That means addon plugins can react at different levels, from high-level scenario start events down to specific verification or routing decisions.
+
+## Cancellable and mutable events
+
+Some events are only informational.
+Others can be modified or cancelled.
+
+For example, `VerificationEnrollEvent` is cancellable and lets listeners rewrite the provider or method before enrollment begins.
+
+```java
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.event.verification.enroll.VerificationEnrollEvent;
+
+public final class ExampleVerificationListener implements EventListener {
+    @IdenticEvent
+    public void onEnroll(VerificationEnrollEvent event) {
+        if ("totp".equalsIgnoreCase(event.getMethodId())) {
+            event.setProviderId("cracked");
+        }
+    }
+}
+```
+
+Another example is `AccountPrepareEvent`, where listeners can influence the final preparation decision.
+
+```java
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.account.AccountPrepareEvent;
+import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.model.identity.AccountDecision;
+
+public final class ExampleAccountPrepareListener implements EventListener {
+    @IdenticEvent
+    public void onPrepare(AccountPrepareEvent event) {
+        if (event.getDecision() == null) {
+            event.setDecision(AccountDecision.allow());
+        }
+    }
+}
+```
+
+Always check the specific event type before assuming it is cancellable or mutable.
+
+## Synchronous vs asynchronous
+
+Identica distinguishes between synchronous events and non-synchronous events through the event type hierarchy.
+If an event implements `SynchronousEvent`, it is processed synchronously on the current thread.
+
+For addon authors, that means you should treat event handlers as part of the active runtime flow and avoid unnecessary blocking work inside them.
+
+## Replicated events
+
+Some Identica events also implement `ReplicatedEvent`.
+Those are intended to cross the replication channel and be replayed on other runtimes.
+
+Important properties of replicated events:
+
+- they carry a replication event id for deduplication
+- they carry an origin server id
+- only registered replicated event types are allowed onto the wire
+- they should represent facts that are safe for every instance to handle locally
+
+That last point is important: not every event should become a replicated event.
+One-time global operations are usually better expressed as commands or service calls rather than replayed events.
+
+## Built-in replicated events
+
+The current replicated event bridge registers these built-in replicated event types:
+
+- `SessionClosedEvent`
+- `AccountClearEvent`
+- `AccountDeleteEvent`
+
+Those are propagated because they represent state changes that other runtimes can safely observe and apply locally.
+
+## When to care about replicated events
+
+As an addon author, you care about replicated events when:
+
+- your integration runs in a replicated multi-instance environment
+- you need to react consistently to account or session changes across runtimes
+- you are considering defining an event that may need cross-instance replay semantics
+
+If your addon only reacts locally and does not need cross-instance replay, normal Identica events are usually enough.

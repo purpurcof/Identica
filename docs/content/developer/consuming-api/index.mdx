@@ -1,0 +1,234 @@
+---
+title: Consuming the API
+description: How to depend on Identica API from another plugin and use it safely.
+---
+
+This page explains how to consume the Identica API from another plugin or addon.
+
+## Coordinates
+
+The published API artifact uses these coordinates:
+
+- Group: `me.whereareiam.identica`
+- Artifact: `api`
+
+For addon plugins, `compileOnly` or the equivalent provided-scope dependency is usually the right choice.
+Identica itself provides the API at runtime.
+
+## Repositories
+
+Identica publishes API artifacts to these Maven repositories:
+
+- Release repository: [https://maven.whereareiam.me/release](https://maven.whereareiam.me/release)
+- Development repository: [https://maven.whereareiam.me/development](https://maven.whereareiam.me/development)
+
+## Adding the dependency
+
+<Tabs items={["Gradle Kotlin DSL", "Gradle Groovy DSL", "Maven"]}>
+  <Tab value="Gradle Kotlin DSL">
+```kotlin
+repositories {
+    maven("https://maven.whereareiam.me/release")
+}
+
+dependencies {
+    compileOnly("me.whereareiam.identica:api:1.0.0")
+}
+```
+  </Tab>
+  <Tab value="Gradle Groovy DSL">
+```groovy
+repositories {
+    maven { url = uri("https://maven.whereareiam.me/release") }
+}
+
+dependencies {
+    compileOnly "me.whereareiam.identica:api:1.0.0"
+}
+```
+  </Tab>
+  <Tab value="Maven">
+```xml
+<repositories>
+  <repository>
+    <id>identica-release</id>
+    <url>https://maven.whereareiam.me/release</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>me.whereareiam.identica</groupId>
+    <artifactId>api</artifactId>
+    <version>1.0.0</version>
+    <scope>provided</scope>
+  </dependency>
+</dependencies>
+```
+  </Tab>
+</Tabs>
+
+If you intentionally target development builds instead of releases, switch the repository URL to the development repository and use a development version.
+
+## Versioning semantics
+
+Identica currently publishes two main API version streams:
+
+- Release versions such as `1.0.0`
+- Development versions such as `dev-91e1b65`
+
+In practice:
+
+- release versions are published to the release repository from tagged releases
+- development versions are published to the development repository from the `dev` branch
+- development versions use the format `dev-<short-commit-sha>`
+
+If you are writing a normal addon plugin, prefer release versions.
+Use development versions only when you intentionally depend on unreleased API changes.
+
+## Javadocs
+
+Use these links to browse the generated API documentation for the latest published release and the latest published development build:
+
+- latest release: <MavenVersionLink
+    metadataUrl="https://maven.whereareiam.me/release/me/whereareiam/identica/api/maven-metadata.xml"
+    hrefTemplate="https://maven.whereareiam.me/javadoc/release/me/whereareiam/identica/api/{version}"
+    selector="release"
+  />
+- latest development build: <MavenVersionLink
+    metadataUrl="https://maven.whereareiam.me/development/me/whereareiam/identica/api/maven-metadata.xml"
+    hrefTemplate="https://maven.whereareiam.me/javadoc/development/me/whereareiam/identica/api/{version}"
+    selector="latest"
+  />
+
+## Initialization and lifecycle
+
+Do not assume the API is ready the moment your addon plugin class is loaded.
+
+The main rules are:
+
+- check `IdenticaAPI.isInitialized()` before accessing services directly
+- or wait until Identica has finished bootstrapping and then resolve services
+
+The API entry point is [IdenticaAPI.java](/home/whereareiam/IdeaProjects/Identica/identica-api/src/main/java/me/whereareiam/identica/IdenticaAPI.java).
+That class exposes both generic `getService(...)` access and convenience methods for common services.
+
+Platform startup and lifecycle integration depend on the platform your addon targets.
+
+<ContentTabs items={["Velocity"]}>
+  <ContentTab value="Velocity">
+    A Velocity addon should wait until its own platform lifecycle is ready, and then resolve Identica services only after Identica itself is initialized.
+
+    Velocity plugins can also declare plugin dependencies directly in `@Plugin`.
+    That affects plugin load order.
+    If your addon really depends on Identica, declare it as a required dependency so Velocity loads Identica before your addon.
+    If your integration is optional, declare it as optional and still guard your API usage with `IdenticaAPI.isInitialized()`.
+
+```java
+import com.google.inject.Inject;
+import com.velocitypowered.api.plugin.Dependency;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.plugin.Plugin;
+import me.whereareiam.identica.IdenticaAPI;
+
+@Plugin(
+    id = "example-identica-addon",
+    name = "ExampleIdenticaAddon",
+    version = "1.0.0",
+    dependencies = {
+        @Dependency(id = "identica")
+    }
+)
+public final class ExampleIdenticaAddon {
+    @Inject
+    public ExampleIdenticaAddon() {
+    }
+
+    @Subscribe
+    public void onProxyInitialization(ProxyInitializeEvent event) {
+        if (!IdenticaAPI.isInitialized()) {
+            return;
+        }
+
+        // Safe place to resolve Identica services
+        IdenticaAPI.getProviderManager();
+    }
+}
+```
+  </ContentTab>
+</ContentTabs>
+
+## Basic service usage example
+
+```java
+import me.whereareiam.identica.IdenticaAPI;
+import me.whereareiam.identica.provider.ProviderManager;
+
+public final class ExampleAddon {
+    public void inspectProviders() {
+        if (!IdenticaAPI.isInitialized()) {
+            return;
+        }
+
+        ProviderManager providerManager = IdenticaAPI.getProviderManager();
+        providerManager.getProviders().forEach(provider -> {
+            if (provider != null && provider.getDescriptor() != null) {
+                System.out.println(provider.getDescriptor().getId());
+            }
+        });
+    }
+}
+```
+
+## Resolving services generically
+
+If there is no convenience method for the service you want, use `getService(...)`.
+
+```java
+import me.whereareiam.identica.IdenticaAPI;
+import me.whereareiam.identica.verification.VerificationService;
+
+public final class ExampleAddon {
+    public VerificationService verificationService() {
+        return IdenticaAPI.getService(VerificationService.class);
+    }
+}
+```
+
+## Common services worth using
+
+These are some of the most useful API entry points for addon plugins:
+
+- `IdenticaAPI.getProviderManager()` for listing and inspecting loaded providers
+- `IdenticaAPI.getProviderOperations()` for provider eligibility and runtime provider operations
+- `IdenticaAPI.getSessionService()` for finding, listing, refreshing, or closing sessions
+- `IdenticaAPI.getAccountService()` for account lookup and lifecycle operations
+- `IdenticaAPI.getVerificationService()` for verification enrollment, challenge, selection, and reset flow
+- `IdenticaAPI.getVerificationRegistry()` for verification method discovery
+- `IdenticaAPI.getReplicationSystem()` if you intentionally integrate with Identica's replicated caches or channels
+- `IdenticaAPI.getEventManager()` for registering or calling Identica events
+
+## Session lookup example
+
+```java
+import me.whereareiam.identica.IdenticaAPI;
+import me.whereareiam.identica.identity.session.SessionService;
+
+import java.util.UUID;
+
+public final class ExampleAddon {
+    public void printSession(UUID uniqueId) {
+        if (!IdenticaAPI.isInitialized()) {
+            return;
+        }
+
+        SessionService sessionService = IdenticaAPI.getSessionService();
+        sessionService.findByUniqueId(uniqueId).thenAccept(optionalSession -> {
+            optionalSession.ifPresent(session ->
+                System.out.println(session.getProviderId() + " -> " + session.getEffectiveUsername())
+            );
+        });
+    }
+}
+```

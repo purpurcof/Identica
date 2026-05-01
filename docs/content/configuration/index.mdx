@@ -1,0 +1,36 @@
+---
+title: Configuration
+description: Conceptual guide to Identica configuration areas and responsibilities.
+---
+
+This section explains Identica configuration as a set of concepts, not as one specific file syntax.
+That is intentional: Identica can choose its config representation at runtime, so the important thing is understanding what each config area means first.
+
+## Format-agnostic by design
+
+Identica does not have to be documented as "the YAML plugin" or "the JSON plugin."
+The runtime selects a configuration format from a marker file in the data directory, with `type=YAML` as the default behavior in the current codebase.
+Some explanations include examples where that helps, while others stay descriptive when the setting type is simple enough without one.
+
+Because of that, this documentation describes:
+
+- what each configuration area controls
+- how the pieces relate to each other
+- when you should edit one config area instead of another
+
+<Callout title="Setting flags" type="warn">
+  Some settings are marked with flags such as <Badge type="warning">Advanced</Badge>, <Badge type="warning">Warning</Badge>, <Badge type="error">Danger</Badge>, or <Badge type="info">Reserved</Badge>.
+  These flags show that a setting is intentionally configurable, but should be changed with more care than ordinary options. Unmarked settings are normal day-to-day configuration.
+</Callout>
+
+## Common value formats
+
+Across configuration areas, values commonly appear in a few recurring forms:
+
+- durations such as `"30s"`, `"10m"`, `"2h"`, `"1d12h"`, or ISO-8601 values such as `"PT10M"`
+- bare numbers for durations such as `10`, which the current duration adapter treats as minutes
+- enum values written as uppercase strings such as `"RANDOM"` or `"REPLACE_EXISTING"`
+- booleans such as `true` and `false`
+- maps keyed by provider id, scenario id, stage id, step name, or fully qualified event class name
+
+For clarity, quoted duration strings are the safest style to document and maintain.

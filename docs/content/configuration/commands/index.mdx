@@ -1,0 +1,211 @@
+---
+title: Commands
+description: Field-by-field explanation of Identica's commands configuration area.
+---
+
+## Behavior
+
+The `behavior` section controls command-wide behavior that is not tied to one specific command definition.
+
+### help
+
+#### sortAlphabetically
+
+- Takes: `true` or `false`
+- Current template default: `true`
+- Affects: whether the help command sorts entries alphabetically before rendering them
+
+When this is `false`, help output keeps the natural command registration order instead of forcing alphabetical order.
+
+### suggestions
+
+#### playerLimit
+
+- Takes: an integer
+- Current template default: `25`
+- Affects: the maximum number of cross-player suggestions returned by command suggestion providers
+
+If this is `0` or lower, those suggestions are effectively disabled.
+
+### clear
+
+#### confirmTtl
+
+- Takes: a duration
+- Current template default: `"60s"`
+- Affects: how long a pending admin clear confirmation stays valid
+
+This is the time window between requesting an account clear and confirming it.
+
+### sessions
+
+#### listPageSize
+
+- Takes: an integer
+- Current template default: `7`
+- Affects: how many entries are shown per page in admin session listings
+
+### migration
+
+#### confirmTtl
+
+- Takes: a duration
+- Current template default: `"60s"`
+- Affects: how long a pending migration confirmation stays valid
+
+### useBrigadier
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: `true` or `false`
+- Current template default: `false`
+- Affects: how Identica registers commands on platforms that support multiple registration modes
+
+<ContentTabs items={["Velocity"]}>
+  <ContentTab value="Velocity">
+    In Velocity, this toggles the command manager registration mode between raw registration and Brigadier registration.
+
+    `RAW` is usually the safer default for Identica.
+
+    With `RAW`, command input is passed through more permissively.
+    That is especially useful for things like passwords, because the input can contain a wider range of characters and is less constrained by Brigadier parsing rules.
+
+    With `BRIGADIER`, input handling is stricter.
+    Normal symbols still work, but only a more limited set of special symbols is accepted cleanly through Brigadier parsing.
+    That can become a problem if your password rules or expected command input rely on broader special-character support.
+
+    Another practical difference is error handling.
+    In `RAW`, Identica can surface its custom invalid-input and syntax-help style messages more cleanly.
+    In `BRIGADIER`, those custom exception and invalid-command messages are less reliable because Brigadier can reject the input earlier in the parsing chain.
+  </ContentTab>
+</ContentTabs>
+
+## commands
+
+The `commands` map contains the actual command definitions keyed by internal definition id.
+
+<Callout title="Command keys" type="warn">
+  For built-in commands, edit the values inside each command definition, but do not casually rename the map keys themselves.
+  The built-in command executors look up definitions by those internal ids.
+</Callout>
+
+Each entry in `commands` uses the same definition structure.
+
+### Command definition fields
+
+#### enabled
+
+- Takes: `true` or `false`
+- Affects: whether the command definition is registered at all
+
+When this is `false`, Identica skips registration for that command definition.
+
+#### aliases
+
+- Takes: a list of alias strings
+- Affects: which command labels and subcommand phrases are registered
+
+Aliases can be single words such as `help` or command phrases such as `admin session list`.
+
+#### permission
+
+- Takes: a string
+- Affects: the permission required to use that command definition
+
+An empty string means no extra permission check is configured for that definition.
+
+#### description
+
+- Takes: a string
+- Affects: help and metadata output for that command
+
+#### usage
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Affects: the rendered usage syntax shown in help and command-related output, and the required/optional argument layout applied during command registration
+
+`usage` is partly documentation and partly structure.
+Identica reads it to determine which command arguments should be treated as required or optional in the final registered command.
+
+This can be useful when you want help output and command syntax to better match the command style you expect players or staff to use.
+For example, you might want usage text to stay aligned with customized aliases, a preferred command flow, or clearer optional-vs-required argument presentation.
+
+The usage syntax behaves like this:
+
+- `<name>` means a required argument
+- `[name]` means an optional argument
+- `<name...>` or `[name...]` means a greedy argument token in the usage string
+- `{...}` placeholders are ignored by the argument parser and are only used for rendered syntax text
+
+Built-in usages commonly use placeholders such as:
+
+- `{alias}` for the currently used alias
+- `{command}` for the root command path
+
+Important rules:
+
+- The argument names inside `<...>` and `[...]` must match real parsed command argument names from the executor
+- `usage` does not define aliases by itself; aliases still come from the `aliases` field
+- If a usage token refers to an argument name that does not exist in the parsed command, registration fails
+- Because `usage` affects structure as well as display, changing it carelessly can make the command definition inconsistent with the actual executor arguments
+
+Example:
+
+- `"{command} {alias} <target> [provider]"` means:
+  - the root command path and chosen alias are rendered into the syntax text
+  - `target` is required
+  - `provider` is optional
+
+- `"{alias}"` means:
+  - no command arguments are defined through `usage`
+  - only the alias placeholder is rendered
+
+#### cooldown
+
+- Takes: a cooldown object
+- Affects: per-command cooldown behavior through the command adapter
+
+##### enabled
+
+- Takes: `true` or `false`
+- Affects: whether the cooldown is active
+
+##### duration
+
+- Takes: an integer
+- Affects: the cooldown duration used by the command system
+
+##### group
+
+- Takes: a string
+- Current template default: `"default"`
+- Affects: which cooldown group the command belongs to
+
+Commands in the same group can share cooldown behavior depending on the command framework rules.
+
+#### arguments
+
+- Takes: a map of argument name to description
+- Affects: custom argument descriptions used in help and syntax formatting
+
+This does not define parsing logic by itself.
+It documents arguments that are already implemented by the command executor.
+
+#### hide
+
+- Takes: `true` or `false`
+- Current template default: `false`
+- Affects: whether the command is hidden from help output
+
+This is used for internal or flow-supporting command definitions that should exist without being listed in normal help output.
+
+## Built-in command groups
+
+The current template generates built-in definitions in these groups:
+
+- Core: `main`, `help`, `enroll`, `availability-username`
+- Admin: `admin`, `admin-reload`, `admin-clear`, `admin-clear-confirm`, `admin-clear-cancel`, `admin-delete`, `admin-delete-confirm`, `admin-delete-cancel`, `admin-reservation-set`, `admin-reservation-info`, `admin-reservation-delete`, `admin-session`, `admin-session-list`, `admin-session-info`, `admin-session-end`, `admin-verification-reset`
+- Migration: `migration-list`, `migration-start`, `migration-cancel`, `migration-primary`, `migration-drop`
+- Verification: `verification`, `verification-status`, `verification-enroll`, `verification-confirm`, `verification-enroll-confirm`, `verification-use`, `verification-disable`, `verification-enroll-cancel`

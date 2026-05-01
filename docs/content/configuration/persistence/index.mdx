@@ -1,0 +1,172 @@
+---
+title: Persistence
+description: Field-by-field explanation of Identica's persistence configuration area.
+---
+
+The persistence configuration selects which database backend Identica uses and how the connection pool is configured.
+
+By default, Identica falls back to SQLite when the persistence type cannot be resolved from an existing config.
+
+## type
+
+- Takes: `"SQLITE"`, `"H2"`, `"MYSQL"`, or `"POSTGRES"`
+- Current default behavior: SQLite is the fallback backend
+- Affects: which persistence backend class and JDBC URL strategy are used
+
+## Backend-specific fields
+
+Different persistence types expose different fields.
+Those backend-specific fields are normally generated after you switch `type` and restart the plugin.
+If you only change `type` without letting the plugin boot again, the file structure may still reflect the old backend layout until Identica regenerates it.
+
+<ContentTabs items={["SQLite", "H2", "MySQL", "PostgreSQL"]}>
+  <ContentTab value="SQLite">
+    #### file
+
+    - Takes: a file name or relative path
+    - Current template default: `"identica.db"`
+    - Affects: the SQLite database file used under the plugin data directory
+
+    If this is blank, the runtime falls back to `identica.db`.
+  </ContentTab>
+  <ContentTab value="H2">
+    #### file
+
+    - Takes: a file name, relative path, or direct H2 target
+    - Current default: `"identica"`
+    - Affects: the H2 database target
+
+    If the value starts with `mem:`, `tcp:`, `ssl:`, or `file:`, Identica treats it as a direct H2 target.
+    Otherwise it is treated as a file path relative to the plugin data directory.
+
+    #### options
+
+    - Takes: a string
+    - Current default: `""`
+    - Affects: the H2 JDBC options appended to the connection URL
+
+    If options are present, Identica appends them to the base H2 URL, automatically inserting `;` when needed.
+  </ContentTab>
+  <ContentTab value="MySQL">
+    #### host
+
+    - Takes: a string
+    - Current default: `"localhost"`
+    - Affects: the database server host
+
+    #### port
+
+    - Takes: an integer
+    - Current default: `3306`
+    - Affects: the database server port
+
+    #### database
+
+    - Takes: a string
+    - Current default: `"identica"`
+    - Affects: the database name used in the JDBC URL
+
+    #### username
+
+    - Takes: a string
+    - Current default: `"identica"`
+    - Affects: the username used for the external database connection
+
+    #### password
+
+    - Takes: a string
+    - Current default: `""`
+    - Affects: the password used for the external database connection
+  </ContentTab>
+  <ContentTab value="PostgreSQL">
+    #### host
+
+    - Takes: a string
+    - Current default: `"localhost"`
+    - Affects: the database server host
+
+    #### port
+
+    - Takes: an integer
+    - Current default: `5432`
+    - Affects: the database server port
+
+    #### database
+
+    - Takes: a string
+    - Current default: `"identica"`
+    - Affects: the database name used in the JDBC URL
+
+    #### username
+
+    - Takes: a string
+    - Current default: `"identica"`
+    - Affects: the username used for the external database connection
+
+    #### password
+
+    - Takes: a string
+    - Current default: `""`
+    - Affects: the password used for the external database connection
+  </ContentTab>
+</ContentTabs>
+
+## hikari
+
+The `hikari` section controls the HikariCP connection pool used by the database layer.
+
+For most setups, the defaults are a good starting point.
+You usually only change these values when you have a clear reason related to database load, connection limits, or infrastructure tuning.
+
+#### poolName
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current default: `"Identica"`
+- Affects: the Hikari pool name shown in diagnostics and logs
+
+#### maximumPoolSize
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer
+- Current default: `10`
+- Affects: the maximum number of pooled database connections
+
+#### minimumIdle
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer
+- Current default: `2`
+- Affects: the minimum number of idle pooled connections Hikari tries to keep ready
+
+#### connectionTimeout
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a number of milliseconds
+- Current default: `30000`
+- Affects: how long Hikari waits for a connection before timing out
+
+#### idleTimeout
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a number of milliseconds
+- Current default: `600000`
+- Affects: how long idle pooled connections may stay unused before Hikari retires them
+
+#### maxLifetime
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a number of milliseconds
+- Current default: `1800000`
+- Affects: the maximum lifetime of a pooled connection before Hikari replaces it
+
+## Connection behavior
+
+If the database connection cannot be established, Identica does not fail fast during Hikari initialization.
+Instead, it logs the connection problem and database-backed features remain unavailable until the connection can be established.

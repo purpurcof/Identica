@@ -1,0 +1,151 @@
+---
+title: Verification
+description: Field-by-field explanation of Identica's verification configuration area.
+---
+
+The verification configuration controls global verification timing and the built-in TOTP verification method.
+
+Provider-specific rules such as whether verification is enabled, required, or selectable for a provider belong in the providers configuration.
+This page is about the shared verification system itself.
+
+## challengeTtl
+
+- Takes: a positive duration
+- Current template default: `"2m"`
+- Affects: how long a pending verification challenge remains valid
+
+This TTL is used for pending challenge state such as a player being asked to enter a TOTP code or recovery code.
+If it is too short, players can lose their challenge before they finish it.
+If it is too long, stale pending challenge state remains valid longer than necessary.
+
+## enrollmentTtl
+
+- Takes: a positive duration
+- Current template default: `"10m"`
+- Affects: how long a pending verification enrollment remains valid
+
+This TTL is used for enrollment state such as a player being partway through TOTP setup and confirmation.
+
+## autoSelectCurrentProvider
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Current template default: `true`
+- Affects: whether a newly enrolled method is automatically selected for the current provider when possible
+
+When this is enabled, Identica tries to auto-select the method the player just enrolled for the current provider.
+If no explicit provider id is present in the enrollment flow, Identica falls back to the provider from the current session when possible.
+
+This reduces friction after successful enrollment, but some operators may prefer to require explicit method selection instead.
+
+## totp
+
+The `totp` section configures the built-in authenticator-app verification method.
+
+### displayName
+
+- Takes: a string
+- Current template default: `"Authenticator App"`
+- Affects: the user-facing method name shown for the built-in TOTP method
+
+If this is blank, the built-in method descriptor falls back to `totp`.
+
+### issuer
+
+- Takes: a string
+- Current template default: `"Identica"`
+- Affects: the issuer value embedded into the generated OTPAuth URI
+
+This is what authenticator apps usually show as the service or account issuer when the QR code or OTPAuth URI is imported.
+
+### labelFormat
+
+- Takes: a string
+- Current template default: `"{player}@{providerId}"`
+- Affects: how the account label is generated inside the OTPAuth URI
+
+The current TOTP setup step replaces these placeholders:
+
+- `{player}` with the current username
+- `{providerId}` with the current provider id
+
+This affects what the entry looks like in authenticator apps.
+
+### digits
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer
+- Current template default: `6`
+- Affects: how many digits each generated TOTP code contains
+
+This value is used both when the OTPAuth URI is generated and when TOTP codes are later verified.
+
+### period
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current template default: `"30s"`
+- Affects: the TOTP period used for code generation and verification
+
+Internally, the built-in TOTP method converts this to seconds for OTPAuth generation and code verification.
+
+### allowedPastWindows
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer
+- Current template default: `1`
+- Affects: how many previous TOTP time windows are accepted during verification
+
+Higher values are more tolerant of clock drift and slow input, but they also make verification more permissive.
+
+### allowedFutureWindows
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer
+- Current template default: `1`
+- Affects: how many future TOTP time windows are accepted during verification
+
+Higher values can help with clock drift, but they also widen the accepted verification window.
+
+## recoveryCodes
+
+The `recoveryCodes` subsection controls backup codes generated during TOTP enrollment.
+
+### enabled
+
+- Takes: `true` or `false`
+- Current template default: `true`
+- Affects: whether recovery codes are generated during TOTP enrollment
+
+If this is disabled, the built-in TOTP enrollment flow produces no recovery codes.
+
+### amount
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer
+- Current template default: `8`
+- Affects: how many recovery codes are generated during TOTP enrollment
+
+### length
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer
+- Current template default: `10`
+- Affects: how many characters each recovery code contains before grouping is applied
+
+### groupSize
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer
+- Current template default: `4`
+- Affects: how recovery codes are visually grouped when generated
+
+This changes the formatting style of generated recovery codes, not whether they exist.

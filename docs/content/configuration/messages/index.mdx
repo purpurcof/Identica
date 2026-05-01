@@ -1,0 +1,106 @@
+---
+title: Messages
+description: Shared formatting guidance for Identica messages configuration.
+---
+
+This page documents only the shared message-formatting areas that affect many messages at once.
+It does not try to explain every individual message field in the full messages configuration.
+
+## Formatting
+
+Identica messages can use MiniMessage formatting.
+If you want to use colors, decorations, click actions, hover actions, or other text formatting features, see the MiniMessage format reference here:
+
+- [MiniMessage format reference](https://docs.papermc.io/adventure/minimessage/format/)
+
+Identica also provides internal placeholders in some messages.
+Those placeholders always use curly-brace format such as `{prefix}`, `{username}`, or `{provider}`.
+
+The exact available placeholders depend on the specific message field and the code path that renders it.
+
+## prefix
+
+- Takes: a string
+- Current template default: `"<green>Identica</green> <dark_gray>| "`
+- Affects: the global message prefix supplied to the serializer engine
+
+This prefix is available to messages through `{prefix}` and is also used as the serializer prefix supplier.
+
+Changing this lets you rebrand or restyle the general look of Identica messages without editing every message line one by one.
+
+## format
+
+The `format` section controls shared formatting helpers used by message placeholders.
+
+### temporal
+
+The `temporal` subsection controls how shared date and date-time placeholders are formatted when messages render timestamps.
+
+#### date
+
+- Takes: a date-time pattern string
+- Current template default: `"dd.MM.yyyy"`
+- Affects: the formatter pattern used for date-only placeholders
+
+If this is blank, runtime code falls back to its built-in formatter for the specific message path.
+
+#### dateTime
+
+- Takes: a date-time pattern string
+- Current template default: `"dd.MM.yyyy HH:mm:ss"`
+- Affects: the formatter pattern used for date-time placeholders
+
+If this is blank, runtime code falls back to its built-in formatter for the specific message path.
+
+## commands.pagination
+
+The `commands.pagination` section controls the shared pagination renderer used by command outputs that span multiple pages.
+
+These settings affect the formatting of page navigation, not which data is paginated.
+
+#### showPaginationIfOnePage
+
+- Takes: `true` or `false`
+- Current template default: `false`
+- Affects: whether pagination controls are shown when there is only one page
+
+#### format
+
+- Takes: a string
+- Current template default: `"\n {previous}<white>Pagination</white> <gray>[{current}/{max}]</gray>{next} \n"`
+- Affects: the overall pagination line format
+
+The pagination renderer can supply placeholders such as:
+
+- `{previous}`
+- `{next}`
+- `{current}`
+- `{max}`
+
+#### showPreviousEvenIfFirst
+
+- Takes: `true` or `false`
+- Current template default: `false`
+- Affects: whether the previous-page control is still shown on the first page
+
+#### previousTagFormat
+
+- Takes: a string
+- Current template default: `"<red><click:run_command:/identica help {previousPage}>«</red> "`
+- Affects: the rendered previous-page control
+
+The pagination renderer can supply `{previousPage}` here.
+
+#### showNextEvenIfLast
+
+- Takes: `true` or `false`
+- Current template default: `false`
+- Affects: whether the next-page control is still shown on the last page
+
+#### nextTagFormat
+
+- Takes: a string
+- Current template default: `" <green><click:run_command:/identica help {nextPage}>»</green>"`
+- Affects: the rendered next-page control
+
+The pagination renderer can supply `{nextPage}` here.

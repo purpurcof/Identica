@@ -8,7 +8,7 @@ changelog:
       labels:
         - feature
 
-    - title: "What changed"
+    - title: "Enhancements"
       labels:
         - change
 

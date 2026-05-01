@@ -16,8 +16,8 @@ import me.whereareiam.identica.model.routing.RoutingPlan;
 import me.whereareiam.identica.model.routing.RoutingSignal;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.routing.RoutingClearReason;
-import me.whereareiam.identica.type.routing.RoutingReason;
+import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
+import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

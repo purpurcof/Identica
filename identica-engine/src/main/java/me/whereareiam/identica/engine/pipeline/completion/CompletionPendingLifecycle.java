@@ -13,7 +13,7 @@ import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.routing.RoutingIntent;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.routing.RoutingIntentStore;
-import me.whereareiam.identica.type.routing.RoutingReason;
+import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;

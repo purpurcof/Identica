@@ -2,6 +2,7 @@ package me.whereareiam.identica.platform.velocity.listener.routing;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.velocitypowered.api.proxy.ConnectionRequestBuilder;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
@@ -9,6 +10,7 @@ import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.routing.RoutingTargetMissingEvent;
+import me.whereareiam.identica.event.routing.intent.RoutingIntentRetryEvent;
 import me.whereareiam.identica.event.routing.intent.RoutingIntentStartedEvent;
 import me.whereareiam.identica.event.routing.intent.RoutingIntentUpdatedEvent;
 import me.whereareiam.identica.logging.Logger;
@@ -17,6 +19,7 @@ import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
 import me.whereareiam.identica.routing.RoutingAttemptService;
+import me.whereareiam.identica.type.routing.reason.RoutingAttemptFailureReason;
 import me.whereareiam.identica.type.routing.RoutingAttemptTrigger;
 import org.jetbrains.annotations.NotNull;
 
@@ -50,7 +53,20 @@ public class VelocityRoutingIntentListener implements EventListener {
 		apply(event.getIntent(), "updated");
 	}
 
+	@IdenticEvent
+	public void onRoutingIntentRetry(@NotNull RoutingIntentRetryEvent event) {
+		apply(event.getIntent(), "retry", RoutingAttemptTrigger.SCHEDULED_RETRY);
+	}
+
 	private void apply(@NotNull RoutingIntent intent, @NotNull String source) {
+		apply(intent, source, RoutingAttemptTrigger.ASYNC_CONNECT);
+	}
+
+	private void apply(
+			@NotNull RoutingIntent intent,
+			@NotNull String source,
+			@NotNull RoutingAttemptTrigger trigger
+	) {
 		Player player = proxyServer.getPlayer(intent.getConnectionUniqueId()).orElse(null);
 		if (player == null) {
 			Logger.debug("Velocity routing intent %s skipped connection=%s target=%s reason=player-offline",
@@ -69,7 +85,7 @@ public class VelocityRoutingIntentListener implements EventListener {
 
 		RoutingAttemptDecision decision = routingAttemptService.decide(new RoutingAttemptRequest(
 				player.getUniqueId(),
-				RoutingAttemptTrigger.ASYNC_CONNECT,
+				trigger,
 				currentServer
 		));
 		if (!decision.isAllowed() || decision.getIntent() == null) {
@@ -104,25 +120,60 @@ public class VelocityRoutingIntentListener implements EventListener {
 			if (missingEvent.isDisconnect() && missingEvent.getMessage() != null)
 				player.disconnect(missingEvent.getMessage());
 
-			routingAttemptService.record(new RoutingAttemptReport(
+			routingAttemptService.record(RoutingAttemptReport.failed(
 					player.getUniqueId(),
-					RoutingAttemptTrigger.ASYNC_CONNECT,
-					false,
+					trigger,
 					targetServer,
-					"missing-server"
+					RoutingAttemptFailureReason.MISSING_SERVER
 			));
 			return;
 		}
 
 		Logger.debug("Velocity routing intent %s applying player=%s current=%s target=%s",
 				source, player.getUniqueId(), currentServer, targetServer);
-		player.createConnectionRequest(server.get()).fireAndForget();
-		routingAttemptService.record(new RoutingAttemptReport(
-				player.getUniqueId(),
-				RoutingAttemptTrigger.ASYNC_CONNECT,
-				true,
-				targetServer,
-				null
-		));
+		player.createConnectionRequest(server.get()).connect()
+				.whenComplete((result, throwable) -> handleAsyncResult(player, targetServer, trigger, result, throwable));
+	}
+
+	private void handleAsyncResult(
+			@NotNull Player player,
+			@NotNull String targetServer,
+			@NotNull RoutingAttemptTrigger trigger,
+			ConnectionRequestBuilder.Result result,
+			Throwable throwable
+	) {
+		if (throwable != null) {
+			Logger.debug("Velocity routing async connect failed player=%s target=%s trigger=%s reason=%s",
+					player.getUniqueId(), targetServer, trigger, throwable.toString());
+			recordAttempt(player, trigger, false, targetServer, RoutingAttemptFailureReason.CONNECTION_EXCEPTION);
+			return;
+		}
+		if (result == null) {
+			recordAttempt(player, trigger, false, targetServer, RoutingAttemptFailureReason.CONNECTION_RESULT_MISSING);
+			return;
+		}
+
+		ConnectionRequestBuilder.Status status = result.getStatus();
+		Logger.debug("Velocity routing async connect finished player=%s target=%s trigger=%s status=%s",
+				player.getUniqueId(), targetServer, trigger, status);
+		switch (status) {
+			case SUCCESS, ALREADY_CONNECTED -> recordAttempt(player, trigger, true, targetServer, null);
+			case SERVER_DISCONNECTED -> recordAttempt(player, trigger, false, targetServer, RoutingAttemptFailureReason.SERVER_DISCONNECTED);
+			case CONNECTION_CANCELLED -> recordAttempt(player, trigger, false, targetServer, RoutingAttemptFailureReason.CONNECTION_CANCELLED);
+			case CONNECTION_IN_PROGRESS -> recordAttempt(player, trigger, false, targetServer, RoutingAttemptFailureReason.CONNECTION_IN_PROGRESS);
+		}
+	}
+
+	private void recordAttempt(
+			@NotNull Player player,
+			@NotNull RoutingAttemptTrigger trigger,
+			boolean accepted,
+			@NotNull String targetServer,
+			RoutingAttemptFailureReason failureReason
+	) {
+		RoutingAttemptReport report = accepted
+				? RoutingAttemptReport.succeeded(player.getUniqueId(), trigger, targetServer)
+				: RoutingAttemptReport.failed(player.getUniqueId(), trigger, targetServer, failureReason);
+		routingAttemptService.record(report);
 	}
 }

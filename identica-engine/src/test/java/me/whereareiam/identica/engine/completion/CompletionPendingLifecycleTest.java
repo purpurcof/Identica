@@ -14,7 +14,7 @@ import me.whereareiam.identica.model.routing.attempt.RoutingAttemptState;
 import me.whereareiam.identica.model.routing.RoutingEndpoint;
 import me.whereareiam.identica.model.routing.RoutingIntent;
 import me.whereareiam.identica.routing.RoutingIntentStore;
-import me.whereareiam.identica.type.routing.RoutingReason;
+import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import net.kyori.adventure.audience.Audience;

@@ -14,6 +14,7 @@ import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
 import me.whereareiam.identica.model.routing.RoutingIntent;
+import me.whereareiam.identica.type.routing.reason.RoutingAttemptFailureReason;
 import me.whereareiam.identica.routing.RoutingAttemptService;
 import me.whereareiam.identica.type.routing.RoutingAttemptTrigger;
 
@@ -63,12 +64,11 @@ public class PlayerChooseInitialServerListener implements DynamicListener<Player
 			if (missingEvent.isDisconnect() && missingEvent.getMessage() != null) {
 				event.getPlayer().disconnect(missingEvent.getMessage());
 			}
-			routingAttemptService.record(new RoutingAttemptReport(
+			routingAttemptService.record(RoutingAttemptReport.failed(
 					connectionId,
 					RoutingAttemptTrigger.INITIAL_SERVER,
-					false,
 					targetServer,
-					"missing-server"
+					RoutingAttemptFailureReason.MISSING_SERVER
 			));
 			return;
 		}
@@ -76,12 +76,10 @@ public class PlayerChooseInitialServerListener implements DynamicListener<Player
 		event.setInitialServer(server.get());
 		Logger.debug("Velocity initial server routing applied player=%s target=%s",
 				connectionId, targetServer);
-		routingAttemptService.record(new RoutingAttemptReport(
+		routingAttemptService.record(RoutingAttemptReport.succeeded(
 				connectionId,
 				RoutingAttemptTrigger.INITIAL_SERVER,
-				true,
-				targetServer,
-				null
+				targetServer
 		));
 	}
 }

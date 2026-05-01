@@ -3,7 +3,7 @@ package me.whereareiam.identica.model.routing;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
-import me.whereareiam.identica.type.routing.RoutingClearReason;
+import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import me.whereareiam.identica.type.routing.RoutingPlanAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

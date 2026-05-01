@@ -25,10 +25,10 @@ import me.whereareiam.identica.model.routing.RoutingSignal;
 import me.whereareiam.identica.routing.RoutingAttemptService;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.routing.RoutingIntentStore;
-import me.whereareiam.identica.type.routing.RoutingClearReason;
+import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import me.whereareiam.identica.type.routing.RoutingIntentStatus;
 import me.whereareiam.identica.type.routing.RoutingPlanAction;
-import me.whereareiam.identica.type.routing.RoutingReason;
+import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -135,13 +135,13 @@ public class DefaultRoutingCoordinator implements RoutingCoordinator, RoutingAtt
 			return;
 		}
 
-		Logger.debug("Routing attempt recorded connection=%s trigger=%s accepted=%s server=%s attempts=%s message=%s",
+		Logger.debug("Routing attempt recorded connection=%s trigger=%s accepted=%s server=%s attempts=%s failureReason=%s",
 				report.getConnectionUniqueId(),
 				report.getTrigger(),
 				report.isAccepted(),
 				report.getServer(),
 				intent.getAttemptState().getAttempts(),
-				report.getMessage());
+				report.getFailureReason());
 		eventManager.call(new RoutingAttemptFinishedEvent(intent, report));
 	}
 

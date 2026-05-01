@@ -67,6 +67,7 @@ import me.whereareiam.identica.common.verification.type.totp.TotpVerificationMet
 import me.whereareiam.identica.common.routing.DefaultRoutingCoordinator;
 import me.whereareiam.identica.common.routing.DefaultRoutingIntentStore;
 import me.whereareiam.identica.common.routing.RoutingPlanner;
+import me.whereareiam.identica.common.routing.RoutingRetryCoordinator;
 import me.whereareiam.identica.common.routing.RoutingTargetMissingListener;
 import me.whereareiam.identica.common.identity.session.DefaultSessionService;
 import me.whereareiam.identica.common.identity.session.SessionRefreshCoordinator;
@@ -196,6 +197,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(DefaultRoutingCoordinator.class).asEagerSingleton();
 		bind(RoutingCoordinator.class).to(DefaultRoutingCoordinator.class);
 		bind(RoutingAttemptService.class).to(DefaultRoutingCoordinator.class);
+		bind(RoutingRetryCoordinator.class).asEagerSingleton();
 		bind(RoutingTargetMissingListener.class).asEagerSingleton();
 
 		// Conflict resolution

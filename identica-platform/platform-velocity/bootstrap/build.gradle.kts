@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.platformVelocityApi)
     implementation(libs.bundles.bStats.velocity)
     compileOnly(libs.velocity)
+    testImplementation(libs.velocity)
     annotationProcessor(libs.velocity)
 
     implementation(libs.attache.velocity)

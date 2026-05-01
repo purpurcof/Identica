@@ -8,15 +8,16 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.routing.RoutingPlan;
 import me.whereareiam.identica.model.routing.RoutingSignal;
+import me.whereareiam.identica.type.routing.RoutingRetryMode;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.pipeline.journey.step.StepContextRequirement;
-import me.whereareiam.identica.type.routing.RoutingClearReason;
+import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import me.whereareiam.identica.type.routing.RoutingPlanAction;
-import me.whereareiam.identica.type.routing.RoutingReason;
+import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
@@ -61,6 +62,23 @@ class RoutingPlannerTest {
 		assertEquals(RoutingPlanAction.REPLACE, plan.getAction());
 		assertEquals(RoutingReason.COMPLETION, plan.getIntent().getReason());
 		assertEquals("lobby", plan.getIntent().getEndpoint().getServer());
+	}
+
+	@DisplayName("Scenario completion targets inherit default attempts when omitted")
+	@Test
+	void completionTargetInheritsDefaultAttemptsWhenOmitted() {
+		Settings settings = settings();
+		settings.getConnection().getRouting().getDefaults().getComplete().getAttempts().setMode(RoutingRetryMode.UNTIL_REACHED);
+		settings.getConnection().getRouting().getScenarios().get("authentication").getComplete().setAttempts(null);
+
+		RoutingPlanner planner = new RoutingPlanner(() -> settings);
+		RoutingPlan plan = planner.plan(RoutingSignal.pipelineFinished(
+				context(UUID.randomUUID()),
+				PipelineType.AUTHENTICATION,
+				PipelineResult.complete()
+		));
+
+		assertEquals(RoutingRetryMode.UNTIL_REACHED, plan.getIntent().getAttemptPolicy().getMode());
 	}
 
 	@DisplayName("A failed pipeline clears the current routing intent")

@@ -10,17 +10,17 @@ connection:
       step:
         target: "lobby"
         attempts:
-          mode: "RETRY_ONCE"
+          mode: "UNTIL_REACHED"
           maxAttempts: 1
-          retryDelay: "0s"
+          retryDelay: "1s"
           consumeOnReached: false
           consumeOnExhausted: true
       complete:
         target: "lobby"
         attempts:
-          mode: "NONE"
+          mode: "UNTIL_REACHED"
           maxAttempts: 1
-          retryDelay: "0s"
+          retryDelay: "1s"
           consumeOnReached: true
           consumeOnExhausted: true
     scenarios:

@@ -1,7 +1,7 @@
 package me.whereareiam.identica.routing;
 
 import me.whereareiam.identica.model.routing.RoutingSignal;
-import me.whereareiam.identica.type.routing.RoutingClearReason;
+import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;

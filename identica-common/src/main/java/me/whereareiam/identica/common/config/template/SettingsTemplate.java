@@ -137,9 +137,9 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 
 	private Settings.Routing.Targets createScenarioTargets(String step, String complete) {
 		Settings.Routing.Targets targets = new Settings.Routing.Targets();
-		Settings.Routing.Target stepTarget = Settings.Routing.Target.step();
+		Settings.Routing.Target stepTarget = new Settings.Routing.Target();
 		stepTarget.setTarget(step);
-		Settings.Routing.Target completeTarget = Settings.Routing.Target.complete();
+		Settings.Routing.Target completeTarget = new Settings.Routing.Target();
 		completeTarget.setTarget(complete);
 
 		targets.setStep(stepTarget);

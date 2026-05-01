@@ -14,6 +14,7 @@ import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
 import me.whereareiam.identica.model.routing.RoutingIntent;
+import me.whereareiam.identica.type.routing.reason.RoutingAttemptFailureReason;
 import me.whereareiam.identica.routing.RoutingAttemptService;
 import me.whereareiam.identica.type.routing.RoutingAttemptTrigger;
 
@@ -86,12 +87,11 @@ public class ServerPreConnectListener implements DynamicListener<ServerPreConnec
 			if (missingEvent.isDisconnect() && missingEvent.getMessage() != null)
 				event.getPlayer().disconnect(missingEvent.getMessage());
 
-			routingAttemptService.record(new RoutingAttemptReport(
+			routingAttemptService.record(RoutingAttemptReport.failed(
 					connectionId,
 					RoutingAttemptTrigger.PRE_CONNECT,
-					false,
 					targetServer,
-					"missing-server"
+					RoutingAttemptFailureReason.MISSING_SERVER
 			));
 			return;
 		}
@@ -101,12 +101,10 @@ public class ServerPreConnectListener implements DynamicListener<ServerPreConnec
 				connectionId,
 				event.getOriginalServer().getServerInfo().getName(),
 				targetServer);
-		routingAttemptService.record(new RoutingAttemptReport(
+		routingAttemptService.record(RoutingAttemptReport.succeeded(
 				connectionId,
 				RoutingAttemptTrigger.PRE_CONNECT,
-				true,
-				targetServer,
-				null
+				targetServer
 		));
 	}
 }

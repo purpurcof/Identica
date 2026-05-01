@@ -3,6 +3,7 @@ package me.whereareiam.identica.model.routing.attempt;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.identica.type.routing.reason.RoutingAttemptFailureReason;
 
 /**
  * Mutable attempt counters for a routing intent.
@@ -15,7 +16,7 @@ public class RoutingAttemptState {
 	private long lastAttemptAt;
 	private String lastServer;
 	private boolean lastAccepted;
-	private String lastMessage;
+	private RoutingAttemptFailureReason lastFailureReason;
 
 	public RoutingAttemptState copy() {
 		RoutingAttemptState copy = new RoutingAttemptState();
@@ -23,7 +24,7 @@ public class RoutingAttemptState {
 		copy.setLastAttemptAt(lastAttemptAt);
 		copy.setLastServer(lastServer);
 		copy.setLastAccepted(lastAccepted);
-		copy.setLastMessage(lastMessage);
+		copy.setLastFailureReason(lastFailureReason);
 		return copy;
 	}
 }

@@ -8,7 +8,7 @@ import me.whereareiam.identica.model.routing.RoutingIntent;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.routing.RoutingAttemptTrigger;
 import me.whereareiam.identica.type.routing.RoutingIntentStatus;
-import me.whereareiam.identica.type.routing.RoutingReason;
+import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +27,7 @@ class DefaultRoutingIntentStoreTest {
 		UUID connectionId = UUID.randomUUID();
 		RoutingIntent first = intent(connectionId, "auth");
 		store.put(first);
-		store.recordAttempt(new RoutingAttemptReport(connectionId, RoutingAttemptTrigger.INITIAL_SERVER, true, "auth", null));
+		store.recordAttempt(RoutingAttemptReport.succeeded(connectionId, RoutingAttemptTrigger.INITIAL_SERVER, "auth"));
 
 		RoutingIntent replacement = intent(connectionId, "lobby");
 		store.put(replacement);

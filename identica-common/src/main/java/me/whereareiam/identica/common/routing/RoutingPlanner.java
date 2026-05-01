@@ -63,7 +63,7 @@ public class RoutingPlanner {
 		}
 
 		Settings.Routing.Target target = resolveStepTarget(signal);
-		if (target == null || isBlank(target.getTarget())) {
+		if (isBlank(target.getTarget())) {
 			Logger.debug("Step routing clearing because target is missing connection=%s pipeline=%s stage=%s step=%s",
 					connectionId, signal.getPipelineType(), stageId(signal), stepName(signal));
 			return RoutingPlan.clear(connectionId, RoutingClearReason.NO_TARGET);
@@ -132,27 +132,23 @@ public class RoutingPlanner {
 
 	private Settings.Routing.Target resolveCompletionTarget(@NotNull RoutingSignal signal) {
 		Settings.Routing routing = settingsProvider.get().getConnection().getRouting();
+		Settings.Routing.Target target = routing.getDefaults().getComplete();
 		Settings.Routing.Targets scenario = resolveScenarioTargets(routing, signal.getPipelineType());
-		Settings.Routing.Target target = scenario != null ? scenario.getComplete() : null;
-		if (target != null && !isBlank(target.getTarget())) return target;
-		return routing.getDefaults().getComplete();
+		return mergeTarget(target, scenario != null ? scenario.getComplete() : null);
 	}
 
 	private Settings.Routing.Target resolveStepTarget(@NotNull RoutingSignal signal) {
 		Settings.Routing routing = settingsProvider.get().getConnection().getRouting();
+		Settings.Routing.Target target = routing.getDefaults().getStep();
 		Settings.Routing.Targets scenario = resolveScenarioTargets(routing, signal.getPipelineType());
-		Settings.Routing.Target target = scenario != null ? scenario.getStep() : null;
-		if (target == null || isBlank(target.getTarget()))
-			target = routing.getDefaults().getStep();
+		target = mergeTarget(target, scenario != null ? scenario.getStep() : null);
 
 		Settings.Routing.Targets.Overrides overrides = scenario != null ? scenario.getOverrides() : null;
 		Settings.Routing.Target stageOverride = resolveStageOverride(overrides, signal.getStage() != null ? signal.getStage().id() : null);
-		if (stageOverride != null && !isBlank(stageOverride.getTarget()))
-			target = stageOverride;
+		target = mergeTarget(target, stageOverride);
 
 		Settings.Routing.Target stepOverride = resolveStepOverride(overrides, signal.getStep() != null ? signal.getStep().getName() : null);
-		if (stepOverride != null && !isBlank(stepOverride.getTarget()))
-			target = stepOverride;
+		target = mergeTarget(target, stepOverride);
 
 		return target;
 	}
@@ -201,6 +197,24 @@ public class RoutingPlanner {
 		copy.setConsumeOnReached(source.isConsumeOnReached());
 		copy.setConsumeOnExhausted(source.isConsumeOnExhausted());
 		return copy;
+	}
+
+	private @NotNull Settings.Routing.Target mergeTarget(
+			@Nullable Settings.Routing.Target base,
+			@Nullable Settings.Routing.Target override
+	) {
+		Settings.Routing.Target merged = new Settings.Routing.Target();
+		String baseTarget = base != null ? base.getTarget() : "";
+		RoutingAttemptPolicy baseAttempts = base != null ? base.getAttempts() : null;
+		if (override == null) {
+			merged.setTarget(baseTarget);
+			merged.setAttempts(baseAttempts);
+			return merged;
+		}
+
+		merged.setTarget(!isBlank(override.getTarget()) ? override.getTarget() : baseTarget);
+		merged.setAttempts(override.getAttempts() != null ? override.getAttempts() : baseAttempts);
+		return merged;
 	}
 
 	private boolean isBlank(String value) {

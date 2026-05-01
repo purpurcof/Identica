@@ -63,3 +63,20 @@ jobs:
             output/${{ needs.prepare.outputs.name }}-VELOCITY-${{ needs.prepare.outputs.version }}.jar
             output/${{ needs.prepare.outputs.name }}-Cracked-${{ needs.prepare.outputs.version }}.jar
             output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
+
+  publish-distribution:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Publish Modrinth distribution
+        uses: whereareiam/blockops/actions/publish-distribution@76c525546cac0722e34f326c38faa588c7e17aca
+        with:
+          github-token: ${{ github.token }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          release-tag: ${{ github.event.release.tag_name }}

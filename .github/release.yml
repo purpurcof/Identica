@@ -1,0 +1,31 @@
+changelog:
+  categories:
+    - title: "## Breaking changes"
+      labels:
+        - breaking-change
+
+    - title: "## What’s new"
+      labels:
+        - feature
+
+    - title: "## What changed"
+      labels:
+        - change
+
+    - title: "## Fixes"
+      labels:
+        - bug
+
+  exclude:
+    labels:
+      - skip-changelog
+
+template: |
+  <!--
+  # Update X.X.X – Title
+
+  This release focuses on ...
+
+  -->
+
+  $CHANGES

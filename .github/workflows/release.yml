@@ -55,7 +55,7 @@ jobs:
           mv build/libs/Premium-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
@@ -75,7 +75,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Publish Modrinth distribution
-        uses: whereareiam/blockops/actions/publish-distribution@76c525546cac0722e34f326c38faa588c7e17aca
+        uses: whereareiam/blockops/actions/publish-distribution@dev
         with:
           github-token: ${{ github.token }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}

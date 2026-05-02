@@ -1,0 +1,74 @@
+---
+title: Settings
+description: Field-by-field explanation of the Premium provider settings configuration.
+---
+
+## lookup
+
+`lookup` controls how the Premium provider checks whether a username currently has a premium Minecraft profile.
+
+The eligibility resolver uses this both for provider eligibility checks and for cached premium-profile lookups.
+
+### profileEndpoint
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a URL template string
+- Current template default: `"https://api.mojang.com/users/profiles/minecraft/%s"`
+- Affects: the HTTP endpoint used to look up a premium profile by username
+
+The runtime supports either `%s` or `{username}` as the placeholder.
+The username is URL-encoded before insertion.
+
+If this value is blank, premium-profile lookup returns `false` instead of calling any endpoint.
+
+### timeout
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current template default: `"3s"`
+- Affects: the HTTP request timeout for premium profile lookups and the outer eligibility wait limit
+
+If this is zero or negative, the HTTP request builder stops applying an explicit request timeout.
+The eligibility resolver also only adds its completion timeout when this value is positive.
+
+### cacheTtl
+
+- Takes: a non-negative duration
+- Current template default: `"5m"`
+- Affects: how long username-to-premium-profile results stay in the replicated profile lookup cache
+
+If this is zero or negative, the lookup cache is skipped and every check goes straight to the configured endpoint.
+
+## profileSnapshotTtl
+
+- Takes: a non-negative duration
+- Current template default: `"10m"`
+- Affects: how long observed premium profile snapshots stay cached by username
+
+The Premium profile store saves profile-id snapshots under a replicated cache namespace and clears them again on account lifecycle changes.
+If this is zero or negative, snapshot writes are skipped entirely.
+
+## replication.cache
+
+<Badge type="warning">Advanced</Badge>
+
+The Premium provider uses its own replication cache namespaces for two distinct purposes.
+Unlike the Cracked provider's template-only lockout field, both of these are actively used by runtime code.
+
+### profile
+
+- Takes: a string namespace
+- Current template default: `"premium-resolver"`
+- Affects: the replicated cache namespace for username-to-boolean premium profile lookup results
+
+If this is blank, the premium profile lookup cache initialization fails.
+
+### profileSnapshot
+
+- Takes: a string namespace
+- Current template default: `"premium-profile-snapshot"`
+- Affects: the replicated cache namespace for stored premium profile snapshots
+
+If this is blank, the premium profile snapshot store initialization fails.

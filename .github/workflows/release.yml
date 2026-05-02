@@ -64,19 +64,59 @@ jobs:
             output/${{ needs.prepare.outputs.name }}-Cracked-${{ needs.prepare.outputs.version }}.jar
             output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
 
-  publish-distribution:
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: release-distribution-${{ needs.prepare.outputs.version }}
+          path: output/
+
+  resolve-distribution:
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      plan-json: ${{ steps.resolve.outputs.plan-json }}
+      matrix-json: ${{ steps.resolve.outputs.matrix-json }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Publish Modrinth distribution
-        uses: whereareiam/blockops/actions/publish-distribution@dev
+      - name: Resolve distribution plan
+        id: resolve
+        uses: whereareiam/blockops/actions/publish/resolve-distribution-plan@dev
         with:
-          github-token: ${{ github.token }}
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           release-tag: ${{ github.event.release.tag_name }}
+          release-name: ${{ github.event.release.name }}
+          release-body: ${{ github.event.release.body }}
+          release-url: ${{ github.event.release.html_url }}
+
+  publish-distribution:
+    needs:
+      - prepare
+      - resolve-distribution
+    if: ${{ needs.resolve-distribution.outputs.matrix-json != '[]' }}
+    name: Publish ${{ matrix.publication.publication }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        publication: ${{ fromJson(needs.resolve-distribution.outputs.matrix-json) }}
+
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v6
+        with:
+          name: release-distribution-${{ needs.prepare.outputs.version }}
+          path: output
+
+      - name: Publish distribution
+        uses: whereareiam/blockops/actions/publish/publish-publication@dev
+        with:
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          plan-json: ${{ needs.resolve-distribution.outputs.plan-json }}
+          artifact-directory: output
+          publication: ${{ matrix.publication.publication }}

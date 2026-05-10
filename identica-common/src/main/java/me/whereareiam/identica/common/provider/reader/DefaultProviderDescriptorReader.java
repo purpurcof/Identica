@@ -9,6 +9,6 @@ import java.io.InputStream;
 public class DefaultProviderDescriptorReader implements ProviderDescriptorReader {
 	@Override
 	public ProviderDescriptor read(InputStream inputStream) {
-		return Config.load(inputStream, ProviderDescriptor.class);
+		return Config.defaults().read(inputStream, ProviderDescriptor.class);
 	}
 }

@@ -3,6 +3,7 @@ package me.whereareiam.identica.model.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.configura.ConfigDocument;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -11,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 @Setter
 @ToString
-public class Replication {
+public class Replication extends ConfigDocument {
 	private boolean enabled;
 	private @NotNull String serverId;
 	private @NotNull Redis redis;

@@ -1,9 +1,9 @@
 package me.whereareiam.identica.common.config.template;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Singleton;
 import me.whereareiam.configura.TemplateProvider;
-import me.whereareiam.configura.node.ObjectNode;
-import me.whereareiam.configura.node.StringNode;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 
@@ -15,12 +15,12 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 	public Providers supply(Providers config) {
 		Providers.ConflictRules usernameRules = new Providers.ConflictRules();
 		Providers.ConflictRule defaultRule = new Providers.ConflictRule();
-		defaultRule.setResolvers(List.of(formatResolver("{username}*", "joiner")));
+		defaultRule.setResolvers(List.of(formatResolver("{username}*")));
 		usernameRules.setDefaultRule(defaultRule);
 
 		Providers.ConflictRule premiumVsCracked = new Providers.ConflictRule();
 		premiumVsCracked.setProviders(List.of("premium", "cracked"));
-		premiumVsCracked.setResolvers(List.of(formatResolver("{username}_{incomingProvider}", "joiner")));
+		premiumVsCracked.setResolvers(List.of(formatResolver("{username}_{incomingProvider}")));
 		usernameRules.setPairs(List.of(premiumVsCracked));
 
 		config.getConflicts().put("username", usernameRules);
@@ -45,13 +45,13 @@ public class ProvidersTemplate implements TemplateProvider<Providers> {
 		return config;
 	}
 
-	private Providers.ResolverEntry formatResolver(String pattern, String target) {
-		ObjectNode format = new ObjectNode();
-		format.getValues().put("pattern", new StringNode(pattern));
+	private Providers.ResolverEntry formatResolver(String pattern) {
+		ObjectNode format = JsonNodeFactory.instance.objectNode();
+		format.put("pattern", pattern);
 
-		ObjectNode node = new ObjectNode();
-		node.getValues().put("format", format);
-		node.getValues().put("target", new StringNode(target));
+		ObjectNode node = JsonNodeFactory.instance.objectNode();
+		node.set("format", format);
+		node.put("target", "joiner");
 		Providers.ResolverEntry entry = new Providers.ResolverEntry();
 		entry.setId("format_display");
 		entry.setParameters(node);

@@ -3,6 +3,7 @@ package me.whereareiam.identica.model.config.persistence;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.configura.annotation.Polymorphic;
 import me.whereareiam.identica.model.config.persistence.external.MysqlPersistence;
 import me.whereareiam.identica.model.config.persistence.external.PostgresPersistence;
@@ -25,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 		},
 		defaultValue = "SQLITE"
 )
-public abstract class Persistence {
+public abstract class Persistence extends ConfigDocument {
 	private @NotNull DatabaseType type;
 	private @NotNull Hikari hikari = new Hikari();
 

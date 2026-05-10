@@ -1,8 +1,8 @@
 package me.whereareiam.identica.conflict.resolver.typed;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import me.whereareiam.configura.Config;
-import me.whereareiam.configura.node.Node;
-import me.whereareiam.configura.node.ObjectNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,11 +27,11 @@ public final class ConflictParameters {
 	 * @return bound config instance
 	 */
 	public static <T> @NotNull T bind(
-			@Nullable Node node,
+			@Nullable JsonNode node,
 			@NotNull Class<T> type
 	) {
-		Node safe = node != null ? node : new ObjectNode();
-		byte[] bytes = Config.getDefaultWriter().encodeNode(safe);
-		return Config.getDefaultReader().load(bytes, type);
+		JsonNode safe = node != null ? node : JsonNodeFactory.instance.objectNode();
+		Config config = Config.yaml();
+		return config.read(config.writeNodeBytes(safe), type);
 	}
 }

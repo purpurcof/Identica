@@ -1,6 +1,6 @@
 package me.whereareiam.identica.common.conflict;
 
-import me.whereareiam.configura.node.Node;
+import com.fasterxml.jackson.databind.JsonNode;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickActiveConflictResolver;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickBothConflictResolver;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickJoinerConflictResolver;
@@ -39,7 +39,7 @@ class DefaultConflictServiceTest {
 			}
 
 			@Override
-			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull Node params) {
+			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull JsonNode params) {
 				resolverCalled.set(true);
 				return ConflictResolution.allow();
 			}
@@ -85,7 +85,7 @@ class DefaultConflictServiceTest {
 			}
 
 			@Override
-			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull Node params) {
+			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull JsonNode params) {
 				passCalled.set(true);
 				return ConflictResolution.pass();
 			}
@@ -97,7 +97,7 @@ class DefaultConflictServiceTest {
 			}
 
 			@Override
-			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull Node params) {
+			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull JsonNode params) {
 				allowCalled.set(true);
 				return ConflictResolution.allow();
 			}

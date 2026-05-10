@@ -1,11 +1,12 @@
 package me.whereareiam.identica.model.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.configura.annotation.Field;
-import me.whereareiam.configura.node.Node;
-import me.whereareiam.configura.node.ObjectNode;
+import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +22,7 @@ import java.util.Map;
 @Getter
 @Setter
 @ToString
-public class Providers {
+public class Providers extends ConfigDocument {
 	private @NotNull Map<String, ConflictRules> conflicts = new HashMap<>();
 	private @NotNull List<ProviderEntry> providers = new ArrayList<>();
 
@@ -32,7 +33,7 @@ public class Providers {
 	@Setter
 	@ToString
 	public static class ConflictRules {
-		@Field(name = "default")
+		@JsonProperty("default")
 		private @NotNull ConflictRule defaultRule;
 		private @NotNull List<ConflictRule> pairs = new ArrayList<>();
 	}
@@ -57,7 +58,7 @@ public class Providers {
 	@ToString
 	public static class ResolverEntry {
 		private @NotNull String id;
-		private @NotNull Node parameters = new ObjectNode();
+		private @NotNull JsonNode parameters = JsonNodeFactory.instance.objectNode();
 	}
 
 	/**

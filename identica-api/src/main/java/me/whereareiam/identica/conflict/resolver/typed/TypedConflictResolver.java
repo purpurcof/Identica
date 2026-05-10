@@ -1,6 +1,6 @@
 package me.whereareiam.identica.conflict.resolver.typed;
 
-import me.whereareiam.configura.node.Node;
+import com.fasterxml.jackson.databind.JsonNode;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
@@ -34,7 +34,7 @@ public interface TypedConflictResolver<T> extends ConflictResolver {
 	@Override
 	default @NotNull ConflictResolution resolve(
 			@NotNull ConflictContext context,
-			@NotNull Node params
+			@NotNull JsonNode params
 	) {
 		T config = ConflictParameters.bind(params, getConfigType());
 		return resolve(context, config);

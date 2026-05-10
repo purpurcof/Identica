@@ -289,6 +289,8 @@ This is usually the place to send players back into the normal network after aut
 - Supported scenario ids: `authentication`, `registration`, `migration`
 - Affects: per-scenario step and completion targets
 
+Generated settings leave this map empty.
+Add scenario entries only when a scenario should route differently from `routing.defaults`.
 Scenario ids are matched case-insensitively by the routing planner.
 
 <Tabs items={["YAML", "JSON"]}>
@@ -326,7 +328,7 @@ connection:
   </Tab>
 </Tabs>
 
-These scenario entries override `routing.defaults` for the matching pipeline.
+These user-added scenario entries override `routing.defaults` for the matching pipeline.
 
 #### stages
 

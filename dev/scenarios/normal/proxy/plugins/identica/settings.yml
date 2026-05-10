@@ -23,31 +23,7 @@ connection:
           retryDelay: "1s"
           consumeOnReached: true
           consumeOnExhausted: true
-    scenarios:
-      migration:
-        step:
-          target: "lobby"
-        complete:
-          target: "lobby"
-        overrides:
-          stages: {}
-          steps: {}
-      registration:
-        step:
-          target: "lobby"
-        complete:
-          target: "lobby"
-        overrides:
-          stages: {}
-          steps: {}
-      authentication:
-        step:
-          target: "lobby"
-        complete:
-          target: "lobby"
-        overrides:
-          stages: {}
-          steps: {}
+    scenarios: {}
   sessions:
     defaultTtl: "2h"
     refreshTtl: "10m"

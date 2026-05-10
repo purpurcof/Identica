@@ -279,24 +279,16 @@ In most cases, step targets should point to an authentication or transition dest
           complete:
             target: lobby
         scenarios:
-          authentication:
-            step:
-              target: auth
-            complete:
-              target: lobby
           registration:
             step:
               target: registration
-            complete:
-              target: lobby
           migration:
             step:
               target: migration
-            complete:
-              target: lobby
     ```
 
     Use your real server names, not the names shown here.
+    Generated settings leave `scenarios` empty; add scenario entries only when a scenario needs to differ from `routing.defaults`.
     If one step needs exceptional routing, use a step override instead of changing the whole scenario:
 
     ```yaml
@@ -336,11 +328,6 @@ In most cases, step targets should point to an authentication or transition dest
               consumeOnReached: true
               consumeOnExhausted: true
         scenarios:
-          authentication:
-            step:
-              target: auth
-            complete:
-              target: lobby
           registration:
             step:
               target: register

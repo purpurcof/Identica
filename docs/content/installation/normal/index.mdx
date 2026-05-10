@@ -243,25 +243,10 @@ In most cases, step targets should point to an authentication or transition dest
             target: lobby
           complete:
             target: lobby
-        scenarios:
-          authentication:
-            step:
-              target: lobby
-            complete:
-              target: lobby
-          registration:
-            step:
-              target: lobby
-            complete:
-              target: lobby
-          migration:
-            step:
-              target: lobby
-            complete:
-              target: lobby
     ```
 
-    If your setup already separates authentication, registration, or migration across different backends, map each scenario to the real target names now.
+    Generated settings keep `scenarios` empty by default.
+    If your setup already separates authentication, registration, or migration across different backends, add only the scenario entries that differ from these defaults.
     Otherwise, keep the routing simple and use one shared target.
 
     If your hosting panel limits how many separate backend servers you can run, a lightweight limbo server can help.

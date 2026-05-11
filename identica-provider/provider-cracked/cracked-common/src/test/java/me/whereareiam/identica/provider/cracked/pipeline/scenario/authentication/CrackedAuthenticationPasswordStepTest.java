@@ -9,7 +9,7 @@ import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.cracked.account.CrackedAccountService;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
-import me.whereareiam.identica.provider.cracked.config.template.CrackedMessagesTemplate;
+import me.whereareiam.identica.provider.cracked.config.defaults.CrackedMessagesDefaults;
 import me.whereareiam.identica.provider.cracked.cryptography.CryptographyService;
 import me.whereareiam.identica.provider.cracked.model.CrackedAccount;
 import me.whereareiam.identica.provider.cracked.pipeline.CrackedAuthenticationAttempt;
@@ -80,7 +80,7 @@ class CrackedAuthenticationPasswordStepTest {
 	}
 
 	private CrackedMessages messages() {
-		return new CrackedMessagesTemplate().supply(new CrackedMessages());
+		return new CrackedMessagesDefaults().supply(new CrackedMessages());
 	}
 
 	private Settings settings() {

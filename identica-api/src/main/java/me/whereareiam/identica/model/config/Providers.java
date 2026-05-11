@@ -1,15 +1,19 @@
 package me.whereareiam.identica.model.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import me.whereareiam.configura.annotation.Field;
-import me.whereareiam.configura.node.Node;
-import me.whereareiam.configura.node.ObjectNode;
+import me.whereareiam.configura.ConfigDocument;
+import me.whereareiam.configura.annotation.Merge;
+import me.whereareiam.configura.merge.strategy.StructuralObject;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +25,7 @@ import java.util.Map;
 @Getter
 @Setter
 @ToString
-public class Providers {
+public class Providers extends ConfigDocument {
 	private @NotNull Map<String, ConflictRules> conflicts = new HashMap<>();
 	private @NotNull List<ProviderEntry> providers = new ArrayList<>();
 
@@ -32,7 +36,7 @@ public class Providers {
 	@Setter
 	@ToString
 	public static class ConflictRules {
-		@Field(name = "default")
+		@JsonProperty("default")
 		private @NotNull ConflictRule defaultRule;
 		private @NotNull List<ConflictRule> pairs = new ArrayList<>();
 	}
@@ -57,7 +61,7 @@ public class Providers {
 	@ToString
 	public static class ResolverEntry {
 		private @NotNull String id;
-		private @NotNull Node parameters = new ObjectNode();
+		private @NotNull JsonNode parameters = JsonNodeFactory.instance.objectNode();
 	}
 
 	/**
@@ -75,12 +79,28 @@ public class Providers {
 		private @NotNull String displayName = "";
 		private boolean enabled;
 		private int priority;
+		/**
+		 * Optional provider-specific overrides.
+		 */
+		@Merge(StructuralObject.class)
+		private @NotNull Overrides overrides = new Overrides();
 		private @NotNull Verification verification = new Verification();
 		/**
 		 * Hostnames (optionally with port) that map to this provider.
 		 * Entries must use the format {@code host} or {@code host:port}.
 		 */
 		private @NotNull List<String> entrypoints = new ArrayList<>();
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Overrides {
+		/**
+		 * Optional session TTL override for sessions opened by this provider.
+		 * Falls back to settings.connection.sessions.defaultTtl when absent.
+		 */
+		private @Nullable Duration sessionTtl;
 	}
 
 	@Getter

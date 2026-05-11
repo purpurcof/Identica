@@ -3,6 +3,17 @@ name: Release build
 on:
   release:
     types: [ created ]
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        description: Release tag to rebuild and republish, for example v2.0.0-RC6
+        required: true
+        type: string
+      publication:
+        description: Optional publication name to republish, for example identica-modrinth
+        required: false
+        default: ""
+        type: string
 
 jobs:
   prepare:
@@ -10,15 +21,49 @@ jobs:
     outputs:
       name: ${{ steps.details.outputs.name }}
       version: ${{ steps.details.outputs.version }}
+      release-tag: ${{ steps.release.outputs.release-tag }}
+      release-name: ${{ steps.release.outputs.release-name }}
+      release-body: ${{ steps.release.outputs.release-body }}
+      release-url: ${{ steps.release.outputs.release-url }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release-tag || github.ref }}
+
+      - name: Resolve release metadata
+        id: release
+        uses: actions/github-script@v8
+        env:
+          INPUT_RELEASE_TAG: ${{ inputs.release-tag }}
+        with:
+          script: |
+            if (context.eventName === "release") {
+              const release = context.payload.release;
+              core.setOutput("release-tag", release.tag_name);
+              core.setOutput("release-name", release.name || "");
+              core.setOutput("release-body", release.body || "");
+              core.setOutput("release-url", release.html_url || "");
+              return;
+            }
+
+            const tag = process.env.INPUT_RELEASE_TAG;
+            const { data: release } = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag,
+            });
+
+            core.setOutput("release-tag", release.tag_name);
+            core.setOutput("release-name", release.name || "");
+            core.setOutput("release-body", release.body || "");
+            core.setOutput("release-url", release.html_url || "");
 
       - name: Extract project details
         id: details
         run: |
           echo "name=$(grep 'rootProject.name' settings.gradle.kts | awk -F "=" '{print $2}' | tr -d ' \"\n')" >> $GITHUB_OUTPUT
-          echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          echo "version=${{ steps.release.outputs.release-tag }}" | sed 's/^version=v/version=/' >> $GITHUB_OUTPUT
 
   build:
     needs: prepare
@@ -31,6 +76,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.release-tag }}
 
       - name: Build project
         uses: ./.github/actions/gradle-build
@@ -56,7 +103,7 @@ jobs:
 
       - name: Release
         uses: softprops/action-gh-release@v3
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ github.event_name == 'release' && startsWith(github.ref, 'refs/tags/') }}
         with:
           files: |
             output/${{ needs.prepare.outputs.name }}-API-${{ needs.prepare.outputs.version }}.jar
@@ -82,15 +129,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.prepare.outputs.release-tag }}
 
       - name: Resolve distribution plan
         id: resolve
         uses: whereareiam/blockops/actions/publish/resolve-distribution-plan@dev
         with:
-          release-tag: ${{ github.event.release.tag_name }}
-          release-name: ${{ github.event.release.name }}
-          release-body: ${{ github.event.release.body }}
-          release-url: ${{ github.event.release.html_url }}
+          release-tag: ${{ needs.prepare.outputs.release-tag }}
+          release-name: ${{ needs.prepare.outputs.release-name }}
+          release-body: ${{ needs.prepare.outputs.release-body }}
+          release-url: ${{ needs.prepare.outputs.release-url }}
+          targets: ${{ inputs.publication }}
 
   publish-distribution:
     needs:

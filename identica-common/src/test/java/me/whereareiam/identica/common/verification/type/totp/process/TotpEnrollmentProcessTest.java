@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.verification.type.totp.process;
 
-import me.whereareiam.identica.common.config.template.VerificationTemplate;
-import me.whereareiam.identica.common.config.template.messages.MessagesCommandsTemplate;
+import me.whereareiam.identica.common.config.defaults.VerificationDefaults;
+import me.whereareiam.identica.common.config.defaults.messages.MessagesCommandDefaults;
 import me.whereareiam.identica.common.verification.type.totp.TotpCodec;
 import me.whereareiam.identica.common.verification.type.totp.state.TotpEnrollmentState;
 import me.whereareiam.identica.common.verification.type.totp.step.TotpConfirmCodeStep;
@@ -186,13 +186,13 @@ class TotpEnrollmentProcessTest {
 	}
 
 	private @NotNull Verification verification() {
-		return new VerificationTemplate().supply(new Verification());
+		return new VerificationDefaults().supply(new Verification());
 	}
 
 	private @NotNull Messages messages() {
 		Messages messages = new Messages();
 		Messages.Commands commands = new Messages.Commands();
-		new MessagesCommandsTemplate().supply(commands);
+		new MessagesCommandDefaults().supply(commands);
 		messages.setCommands(commands);
 		return messages;
 	}

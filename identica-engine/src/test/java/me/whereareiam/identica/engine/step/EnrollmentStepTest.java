@@ -1,7 +1,7 @@
 package me.whereareiam.identica.engine.step;
 
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.common.config.template.SettingsTemplate;
+import me.whereareiam.identica.common.config.defaults.SettingsDefaults;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.config.Messages;
@@ -147,7 +147,7 @@ class EnrollmentStepTest {
 	}
 
 	private Settings settings(boolean autoSelectSingleProvider) {
-		Settings settings = new SettingsTemplate().supply(new Settings());
+		Settings settings = new SettingsDefaults().supply(new Settings());
 		settings.getConnection().getRegistration().setAutoSelectSingleProvider(autoSelectSingleProvider);
 		return settings;
 	}

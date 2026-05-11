@@ -3,13 +3,14 @@ package me.whereareiam.identica.provider.cracked.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.configura.ConfigDocument;
 
 import java.time.Duration;
 
 @Getter
 @Setter
 @ToString
-public class CrackedSettings {
+public class CrackedSettings extends ConfigDocument {
 	private Scenario scenario;
 	private Replication replication;
 	private Cryptography cryptography;

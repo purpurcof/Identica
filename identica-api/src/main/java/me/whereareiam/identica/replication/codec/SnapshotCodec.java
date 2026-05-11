@@ -1,9 +1,6 @@
 package me.whereareiam.identica.replication.codec;
 
 import me.whereareiam.configura.Config;
-import me.whereareiam.configura.reader.ConfigReader;
-import me.whereareiam.configura.type.Format;
-import me.whereareiam.configura.writer.ConfigWriter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,19 +37,18 @@ public interface SnapshotCodec<S> {
 	 */
 	static <S> @NotNull SnapshotCodec<S> json(@NotNull Class<S> type) {
 		return new SnapshotCodec<>() {
-			private final ConfigReader reader = Config.getDefaultReader().withFormat(Format.JSON);
-			private final ConfigWriter writer = Config.getDefaultWriter().withFormat(Format.JSON);
+			private final Config configura = Config.json();
 
 			@Override
 			public byte @NotNull [] encode(@Nullable S snapshot) {
 				if (snapshot == null) return new byte[0];
-				return writer.encode(snapshot);
+				return configura.writeBytes(snapshot);
 			}
 
 			@Override
 			public S decode(byte @Nullable [] payload) {
 				if (payload == null || payload.length == 0) return null;
-				return reader.decode(payload, type);
+				return configura.read(payload, type);
 			}
 		};
 	}

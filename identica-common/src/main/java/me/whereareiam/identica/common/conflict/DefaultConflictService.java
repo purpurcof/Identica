@@ -1,5 +1,8 @@
 package me.whereareiam.identica.common.conflict;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -14,8 +17,6 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickActiveConflictResolver;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickBothConflictResolver;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickJoinerConflictResolver;
-import me.whereareiam.configura.node.Node;
-import me.whereareiam.configura.node.ObjectNode;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.conflict.ConflictType;
@@ -211,7 +212,7 @@ public class DefaultConflictService implements ConflictService {
 			if (!rule.isForce() && !resolver.supports(context.getKey()))
 				continue;
 
-			Node params = resolveParams(entry);
+			JsonNode params = resolveParams(entry);
 			ConflictResolution resolution = resolver.resolve(context, params);
 			if (resolution.getAction() == ConflictResolution.Action.PASS)
 				continue;
@@ -229,11 +230,11 @@ public class DefaultConflictService implements ConflictService {
 		return resolver.isBlank() ? null : resolver;
 	}
 
-	private @NotNull Node resolveParams(ResolverEntry entry) {
-		if (entry == null) return new ObjectNode();
+	private @NotNull JsonNode resolveParams(ResolverEntry entry) {
+		if (entry == null) return JsonNodeFactory.instance.objectNode();
 
 		return entry.getParameters() instanceof ObjectNode objectNode
-				? new ObjectNode(objectNode.getValues())
-				: new ObjectNode();
+				? objectNode.deepCopy()
+				: JsonNodeFactory.instance.objectNode();
 	}
 }

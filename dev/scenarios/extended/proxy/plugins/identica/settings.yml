@@ -24,35 +24,15 @@ connection:
           consumeOnReached: true
           consumeOnExhausted: true
     scenarios:
-      migration:
-        step:
-          target: "migration"
-        complete:
-          target: "lobby"
-        overrides:
-          stages: {}
-          steps: {}
       registration:
         step:
           target: "registration"
-        complete:
-          target: "lobby"
-        overrides:
-          stages: {}
-          steps: {}
-      authentication:
+      migration:
         step:
-          target: "auth"
-        complete:
-          target: "lobby"
-        overrides:
-          stages: {}
-          steps: {}
+          target: "migration"
   sessions:
     defaultTtl: "2h"
     refreshTtl: "10m"
-    providers:
-      premium: "12h"
     concurrencyPolicy: "REPLACE_EXISTING"
     concurrencyOverrides: {}
   authentication:

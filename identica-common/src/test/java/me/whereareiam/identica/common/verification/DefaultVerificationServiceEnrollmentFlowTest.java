@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.verification;
 
-import me.whereareiam.identica.common.config.template.VerificationTemplate;
-import me.whereareiam.identica.common.config.template.messages.MessagesCommandsTemplate;
+import me.whereareiam.identica.common.config.defaults.VerificationDefaults;
+import me.whereareiam.identica.common.config.defaults.messages.MessagesCommandDefaults;
 import me.whereareiam.identica.common.verification.challenge.VerificationChallengeLifecycle;
 import me.whereareiam.identica.common.verification.enrollment.VerificationEnrollmentActivator;
 import me.whereareiam.identica.common.verification.challenge.VerificationChallengeStore;
@@ -55,7 +55,7 @@ class DefaultVerificationServiceEnrollmentFlowTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	void beginEnrollmentPersistsStateAndResumesUntilActivation() {
-		Verification verification = new VerificationTemplate().supply(new Verification());
+		Verification verification = new VerificationDefaults().supply(new Verification());
 		verification.setAutoSelectCurrentProvider(false);
 		VerificationPersistenceService persistenceService = mock(VerificationPersistenceService.class);
 		VerificationEnrollmentStore enrollmentStore = mock(VerificationEnrollmentStore.class);
@@ -190,7 +190,7 @@ class DefaultVerificationServiceEnrollmentFlowTest {
 	private Messages messages() {
 		Messages messages = new Messages();
 		Messages.Commands commands = new Messages.Commands();
-		new MessagesCommandsTemplate().supply(commands);
+		new MessagesCommandDefaults().supply(commands);
 		messages.setCommands(commands);
 		return messages;
 	}

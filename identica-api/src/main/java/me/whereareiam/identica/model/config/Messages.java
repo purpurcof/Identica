@@ -1,14 +1,14 @@
 package me.whereareiam.identica.model.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.commandant.model.message.ExceptionMessages;
 import me.whereareiam.commandant.model.message.HelpMessages;
 import me.whereareiam.commandant.model.message.PaginationMessages;
 import org.jetbrains.annotations.NotNull;
-
-import me.whereareiam.configura.annotation.Field;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,7 @@ import java.util.Map;
 @Getter
 @Setter
 @ToString
-public class Messages {
+public class Messages extends ConfigDocument {
 	private @NotNull String prefix;
 	private @NotNull Format format;
 	private @NotNull Commands commands;
@@ -39,13 +39,13 @@ public class Messages {
 			/**
 			 * Formatter pattern used for date-only placeholders.
 			 */
-			@Field(name = "date")
+			@JsonProperty("date")
 			private @NotNull DateTimePattern date;
 
 			/**
 			 * Formatter pattern used for date-time placeholders.
 			 */
-			@Field(name = "dateTime")
+			@JsonProperty("dateTime")
 			private @NotNull DateTimePattern dateTime;
 		}
 	}
@@ -361,7 +361,7 @@ public class Messages {
 				 * Placeholder value used when session fields are missing.
 				 */
 				private @NotNull String unknown;
-				@Field(name = "list")
+				@JsonProperty("list")
 				private @NotNull Listing listing;
 				private @NotNull Info info;
 				private @NotNull End end;

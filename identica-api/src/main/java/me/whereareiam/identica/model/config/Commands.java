@@ -3,6 +3,7 @@ package me.whereareiam.identica.model.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.identica.model.CommandDefinition;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +17,7 @@ import java.util.Map;
 @Getter
 @Setter
 @ToString
-public class Commands {
+public class Commands extends ConfigDocument {
 	private @NotNull Behavior behavior;
 	private @NotNull Map<String, CommandDefinition> commands = new HashMap<>();
 

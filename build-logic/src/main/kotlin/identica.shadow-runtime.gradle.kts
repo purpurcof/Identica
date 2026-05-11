@@ -12,6 +12,8 @@ tasks.withType<ShadowJar>().configureEach {
     relocate("org.bstats", "me.whereareiam.identica.library.bstats")
     relocate("org.jdbi", "me.whereareiam.identica.library.jdbi")
     relocate("me.whereareiam.dialectica", "me.whereareiam.identica.library.dialectica")
+    relocate("com.fasterxml.jackson", "me.whereareiam.identica.library.jackson")
+    relocate("org.yaml.snakeyaml", "me.whereareiam.identica.library.snakeyaml")
 
     val defaultDestination = rootProject.layout.buildDirectory.dir("libs")
 

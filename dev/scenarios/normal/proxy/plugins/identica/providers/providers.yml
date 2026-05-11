@@ -25,6 +25,7 @@ providers:
     displayName: "CR"
     enabled: true
     priority: 50
+    overrides: {}
     verification:
       enabled: true
       required: false
@@ -39,6 +40,8 @@ providers:
     displayName: "PR"
     enabled: true
     priority: 100
+    overrides:
+      sessionTtl: "12h"
     verification:
       enabled: false
       required: false

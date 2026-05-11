@@ -7,10 +7,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.configura.Config;
-import me.whereareiam.configura.node.Node;
-import me.whereareiam.configura.reader.ConfigReader;
 import me.whereareiam.configura.type.Format;
-import me.whereareiam.configura.writer.ConfigWriter;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Serializer;
@@ -30,10 +27,7 @@ import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.common.replication.NoopReplicationAdapter;
 import me.whereareiam.identica.common.replication.event.DefaultReplicatedEventRegistry;
 import me.whereareiam.identica.common.replication.event.ReplicatedEventBridge;
-import me.whereareiam.identica.common.config.adapter.DateTimePatternAdapter;
-import me.whereareiam.identica.common.config.adapter.DurationAdapter;
-import me.whereareiam.identica.common.config.adapter.NodeAdapter;
-import me.whereareiam.identica.common.config.adapter.ProviderCapabilityAdapter;
+import me.whereareiam.identica.common.config.IdenticaModule;
 import me.whereareiam.identica.common.config.provider.*;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
 import me.whereareiam.identica.common.conflict.ConflictPrepareLifecycle;
@@ -95,7 +89,6 @@ import me.whereareiam.identica.routing.RoutingIntentStore;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.service.MigrationService;
-import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.identica.verification.VerificationMethod;
 import me.whereareiam.identica.verification.VerificationRegistry;
@@ -106,7 +99,6 @@ import me.whereareiam.identica.provider.ProviderAttemptStore;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -236,19 +228,14 @@ public class CommonConfiguration extends AbstractModule {
 	}
 
 	@Inject
-	void initializeConfigura(
-			ConfigurationTypeResolver resolver
-	) {
-		Format format = resolver.getConfigurationType();
-		ConfigReader reader = Config.getDefaultReader().withFormat(format);
-		ConfigWriter writer = Config.getDefaultWriter().withFormat(format);
-		Config.setReader(reader);
-		Config.setWriter(writer);
-
-		Config.registerAdapter(Node.class, new NodeAdapter());
-		Config.registerAdapter(Duration.class, new DurationAdapter());
-		Config.registerAdapter(DateTimePattern.class, new DateTimePatternAdapter());
-		Config.registerAdapter(ProviderCapability.class, new ProviderCapabilityAdapter());
+	void initializeConfigura() {
+		Path configuredDataPath = ensureDirectory(dataPath, "data");
+		Format format = new FileSystemConfigurationTypeResolver(configuredDataPath).getConfigurationType();
+		Config config = Config.builder()
+				.format(format)
+				.module(new IdenticaModule())
+				.build();
+		Config.setDefaults(config);
 	}
 
 	@Provides

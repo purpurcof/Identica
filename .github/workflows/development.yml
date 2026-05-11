@@ -7,7 +7,22 @@ on:
   workflow_dispatch:
 
 jobs:
+  validate-ref:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject release refs for manual development publish
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            release|release/*)
+              echo "Manual development publish is not allowed from ${GITHUB_REF_NAME}."
+              exit 1
+              ;;
+          esac
+
   prepare:
+    needs: validate-ref
+    if: always() && (github.event_name != 'workflow_dispatch' || needs.validate-ref.result == 'success')
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.details.outputs.name }}
@@ -20,10 +35,12 @@ jobs:
         id: details
         run: |
           echo "name=$(grep 'rootProject.name' settings.gradle.kts | awk -F "=" '{print $2}' | tr -d ' \"\n')" >> $GITHUB_OUTPUT
-          echo "version=${GITHUB_REF##*/}-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+          branch_name="${GITHUB_REF_NAME//\//-}"
+          echo "version=${branch_name}-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
   build:
     needs: prepare
+    if: always() && needs.prepare.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: read

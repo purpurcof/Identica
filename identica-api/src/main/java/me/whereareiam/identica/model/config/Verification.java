@@ -3,6 +3,7 @@ package me.whereareiam.identica.model.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.configura.ConfigDocument;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
@@ -10,7 +11,7 @@ import java.time.Duration;
 @Getter
 @Setter
 @ToString
-public class Verification {
+public class Verification extends ConfigDocument {
 	private @NotNull Duration challengeTtl;
 	private @NotNull Duration enrollmentTtl;
 	private boolean autoSelectCurrentProvider;

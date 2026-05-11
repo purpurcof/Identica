@@ -43,7 +43,7 @@ Use `2` for normal operation and `3` or `4` when you are actively debugging rout
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"10m"`
+- Current default: `"10m"`
 - Affects: how long premium-provider handshake instructions stay valid
 
 This TTL is read by premium handshake and verification code.
@@ -73,7 +73,7 @@ connection:
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"10m"`
+- Current default: `"10m"`
 - Affects: how long provider-attempt markers stay in the replicated attempt store
 
 Identica uses this when it marks that a provider attempt already happened for a provider, scope, username, and IP combination.
@@ -103,7 +103,7 @@ connection:
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"15m"`
+- Current default: `"15m"`
 - Affects: how long reserved account identities and username reservations are kept
 
 This matters during registration and account clearing.
@@ -133,7 +133,7 @@ connection:
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"10m"`
+- Current default: `"10m"`
 - Affects: temporary prepare-state and completion-pending bridge entries
 
 This TTL is used by the prepare-state store and completion pending store.
@@ -162,7 +162,7 @@ connection:
 <Badge type="error">Danger</Badge>
 
 - Takes: `"RANDOM"`, `"OFFLINE"`, or `"PREMIUM"`
-- Current template default: `"RANDOM"`
+- Current default: `"RANDOM"`
 - Affects: how Identica assigns UUIDs to newly discovered accounts
 
 <Tabs items={["RANDOM", "OFFLINE", "PREMIUM"]}>
@@ -289,6 +289,8 @@ This is usually the place to send players back into the normal network after aut
 - Supported scenario ids: `authentication`, `registration`, `migration`
 - Affects: per-scenario step and completion targets
 
+Generated settings leave this map empty.
+Add scenario entries only when a scenario should route differently from `routing.defaults`.
 Scenario ids are matched case-insensitively by the routing planner.
 
 <Tabs items={["YAML", "JSON"]}>
@@ -326,7 +328,7 @@ connection:
   </Tab>
 </Tabs>
 
-These scenario entries override `routing.defaults` for the matching pipeline.
+These user-added scenario entries override `routing.defaults` for the matching pipeline.
 
 #### stages
 
@@ -488,11 +490,12 @@ Session settings control how long sessions live and how concurrent sessions are 
 #### defaultTtl
 
 - Takes: a positive duration
-- Current template default: `"2h"`
+- Current default: `"2h"`
 - Affects: how long sessions live when no provider-specific override exists
 
 This is the base TTL used by the session cache.
 Every time a session is re-opened or refreshed, the TTL is written again.
+Provider-specific TTL exceptions belong to provider entries as `overrides.sessionTtl`.
 
 <Tabs items={["YAML", "JSON"]}>
   <Tab value="YAML">
@@ -520,7 +523,7 @@ connection:
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a duration
-- Current template default: `"10m"`
+- Current default: `"10m"`
 - Affects: how often Identica schedules automatic session refreshes for online identities
 
 The refresh coordinator starts a repeating task with this interval.
@@ -548,46 +551,12 @@ connection:
   </Tab>
 </Tabs>
 
-#### providers
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a map of provider id to positive duration
-- Affects: provider-specific session TTL overrides
-
-The key should be the provider id, such as `premium`.
-Use this when one provider should keep sessions longer or shorter than the global default.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  sessions:
-    providers:
-      premium: "12h"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "sessions": {
-      "providers": {
-        "premium": "12h"
-      }
-    }
-  }
-}
-```
-  </Tab>
-</Tabs>
-
 #### concurrencyPolicy
 
 <Badge type="warning">Warning</Badge>
 
 - Takes: `"ALLOW_MULTIPLE"`, `"REPLACE_EXISTING"`, or `"REJECT_NEW"`
-- Current template default: `"REPLACE_EXISTING"`
+- Current default: `"REPLACE_EXISTING"`
 - Affects: the default session-opening policy used by `SessionService.open(session)`
 
 The policies behave like this:
@@ -640,7 +609,7 @@ These settings affect the authentication pipeline.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"5m"`
+- Current default: `"5m"`
 - Affects: how long a waiting or reconnect-required authentication pipeline can be resumed
 
 When an authentication flow is pending, this TTL becomes the expiry time for its saved pipeline state.
@@ -651,7 +620,7 @@ If the pipeline expires first, the pending pipeline kick coordinator disconnects
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"5s"`
+- Current default: `"5s"`
 - Affects: how long an advance/resume lock is held to stop double-submits
 
 This prevents multiple near-simultaneous advance attempts from racing the same pending pipeline state.
@@ -661,7 +630,7 @@ This prevents multiple near-simultaneous advance attempts from racing the same p
 <Badge type="warning">Warning</Badge>
 
 - Takes: `true` or `false`
-- Current template default: `true`
+- Current default: `true`
 - Affects: whether waiting authentication state is saved and whether resume requests are accepted
 
 If this is `false`, waiting or reconnect-required authentication state is cleared instead of saved.
@@ -672,7 +641,7 @@ That means players cannot resume the authentication flow later.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: `"SEAMLESS"` or `"INTERACTIVE"`
-- Current template default: `"SEAMLESS"`
+- Current default: `"SEAMLESS"`
 - Affects: the preferred authentication journey style
 
 <Tabs items={["SEAMLESS", "INTERACTIVE"]}>
@@ -706,7 +675,7 @@ Identica first tries this preferred mode, then may fall back depending on `journ
 <Badge type="warning">Advanced</Badge>
 
 - Takes: `"PREFER"` or `"STRICT"`
-- Current template default: `"PREFER"`
+- Current default: `"PREFER"`
 - Affects: whether Identica may fall back to another journey mode when the preferred one is not viable
 
 Behavior in current source:
@@ -722,7 +691,7 @@ If you set `STRICT`, a flow that could have worked in the other mode may fail or
 <Badge type="warning">Warning</Badge>
 
 - Takes: `"ALLOW_MULTIPLE"`, `"REPLACE_EXISTING"`, or `"REJECT_NEW"`
-- Current template default: `"REPLACE_EXISTING"`
+- Current default: `"REPLACE_EXISTING"`
 - Affects: the policy used specifically when authentication opens a session after success
 
 This overrides the generic session default for the authentication success path.
@@ -736,7 +705,7 @@ These settings affect the registration pipeline.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"5m"`
+- Current default: `"5m"`
 - Affects: how long a pending registration flow can be resumed
 
 #### advanceLockTtl
@@ -744,7 +713,7 @@ These settings affect the registration pipeline.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"5s"`
+- Current default: `"5s"`
 - Affects: how long advance locking prevents duplicate registration submissions
 
 #### allowResume
@@ -752,7 +721,7 @@ These settings affect the registration pipeline.
 <Badge type="warning">Warning</Badge>
 
 - Takes: `true` or `false`
-- Current template default: `true`
+- Current default: `true`
 - Affects: whether pending registration state is stored and can be resumed later
 
 #### journeyMode
@@ -760,7 +729,7 @@ These settings affect the registration pipeline.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: `"SEAMLESS"` or `"INTERACTIVE"`
-- Current template default: `"SEAMLESS"`
+- Current default: `"SEAMLESS"`
 - Affects: the preferred registration journey style
 
 <Tabs items={["SEAMLESS", "INTERACTIVE"]}>
@@ -795,7 +764,7 @@ If you want less manual selection in that interactive flow, `autoSelectSinglePro
 <Badge type="warning">Advanced</Badge>
 
 - Takes: `"PREFER"` or `"STRICT"`
-- Current template default: `"PREFER"`
+- Current default: `"PREFER"`
 - Affects: whether registration may switch away from the preferred journey mode when required
 
 For most setups, `PREFER` is the better default.
@@ -804,7 +773,7 @@ Use `STRICT` only when you intentionally want registration to fail rather than f
 #### autoSelectSingleProvider
 
 - Takes: `true` or `false`
-- Current template default: `false`
+- Current default: `false`
 - Affects: the interactive registration enrollment step when exactly one eligible provider is available
 
 If `true`, Identica auto-selects that single provider and completes the enrollment step immediately.
@@ -843,7 +812,7 @@ These settings affect the migration pipeline.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"5m"`
+- Current default: `"5m"`
 - Affects: how long a pending migration flow can be resumed
 
 #### advanceLockTtl
@@ -851,7 +820,7 @@ These settings affect the migration pipeline.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"5s"`
+- Current default: `"5s"`
 - Affects: how long advance locking prevents duplicate migration submissions
 
 #### allowResume
@@ -859,7 +828,7 @@ These settings affect the migration pipeline.
 <Badge type="warning">Warning</Badge>
 
 - Takes: `true` or `false`
-- Current template default: `true`
+- Current default: `true`
 - Affects: whether migration state is stored for resume/advance behavior
 
 #### journeyMode
@@ -867,7 +836,7 @@ These settings affect the migration pipeline.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: `"SEAMLESS"` or `"INTERACTIVE"`
-- Current template default: `"INTERACTIVE"`
+- Current default: `"INTERACTIVE"`
 - Affects: the preferred migration journey style
 
 <Tabs items={["SEAMLESS", "INTERACTIVE"]}>
@@ -883,7 +852,7 @@ These settings affect the migration pipeline.
 
     Use case: the player confirms the migration, chooses a provider path, or responds to another prompt before the migration continues.
 
-    The current template prefers an interactive migration flow.
+    The current defaults prefer an interactive migration flow.
     That is usually the safer option because migration often benefits from explicit confirmation, provider choice, or other visible user guidance rather than a silent automatic transition.
   </Tab>
 </Tabs>
@@ -893,7 +862,7 @@ These settings affect the migration pipeline.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: `"PREFER"` or `"STRICT"`
-- Current template default: `"PREFER"`
+- Current default: `"PREFER"`
 - Affects: whether migration may fall back to the other journey mode
 
 For most setups, `PREFER` is the better default.
@@ -909,7 +878,7 @@ The built-in settings page currently exposes `resumeSpam`.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: `true` or `false`
-- Current template default: `false`
+- Current default: `false`
 - Affects: whether the resume-spam sentinel is allowed to operate
 
 This sentinel watches process, resume, and advance attempts.
@@ -919,7 +888,7 @@ This sentinel watches process, resume, and advance attempts.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: an integer greater than `0`
-- Current template default: `10`
+- Current default: `10`
 - Affects: how many attempts are allowed before lockout logic applies
 
 #### enabled
@@ -927,7 +896,7 @@ This sentinel watches process, resume, and advance attempts.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: `true` or `false`
-- Current template default: `true`
+- Current default: `true`
 - Affects: whether the sentinel can actively lock out attempts after the threshold is exceeded
 
 #### duration
@@ -935,7 +904,7 @@ This sentinel watches process, resume, and advance attempts.
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
-- Current template default: `"30s"`
+- Current default: `"30s"`
 - Affects: how long the lockout lasts
 
 <Tabs items={["YAML", "JSON"]}>
@@ -976,7 +945,7 @@ connection:
 <Badge type="warning">Advanced</Badge>
 
 - Takes: `true` or `false`
-- Current template default: `false`
+- Current default: `false`
 - Affects: whether pre-lockout warning logic can run
 
 #### thresholdPercentage
@@ -984,7 +953,7 @@ connection:
 <Badge type="warning">Advanced</Badge>
 
 - Takes: an integer percentage from `0` to `100`
-- Current template default: `0`
+- Current default: `0`
 - Affects: when warning messages start relative to `maxAttempts`
 
 The current code clamps this into the `0..100` range and computes the warning threshold from `maxAttempts`.

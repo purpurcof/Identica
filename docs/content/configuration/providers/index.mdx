@@ -1,0 +1,65 @@
+---
+title: Providers
+description: Field-by-field explanation of Identica's provider configuration area.
+---
+
+The providers configuration controls which identity providers are enabled and how provider-specific behavior is applied.
+Global session defaults stay in `settings.yml`; provider-specific session overrides live here on the matching provider entry.
+
+### providers
+
+- Takes: a list of provider entries
+- Affects: provider enablement, ordering, entrypoint routing, verification policy, and provider-specific session TTLs
+
+Provider ids should match installed provider descriptors, such as `premium` or `cracked`.
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+providers:
+  - id: "premium"
+    displayName: "PR"
+    enabled: true
+    priority: 100
+    overrides:
+      sessionTtl: "12h"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "providers": [
+    {
+      "id": "premium",
+      "displayName": "PR",
+      "enabled": true,
+      "priority": 100,
+      "overrides": {
+        "sessionTtl": "12h"
+      }
+    }
+  ]
+}
+```
+  </Tab>
+</Tabs>
+
+#### overrides
+
+- Takes: an object
+- Current default: `{}` for providers without overrides
+- Affects: provider-specific behavior that differs from global defaults
+
+The `overrides` object is kept in generated config as a stable place for provider-specific exceptions.
+Configura keeps the object structure without filling every possible child field.
+
+#### overrides.sessionTtl
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"12h"` for `premium`; absent for `cracked`
+- Affects: how long sessions opened by this provider live
+
+If `sessionTtl` is absent, Identica uses `settings.connection.sessions.defaultTtl`.
+Use this when one provider should keep sessions longer or shorter than the global default.

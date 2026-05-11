@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.config.template.messages;
+package me.whereareiam.identica.common.config.defaults.messages;
 
 import com.google.inject.Singleton;
 import me.whereareiam.commandant.model.message.ExceptionMessages;
@@ -9,7 +9,7 @@ import me.whereareiam.identica.model.config.Messages;
 import java.util.List;
 
 @Singleton
-public class MessagesCommandsTemplate {
+public class MessagesCommandDefaults {
 	public Messages.Commands supply(Messages.Commands commands) {
 		commands.setCurrentSessionRequired("{prefix}<white>You must have an <red>active session</red> to use this command.</white>");
 		applyExceptions(commands);

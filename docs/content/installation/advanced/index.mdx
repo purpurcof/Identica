@@ -176,6 +176,8 @@ providers:
     displayName: "PR"
     enabled: true
     priority: 200
+    overrides:
+      sessionTtl: 12h
     entrypoints:
       - premium.example.com
 
@@ -183,11 +185,12 @@ providers:
     displayName: "CR"
     enabled: true
     priority: 100
+    overrides: {}
     entrypoints:
       - cracked.example.com
 ```
 
-If hostname-based routing is not part of this rollout yet, leave `entrypoints` empty or replace the template values later when you know the real hostnames.
+If hostname-based routing is not part of this rollout yet, leave `entrypoints` empty or replace the default values later when you know the real hostnames.
 
 ## 5. Understand journey mode and journey policy
 
@@ -215,7 +218,7 @@ For most setups, `PREFER` is the better default.
 
 ## 6. Turn shared state into an intentional environment contract
 
-Open the generated `replication` config and change it from a template into a stable environment definition.
+Open the generated `replication` config and change it from generated defaults into a stable environment definition.
 
 The two most important rules are:
 
@@ -250,10 +253,10 @@ That stability is what lets sessions, reservations, attempts, and pending pipeli
 Do not casually rename those keys after the environment is live.
 If you need environment-specific naming, decide it before the rollout and then keep it stable.
 
-## 8. Replace template routing targets with real ones
+## 8. Replace default routing targets with real ones
 
 Open `settings` and align routing with the backend targets that actually exist.
-The template values are examples only.
+The default values are examples only.
 
 It is usually not a good idea to use the same target for both step routing and completion routing.
 In most cases, step targets should point to an authentication or transition destination, while completion should point to the place where the player is actually meant to end up.

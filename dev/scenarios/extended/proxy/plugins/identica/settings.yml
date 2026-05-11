@@ -33,8 +33,6 @@ connection:
   sessions:
     defaultTtl: "2h"
     refreshTtl: "10m"
-    providers:
-      premium: "12h"
     concurrencyPolicy: "REPLACE_EXISTING"
     concurrencyOverrides: {}
   authentication:

@@ -7,10 +7,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
+import me.whereareiam.configura.annotation.Merge;
+import me.whereareiam.configura.merge.strategy.StructuralObject;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,12 +79,28 @@ public class Providers extends ConfigDocument {
 		private @NotNull String displayName = "";
 		private boolean enabled;
 		private int priority;
+		/**
+		 * Optional provider-specific overrides.
+		 */
+		@Merge(StructuralObject.class)
+		private @NotNull Overrides overrides = new Overrides();
 		private @NotNull Verification verification = new Verification();
 		/**
 		 * Hostnames (optionally with port) that map to this provider.
 		 * Entries must use the format {@code host} or {@code host:port}.
 		 */
 		private @NotNull List<String> entrypoints = new ArrayList<>();
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Overrides {
+		/**
+		 * Optional session TTL override for sessions opened by this provider.
+		 * Falls back to settings.connection.sessions.defaultTtl when absent.
+		 */
+		private @Nullable Duration sessionTtl;
 	}
 
 	@Getter

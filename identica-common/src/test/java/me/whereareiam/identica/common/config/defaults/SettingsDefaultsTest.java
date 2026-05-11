@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.config.template;
+package me.whereareiam.identica.common.config.defaults;
 
 import me.whereareiam.configura.Config;
 import me.whereareiam.configura.type.Format;
@@ -15,12 +15,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("Settings Template")
-class SettingsTemplateTest {
+@DisplayName("Settings Defaults")
+class SettingsDefaultsTest {
 	@DisplayName("Generated routing scenarios are empty by default")
 	@Test
 	void generatedRoutingScenariosAreEmptyByDefault() {
-		Settings settings = new SettingsTemplate().supply(new Settings());
+		Settings settings = new SettingsDefaults().supply(new Settings());
 
 		assertNotNull(settings.getConnection());
 		assertNotNull(settings.getConnection().getRouting());
@@ -35,7 +35,7 @@ class SettingsTemplateTest {
 		Config config = Config.builder()
 				.format(Format.YAML)
 				.module(new IdenticaModule())
-				.template(SettingsTemplate.class)
+				.defaults(SettingsDefaults.class)
 				.build();
 
 		Settings settings = config.update(settingsPath, Settings.class);

@@ -5,7 +5,7 @@ import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.configura.annotation.Merge;
-import me.whereareiam.configura.type.MergePreset;
+import me.whereareiam.configura.merge.strategy.DeclaredKeysOnlyMap;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
@@ -125,7 +125,7 @@ public class Settings extends ConfigDocument {
 		 * Scenario-specific routing targets keyed by scenario id.
 		 * Supported ids: authentication, registration, migration.
 		 */
-		@Merge(preset = MergePreset.DECLARED_KEYS_ONLY_MAP)
+		@Merge(DeclaredKeysOnlyMap.class)
 		private @NotNull Map<String, Targets> scenarios = new HashMap<>();
 
 		@Getter
@@ -189,7 +189,6 @@ public class Settings extends ConfigDocument {
 	public static class Sessions {
 		private @NotNull Duration defaultTtl;
 		private @NotNull Duration refreshTtl;
-		private @NotNull Map<String, Duration> providers = new HashMap<>();
 		/**
 		 * Default policy for concurrent sessions.
 		 */

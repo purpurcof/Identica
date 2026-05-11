@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
-import me.whereareiam.identica.common.config.template.SettingsTemplate;
+import me.whereareiam.identica.common.config.defaults.SettingsDefaults;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.model.config.Settings;
 
@@ -18,6 +18,6 @@ public class SettingsProvider extends ConfigProvider<Settings> {
 			@Named("dataPath") Path dataPath,
 			Registry<Reloadable> registry
 	) {
-		super(dataPath, "settings", Settings.class, registry, configure(SettingsTemplate.class, Settings.class));
+		super(dataPath, "settings", Settings.class, registry, configure(SettingsDefaults.class, Settings.class));
 	}
 }

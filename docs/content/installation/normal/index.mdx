@@ -177,6 +177,8 @@ providers:
     displayName: "PR"
     enabled: true
     priority: 200
+    overrides:
+      sessionTtl: 12h
     entrypoints:
       - premium.example.com
 
@@ -184,11 +186,12 @@ providers:
     displayName: "CR"
     enabled: true
     priority: 100
+    overrides: {}
     entrypoints:
       - cracked.example.com
 ```
 
-If you are not using hostname-based routing yet, leave `entrypoints` empty or replace the template values later when you know the real hostnames.
+If you are not using hostname-based routing yet, leave `entrypoints` empty or replace the default values later when you know the real hostnames.
 Keep the generated verification blocks unless verification setup is intentionally part of this installation pass.
 
 ## 5. Understand journey mode and journey policy
@@ -215,9 +218,9 @@ If you want less manual selection in that flow, the generated settings also incl
 
 For most setups, `PREFER` is the better default.
 
-## 6. Replace template routing targets with a simple real route
+## 6. Replace default routing targets with a simple real route
 
-The generated `settings` template uses example routing targets.
+The generated `settings` defaults use example routing targets.
 Do not leave them unchanged unless those names really exist in your environment.
 
 It is usually not a good idea to use the same target for both step routing and completion routing.

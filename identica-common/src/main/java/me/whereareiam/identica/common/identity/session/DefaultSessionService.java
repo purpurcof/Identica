@@ -11,6 +11,7 @@ import me.whereareiam.identica.event.identity.session.SessionReplacedEvent;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.SessionCloseRequest;
+import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.replication.ReplicationType;
@@ -33,6 +34,7 @@ import java.util.concurrent.CompletionStage;
 @Singleton
 public class DefaultSessionService implements SessionService, EventListener {
 	private final Provider<Settings> settingsProvider;
+	private final Provider<Providers> providersProvider;
 	private final Provider<Replication> replicationProvider;
 	private final EventManager eventManager;
 
@@ -43,11 +45,13 @@ public class DefaultSessionService implements SessionService, EventListener {
 	@Inject
 	public DefaultSessionService(
 			Provider<Settings> settingsProvider,
+			Provider<Providers> providersProvider,
 			EventManager eventManager,
 			Provider<Replication> replicationProvider,
 			ReplicationSystem replicationSystem
 	) {
 		this.settingsProvider = settingsProvider;
+		this.providersProvider = providersProvider;
 		this.replicationProvider = replicationProvider;
 		this.eventManager = eventManager;
 
@@ -270,25 +274,40 @@ public class DefaultSessionService implements SessionService, EventListener {
 		Settings.Sessions sessions = settingsProvider.get().getConnection().getSessions();
 
 		Duration resolved = requireDuration(sessions.getDefaultTtl(), "settings.connection.sessions.defaultTtl");
-		Duration override = findOverride(sessions.getProviders(), providerId);
+		Providers.ProviderEntry provider = findProvider(providerId);
+		Duration override = provider != null
+				? provider.getOverrides().getSessionTtl()
+				: null;
 
-		if (override != null) return requireDuration(override, "settings.connection.sessions.providers." + providerId);
+		if (override != null) return requireDuration(override, "providers.providers." + providerId + ".overrides.sessionTtl");
 
 		return resolved;
 	}
 
+	private @Nullable Providers.ProviderEntry findProvider(@Nullable String rawId) {
+		String id = trimToNull(rawId);
+		if (id == null) return null;
+
+		Providers config = providersProvider.get();
+		for (Providers.ProviderEntry entry : config.getProviders()) {
+			if (entry == null) continue;
+			String entryId = trimToNull(entry.getId());
+			if (entryId != null && entryId.equalsIgnoreCase(id))
+				return entry;
+		}
+
+		return null;
+	}
+
 	private <T> @Nullable T findOverride(@NotNull Map<String, T> overrides, @Nullable String rawKey) {
 		String key = trimToNull(rawKey);
-		if (key == null)
-			return null;
+		if (key == null) return null;
 
 		T exact = overrides.get(rawKey);
-		if (exact != null)
-			return exact;
+		if (exact != null) return exact;
 
 		T trimmed = overrides.get(key);
-		if (trimmed != null)
-			return trimmed;
+		if (trimmed != null) return trimmed;
 
 		return overrides.get(key.toLowerCase());
 	}

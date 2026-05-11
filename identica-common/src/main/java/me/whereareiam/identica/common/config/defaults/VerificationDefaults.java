@@ -1,13 +1,13 @@
-package me.whereareiam.identica.common.config.template;
+package me.whereareiam.identica.common.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
 import me.whereareiam.identica.model.config.Verification;
 
 import java.time.Duration;
 
 @Singleton
-public class VerificationTemplate implements TemplateProvider<Verification> {
+public class VerificationDefaults implements MergeDefaultsProvider<Verification> {
 	@Override
 	public Verification supply(Verification verification) {
 		verification.setChallengeTtl(Duration.ofMinutes(2));

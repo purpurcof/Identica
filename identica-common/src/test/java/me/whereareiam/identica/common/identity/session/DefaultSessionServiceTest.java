@@ -10,6 +10,7 @@ import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.identity.session.SessionClosedEvent;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.SessionCloseRequest;
+import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -112,13 +114,61 @@ class DefaultSessionServiceTest {
 		assertEquals(uniqueId, original.getUniqueId());
 	}
 
+	@DisplayName("Provider session TTL overrides the settings default")
+	@Test
+	void providerSessionTtlOverridesSettingsDefault() {
+		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
+		DefaultReplicationSystem replicationSystem = new DefaultReplicationSystem(adapter);
+		EventController eventController = new EventController();
+
+		DefaultSessionService service = sessionService(
+				"alpha",
+				replicationSystem,
+				eventController,
+				providers(provider("premium", Duration.ofHours(12)))
+		);
+
+		service.open(session(UUID.randomUUID(), "premium")).join();
+
+		assertEquals(Duration.ofHours(12).toMillis(), adapter.lastTtlMs);
+	}
+
+	@DisplayName("Sessions use the settings default when provider TTL is absent")
+	@Test
+	void missingProviderSessionTtlUsesSettingsDefault() {
+		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
+		DefaultReplicationSystem replicationSystem = new DefaultReplicationSystem(adapter);
+		EventController eventController = new EventController();
+
+		DefaultSessionService service = sessionService(
+				"alpha",
+				replicationSystem,
+				eventController,
+				providers(provider("premium", null))
+		);
+
+		service.open(session(UUID.randomUUID(), "premium")).join();
+
+		assertEquals(Duration.ofMinutes(5).toMillis(), adapter.lastTtlMs);
+	}
+
 	private DefaultSessionService sessionService(
 			String serverId,
 			DefaultReplicationSystem replicationSystem,
 			EventController eventController
 	) {
+		return sessionService(serverId, replicationSystem, eventController, providers());
+	}
+
+	private DefaultSessionService sessionService(
+			String serverId,
+			DefaultReplicationSystem replicationSystem,
+			EventController eventController,
+			Providers providers
+	) {
 		return new DefaultSessionService(
 				this::settings,
+				() -> providers,
 				eventController,
 				() -> replication(serverId),
 				replicationSystem
@@ -139,12 +189,30 @@ class DefaultSessionServiceTest {
 	}
 
 	private Session session(UUID uniqueId) {
+		return session(uniqueId, "provider");
+	}
+
+	private Session session(UUID uniqueId, String providerId) {
 		return Session.builder()
 				.uniqueId(uniqueId)
-				.providerId("provider")
+				.providerId(providerId)
 				.providerSubject(uniqueId.toString())
 				.originalUsername("Player")
 				.build();
+	}
+
+	private Providers providers(Providers.ProviderEntry... entries) {
+		Providers providers = new Providers();
+		providers.setProviders(List.of(entries));
+		return providers;
+	}
+
+	private Providers.ProviderEntry provider(String id, Duration sessionTtl) {
+		Providers.ProviderEntry provider = new Providers.ProviderEntry();
+		provider.setId(id);
+		provider.setEnabled(true);
+		provider.getOverrides().setSessionTtl(sessionTtl);
+		return provider;
 	}
 
 	private Settings settings() {

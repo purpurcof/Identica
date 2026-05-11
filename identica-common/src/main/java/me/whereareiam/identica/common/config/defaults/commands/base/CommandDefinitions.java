@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.config.template.commands.base;
+package me.whereareiam.identica.common.config.defaults.commands.base;
 
 import me.whereareiam.identica.model.CommandDefinition;
 import org.jetbrains.annotations.NotNull;

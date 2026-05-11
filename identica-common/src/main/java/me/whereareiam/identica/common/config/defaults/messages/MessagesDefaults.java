@@ -1,17 +1,18 @@
-package me.whereareiam.identica.common.config.template.messages;
+package me.whereareiam.identica.common.config.defaults.messages;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
 import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class MessagesTemplate implements TemplateProvider<Messages> {
+public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 	@Override
-	public Messages supply(Messages messages) {
+	public Messages supply(@NotNull Messages messages) {
 		applyGeneral(messages);
 		applyCommands(messages);
 		applyProviders(messages);
@@ -30,7 +31,7 @@ public class MessagesTemplate implements TemplateProvider<Messages> {
 	}
 
 	private void applyCommands(Messages messages) {
-		Messages.Commands commands = new MessagesCommandsTemplate().supply(new Messages.Commands());
+		Messages.Commands commands = new MessagesCommandDefaults().supply(new Messages.Commands());
 		messages.setCommands(commands);
 	}
 

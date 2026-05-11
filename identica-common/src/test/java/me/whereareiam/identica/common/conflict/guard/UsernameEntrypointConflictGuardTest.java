@@ -1,6 +1,6 @@
 package me.whereareiam.identica.common.conflict.guard;
 
-import me.whereareiam.identica.common.config.template.messages.MessagesTemplate;
+import me.whereareiam.identica.common.config.defaults.messages.MessagesDefaults;
 import me.whereareiam.identica.common.provider.DefaultProviderOperations;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.config.Messages;
@@ -50,7 +50,7 @@ class UsernameEntrypointConflictGuardTest {
 				entry("premium", "Premium Network", 100, List.of("premium.example.com")),
 				entry("cracked", "Offline Network", 50, List.of("cracked.example.com"))
 		));
-		Messages messages = new MessagesTemplate().supply(new Messages());
+		Messages messages = new MessagesDefaults().supply(new Messages());
 
 		ProviderOperations providerOperations = providerOperations(providers);
 		UsernameEntrypointConflictGuard guard = new UsernameEntrypointConflictGuard(

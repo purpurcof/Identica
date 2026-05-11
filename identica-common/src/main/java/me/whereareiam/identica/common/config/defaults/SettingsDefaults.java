@@ -1,7 +1,7 @@
-package me.whereareiam.identica.common.config.template;
+package me.whereareiam.identica.common.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Singleton
-public class SettingsTemplate implements TemplateProvider<Settings> {
+public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 	@Override
 	public Settings supply(Settings settings) {
 		settings.setLevel(2);
@@ -34,9 +34,6 @@ public class SettingsTemplate implements TemplateProvider<Settings> {
 		Settings.Sessions sessions = new Settings.Sessions();
 		sessions.setDefaultTtl(Duration.ofHours(2));
 		sessions.setRefreshTtl(Duration.ofMinutes(10));
-		sessions.setProviders(Map.of(
-				"premium", Duration.ofHours(12)
-		));
 		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		sessions.setConcurrencyOverrides(new HashMap<>());
 

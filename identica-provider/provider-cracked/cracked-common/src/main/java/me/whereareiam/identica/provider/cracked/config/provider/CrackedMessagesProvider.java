@@ -7,7 +7,7 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
-import me.whereareiam.identica.provider.cracked.config.template.CrackedMessagesTemplate;
+import me.whereareiam.identica.provider.cracked.config.defaults.CrackedMessagesDefaults;
 
 import java.nio.file.Path;
 
@@ -23,7 +23,7 @@ public class CrackedMessagesProvider extends ConfigProvider<CrackedMessages> {
 				"messages",
 				CrackedMessages.class,
 				reloadables,
-				configure(CrackedMessagesTemplate.class, CrackedMessages.class)
+				configure(CrackedMessagesDefaults.class, CrackedMessages.class)
 		);
 	}
 }

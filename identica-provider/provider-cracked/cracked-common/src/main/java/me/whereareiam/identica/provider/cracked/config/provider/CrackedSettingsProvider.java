@@ -7,7 +7,7 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
-import me.whereareiam.identica.provider.cracked.config.template.CrackedSettingsTemplate;
+import me.whereareiam.identica.provider.cracked.config.defaults.CrackedSettingsDefaults;
 
 import java.nio.file.Path;
 
@@ -23,7 +23,7 @@ public class CrackedSettingsProvider extends ConfigProvider<CrackedSettings> {
 				"settings",
 				CrackedSettings.class,
 				reloadables,
-				configure(CrackedSettingsTemplate.class, CrackedSettings.class)
+				configure(CrackedSettingsDefaults.class, CrackedSettings.class)
 		);
 	}
 }

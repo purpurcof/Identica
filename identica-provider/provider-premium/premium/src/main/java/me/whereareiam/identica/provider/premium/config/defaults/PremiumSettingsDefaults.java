@@ -1,13 +1,13 @@
-package me.whereareiam.identica.provider.premium.config.template;
+package me.whereareiam.identica.provider.premium.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
 
 import java.time.Duration;
 
 @Singleton
-public class PremiumSettingsTemplate implements TemplateProvider<PremiumSettings> {
+public class PremiumSettingsDefaults implements MergeDefaultsProvider<PremiumSettings> {
 	@Override
 	public PremiumSettings supply(PremiumSettings config) {
 		PremiumSettings.Lookup lookup = config.getLookup();

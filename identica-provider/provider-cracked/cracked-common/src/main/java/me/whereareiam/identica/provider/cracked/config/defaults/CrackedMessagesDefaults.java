@@ -1,13 +1,13 @@
-package me.whereareiam.identica.provider.cracked.config.template;
+package me.whereareiam.identica.provider.cracked.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 
 import java.util.List;
 
 @Singleton
-public class CrackedMessagesTemplate implements TemplateProvider<CrackedMessages> {
+public class CrackedMessagesDefaults implements MergeDefaultsProvider<CrackedMessages> {
 	@Override
 	public CrackedMessages supply(CrackedMessages messages) {
 		CrackedMessages.Scenario scenario = new CrackedMessages.Scenario();

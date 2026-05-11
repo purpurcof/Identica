@@ -11,7 +11,7 @@ import me.whereareiam.identica.model.migration.operation.MigrationResult;
 import me.whereareiam.identica.model.verification.VerificationResolutionResult;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
-import me.whereareiam.identica.provider.premium.config.template.PremiumMessagesTemplate;
+import me.whereareiam.identica.provider.premium.config.defaults.PremiumMessagesDefaults;
 import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.verification.VerificationResolutionStatus;
@@ -89,7 +89,7 @@ class PremiumCommandTest {
 		when(verificationService.resolveVerification(any()))
 				.thenReturn(VerificationResolutionResult.of(VerificationResolutionStatus.WAITING, "challenge", "totp", true, false));
 
-		PremiumMessages premiumMessages = new PremiumMessagesTemplate().supply(new PremiumMessages());
+		PremiumMessages premiumMessages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		PremiumCommand command = new PremiumCommand(
 				migrationService,
 				providerManager,
@@ -125,7 +125,7 @@ class PremiumCommandTest {
 		PremiumCommand command = new PremiumCommand(
 				migrationService,
 				providerManager,
-				() -> new PremiumMessagesTemplate().supply(new PremiumMessages()),
+				() -> new PremiumMessagesDefaults().supply(new PremiumMessages()),
 				Messages::new,
 				verificationService,
 				sessionService

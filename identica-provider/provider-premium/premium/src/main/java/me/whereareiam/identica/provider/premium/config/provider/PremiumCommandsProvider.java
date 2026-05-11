@@ -7,7 +7,7 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.provider.premium.config.PremiumCommands;
-import me.whereareiam.identica.provider.premium.config.template.PremiumCommandsTemplate;
+import me.whereareiam.identica.provider.premium.config.defaults.PremiumCommandsDefaults;
 
 import java.nio.file.Path;
 
@@ -23,7 +23,7 @@ public class PremiumCommandsProvider extends ConfigProvider<PremiumCommands> {
 				"commands",
 				PremiumCommands.class,
 				reloadables,
-				configure(PremiumCommandsTemplate.class, PremiumCommands.class)
+				configure(PremiumCommandsDefaults.class, PremiumCommands.class)
 		);
 	}
 }

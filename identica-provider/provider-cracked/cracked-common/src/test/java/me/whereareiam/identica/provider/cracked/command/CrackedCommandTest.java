@@ -11,7 +11,7 @@ import me.whereareiam.identica.model.migration.operation.MigrationResult;
 import me.whereareiam.identica.model.verification.VerificationResolutionResult;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
-import me.whereareiam.identica.provider.cracked.config.template.CrackedMessagesTemplate;
+import me.whereareiam.identica.provider.cracked.config.defaults.CrackedMessagesDefaults;
 import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.verification.VerificationResolutionStatus;
@@ -89,7 +89,7 @@ class CrackedCommandTest {
 		when(verificationService.resolveVerification(any()))
 				.thenReturn(VerificationResolutionResult.of(VerificationResolutionStatus.WAITING, "challenge", "totp", true, false));
 
-		CrackedMessages crackedMessages = new CrackedMessagesTemplate().supply(new CrackedMessages());
+		CrackedMessages crackedMessages = new CrackedMessagesDefaults().supply(new CrackedMessages());
 		CrackedCommand command = new CrackedCommand(
 				() -> crackedMessages,
 				Messages::new,
@@ -123,7 +123,7 @@ class CrackedCommandTest {
 				.thenReturn(MigrationResult.builder().status(MigrationResultStatus.STARTED).build());
 
 		CrackedCommand command = new CrackedCommand(
-				() -> new CrackedMessagesTemplate().supply(new CrackedMessages()),
+				() -> new CrackedMessagesDefaults().supply(new CrackedMessages()),
 				Messages::new,
 				migrationService,
 				providerManager,

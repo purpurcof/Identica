@@ -1,13 +1,13 @@
-package me.whereareiam.identica.provider.premium.config.template;
+package me.whereareiam.identica.provider.premium.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 
 import java.util.List;
 
 @Singleton
-public class PremiumMessagesTemplate implements TemplateProvider<PremiumMessages> {
+public class PremiumMessagesDefaults implements MergeDefaultsProvider<PremiumMessages> {
 	@Override
 	public PremiumMessages supply(PremiumMessages messages) {
 		PremiumMessages.Verification verification = new PremiumMessages.Verification();

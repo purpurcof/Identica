@@ -7,7 +7,7 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.provider.cracked.config.CrackedCommands;
-import me.whereareiam.identica.provider.cracked.config.template.CrackedCommandsTemplate;
+import me.whereareiam.identica.provider.cracked.config.defaults.CrackedCommandsDefaults;
 
 import java.nio.file.Path;
 
@@ -23,7 +23,7 @@ public class CrackedCommandsProvider extends ConfigProvider<CrackedCommands> {
 				"commands",
 				CrackedCommands.class,
 				reloadables,
-				configure(CrackedCommandsTemplate.class, CrackedCommands.class)
+				configure(CrackedCommandsDefaults.class, CrackedCommands.class)
 		);
 	}
 }

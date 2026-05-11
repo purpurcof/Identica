@@ -5,7 +5,7 @@ import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
-import me.whereareiam.identica.provider.premium.config.template.PremiumMessagesTemplate;
+import me.whereareiam.identica.provider.premium.config.defaults.PremiumMessagesDefaults;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
@@ -25,7 +25,7 @@ class PremiumCompletionStepTest {
 	@DisplayName("Uses the reused-session completion message for authentication resumes")
 	@Test
 	void authenticationUsesReusedSessionMessageWhenSessionWasReused() {
-		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
+		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
 		List<String> lines = step.lines(context(true, PipelineType.AUTHENTICATION));
@@ -36,7 +36,7 @@ class PremiumCompletionStepTest {
 	@DisplayName("Keeps the migration completion message even when the session was reused")
 	@Test
 	void migrationIgnoresReusedSessionMessage() {
-		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
+		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
 		List<String> lines = step.lines(context(true, PipelineType.MIGRATION));
@@ -47,7 +47,7 @@ class PremiumCompletionStepTest {
 	@DisplayName("Uses the registration completion message when one is configured")
 	@Test
 	void registrationUsesRegistrationMessageWhenConfigured() {
-		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
+		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
 		List<String> lines = step.lines(context(false, PipelineType.REGISTRATION));
@@ -58,7 +58,7 @@ class PremiumCompletionStepTest {
 	@DisplayName("Keeps the registration completion message even when the session was reused")
 	@Test
 	void registrationIgnoresReusedSessionMessage() {
-		PremiumMessages messages = new PremiumMessagesTemplate().supply(new PremiumMessages());
+		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
 		List<String> lines = step.lines(context(true, PipelineType.REGISTRATION));

@@ -7,7 +7,7 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
-import me.whereareiam.identica.provider.premium.config.template.PremiumMessagesTemplate;
+import me.whereareiam.identica.provider.premium.config.defaults.PremiumMessagesDefaults;
 
 import java.nio.file.Path;
 
@@ -23,7 +23,7 @@ public class PremiumMessagesProvider extends ConfigProvider<PremiumMessages> {
 				"messages",
 				PremiumMessages.class,
 				reloadables,
-				configure(PremiumMessagesTemplate.class, PremiumMessages.class)
+				configure(PremiumMessagesDefaults.class, PremiumMessages.class)
 		);
 	}
 }

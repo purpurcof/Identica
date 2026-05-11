@@ -1,7 +1,7 @@
-package me.whereareiam.identica.provider.cracked.config.template;
+package me.whereareiam.identica.provider.cracked.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
 import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.provider.cracked.config.CrackedCommands;
 
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class CrackedCommandsTemplate implements TemplateProvider<CrackedCommands> {
+public class CrackedCommandsDefaults implements MergeDefaultsProvider<CrackedCommands> {
 	@Override
 	public CrackedCommands supply(CrackedCommands commands) {
 		CommandDefinition register = CommandDefinition.builder()

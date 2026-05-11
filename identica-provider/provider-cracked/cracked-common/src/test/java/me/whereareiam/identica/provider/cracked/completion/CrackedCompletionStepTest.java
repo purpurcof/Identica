@@ -5,7 +5,7 @@ import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
-import me.whereareiam.identica.provider.cracked.config.template.CrackedMessagesTemplate;
+import me.whereareiam.identica.provider.cracked.config.defaults.CrackedMessagesDefaults;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
@@ -25,7 +25,7 @@ class CrackedCompletionStepTest {
 	@DisplayName("Uses the reused-session completion message for authentication resumes")
 	@Test
 	void authenticationUsesReusedSessionMessageWhenSessionWasReused() {
-		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
+		CrackedMessages messages = new CrackedMessagesDefaults().supply(new CrackedMessages());
 		InspectableCrackedCompletionStep step = new InspectableCrackedCompletionStep(() -> messages);
 
 		List<String> lines = step.lines(context(true, PipelineType.AUTHENTICATION));
@@ -36,7 +36,7 @@ class CrackedCompletionStepTest {
 	@DisplayName("Uses the authentication completion message for authentication pipelines")
 	@Test
 	void authenticationUsesAuthenticationCompletionMessage() {
-		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
+		CrackedMessages messages = new CrackedMessagesDefaults().supply(new CrackedMessages());
 		InspectableCrackedCompletionStep step = new InspectableCrackedCompletionStep(() -> messages);
 
 		List<String> lines = step.lines(context(false, PipelineType.AUTHENTICATION));
@@ -47,7 +47,7 @@ class CrackedCompletionStepTest {
 	@DisplayName("Uses the registration completion message for registration pipelines")
 	@Test
 	void registrationUsesRegistrationCompletionMessage() {
-		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
+		CrackedMessages messages = new CrackedMessagesDefaults().supply(new CrackedMessages());
 		InspectableCrackedCompletionStep step = new InspectableCrackedCompletionStep(() -> messages);
 
 		List<String> lines = step.lines(context(false, PipelineType.REGISTRATION));
@@ -58,7 +58,7 @@ class CrackedCompletionStepTest {
 	@DisplayName("Uses the migration completion message for migration pipelines")
 	@Test
 	void migrationUsesMigrationCompletionMessage() {
-		CrackedMessages messages = new CrackedMessagesTemplate().supply(new CrackedMessages());
+		CrackedMessages messages = new CrackedMessagesDefaults().supply(new CrackedMessages());
 		InspectableCrackedCompletionStep step = new InspectableCrackedCompletionStep(() -> messages);
 
 		List<String> lines = step.lines(context(true, PipelineType.MIGRATION));

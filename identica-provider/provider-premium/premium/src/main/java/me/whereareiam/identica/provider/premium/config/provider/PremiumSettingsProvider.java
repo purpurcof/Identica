@@ -7,7 +7,7 @@ import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.provider.premium.config.PremiumSettings;
-import me.whereareiam.identica.provider.premium.config.template.PremiumSettingsTemplate;
+import me.whereareiam.identica.provider.premium.config.defaults.PremiumSettingsDefaults;
 
 import java.nio.file.Path;
 
@@ -23,7 +23,7 @@ public class PremiumSettingsProvider extends ConfigProvider<PremiumSettings> {
 				"settings",
 				PremiumSettings.class,
 				reloadables,
-				configure(PremiumSettingsTemplate.class, PremiumSettings.class)
+				configure(PremiumSettingsDefaults.class, PremiumSettings.class)
 		);
 	}
 }

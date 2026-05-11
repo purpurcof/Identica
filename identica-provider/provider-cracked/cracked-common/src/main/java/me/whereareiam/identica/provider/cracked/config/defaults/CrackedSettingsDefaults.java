@@ -1,13 +1,13 @@
-package me.whereareiam.identica.provider.cracked.config.template;
+package me.whereareiam.identica.provider.cracked.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
 import me.whereareiam.identica.provider.cracked.config.CrackedSettings;
 
 import java.time.Duration;
 
 @Singleton
-public class CrackedSettingsTemplate implements TemplateProvider<CrackedSettings> {
+public class CrackedSettingsDefaults implements MergeDefaultsProvider<CrackedSettings> {
 	@Override
 	public CrackedSettings supply(CrackedSettings config) {
 		CrackedSettings.Scenario.Registration registration = new CrackedSettings.Scenario.Registration();

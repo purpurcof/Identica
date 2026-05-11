@@ -118,3 +118,18 @@ publications:
     provider: modrinth
     artifact: premium-provider
     project_id: OOO3uDTT
+
+  # identica-hangar:
+  #   provider: hangar
+  #   artifact: identica
+  #   project_slug: PROJECT_SLUG
+
+  # cracked-provider-hangar:
+  #   provider: hangar
+  #   artifact: cracked-provider
+  #   project_slug: PROJECT_SLUG
+
+  # premium-provider-hangar:
+  #   provider: hangar
+  #   artifact: premium-provider
+  #   project_slug: PROJECT_SLUG

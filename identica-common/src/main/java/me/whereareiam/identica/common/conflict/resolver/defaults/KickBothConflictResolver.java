@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.conflict.resolver.defaults;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Singleton;
-import me.whereareiam.configura.node.Node;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
@@ -17,7 +17,7 @@ public class KickBothConflictResolver implements ConflictResolver {
 	@Override
 	public @NotNull ConflictResolution resolve(
 			@NotNull ConflictContext context,
-			@NotNull Node params
+			@NotNull JsonNode params
 	) {
 		return ConflictResolution.kickBoth(null);
 	}

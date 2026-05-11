@@ -1,8 +1,8 @@
 package me.whereareiam.identica.conflict.resolver;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
-import me.whereareiam.configura.node.Node;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -35,6 +35,6 @@ public interface ConflictResolver {
 	 */
 	@NotNull ConflictResolution resolve(
 			@NotNull ConflictContext context,
-			@NotNull Node params
+			@NotNull JsonNode params
 	);
 }

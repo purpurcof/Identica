@@ -3,13 +3,14 @@ package me.whereareiam.identica.provider.cracked.config;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import me.whereareiam.configura.ConfigDocument;
 
 import java.util.List;
 
 @Getter
 @Setter
 @ToString
-public class CrackedMessages {
+public class CrackedMessages extends ConfigDocument {
 	private Scenario scenario;
 	private Completion completion;
 	private Password password;

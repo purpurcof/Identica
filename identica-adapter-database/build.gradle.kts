@@ -41,4 +41,16 @@ extensions.configure<AttacheExtension>("attache") {
         relocate("org{}jdbi", "me.whereareiam.identica.library.jdbi")
         relocate("io{}leangen{}geantyref", "me.whereareiam.identica.library.geantyref")
     }
+
+    library(libs.postgresql) {
+        excludeTransitive("com.github.waffle", "waffle-jna")
+        excludeTransitive("net.java.dev.jna", "jna")
+        excludeTransitive("net.java.dev.jna", "jna-platform")
+    }
+
+    library(libs.mariadb) {
+        excludeTransitive("com.github.waffle", "waffle-jna")
+        excludeTransitive("net.java.dev.jna", "jna")
+        excludeTransitive("net.java.dev.jna", "jna-platform")
+    }
 }

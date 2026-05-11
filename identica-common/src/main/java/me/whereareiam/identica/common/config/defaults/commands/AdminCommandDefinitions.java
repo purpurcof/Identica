@@ -1,6 +1,6 @@
-package me.whereareiam.identica.common.config.template.commands;
+package me.whereareiam.identica.common.config.defaults.commands;
 
-import me.whereareiam.identica.common.config.template.commands.base.CommandDefinitions;
+import me.whereareiam.identica.common.config.defaults.commands.base.CommandDefinitions;
 import me.whereareiam.identica.model.CommandDefinition;
 
 import java.util.List;

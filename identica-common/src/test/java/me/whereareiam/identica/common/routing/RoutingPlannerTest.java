@@ -64,6 +64,30 @@ class RoutingPlannerTest {
 		assertEquals("lobby", plan.getIntent().getEndpoint().getServer());
 	}
 
+	@DisplayName("Missing scenario targets fall back to routing defaults")
+	@Test
+	void missingScenarioTargetsUseDefaults() {
+		Settings settings = settings();
+		settings.getConnection().getRouting().getScenarios().clear();
+
+		RoutingPlanner planner = new RoutingPlanner(() -> settings);
+		RoutingPlan stepPlan = planner.plan(RoutingSignal.stepFinished(
+				context(UUID.randomUUID()),
+				PipelineType.REGISTRATION,
+				StageType.PROVIDER,
+				step("password"),
+				StepResult.waiting("")
+		));
+		RoutingPlan completionPlan = planner.plan(RoutingSignal.pipelineFinished(
+				context(UUID.randomUUID()),
+				PipelineType.REGISTRATION,
+				PipelineResult.complete()
+		));
+
+		assertEquals("fallback-auth", stepPlan.getIntent().getEndpoint().getServer());
+		assertEquals("fallback-lobby", completionPlan.getIntent().getEndpoint().getServer());
+	}
+
 	@DisplayName("Scenario completion targets inherit default attempts when omitted")
 	@Test
 	void completionTargetInheritsDefaultAttemptsWhenOmitted() {

@@ -1,19 +1,19 @@
-package me.whereareiam.identica.common.config.template;
+package me.whereareiam.identica.common.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.TemplateProvider;
-import me.whereareiam.identica.common.config.template.commands.AdminCommandDefinitions;
-import me.whereareiam.identica.common.config.template.commands.base.CommandDefinitions;
-import me.whereareiam.identica.common.config.template.commands.CoreCommandDefinitions;
-import me.whereareiam.identica.common.config.template.commands.MigrationCommandDefinitions;
-import me.whereareiam.identica.common.config.template.commands.VerificationCommandDefinitions;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
+import me.whereareiam.identica.common.config.defaults.commands.AdminCommandDefinitions;
+import me.whereareiam.identica.common.config.defaults.commands.base.CommandDefinitions;
+import me.whereareiam.identica.common.config.defaults.commands.CoreCommandDefinitions;
+import me.whereareiam.identica.common.config.defaults.commands.MigrationCommandDefinitions;
+import me.whereareiam.identica.common.config.defaults.commands.VerificationCommandDefinitions;
 import me.whereareiam.identica.model.config.Commands;
 
 import java.time.Duration;
 import java.util.List;
 
 @Singleton
-public class CommandsTemplate implements TemplateProvider<Commands> {
+public class CommandsDefaults implements MergeDefaultsProvider<Commands> {
 	private final List<CommandDefinitions> definitions = List.of(
 			new CoreCommandDefinitions(),
 			new AdminCommandDefinitions(),

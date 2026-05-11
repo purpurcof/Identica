@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import me.whereareiam.identica.Reloadable;
-import me.whereareiam.identica.common.config.template.PersistenceTemplate;
+import me.whereareiam.identica.common.config.defaults.PersistenceDefaults;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.model.config.persistence.H2Persistence;
 import me.whereareiam.identica.model.config.persistence.Persistence;
@@ -28,7 +28,7 @@ public class PersistenceProvider extends ConfigProvider<Persistence> {
 				Persistence.class,
 				registry,
 				configure(
-						PersistenceTemplate.class,
+						PersistenceDefaults.class,
 						SqlitePersistence.class,
 						H2Persistence.class,
 						MysqlPersistence.class,

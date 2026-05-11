@@ -1,6 +1,6 @@
 package me.whereareiam.identica.common.migration;
 
-import me.whereareiam.identica.common.config.template.SettingsTemplate;
+import me.whereareiam.identica.common.config.defaults.SettingsDefaults;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
@@ -218,7 +218,7 @@ class DefaultMigrationServiceTest {
 		when(identityService.find(any(UUID.class))).thenReturn(Optional.empty());
 		when(identityService.find(any(String.class))).thenReturn(Optional.empty());
 
-		Settings settings = new SettingsTemplate().supply(new Settings());
+		Settings settings = new SettingsDefaults().supply(new Settings());
 		DefaultMigrationService service = new DefaultMigrationService(
 				providerManager,
 				providerLinkPersistenceService,

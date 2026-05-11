@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
-import me.whereareiam.identica.common.config.template.VerificationTemplate;
+import me.whereareiam.identica.common.config.defaults.VerificationDefaults;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.model.config.Verification;
 
@@ -23,7 +23,7 @@ public class VerificationProvider extends ConfigProvider<Verification> {
 				"verification",
 				Verification.class,
 				registry,
-				configure(VerificationTemplate.class, Verification.class)
+				configure(VerificationDefaults.class, Verification.class)
 		);
 	}
 }

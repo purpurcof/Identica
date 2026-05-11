@@ -2,7 +2,7 @@ package me.whereareiam.identica.config;
 
 import com.google.inject.Provider;
 import me.whereareiam.configura.Config;
-import me.whereareiam.configura.TemplateProvider;
+import me.whereareiam.configura.merge.MergeDefaultsProvider;
 import me.whereareiam.configura.migration.MigrationDefinition;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;
@@ -62,7 +62,7 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 	}
 
 	protected static Config configure(
-			Class<? extends TemplateProvider<?>> providerClass,
+			Class<? extends MergeDefaultsProvider<?>> providerClass,
 			Class<?>... versionedTypes
 	) {
 		Versioned<?>[] declarations = new Versioned<?>[versionedTypes.length];
@@ -75,7 +75,7 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 
 	protected static Config configure(
 			Config baseConfig,
-			Class<? extends TemplateProvider<?>> providerClass,
+			Class<? extends MergeDefaultsProvider<?>> providerClass,
 			Class<?>... versionedTypes
 	) {
 		Versioned<?>[] declarations = new Versioned<?>[versionedTypes.length];
@@ -87,7 +87,7 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 	}
 
 	protected static Config configure(
-			Class<? extends TemplateProvider<?>> providerClass,
+			Class<? extends MergeDefaultsProvider<?>> providerClass,
 			Versioned<?>... versionedTypes
 	) {
 		return configure(Config.defaults(), providerClass, versionedTypes);
@@ -96,10 +96,10 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	protected static Config configure(
 			Config baseConfig,
-			Class<? extends TemplateProvider<?>> providerClass,
+			Class<? extends MergeDefaultsProvider<?>> providerClass,
 			Versioned<?>... versionedTypes
 	) {
-		Config config = baseConfig.withTemplate((Class) providerClass);
+		Config config = baseConfig.withDefaults((Class) providerClass);
 		if (versionedTypes == null) return config;
 
 		for (Versioned<?> versionedType : versionedTypes) {

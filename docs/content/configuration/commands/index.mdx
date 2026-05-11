@@ -12,7 +12,7 @@ The `behavior` section controls command-wide behavior that is not tied to one sp
 #### sortAlphabetically
 
 - Takes: `true` or `false`
-- Current template default: `true`
+- Current default: `true`
 - Affects: whether the help command sorts entries alphabetically before rendering them
 
 When this is `false`, help output keeps the natural command registration order instead of forcing alphabetical order.
@@ -22,7 +22,7 @@ When this is `false`, help output keeps the natural command registration order i
 #### playerLimit
 
 - Takes: an integer
-- Current template default: `25`
+- Current default: `25`
 - Affects: the maximum number of cross-player suggestions returned by command suggestion providers
 
 If this is `0` or lower, those suggestions are effectively disabled.
@@ -32,7 +32,7 @@ If this is `0` or lower, those suggestions are effectively disabled.
 #### confirmTtl
 
 - Takes: a duration
-- Current template default: `"60s"`
+- Current default: `"60s"`
 - Affects: how long a pending admin clear confirmation stays valid
 
 This is the time window between requesting an account clear and confirming it.
@@ -42,7 +42,7 @@ This is the time window between requesting an account clear and confirming it.
 #### listPageSize
 
 - Takes: an integer
-- Current template default: `7`
+- Current default: `7`
 - Affects: how many entries are shown per page in admin session listings
 
 ### migration
@@ -50,7 +50,7 @@ This is the time window between requesting an account clear and confirming it.
 #### confirmTtl
 
 - Takes: a duration
-- Current template default: `"60s"`
+- Current default: `"60s"`
 - Affects: how long a pending migration confirmation stays valid
 
 ### useBrigadier
@@ -58,7 +58,7 @@ This is the time window between requesting an account clear and confirming it.
 <Badge type="warning">Warning</Badge>
 
 - Takes: `true` or `false`
-- Current template default: `false`
+- Current default: `false`
 - Affects: how Identica registers commands on platforms that support multiple registration modes
 
 <ContentTabs items={["Velocity"]}>
@@ -180,7 +180,7 @@ Example:
 ##### group
 
 - Takes: a string
-- Current template default: `"default"`
+- Current default: `"default"`
 - Affects: which cooldown group the command belongs to
 
 Commands in the same group can share cooldown behavior depending on the command framework rules.
@@ -196,14 +196,14 @@ It documents arguments that are already implemented by the command executor.
 #### hide
 
 - Takes: `true` or `false`
-- Current template default: `false`
+- Current default: `false`
 - Affects: whether the command is hidden from help output
 
 This is used for internal or flow-supporting command definitions that should exist without being listed in normal help output.
 
 ## Built-in command groups
 
-The current template generates built-in definitions in these groups:
+The current defaults generate built-in definitions in these groups:
 
 - Core: `main`, `help`, `enroll`, `availability-username`
 - Admin: `admin`, `admin-reload`, `admin-clear`, `admin-clear-confirm`, `admin-clear-cancel`, `admin-delete`, `admin-delete-confirm`, `admin-delete-cancel`, `admin-reservation-set`, `admin-reservation-info`, `admin-reservation-delete`, `admin-session`, `admin-session-list`, `admin-session-info`, `admin-session-end`, `admin-verification-reset`

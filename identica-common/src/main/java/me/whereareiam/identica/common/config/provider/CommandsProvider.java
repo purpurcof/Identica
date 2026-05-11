@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import me.whereareiam.identica.Reloadable;
-import me.whereareiam.identica.common.config.template.CommandsTemplate;
+import me.whereareiam.identica.common.config.defaults.CommandsDefaults;
 import me.whereareiam.identica.config.ConfigProvider;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.Registry;
@@ -18,6 +18,6 @@ public class CommandsProvider extends ConfigProvider<Commands> {
 			@Named("dataPath") Path dataPath,
 			Registry<Reloadable> registry
 	) {
-		super(dataPath, "commands", Commands.class, registry, configure(CommandsTemplate.class, Commands.class));
+		super(dataPath, "commands", Commands.class, registry, configure(CommandsDefaults.class, Commands.class));
 	}
 }

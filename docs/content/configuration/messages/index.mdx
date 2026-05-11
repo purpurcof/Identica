@@ -21,7 +21,7 @@ The exact available placeholders depend on the specific message field and the co
 ## prefix
 
 - Takes: a string
-- Current template default: `"<green>Identica</green> <dark_gray>| "`
+- Current default: `"<green>Identica</green> <dark_gray>| "`
 - Affects: the global message prefix supplied to the serializer engine
 
 This prefix is available to messages through `{prefix}` and is also used as the serializer prefix supplier.
@@ -39,7 +39,7 @@ The `temporal` subsection controls how shared date and date-time placeholders ar
 #### date
 
 - Takes: a date-time pattern string
-- Current template default: `"dd.MM.yyyy"`
+- Current default: `"dd.MM.yyyy"`
 - Affects: the formatter pattern used for date-only placeholders
 
 If this is blank, runtime code falls back to its built-in formatter for the specific message path.
@@ -47,7 +47,7 @@ If this is blank, runtime code falls back to its built-in formatter for the spec
 #### dateTime
 
 - Takes: a date-time pattern string
-- Current template default: `"dd.MM.yyyy HH:mm:ss"`
+- Current default: `"dd.MM.yyyy HH:mm:ss"`
 - Affects: the formatter pattern used for date-time placeholders
 
 If this is blank, runtime code falls back to its built-in formatter for the specific message path.
@@ -61,13 +61,13 @@ These settings affect the formatting of page navigation, not which data is pagin
 #### showPaginationIfOnePage
 
 - Takes: `true` or `false`
-- Current template default: `false`
+- Current default: `false`
 - Affects: whether pagination controls are shown when there is only one page
 
 #### format
 
 - Takes: a string
-- Current template default: `"\n {previous}<white>Pagination</white> <gray>[{current}/{max}]</gray>{next} \n"`
+- Current default: `"\n {previous}<white>Pagination</white> <gray>[{current}/{max}]</gray>{next} \n"`
 - Affects: the overall pagination line format
 
 The pagination renderer can supply placeholders such as:
@@ -80,13 +80,13 @@ The pagination renderer can supply placeholders such as:
 #### showPreviousEvenIfFirst
 
 - Takes: `true` or `false`
-- Current template default: `false`
+- Current default: `false`
 - Affects: whether the previous-page control is still shown on the first page
 
 #### previousTagFormat
 
 - Takes: a string
-- Current template default: `"<red><click:run_command:/identica help {previousPage}>«</red> "`
+- Current default: `"<red><click:run_command:/identica help {previousPage}>«</red> "`
 - Affects: the rendered previous-page control
 
 The pagination renderer can supply `{previousPage}` here.
@@ -94,13 +94,13 @@ The pagination renderer can supply `{previousPage}` here.
 #### showNextEvenIfLast
 
 - Takes: `true` or `false`
-- Current template default: `false`
+- Current default: `false`
 - Affects: whether the next-page control is still shown on the last page
 
 #### nextTagFormat
 
 - Takes: a string
-- Current template default: `" <green><click:run_command:/identica help {nextPage}>»</green>"`
+- Current default: `" <green><click:run_command:/identica help {nextPage}>»</green>"`
 - Affects: the rendered next-page control
 
 The pagination renderer can supply `{nextPage}` here.

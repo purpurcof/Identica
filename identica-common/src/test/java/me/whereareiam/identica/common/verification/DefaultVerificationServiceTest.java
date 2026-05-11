@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.verification;
 
-import me.whereareiam.identica.common.config.template.VerificationTemplate;
-import me.whereareiam.identica.common.config.template.messages.MessagesCommandsTemplate;
+import me.whereareiam.identica.common.config.defaults.VerificationDefaults;
+import me.whereareiam.identica.common.config.defaults.messages.MessagesCommandDefaults;
 import me.whereareiam.identica.common.verification.type.totp.TotpVerificationMethod;
 import me.whereareiam.identica.common.verification.type.totp.process.TotpChallengeProcess;
 import me.whereareiam.identica.common.verification.type.totp.process.TotpEnrollmentProcess;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.mock;
 class DefaultVerificationServiceTest {
 	@Test
 	void registryFindsRegisteredMethodByDescriptorId() {
-		Verification verification = new VerificationTemplate().supply(new Verification());
+		Verification verification = new VerificationDefaults().supply(new Verification());
 		Messages messages = messages();
 		VerificationPersistenceService persistenceService = mock(VerificationPersistenceService.class);
 		TotpSetupStep setupStep = new TotpSetupStep(() -> verification, () -> messages);
@@ -45,7 +45,7 @@ class DefaultVerificationServiceTest {
 
 	@Test
 	void builtInTotpDescriptorAdvertisesProcessCapabilities() {
-		Verification verification = new VerificationTemplate().supply(new Verification());
+		Verification verification = new VerificationDefaults().supply(new Verification());
 		Messages messages = messages();
 		VerificationPersistenceService persistenceService = mock(VerificationPersistenceService.class);
 		TotpSetupStep setupStep = new TotpSetupStep(() -> verification, () -> messages);
@@ -67,7 +67,7 @@ class DefaultVerificationServiceTest {
 	private Messages messages() {
 		Messages messages = new Messages();
 		Messages.Commands commands = new Messages.Commands();
-		new MessagesCommandsTemplate().supply(commands);
+		new MessagesCommandDefaults().supply(commands);
 		messages.setCommands(commands);
 		return messages;
 	}

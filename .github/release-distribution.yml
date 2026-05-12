@@ -113,11 +113,17 @@ publications:
     provider: modrinth
     artifact: cracked-provider
     project_id: cFnEyCND
+    dependencies:
+      - project_id: D26hHMI2
+        dependency_type: required
 
   premium-provider-modrinth:
     provider: modrinth
     artifact: premium-provider
     project_id: OOO3uDTT
+    dependencies:
+      - project_id: D26hHMI2
+        dependency_type: required
 
   identica-hangar:
     provider: hangar
@@ -128,8 +134,16 @@ publications:
     provider: hangar
     artifact: cracked-provider
     project_slug: "whereareiam/Identica-Offline-Provider"
+    dependencies:
+      - kind: hangar
+        name: Identica
+        required: true
 
   premium-provider-hangar:
     provider: hangar
     artifact: premium-provider
     project_slug: "whereareiam/Identica-Premium-Provider"
+    dependencies:
+      - kind: hangar
+        name: Identica
+        required: true

@@ -118,7 +118,9 @@ jobs:
           path: output/
 
   resolve-distribution:
-    needs: build
+    needs:
+      - prepare
+      - build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -167,6 +169,7 @@ jobs:
         uses: whereareiam/blockops/actions/publish/publish-publication@dev
         with:
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          hangar-token: ${{ secrets.HANGAR_TOKEN }}
           plan-json: ${{ needs.resolve-distribution.outputs.plan-json }}
           artifact-directory: output
           publication: ${{ matrix.publication.publication }}

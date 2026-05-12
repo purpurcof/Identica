@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
 import me.whereareiam.identica.common.config.defaults.commands.AdminCommandDefinitions;
 import me.whereareiam.identica.common.config.defaults.commands.base.CommandDefinitions;
 import me.whereareiam.identica.common.config.defaults.commands.CoreCommandDefinitions;

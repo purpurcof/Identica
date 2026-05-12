@@ -81,11 +81,15 @@ supported_game_versions: &supported_game_versions
   - "26.1.1"
   - "26.1.2"
 
+supported_velocity_versions: &supported_velocity_versions
+  - "3.5.0"
+
 artifacts:
   identica:
     file: Identica-VELOCITY-{version}.jar
     platform: velocity
     game_versions: *supported_game_versions
+    platform_versions: *supported_velocity_versions
     loaders:
       - velocity
 
@@ -93,6 +97,7 @@ artifacts:
     file: Identica-Cracked-{version}.jar
     platform: velocity
     game_versions: *supported_game_versions
+    platform_versions: *supported_velocity_versions
     loaders:
       - velocity
 
@@ -100,6 +105,7 @@ artifacts:
     file: Identica-Premium-{version}.jar
     platform: velocity
     game_versions: *supported_game_versions
+    platform_versions: *supported_velocity_versions
     loaders:
       - velocity
 
@@ -129,11 +135,13 @@ publications:
     provider: hangar
     artifact: identica
     project_slug: "whereareiam/Identica"
+    platform_versions: *supported_velocity_versions
 
   cracked-provider-hangar:
     provider: hangar
     artifact: cracked-provider
     project_slug: "whereareiam/Identica-Offline-Provider"
+    platform_versions: *supported_velocity_versions
     dependencies:
       - kind: hangar
         name: Identica
@@ -143,6 +151,7 @@ publications:
     provider: hangar
     artifact: premium-provider
     project_slug: "whereareiam/Identica-Premium-Provider"
+    platform_versions: *supported_velocity_versions
     dependencies:
       - kind: hangar
         name: Identica

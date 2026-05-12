@@ -47,7 +47,7 @@ testcontainers = "2.0.2"
 testcontainers-redis = "2.2.4"
 
 # providers
-# cracked provider
+# password provider
 argon2 = "2.12"
 bcrypt = "0.10.2"
 
@@ -107,7 +107,7 @@ testcontainers-postgresql = { group = "org.testcontainers", name = "testcontaine
 testcontainers-redis = { group = "com.redis", name = "testcontainers-redis", version.ref = "testcontainers-redis" }
 
 # providers
-# cracked provider
+# password provider
 argon2 = { group = "de.mkammerer", name = "argon2-jvm", version.ref = "argon2" }
 bcrypt = { group = "at.favre.lib", name = "bcrypt", version.ref = "bcrypt" }
 

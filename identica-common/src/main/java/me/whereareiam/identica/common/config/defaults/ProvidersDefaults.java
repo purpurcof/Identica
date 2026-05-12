@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.config.defaults;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 

@@ -1,7 +1,7 @@
 package me.whereareiam.identica.provider.cracked.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
 import me.whereareiam.identica.provider.cracked.config.CrackedMessages;
 
 import java.util.List;

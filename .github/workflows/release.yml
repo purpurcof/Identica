@@ -114,7 +114,7 @@ jobs:
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: release-distribution-${{ needs.prepare.outputs.version }}
+          name: Release Artifacts
           path: output/
 
   resolve-distribution:
@@ -162,14 +162,15 @@ jobs:
       - name: Download distribution artifacts
         uses: actions/download-artifact@v7
         with:
-          name: release-distribution-${{ needs.prepare.outputs.version }}
+          name: Release Artifacts
           path: output
 
       - name: Publish distribution
         uses: whereareiam/blockops/actions/publish/publish-publication@dev
         with:
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          hangar-token: ${{ secrets.HANGAR_TOKEN }}
+          provider-credentials: |
+            modrinth: ${{ secrets.MODRINTH_TOKEN }}
+            hangar: ${{ secrets.HANGAR_TOKEN }}
           plan-json: ${{ needs.resolve-distribution.outputs.plan-json }}
           artifact-directory: output
           publication: ${{ matrix.publication.publication }}

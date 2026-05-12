@@ -2,7 +2,7 @@ package me.whereareiam.identica.config;
 
 import com.google.inject.Provider;
 import me.whereareiam.configura.Config;
-import me.whereareiam.configura.merge.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
 import me.whereareiam.configura.migration.MigrationDefinition;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.Registry;

@@ -8,7 +8,7 @@ import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.configura.annotation.Merge;
-import me.whereareiam.configura.merge.strategy.StructuralObject;
+import me.whereareiam.configura.merge.strategy.type.StructuralObject;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

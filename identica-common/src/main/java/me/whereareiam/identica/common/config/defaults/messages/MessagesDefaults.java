@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.config.defaults.messages;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
 import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
 import org.jetbrains.annotations.NotNull;

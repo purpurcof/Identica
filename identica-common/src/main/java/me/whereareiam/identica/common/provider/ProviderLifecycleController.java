@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.common.config.ConfigInitializer;
 import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
@@ -35,6 +36,7 @@ import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -126,6 +128,7 @@ public class ProviderLifecycleController {
 			internal.setProvider(provider);
 			internal.setWorkingPath(workingPath);
 			internal.setClassLoader(classLoader);
+			prewarmProviderConfigs(providerInjector, internal);
 			storeBindings(internal, providerInjector);
 			internal.setState(ProviderState.LOADED);
 			if (checkRequirements(internal))
@@ -286,6 +289,16 @@ public class ProviderLifecycleController {
 	private void fireProviderUnloaded(InternalProvider internal) {
 		if (eventManager == null || internal == null) return;
 		eventManager.call(new ProviderUnloadedEvent(internal));
+	}
+
+	private void prewarmProviderConfigs(Injector providerInjector, InternalProvider internal) {
+		List<String> prepared = ConfigInitializer.initialize(
+				providerInjector,
+				type -> type.getSimpleName().endsWith("Provider")
+		);
+
+		if (!prepared.isEmpty())
+			Logger.info("Prepared provider configs for %s: %s", safeId(internal), String.join(", ", prepared));
 	}
 
 	private String safeId(InternalProvider internal) {

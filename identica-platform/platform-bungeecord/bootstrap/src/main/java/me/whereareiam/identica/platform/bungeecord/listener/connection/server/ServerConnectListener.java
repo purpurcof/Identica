@@ -22,7 +22,7 @@ import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class BungeeCordServerConnectListener implements DynamicListener<ServerConnectEvent> {
+public class ServerConnectListener implements DynamicListener<ServerConnectEvent> {
 	private final ProxyServer proxyServer;
 	private final RoutingAttemptService routingAttemptService;
 	private final EventManager eventManager;

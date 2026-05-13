@@ -9,7 +9,7 @@ import net.md_5.bungee.api.event.PlayerHandshakeEvent;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class BungeeCordPlayerHandshakeListener implements DynamicListener<PlayerHandshakeEvent> {
+public class PlayerHandshakeListener implements DynamicListener<PlayerHandshakeEvent> {
 	private final BungeeCordHandshakeDecisionAdapter handshakeDecisionAdapter;
 
 	@Override

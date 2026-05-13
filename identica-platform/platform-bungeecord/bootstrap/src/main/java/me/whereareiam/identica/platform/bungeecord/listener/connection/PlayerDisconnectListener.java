@@ -12,14 +12,14 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 
 @Singleton
-public class BungeeCordDisconnectListener implements DynamicListener<PlayerDisconnectEvent> {
+public class PlayerDisconnectListener implements DynamicListener<PlayerDisconnectEvent> {
 	private final RoutingCoordinator routingCoordinator;
 	private final IdentityService identityService;
 	private final PrepareStateStore prepareStateStore;
 	private final VerificationService verificationService;
 
 	@Inject
-	public BungeeCordDisconnectListener(
+	public PlayerDisconnectListener(
 			RoutingCoordinator routingCoordinator,
 			IdentityService identityService,
 			PrepareStateStore prepareStateStore,

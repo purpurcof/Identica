@@ -9,7 +9,7 @@ import net.md_5.bungee.api.event.ServerSwitchEvent;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class BungeeCordServerSwitchListener implements DynamicListener<ServerSwitchEvent> {
+public class ServerSwitchListener implements DynamicListener<ServerSwitchEvent> {
 	private final BungeeCordResumeDecisionAdapter resumeDecisionAdapter;
 
 	@Override

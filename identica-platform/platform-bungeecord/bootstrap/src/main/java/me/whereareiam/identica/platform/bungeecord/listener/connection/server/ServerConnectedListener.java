@@ -9,7 +9,7 @@ import net.md_5.bungee.api.event.ServerConnectedEvent;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class BungeeCordServerConnectedListener implements DynamicListener<ServerConnectedEvent> {
+public class ServerConnectedListener implements DynamicListener<ServerConnectedEvent> {
 	private final RoutingCoordinator routingCoordinator;
 
 	@Override

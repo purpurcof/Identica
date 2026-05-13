@@ -9,12 +9,12 @@ import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.platform.bungeecord.BungeeCordIdentica;
-import me.whereareiam.identica.platform.bungeecord.listener.connection.BungeeCordDisconnectListener;
-import me.whereareiam.identica.platform.bungeecord.listener.connection.BungeeCordLoginListener;
-import me.whereareiam.identica.platform.bungeecord.listener.connection.BungeeCordPlayerHandshakeListener;
-import me.whereareiam.identica.platform.bungeecord.listener.connection.server.BungeeCordServerConnectListener;
-import me.whereareiam.identica.platform.bungeecord.listener.connection.server.BungeeCordServerConnectedListener;
-import me.whereareiam.identica.platform.bungeecord.listener.connection.server.BungeeCordServerSwitchListener;
+import me.whereareiam.identica.platform.bungeecord.listener.connection.PlayerDisconnectListener;
+import me.whereareiam.identica.platform.bungeecord.listener.connection.PlayerHandshakeListener;
+import me.whereareiam.identica.platform.bungeecord.listener.connection.PostLoginListener;
+import me.whereareiam.identica.platform.bungeecord.listener.connection.server.ServerConnectListener;
+import me.whereareiam.identica.platform.bungeecord.listener.connection.server.ServerConnectedListener;
+import me.whereareiam.identica.platform.bungeecord.listener.connection.server.ServerSwitchListener;
 import net.md_5.bungee.api.event.*;
 
 @Singleton
@@ -41,12 +41,12 @@ public class BungeeCordListenerRegistrar extends CommonListenerRegistrar {
 	public void registerListeners() {
 		listenerRegistry.attachRegistrar(this);
 
-		registerListener(PlayerHandshakeEvent.class, injector.getInstance(BungeeCordPlayerHandshakeListener.class));
-		registerListener(PostLoginEvent.class, injector.getInstance(BungeeCordLoginListener.class));
-		registerListener(ServerConnectedEvent.class, injector.getInstance(BungeeCordServerConnectedListener.class));
-		registerListener(ServerSwitchEvent.class, injector.getInstance(BungeeCordServerSwitchListener.class));
-		registerListener(ServerConnectEvent.class, injector.getInstance(BungeeCordServerConnectListener.class));
-		registerListener(PlayerDisconnectEvent.class, injector.getInstance(BungeeCordDisconnectListener.class));
+		registerListener(PlayerHandshakeEvent.class, injector.getInstance(PlayerHandshakeListener.class));
+		registerListener(PostLoginEvent.class, injector.getInstance(PostLoginListener.class));
+		registerListener(ServerConnectedEvent.class, injector.getInstance(ServerConnectedListener.class));
+		registerListener(ServerSwitchEvent.class, injector.getInstance(ServerSwitchListener.class));
+		registerListener(ServerConnectEvent.class, injector.getInstance(ServerConnectListener.class));
+		registerListener(PlayerDisconnectEvent.class, injector.getInstance(PlayerDisconnectListener.class));
 	}
 
 	@Override

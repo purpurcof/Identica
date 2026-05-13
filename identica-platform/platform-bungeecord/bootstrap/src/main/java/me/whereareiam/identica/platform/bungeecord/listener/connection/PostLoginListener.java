@@ -9,7 +9,7 @@ import net.md_5.bungee.api.event.PostLoginEvent;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class BungeeCordLoginListener implements DynamicListener<PostLoginEvent> {
+public class PostLoginListener implements DynamicListener<PostLoginEvent> {
 	private final BungeeCordLoginDecisionAdapter loginDecisionAdapter;
 
 	@Override

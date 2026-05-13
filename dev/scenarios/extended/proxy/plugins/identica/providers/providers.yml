@@ -12,7 +12,7 @@ conflicts:
     pairs:
       - providers:
           - "premium"
-          - "cracked"
+          - "password"
         force: false
         resolvers:
           - id: "format_display"
@@ -21,7 +21,7 @@ conflicts:
                 pattern: "{username}_{incomingProvider}"
               target: "joiner"
 providers:
-  - id: "cracked"
+  - id: "password"
     displayName: "CR"
     enabled: true
     priority: 50
@@ -35,7 +35,7 @@ providers:
           priority: 100
           unavailableSelectionPolicy: "KEEP_LOCKED"
     entrypoints:
-      - "cracked.arcadeya.com"
+      - "password.arcadeya.com"
   - id: "premium"
     displayName: "PR"
     enabled: true

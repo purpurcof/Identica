@@ -8,11 +8,11 @@ val velocityJvmArgs = listOf("-Xms256M", "-Xmx256M")
 val paperJvmArgs = listOf("-Xms512M", "-Xmx512M")
 
 evaluationDependsOn(":platform-velocity-bootstrap")
-evaluationDependsOn(":provider-cracked-runtime")
+evaluationDependsOn(":provider-password-runtime")
 evaluationDependsOn(":provider-premium-runtime")
 
 val velocityShadowJar = project(":platform-velocity-bootstrap").tasks.named("shadowJar", Jar::class.java)
-val crackedShadowJar = project(":provider-cracked-runtime").tasks.named("shadowJar", Jar::class.java)
+val passwordShadowJar = project(":provider-password-runtime").tasks.named("shadowJar", Jar::class.java)
 val premiumShadowJar = project(":provider-premium-runtime").tasks.named("shadowJar", Jar::class.java)
 
 val spawner = extensions.getByName("spawner")
@@ -29,7 +29,7 @@ scenarios.registerScenario("normal") { scenario ->
         velocity.addServer("lobby", "127.0.0.1:25566")
         velocity.setTryServers("lobby")
         velocity.addInstall("plugins", velocityShadowJar.flatMap { it.archiveFile })
-        velocity.addInstall("plugins/identica/providers", crackedShadowJar.flatMap { it.archiveFile })
+        velocity.addInstall("plugins/identica/providers", passwordShadowJar.flatMap { it.archiveFile })
         velocity.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
     }
 
@@ -53,7 +53,7 @@ scenarios.registerScenario("extended") { scenario ->
         velocity.addServer("lobby", "127.0.0.1:25569")
         velocity.setTryServers("lobby")
         velocity.addInstall("plugins", velocityShadowJar.flatMap { it.archiveFile })
-        velocity.addInstall("plugins/identica/providers", crackedShadowJar.flatMap { it.archiveFile })
+        velocity.addInstall("plugins/identica/providers", passwordShadowJar.flatMap { it.archiveFile })
         velocity.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
     }
 

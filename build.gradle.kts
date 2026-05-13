@@ -13,7 +13,7 @@ tasks.register("pluginJars") {
 
     dependsOn(
         ":platform-velocity-bootstrap:shadowJar",
-        ":provider-cracked-runtime:shadowJar",
+        ":provider-password-runtime:shadowJar",
         ":provider-premium-runtime:shadowJar"
     )
 }

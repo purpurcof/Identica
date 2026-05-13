@@ -17,7 +17,7 @@ class ProvidersDefaultsTest {
 		Providers providers = new ProvidersDefaults().supply(new Providers());
 
 		assertEquals(Duration.ofHours(12), provider(providers, "premium").getOverrides().getSessionTtl());
-		assertNull(provider(providers, "password").getOverrides().getSessionTtl());
+		assertNull(provider(providers, "credential").getOverrides().getSessionTtl());
 	}
 
 	private Providers.ProviderEntry provider(Providers providers, String id) {

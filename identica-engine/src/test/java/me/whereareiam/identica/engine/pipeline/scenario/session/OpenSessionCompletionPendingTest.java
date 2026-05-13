@@ -21,9 +21,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @DisplayName("Open-Session Completion Pending")
 class OpenSessionCompletionPendingTest {
@@ -48,7 +46,7 @@ class OpenSessionCompletionPendingTest {
 				.build();
 		Session session = Session.builder()
 				.uniqueId(identicaUniqueId)
-				.providerId("password")
+				.providerId("credential")
 				.providerSubject("player-one")
 				.originalUsername("PlayerOne")
 				.effectiveUsername("PlayerOne")
@@ -72,7 +70,7 @@ class OpenSessionCompletionPendingTest {
 				&& requested.getConnectionUniqueId().equals(connectionUniqueId)
 				&& requested.getPipelineType() == PipelineType.AUTHENTICATION
 				&& identicaUniqueId.equals(requested.getSession().getUniqueId())
-				&& "password".equals(requested.getSession().getProviderId())
+				&& "credential".equals(requested.getSession().getProviderId())
 				&& !requested.isSessionReused()
 		));
 	}

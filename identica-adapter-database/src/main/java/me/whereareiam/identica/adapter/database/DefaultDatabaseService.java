@@ -11,6 +11,8 @@ import me.whereareiam.dialectica.SchemaManager;
 import me.whereareiam.identica.adapter.database.config.LoggerConfig;
 import me.whereareiam.identica.adapter.database.connection.DataSourceFactory;
 import me.whereareiam.identica.database.DatabaseService;
+import me.whereareiam.identica.database.schema.SchemaBootstrap;
+import me.whereareiam.identica.database.schema.SchemaContributor;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
@@ -20,6 +22,7 @@ import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
 import java.nio.file.Path;
@@ -30,7 +33,7 @@ import java.nio.file.Path;
  */
 @Getter
 @Singleton
-public class DefaultDatabaseService implements DatabaseService, EventListener {
+public class DefaultDatabaseService implements DatabaseService, SchemaBootstrap, EventListener {
 	private final Persistence persistence;
 	private DataSource dataSource;
 	private Jdbi jdbi;
@@ -59,15 +62,22 @@ public class DefaultDatabaseService implements DatabaseService, EventListener {
 
 			LoggerConfig.configure(jdbi);
 
-			// Initialize schema using Dialectica with automatic package scanning
-			SchemaManager schemaManager = Dialectica.schema(jdbi)
+			newSchemaManager()
 					.scanPackages("me.whereareiam.identica.adapter.database.entity")
-					.setFailOnError(false);
-			schemaManager.initialize();
+					.initialize();
 		} catch (Exception e) {
 			Logger.severe("Failed to initialize database: %s", e.getMessage());
 			throw new RuntimeException("Failed to initialize database", e);
 		}
+	}
+
+	@Override
+	public void apply(@NotNull SchemaContributor contributor) {
+		if (!isInitialized()) throw new IllegalStateException("DatabaseService has not been initialized yet");
+
+		SchemaManager schemaManager = newSchemaManager();
+		contributor.contribute(schemaManager);
+		schemaManager.initialize();
 	}
 
 	@IdenticEvent(EventOrder.HIGH)
@@ -92,5 +102,10 @@ public class DefaultDatabaseService implements DatabaseService, EventListener {
 	@Override
 	public boolean isInitialized() {
 		return jdbi != null;
+	}
+
+	private SchemaManager newSchemaManager() {
+		return Dialectica.schema(jdbi)
+				.setFailOnError(false);
 	}
 }

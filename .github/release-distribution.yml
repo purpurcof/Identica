@@ -108,8 +108,8 @@ artifacts:
         game_versions: *supported_game_versions
         platform_versions: *supported_velocity_versions
 
-  password-provider:
-    file: Identica-Password-{version}.jar
+  credential-provider:
+    file: Identica-Credential-{version}.jar
     platforms:
       velocity:
         loaders:
@@ -139,7 +139,7 @@ publications:
     platforms:
       - velocity
 
-  password-provider-modrinth:
+  credential-provider-modrinth:
     provider:
       id: modrinth
       project_id: cFnEyCND
@@ -155,7 +155,7 @@ publications:
       dependencies:
         - project_id: D26hHMI2
           dependency_type: required
-    artifact: password-provider
+    artifact: credential-provider
     platforms:
       - velocity
 
@@ -191,7 +191,7 @@ publications:
     platforms:
       - velocity
 
-  password-provider-hangar:
+  credential-provider-hangar:
     provider:
       id: hangar
       project_slug: "whereareiam/Identica-Offline-Provider"
@@ -203,7 +203,7 @@ publications:
         - kind: hangar
           name: Identica
           required: true
-    artifact: password-provider
+    artifact: credential-provider
     platforms:
       - velocity
 

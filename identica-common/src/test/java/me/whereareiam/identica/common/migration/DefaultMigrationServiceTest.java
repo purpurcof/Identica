@@ -5,22 +5,22 @@ import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.model.migration.PendingMigration;
-import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.identity.session.SessionService;
-import me.whereareiam.identica.model.migration.operation.MigrationRequest;
-import me.whereareiam.identica.model.migration.operation.MigrationResult;
-import me.whereareiam.identica.model.migration.operation.MigrationStart;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.migration.PendingMigration;
+import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
+import me.whereareiam.identica.model.migration.operation.MigrationRequest;
+import me.whereareiam.identica.model.migration.operation.MigrationResult;
+import me.whereareiam.identica.model.migration.operation.MigrationStart;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
@@ -32,19 +32,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Default Migration Service")
@@ -210,7 +208,7 @@ class DefaultMigrationServiceTest {
 		when(providerLinkPersistenceService.findByUniqueIdAndProviderId(any(UUID.class), any(String.class)))
 				.thenReturn(Optional.of(AccountProviderLink.builder()
 						.uniqueId(UUID.randomUUID())
-						.providerId("password")
+						.providerId("credential")
 						.providerSubject("existing-subject")
 						.primaryLink(false)
 						.build()));
@@ -236,7 +234,7 @@ class DefaultMigrationServiceTest {
 		MigrationResult requested = service.request(MigrationRequest.builder()
 				.connectionUniqueId(connectionUniqueId)
 				.identicaUniqueId(identicaUniqueId)
-				.targetProviderId("password")
+				.targetProviderId("credential")
 				.username("PlayerOne")
 				.ip("127.0.0.1")
 				.build());

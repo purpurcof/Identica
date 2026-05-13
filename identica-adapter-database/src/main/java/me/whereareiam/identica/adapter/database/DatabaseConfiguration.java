@@ -3,28 +3,25 @@ package me.whereareiam.identica.adapter.database;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.adapter.database.account.DefaultAccountReservationPersistenceService;
 import me.whereareiam.identica.adapter.database.account.DefaultAccountPersistenceService;
-import me.whereareiam.identica.adapter.database.repository.account.AccountReservationRepository;
+import me.whereareiam.identica.adapter.database.account.DefaultAccountReservationPersistenceService;
 import me.whereareiam.identica.adapter.database.provider.DefaultProviderLinkPersistenceService;
 import me.whereareiam.identica.adapter.database.provider.DefaultProviderProfilePersistenceService;
 import me.whereareiam.identica.adapter.database.provider.JdbiProvider;
-import me.whereareiam.identica.adapter.database.repository.verification.VerificationEnrollmentRepository;
-import me.whereareiam.identica.adapter.database.repository.verification.VerificationRecoveryCodeRepository;
-import me.whereareiam.identica.adapter.database.repository.verification.VerificationSelectionRepository;
 import me.whereareiam.identica.adapter.database.repository.account.AccountRepository;
+import me.whereareiam.identica.adapter.database.repository.account.AccountReservationRepository;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderLinkRepository;
 import me.whereareiam.identica.adapter.database.repository.provider.ProviderProfileRepository;
 import me.whereareiam.identica.adapter.database.repository.username.UsernameHistoryRepository;
-import me.whereareiam.identica.adapter.database.verification.DefaultVerificationPersistenceService;
+import me.whereareiam.identica.adapter.database.repository.verification.VerificationEnrollmentRepository;
+import me.whereareiam.identica.adapter.database.repository.verification.VerificationRecoveryCodeRepository;
+import me.whereareiam.identica.adapter.database.repository.verification.VerificationSelectionRepository;
 import me.whereareiam.identica.adapter.database.username.DefaultUsernameHistoryPersistenceService;
-import me.whereareiam.identica.database.AccountReservationPersistenceService;
-import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.adapter.database.verification.DefaultVerificationPersistenceService;
+import me.whereareiam.identica.database.*;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
-import me.whereareiam.identica.database.UsernameHistoryPersistenceService;
-import me.whereareiam.identica.database.VerificationPersistenceService;
-import me.whereareiam.identica.database.DatabaseService;
+import me.whereareiam.identica.database.schema.SchemaBootstrap;
 import org.jdbi.v3.core.Jdbi;
 
 public class DatabaseConfiguration extends AbstractModule {
@@ -32,6 +29,7 @@ public class DatabaseConfiguration extends AbstractModule {
 	protected void configure() {
 		bind(Jdbi.class).toProvider(JdbiProvider.class);
 		bind(DatabaseService.class).to(DefaultDatabaseService.class).asEagerSingleton();
+		bind(SchemaBootstrap.class).to(DefaultDatabaseService.class);
 		bind(AccountPersistenceService.class).to(DefaultAccountPersistenceService.class).asEagerSingleton();
 		bind(AccountReservationPersistenceService.class).to(DefaultAccountReservationPersistenceService.class).asEagerSingleton();
 		bind(ProviderLinkPersistenceService.class).to(DefaultProviderLinkPersistenceService.class).asEagerSingleton();

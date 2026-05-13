@@ -19,9 +19,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Default Conflict Service")
 class DefaultConflictServiceTest {
@@ -70,7 +68,7 @@ class DefaultConflictServiceTest {
 		rules.setDefaultRule(defaultRule(entry("allow")));
 
 		Providers.ConflictRule pairRule = new Providers.ConflictRule();
-		pairRule.setProviders(List.of("premium", "password"));
+		pairRule.setProviders(List.of("premium", "credential"));
 		pairRule.setResolvers(List.of(entry("pass")));
 		rules.setPairs(List.of(pairRule));
 
@@ -116,7 +114,7 @@ class DefaultConflictServiceTest {
 		ConflictContext context = context("username")
 				.toBuilder()
 				.incomingLink(link("premium"))
-				.existingLink(link("password"))
+				.existingLink(link("credential"))
 				.build();
 
 		ConflictResolution resolution = service.resolve(context);

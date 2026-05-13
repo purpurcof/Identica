@@ -1,18 +1,12 @@
 package me.whereareiam.identica.engine.prepare;
 
-import me.whereareiam.identica.engine.pipeline.prepare.ConnectionProviderContextResolver;
-import me.whereareiam.identica.engine.pipeline.prepare.PreparePipeline;
-import me.whereareiam.identica.engine.pipeline.prepare.PreparePipelineRegistry;
-import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
-import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.account.AccountPrepareEvent;
-import me.whereareiam.identica.event.base.Event;
-import me.whereareiam.identica.identity.account.RegistrationAccountService;
-import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
+import me.whereareiam.identica.engine.pipeline.prepare.ConnectionProviderContextResolver;
+import me.whereareiam.identica.engine.pipeline.prepare.PreparePipeline;
+import me.whereareiam.identica.engine.pipeline.prepare.PreparePipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.prepare.group.context.ContextGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.context.phase.ResolveEntrypointPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.context.phase.ResolvePendingMigrationContextPhase;
@@ -29,30 +23,36 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.LoadP
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePendingMigrationAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePreparedAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolveProfilePhase;
-import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
-import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.account.AccountPrepareEvent;
+import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
+import me.whereareiam.identica.identity.account.RegistrationAccountService;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
-import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
-import me.whereareiam.identica.model.migration.MigrationContext;
-import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
-import me.whereareiam.identica.type.PrepareStage;
+import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.AccountDecision;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.model.migration.MigrationContext;
+import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
+import me.whereareiam.identica.model.pipeline.prepare.PrepareRequest;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
+import me.whereareiam.identica.type.PrepareStage;
+import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -66,15 +66,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Prepare Pipeline")
@@ -236,7 +231,7 @@ class PreparePipelineTest {
 				.identity(new ConnectionIdentity(UUID.randomUUID(), "MigratingPlayer", "127.0.0.1"))
 				.targetProviderId("password")
 				.build();
-		migrationContext.setProvider(ProviderContext.of("password", "offline-subject", "MigratingPlayer", ProviderOrigin.MANUAL));
+		migrationContext.setProvider(ProviderContext.of("credential", "offline-subject", "MigratingPlayer", ProviderOrigin.MANUAL));
 		pendingMigrationState.setScenario(migrationContext);
 		pendingMigrationState.putItem(new MigrationPendingState(
 				"password",
@@ -341,7 +336,7 @@ class PreparePipelineTest {
 						.build());
 		when(providerOperations.resolveProfile(any()))
 				.thenReturn(ProfileResolution.builder()
-						.providerId("password")
+						.providerId("credential")
 						.providerSubject("offline-subject")
 						.build())
 				.thenReturn(ProfileResolution.builder()
@@ -473,8 +468,8 @@ class PreparePipelineTest {
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of());
 		when(providerOperations.resolveProfile(any()))
 				.thenReturn(ProfileResolution.builder()
-						.providerId("password")
-						.providerSubject("password-subject")
+						.providerId("credential")
+						.providerSubject("credential-subject")
 						.build());
 		when(providerOperations.resolveEntrypoint("premium.example.com", 25565))
 				.thenReturn(ResolvedEntrypoint.builder()
@@ -486,11 +481,11 @@ class PreparePipelineTest {
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
 				.thenReturn(Optional.of(pendingMigrationState));
 		when(registrationAccountService.reserve(any())).thenReturn(identicaUniqueId);
-		when(providerLinkPersistenceService.findBySubject("password", "password-subject"))
+		when(providerLinkPersistenceService.findBySubject("password", "credential-subject"))
 				.thenReturn(Optional.empty());
 		when(accountPersistenceService.findByUniqueId(identicaUniqueId))
 				.thenReturn(Optional.empty());
-		when(providerProfilePersistenceService.findBySubject("password", "password-subject"))
+		when(providerProfilePersistenceService.findBySubject("password", "credential-subject"))
 				.thenReturn(Optional.empty());
 
 		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()

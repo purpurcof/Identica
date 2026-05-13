@@ -1,22 +1,22 @@
 package me.whereareiam.identica.engine.completion;
 
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
-import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
+import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
 import me.whereareiam.identica.event.routing.intent.RoutingIntentReachedEvent;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptState;
+import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.routing.RoutingEndpoint;
 import me.whereareiam.identica.model.routing.RoutingIntent;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptState;
+import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.routing.RoutingIntentStore;
-import me.whereareiam.identica.type.routing.reason.RoutingReason;
-import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
@@ -29,10 +29,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @DisplayName("Completion Pending Lifecycle")
 class CompletionPendingLifecycleTest {
@@ -54,7 +51,7 @@ class CompletionPendingLifecycleTest {
 		UUID connectionUniqueId = UUID.randomUUID();
 		Session session = Session.builder()
 				.uniqueId(UUID.randomUUID())
-				.providerId("password")
+				.providerId("credential")
 				.providerSubject("player-one")
 				.build();
 

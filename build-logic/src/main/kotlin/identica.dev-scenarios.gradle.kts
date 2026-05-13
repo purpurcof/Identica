@@ -6,12 +6,12 @@ val paperJvmArgs = listOf("-Xms512M", "-Xmx512M")
 
 evaluationDependsOn(":platform-bungeecord-bootstrap")
 evaluationDependsOn(":platform-velocity-bootstrap")
-evaluationDependsOn(":provider-password-runtime")
+evaluationDependsOn(":provider-credential-runtime")
 evaluationDependsOn(":provider-premium-runtime")
 
 val bungeecordShadowJar = project(":platform-bungeecord-bootstrap").tasks.named("shadowJar", Jar::class.java)
 val velocityShadowJar = project(":platform-velocity-bootstrap").tasks.named("shadowJar", Jar::class.java)
-val passwordShadowJar = project(":provider-password-runtime").tasks.named("shadowJar", Jar::class.java)
+val credentialShadowJar = project(":provider-credential-runtime").tasks.named("shadowJar", Jar::class.java)
 val premiumShadowJar = project(":provider-premium-runtime").tasks.named("shadowJar", Jar::class.java)
 
 val spawner = extensions.getByName("spawner")
@@ -28,7 +28,7 @@ scenarios.registerScenario("normal-velocity") { scenario ->
         velocity.addServer("lobby", "127.0.0.1:25566")
         velocity.setTryServers("lobby")
         velocity.addInstall("plugins", velocityShadowJar.flatMap { it.archiveFile })
-        velocity.addInstall("plugins/identica/providers", passwordShadowJar.flatMap { it.archiveFile })
+        velocity.addInstall("plugins/identica/providers", credentialShadowJar.flatMap { it.archiveFile })
         velocity.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
     }
 
@@ -50,7 +50,7 @@ scenarios.registerScenario("normal-bungeecord") { scenario ->
         bungeecord.addServer("lobby", "127.0.0.1:25566")
         bungeecord.setTryServers("lobby")
         bungeecord.addInstall("plugins", bungeecordShadowJar.flatMap { it.archiveFile })
-        bungeecord.addInstall("plugins/identica/providers", passwordShadowJar.flatMap { it.archiveFile })
+        bungeecord.addInstall("plugins/identica/providers", credentialShadowJar.flatMap { it.archiveFile })
         bungeecord.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
     }
 
@@ -74,7 +74,7 @@ scenarios.registerScenario("extended-velocity") { scenario ->
         velocity.addServer("lobby", "127.0.0.1:25569")
         velocity.setTryServers("lobby")
         velocity.addInstall("plugins", velocityShadowJar.flatMap { it.archiveFile })
-        velocity.addInstall("plugins/identica/providers", passwordShadowJar.flatMap { it.archiveFile })
+        velocity.addInstall("plugins/identica/providers", credentialShadowJar.flatMap { it.archiveFile })
         velocity.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
     }
 
@@ -121,7 +121,7 @@ scenarios.registerScenario("extended-bungeecord") { scenario ->
         bungeecord.addServer("lobby", "127.0.0.1:25569")
         bungeecord.setTryServers("lobby")
         bungeecord.addInstall("plugins", bungeecordShadowJar.flatMap { it.archiveFile })
-        bungeecord.addInstall("plugins/identica/providers", passwordShadowJar.flatMap { it.archiveFile })
+        bungeecord.addInstall("plugins/identica/providers", credentialShadowJar.flatMap { it.archiveFile })
         bungeecord.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
     }
 

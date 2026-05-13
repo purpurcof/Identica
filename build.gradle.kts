@@ -14,7 +14,7 @@ tasks.register("pluginJars") {
     dependsOn(
         ":platform-bungeecord-bootstrap:shadowJar",
         ":platform-velocity-bootstrap:shadowJar",
-        ":provider-password-runtime:shadowJar",
+        ":provider-credential-runtime:shadowJar",
         ":provider-premium-runtime:shadowJar"
     )
 }

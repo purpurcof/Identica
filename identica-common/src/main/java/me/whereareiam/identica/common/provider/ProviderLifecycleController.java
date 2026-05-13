@@ -13,6 +13,8 @@ import me.whereareiam.identica.common.provider.resolver.ProviderPlatformExtensio
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.conflict.ConflictService;
+import me.whereareiam.identica.database.schema.SchemaBootstrap;
+import me.whereareiam.identica.database.schema.SchemaContributor;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.provider.state.ProviderDisabledEvent;
 import me.whereareiam.identica.event.provider.state.ProviderEnabledEvent;
@@ -43,6 +45,7 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<ProviderEligibilityResolver>> ELIGIBILITY_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProfileSubjectResolver>> PROFILE_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderMigrationPrecheck>> MIGRATION_PRECHECKS = new TypeLiteral<>() {};
+	private static final TypeLiteral<Set<SchemaContributor>> SCHEMA_CONTRIBUTORS = new TypeLiteral<>() {};
 
 	private final ProviderWorkingPathResolver workingPathResolver;
 	private final ProviderClassLoaderFactory classLoaderFactory;
@@ -52,6 +55,7 @@ public class ProviderLifecycleController {
 	private final ProviderPlatformExtensionResolver platformExtensionResolver;
 	private final ProviderResolverRegistry resolverRegistry;
 	private final ConflictService conflictService;
+	private final SchemaBootstrap schemaBootstrap;
 	private final EventManager eventManager;
 	private final HandshakeStore handshakeStore;
 
@@ -96,6 +100,7 @@ public class ProviderLifecycleController {
 						probeProvider,
 						probePlatformExtension
 				);
+				applySchemaContributors(providerInjector);
 				IdenticaProvider provider = instanceFactory.createInjectedProvider(
 						providerInjector,
 						providerClass,
@@ -232,6 +237,11 @@ public class ProviderLifecycleController {
 		if (policies != null)
 			for (HandshakePolicy policy : policies)
 				handshakeStore.registerPolicy(policy);
+	}
+
+	private void applySchemaContributors(Injector injector) {
+		for (SchemaContributor contributor : resolveSet(injector, SCHEMA_CONTRIBUTORS))
+			schemaBootstrap.apply(contributor);
 	}
 
 	private void unregisterProviderBindings(InternalProvider internal) {

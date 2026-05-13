@@ -13,7 +13,7 @@ attache = "dev-317b98f"
 configura = "dev-ba342f9"
 commandant = "dev-d6ae730"
 keystone = "dev-90d39d2"
-dialectica = "dev-332d268"
+dialectica = "dev-62409af"
 
 guice = "7.0.0"
 annotations = "26.0.1"

@@ -72,35 +72,35 @@ project(":platform-bungeecord-bootstrap").projectDir = file("identica-platform/p
 include(":identica-provider")
 project(":identica-provider").projectDir = file("identica-provider")
 
-include(":provider-password")
-project(":provider-password").projectDir = file("identica-provider/provider-password")
+include(":provider-credential")
+project(":provider-credential").projectDir = file("identica-provider/provider-credential")
 
-include(":provider-password-runtime")
-project(":provider-password-runtime").projectDir = file("identica-provider/provider-password/password")
+include(":provider-credential-runtime")
+project(":provider-credential-runtime").projectDir = file("identica-provider/provider-credential/credential")
 
-include(":provider-password-common")
-project(":provider-password-common").projectDir = file("identica-provider/provider-password/password-common")
+include(":provider-credential-common")
+project(":provider-credential-common").projectDir = file("identica-provider/provider-credential/credential-common")
 
-include(":provider-password-api")
-project(":provider-password-api").projectDir = file("identica-provider/provider-password/password-api")
+include(":provider-credential-api")
+project(":provider-credential-api").projectDir = file("identica-provider/provider-credential/credential-api")
 
-include(":provider-password-cryptography")
-project(":provider-password-cryptography").projectDir = file("identica-provider/provider-password/password-cryptography")
+include(":provider-credential-cryptography")
+project(":provider-credential-cryptography").projectDir = file("identica-provider/provider-credential/credential-cryptography")
 
-include(":provider-password-cryptography-common")
-project(":provider-password-cryptography-common").projectDir =
-    file("identica-provider/provider-password/password-cryptography/common")
+include(":provider-credential-cryptography-common")
+project(":provider-credential-cryptography-common").projectDir =
+    file("identica-provider/provider-credential/credential-cryptography/common")
 
-include(":provider-password-cryptography-argon2")
-project(":provider-password-cryptography-argon2").projectDir =
-    file("identica-provider/provider-password/password-cryptography/cryptography-argon2")
+include(":provider-credential-cryptography-argon2")
+project(":provider-credential-cryptography-argon2").projectDir =
+    file("identica-provider/provider-credential/credential-cryptography/cryptography-argon2")
 
-include(":provider-password-cryptography-bcrypt")
-project(":provider-password-cryptography-bcrypt").projectDir =
-    file("identica-provider/provider-password/password-cryptography/cryptography-bcrypt")
+include(":provider-credential-cryptography-bcrypt")
+project(":provider-credential-cryptography-bcrypt").projectDir =
+    file("identica-provider/provider-credential/credential-cryptography/cryptography-bcrypt")
 
-include(":provider-password-database")
-project(":provider-password-database").projectDir = file("identica-provider/provider-password/password-database")
+include(":provider-credential-database")
+project(":provider-credential-database").projectDir = file("identica-provider/provider-credential/credential-database")
 
 include(":provider-premium")
 project(":provider-premium").projectDir = file("identica-provider/provider-premium")

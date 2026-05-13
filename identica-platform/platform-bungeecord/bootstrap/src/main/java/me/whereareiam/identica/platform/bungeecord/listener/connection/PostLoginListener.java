@@ -13,7 +13,7 @@ public class PostLoginListener implements DynamicListener<PostLoginEvent> {
 	private final BungeeCordLoginDecisionAdapter loginDecisionAdapter;
 
 	@Override
-	public void onEvent(net.md_5.bungee.api.event.PostLoginEvent event) {
+	public void onEvent(PostLoginEvent event) {
 		loginDecisionAdapter.process(event);
 	}
 }

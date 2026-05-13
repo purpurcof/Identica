@@ -9,6 +9,7 @@ import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.platform.bungeecord.BungeeCordIdentica;
+import me.whereareiam.identica.platform.bungeecord.listener.connection.LoginListener;
 import me.whereareiam.identica.platform.bungeecord.listener.connection.PlayerDisconnectListener;
 import me.whereareiam.identica.platform.bungeecord.listener.connection.PlayerHandshakeListener;
 import me.whereareiam.identica.platform.bungeecord.listener.connection.PostLoginListener;
@@ -41,6 +42,7 @@ public class BungeeCordListenerRegistrar extends CommonListenerRegistrar {
 	public void registerListeners() {
 		listenerRegistry.attachRegistrar(this);
 
+		registerListener(LoginEvent.class, injector.getInstance(LoginListener.class));
 		registerListener(PlayerHandshakeEvent.class, injector.getInstance(PlayerHandshakeListener.class));
 		registerListener(PostLoginEvent.class, injector.getInstance(PostLoginListener.class));
 		registerListener(ServerConnectedEvent.class, injector.getInstance(ServerConnectedListener.class));

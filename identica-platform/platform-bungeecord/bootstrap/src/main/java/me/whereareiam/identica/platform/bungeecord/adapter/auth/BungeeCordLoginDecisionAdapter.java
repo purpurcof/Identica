@@ -37,14 +37,16 @@ public class BungeeCordLoginDecisionAdapter {
 		ProxiedPlayer player = event.getPlayer();
 		String ip = resolveIp(player);
 		String intendedServer = event.getTarget() != null ? event.getTarget().getName() : null;
-		PrepareDecision prepared = prepareStateStore.peek(player.getUniqueId()).orElse(null);
+
+		ConnectionIdentity identity = new ConnectionIdentity(player.getUniqueId(), player.getName(), ip);
+		applyOrigin(identity, player);
+
+		PrepareDecision prepared = resolvePrepared(player, identity);
 
 		ProviderContext provider = prepared != null ? prepared.getProvider() : null;
-		String providerUsername = provider != null && !provider.getProviderUsername().isBlank()
-				? provider.getProviderUsername()
-				: player.getName();
-		ConnectionIdentity identity = new ConnectionIdentity(player.getUniqueId(), providerUsername, ip);
-		applyOrigin(identity, player);
+		if (provider != null && !provider.getProviderUsername().isBlank())
+			identity.setUsername(provider.getProviderUsername());
+
 		Logger.debug(
 				"Bungee login request player=%s username=%s ip=%s key=%s preparedUniqueId=%s preparedProvider=%s preparedSubject=%s preparedEffective=%s",
 				player.getUniqueId(),
@@ -83,6 +85,16 @@ public class BungeeCordLoginDecisionAdapter {
 		ConnectionDecision.Status status = decision != null ? decision.getStatus() : null;
 		if (status == ConnectionDecision.Status.ALLOW || status == ConnectionDecision.Status.WAIT)
 			identityService.attach(liveIdentity);
+	}
+
+	private PrepareDecision resolvePrepared(@NotNull ProxiedPlayer player, @NotNull ConnectionIdentity identity) {
+		PrepareDecision prepared = prepareStateStore.peek(player.getUniqueId()).orElse(null);
+		if (prepared != null) return prepared;
+
+		String connectionKey = identity.connectionKey();
+		if (connectionKey == null || connectionKey.isBlank()) return null;
+
+		return prepareStateStore.peek(connectionKey).orElse(null);
 	}
 
 	private String resolveIp(@NotNull ProxiedPlayer player) {

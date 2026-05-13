@@ -16,4 +16,5 @@ dependencies {
     testImplementation(libs.jdbi.sqlobject)
     testImplementation(libs.dialectica)
     testImplementation(libs.h2)
+    testImplementation(libs.sqlite)
 }

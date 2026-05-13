@@ -3,6 +3,7 @@ package me.whereareiam.identica.provider.credential.database;
 import me.whereareiam.identica.adapter.database.DefaultDatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.config.persistence.H2Persistence;
+import me.whereareiam.identica.model.config.persistence.SqlitePersistence;
 import org.jdbi.v3.core.Jdbi;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +41,7 @@ class CredentialSchemaContributorTest {
 			handle.execute("DROP TABLE IF EXISTS dialectica_schema_migrations");
 			handle.execute("DROP TABLE IF EXISTS identica_provider_credential_accounts_history");
 			handle.execute("DROP TABLE IF EXISTS identica_provider_credential_accounts");
-			handle.execute("DROP TABLE IF EXISTS identica_cracked_accounts_passwords");
+			handle.execute("DROP TABLE IF EXISTS identica_cracked_account_passwords");
 			handle.execute("DROP TABLE IF EXISTS identica_cracked_accounts");
 		});
 	}
@@ -52,7 +53,7 @@ class CredentialSchemaContributorTest {
 	}
 
 	@Test
-	void renamesCrackedTablesToCanonicalNames() {
+	void renamesLegacySingularPasswordHistoryTableToCanonicalName() {
 		jdbi.useHandle(handle -> {
 			handle.execute("""
 					CREATE TABLE identica_cracked_accounts (
@@ -66,7 +67,7 @@ class CredentialSchemaContributorTest {
 					)
 					""");
 			handle.execute("""
-					CREATE TABLE identica_cracked_accounts_passwords (
+					CREATE TABLE identica_cracked_account_passwords (
 						provider_id VARCHAR(64) NOT NULL,
 						provider_subject VARCHAR(128) NOT NULL,
 						hashing_method VARCHAR(64) NOT NULL,
@@ -80,7 +81,7 @@ class CredentialSchemaContributorTest {
 		databaseService.apply(new CredentialSchemaContributor());
 
 		assertFalse(tableExists("identica_cracked_accounts"));
-		assertFalse(tableExists("identica_cracked_accounts_passwords"));
+		assertFalse(tableExists("identica_cracked_account_passwords"));
 		assertTrue(tableExists("identica_provider_credential_accounts"));
 		assertTrue(tableExists("identica_provider_credential_accounts_history"));
 		assertEquals(1L, migrationRows());
@@ -132,6 +133,60 @@ class CredentialSchemaContributorTest {
 		assertNotNull(exception.getCause());
 		assertTrue(exception.getCause().getMessage().contains("Cannot rename identica_cracked_accounts"));
 		assertEquals(0L, migrationRows());
+	}
+
+	@Test
+	void sqliteRuntimeStyleStartupRenamesLegacyTablesBeforeCreatingCanonicalOnes() throws Exception {
+		if (databaseService != null)
+			databaseService.onShutdown(null);
+
+		Path sqlitePath = Files.createTempDirectory("credential-schema-contributor-sqlite-");
+		SqlitePersistence persistence = new SqlitePersistence();
+		persistence.setFile("identica-test.db");
+
+		databaseService = new DefaultDatabaseService(
+				persistence,
+				Mockito.mock(EventManager.class),
+				sqlitePath
+		);
+		jdbi = databaseService.getJdbi();
+
+		jdbi.useHandle(handle -> {
+			handle.execute("PRAGMA foreign_keys = ON");
+			handle.execute("""
+					CREATE TABLE identica_cracked_accounts (
+						provider_id VARCHAR(64) NOT NULL,
+						provider_subject VARCHAR(128) NOT NULL,
+						password_hash VARCHAR(512) NOT NULL,
+						hashing_method VARCHAR(64) NOT NULL,
+						created_at BIGINT,
+						updated_at BIGINT,
+						PRIMARY KEY (provider_id, provider_subject)
+					)
+					""");
+			handle.execute("""
+					CREATE TABLE identica_cracked_account_passwords (
+						provider_id VARCHAR(64) NOT NULL,
+						provider_subject VARCHAR(128) NOT NULL,
+						hashing_method VARCHAR(64) NOT NULL,
+						change_reason VARCHAR(32) NOT NULL,
+						changed_at BIGINT,
+						PRIMARY KEY (provider_id, provider_subject, changed_at),
+						FOREIGN KEY (provider_id, provider_subject)
+							REFERENCES identica_cracked_accounts(provider_id, provider_subject)
+							ON DELETE CASCADE
+					)
+					""");
+		});
+
+		databaseService.apply(new CredentialSchemaContributor());
+
+		assertFalse(tableExists("identica_cracked_accounts"));
+		assertFalse(tableExists("identica_cracked_account_passwords"));
+		assertTrue(tableExists("identica_provider_credential_accounts"));
+		assertTrue(tableExists("identica_provider_credential_accounts_history"));
+		assertTrue(tableExists("dialectica_schema_migrations"));
+		assertEquals(1L, migrationRows());
 	}
 
 	private boolean tableExists(String tableName) {

@@ -229,12 +229,12 @@ class PreparePipelineTest {
 		MigrationContext migrationContext = MigrationContext.builder()
 				.connectionUniqueId(UUID.randomUUID())
 				.identity(new ConnectionIdentity(UUID.randomUUID(), "MigratingPlayer", "127.0.0.1"))
-				.targetProviderId("password")
+				.targetProviderId("credential")
 				.build();
 		migrationContext.setProvider(ProviderContext.of("credential", "offline-subject", "MigratingPlayer", ProviderOrigin.MANUAL));
 		pendingMigrationState.setScenario(migrationContext);
 		pendingMigrationState.putItem(new MigrationPendingState(
-				"password",
+				"credential",
 				1234L,
 				MigrationInitiator.USER,
 				UUID.randomUUID()
@@ -344,13 +344,13 @@ class PreparePipelineTest {
 						.providerSubject("premium-subject")
 						.build());
 		when(registrationAccountService.reserve(any())).thenReturn(preparedUniqueId);
-		when(providerLinkPersistenceService.findBySubject("password", "offline-subject"))
+		when(providerLinkPersistenceService.findBySubject("credential", "offline-subject"))
 				.thenReturn(Optional.empty());
 		when(providerLinkPersistenceService.findBySubject("premium", "premium-subject"))
 				.thenReturn(Optional.empty());
 		when(accountPersistenceService.findByUniqueId(preparedUniqueId))
 				.thenReturn(Optional.empty());
-		when(providerProfilePersistenceService.findBySubject("password", "offline-subject"))
+		when(providerProfilePersistenceService.findBySubject("credential", "offline-subject"))
 				.thenReturn(Optional.empty());
 		when(providerProfilePersistenceService.findBySubject("premium", "premium-subject"))
 				.thenReturn(Optional.empty());
@@ -481,11 +481,11 @@ class PreparePipelineTest {
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
 				.thenReturn(Optional.of(pendingMigrationState));
 		when(registrationAccountService.reserve(any())).thenReturn(identicaUniqueId);
-		when(providerLinkPersistenceService.findBySubject("password", "credential-subject"))
+		when(providerLinkPersistenceService.findBySubject("credential", "credential-subject"))
 				.thenReturn(Optional.empty());
 		when(accountPersistenceService.findByUniqueId(identicaUniqueId))
 				.thenReturn(Optional.empty());
-		when(providerProfilePersistenceService.findBySubject("password", "credential-subject"))
+		when(providerProfilePersistenceService.findBySubject("credential", "credential-subject"))
 				.thenReturn(Optional.empty());
 
 		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()

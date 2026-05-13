@@ -234,7 +234,7 @@ class DefaultMigrationServiceTest {
 		MigrationResult requested = service.request(MigrationRequest.builder()
 				.connectionUniqueId(connectionUniqueId)
 				.identicaUniqueId(identicaUniqueId)
-				.targetProviderId("password")
+				.targetProviderId("credential")
 				.username("PlayerOne")
 				.ip("127.0.0.1")
 				.build());

@@ -22,7 +22,7 @@ import java.util.UUID;
  * @IdenticEvent
  * public void onEnroll(VerificationEnrollEvent event) {
  *     if ("totp".equalsIgnoreCase(event.getMethodId())) {
- *         event.setProviderId("password");
+ *         event.setProviderId("credential");
  *     }
  * }
  * }</pre>

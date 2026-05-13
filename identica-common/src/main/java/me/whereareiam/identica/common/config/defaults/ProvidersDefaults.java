@@ -20,14 +20,14 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 		usernameRules.setDefaultRule(defaultRule);
 
 		Providers.ConflictRule premiumVsPassword = new Providers.ConflictRule();
-		premiumVsPassword.setProviders(List.of("premium", "password"));
+		premiumVsPassword.setProviders(List.of("premium", "credential"));
 		premiumVsPassword.setResolvers(List.of(formatResolver("{username}_{incomingProvider}")));
 		usernameRules.setPairs(List.of(premiumVsPassword));
 
 		config.getConflicts().put("username", usernameRules);
 
 		Providers.ProviderEntry password = new Providers.ProviderEntry();
-		password.setId("password");
+		password.setId("credential");
 		password.setDisplayName("CR");
 		password.setEnabled(true);
 		password.setPriority(50);

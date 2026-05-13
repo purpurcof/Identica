@@ -147,7 +147,7 @@ class CompletionPendingLifecycleTest {
 				new RoutingAttemptState(),
 				PipelineType.AUTHENTICATION,
 				null,
-				"password",
+				"credential",
 				null,
 				System.currentTimeMillis()
 		);

@@ -70,7 +70,7 @@ class OpenSessionCompletionPendingTest {
 				&& requested.getConnectionUniqueId().equals(connectionUniqueId)
 				&& requested.getPipelineType() == PipelineType.AUTHENTICATION
 				&& identicaUniqueId.equals(requested.getSession().getUniqueId())
-				&& "password".equals(requested.getSession().getProviderId())
+				&& "credential".equals(requested.getSession().getProviderId())
 				&& !requested.isSessionReused()
 		));
 	}

@@ -25,7 +25,7 @@ class FormatUsernameConflictResolverTest {
 				.key("username")
 				.candidate("Player")
 				.incomingLink(link("premium"))
-				.existingLink(link("password"))
+				.existingLink(link("credential"))
 				.build();
 
 		FormatUsernameConflictResolver.Config config = new FormatUsernameConflictResolver.Config();
@@ -41,7 +41,7 @@ class FormatUsernameConflictResolverTest {
 	void formatsDisplayNamesAndProviderIdsWhenAvailable() {
 		ProviderOperations providerOperations = mock(ProviderOperations.class);
 		when(providerOperations.displayProviderName("premium")).thenReturn("Premium");
-		when(providerOperations.displayProviderName("password")).thenReturn("Offline");
+		when(providerOperations.displayProviderName("credential")).thenReturn("Credential");
 
 		FormatUsernameConflictResolver resolver = new FormatUsernameConflictResolver(providerOperations);
 
@@ -49,7 +49,7 @@ class FormatUsernameConflictResolverTest {
 				.key("username")
 				.candidate("Player")
 				.incomingLink(link("premium"))
-				.existingLink(link("password"))
+				.existingLink(link("credential"))
 				.build();
 
 		FormatUsernameConflictResolver.Config config = new FormatUsernameConflictResolver.Config();

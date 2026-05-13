@@ -8,11 +8,11 @@ import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
-import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
+import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,10 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Username Entrypoint Conflict Guard")
@@ -48,7 +45,7 @@ class UsernameEntrypointConflictGuardTest {
 		Providers providers = new Providers();
 		providers.setProviders(List.of(
 				entry("premium", "Premium Network", 100, List.of("premium.example.com")),
-				entry("password", "Offline Network", 50, List.of("password.example.com"))
+				entry("credential", "Credential Network", 50, List.of("credential.example.com"))
 		));
 		Messages messages = new MessagesDefaults().supply(new Messages());
 
@@ -62,7 +59,7 @@ class UsernameEntrypointConflictGuardTest {
 				.key("username")
 				.candidate("Player")
 				.incomingLink(link("premium"))
-				.existingLink(link("password"))
+				.existingLink(link("credential"))
 				.build();
 		context.putExtra("entrypointSource", ProviderOrigin.AUTO);
 
@@ -82,7 +79,7 @@ class UsernameEntrypointConflictGuardTest {
 		Providers providers = new Providers();
 		providers.setProviders(List.of(
 				entry("premium", "Premium Network", 100, List.of("premium.example.com")),
-				entry("password", "Offline Network", 50, List.of("password.example.com"))
+				entry("credential", "Credential Network", 50, List.of("credential.example.com"))
 		));
 
 		ProviderOperations providerOperations = providerOperations(providers);
@@ -95,7 +92,7 @@ class UsernameEntrypointConflictGuardTest {
 				.key("username")
 				.candidate("Player")
 				.incomingLink(link("premium"))
-				.existingLink(link("password"))
+				.existingLink(link("credential"))
 				.build();
 		context.putExtra("entrypointSource", ProviderOrigin.ENTRYPOINT);
 

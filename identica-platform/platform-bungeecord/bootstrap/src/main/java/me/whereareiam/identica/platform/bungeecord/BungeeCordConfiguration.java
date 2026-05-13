@@ -32,14 +32,12 @@ import net.md_5.bungee.api.plugin.PluginManager;
 import org.incendo.cloud.CommandManager;
 
 import java.nio.file.Path;
-import java.util.logging.Logger;
 
 @RequiredArgsConstructor
 public class BungeeCordConfiguration extends AbstractModule {
 	private final ProxyServer proxyServer;
 	private final BungeeCordIdentica plugin;
 	private final Path dataPath;
-	private final Logger logger;
 	private final BungeeAudiences audiences;
 
 	@Override
@@ -49,7 +47,6 @@ public class BungeeCordConfiguration extends AbstractModule {
 		bind(PluginManager.class).toInstance(proxyServer.getPluginManager());
 		bind(BungeeCordIdentica.class).toInstance(plugin);
 		bind(BungeeAudiences.class).toInstance(audiences);
-		bind(Logger.class).toInstance(logger);
 		bind(LoggingHelper.class).to(BungeeCordLoggingHelper.class);
 		bind(ListenerRegistrar.class).to(BungeeCordListenerRegistrar.class);
 		bind(BungeeCordRoutingIntentListener.class).asEagerSingleton();

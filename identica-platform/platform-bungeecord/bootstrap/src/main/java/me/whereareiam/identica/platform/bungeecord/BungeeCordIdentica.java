@@ -35,7 +35,7 @@ public class BungeeCordIdentica extends Plugin {
 		injector = Guice.createInjector(
 				new CommonConfiguration(getDataFolder().toPath()),
 				new EngineConfiguration(),
-				new BungeeCordConfiguration(getProxy(), this, getDataFolder().toPath(), getLogger(), audiences),
+				new BungeeCordConfiguration(getProxy(), this, getDataFolder().toPath(), audiences),
 				new CommandConfiguration(),
 				new DatabaseConfiguration(),
 				new ReplicationConfiguration()

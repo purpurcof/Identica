@@ -5,12 +5,11 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.handshake.policy.HandshakePolicy;
-import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
 import me.whereareiam.identica.common.provider.injector.ProviderInjectorFactory;
+import me.whereareiam.identica.common.provider.resolver.ProviderPlatformExtensionResolver;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.conflict.ConflictService;
@@ -19,10 +18,13 @@ import me.whereareiam.identica.event.provider.state.ProviderDisabledEvent;
 import me.whereareiam.identica.event.provider.state.ProviderEnabledEvent;
 import me.whereareiam.identica.event.provider.state.ProviderLoadedEvent;
 import me.whereareiam.identica.event.provider.state.ProviderUnloadedEvent;
+import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.provider.ProviderPlatformExtension;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
@@ -47,6 +49,7 @@ public class ProviderLifecycleController {
 	private final ProviderDependencyResolver dependencyResolver;
 	private final ProviderInjectorFactory injectorFactory;
 	private final ProviderInstanceFactory instanceFactory;
+	private final ProviderPlatformExtensionResolver platformExtensionResolver;
 	private final ProviderResolverRegistry resolverRegistry;
 	private final ConflictService conflictService;
 	private final EventManager eventManager;
@@ -75,17 +78,27 @@ public class ProviderLifecycleController {
 			}
 
 			IdenticaProvider probeProvider = instanceFactory.instantiateProvider(providerClass);
-			if (probeProvider != null) {
-				probeProvider.setDescriptor(descriptor);
-				probeProvider.setWorkingPath(workingPath);
-			}
+				if (probeProvider != null) {
+					probeProvider.setDescriptor(descriptor);
+					probeProvider.setWorkingPath(workingPath);
+				}
 
-			dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
+				Class<? extends ProviderPlatformExtension> platformExtensionClass = platformExtensionResolver.resolve(probeProvider);
+				ProviderPlatformExtension probePlatformExtension = platformExtensionClass != null
+						? instanceFactory.instantiatePlatformExtension(platformExtensionClass)
+						: null;
 
-			Injector providerInjector = injectorFactory.create(workingPath, descriptor, probeProvider);
-			IdenticaProvider provider = instanceFactory.createInjectedProvider(
-					providerInjector,
-					providerClass,
+				dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
+
+				Injector providerInjector = injectorFactory.create(
+						workingPath,
+						descriptor,
+						probeProvider,
+						probePlatformExtension
+				);
+				IdenticaProvider provider = instanceFactory.createInjectedProvider(
+						providerInjector,
+						providerClass,
 					probeProvider
 			);
 			if (provider == null) {
@@ -94,8 +107,16 @@ public class ProviderLifecycleController {
 				return;
 			}
 
-			provider.setDescriptor(descriptor);
-			provider.setWorkingPath(workingPath);
+				provider.setDescriptor(descriptor);
+				provider.setWorkingPath(workingPath);
+				if (platformExtensionClass != null) {
+					ProviderPlatformExtension platformExtension = instanceFactory.createInjectedPlatformExtension(
+							providerInjector,
+							platformExtensionClass,
+							probePlatformExtension
+					);
+					provider.setPlatformExtension(platformExtension);
+				}
 
 			internal.setProvider(provider);
 			internal.setWorkingPath(workingPath);

@@ -426,7 +426,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		));
 		enrollment.setDescriptions(Map.of(
 				"premium", "Use Minecraft account for registration.",
-				"password", "Register using password."
+				"credential", "Register using password."
 		));
 		step.setEnrollment(enrollment);
 		journey.setStage(stage);

@@ -70,7 +70,7 @@ class UsernameEntrypointConflictGuardTest {
 		assertTrue(resolution.getMessage().contains("Premium Network"));
 		assertTrue(resolution.getMessage().contains("Offline Network"));
 		assertTrue(resolution.getMessage().contains("premium.example.com"));
-		assertTrue(resolution.getMessage().contains("password.example.com"));
+		assertTrue(resolution.getMessage().contains("credential.example.com"));
 	}
 
 	@DisplayName("Allows the conflict when the user has already selected an entrypoint")

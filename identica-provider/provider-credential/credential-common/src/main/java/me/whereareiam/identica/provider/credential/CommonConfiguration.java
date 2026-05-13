@@ -46,16 +46,16 @@ public class CommonConfiguration extends AbstractModule {
 		bind(BruteForceSentinelDefinition.class).asEagerSingleton();
 		bind(BruteForceSentinelLifecycle.class).asEagerSingleton();
 
-		Multibinder<Object> passwordCommandInstances = Multibinder.newSetBinder(
+		Multibinder<Object> credentialCommandInstances = Multibinder.newSetBinder(
 				binder(),
 				Object.class,
 				Names.named("credentialCommandInstances")
 		);
-		passwordCommandInstances.addBinding().to(PassCommand.class);
-		passwordCommandInstances.addBinding().to(LoginCommand.class);
-		passwordCommandInstances.addBinding().to(PasswordChangeCommand.class);
-		passwordCommandInstances.addBinding().to(PasswordCommand.class);
-		passwordCommandInstances.addBinding().to(ManagementCommand.class);
+		credentialCommandInstances.addBinding().to(PassCommand.class);
+		credentialCommandInstances.addBinding().to(LoginCommand.class);
+		credentialCommandInstances.addBinding().to(PasswordChangeCommand.class);
+		credentialCommandInstances.addBinding().to(PasswordCommand.class);
+		credentialCommandInstances.addBinding().to(ManagementCommand.class);
 
 		Multibinder.newSetBinder(binder(), ProviderMigrationPrecheck.class)
 				.addBinding()

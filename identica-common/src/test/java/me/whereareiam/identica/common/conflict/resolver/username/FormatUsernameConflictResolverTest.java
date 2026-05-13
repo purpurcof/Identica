@@ -56,7 +56,7 @@ class FormatUsernameConflictResolverTest {
 		config.getFormat().setPattern("{username} [{incomingProvider}] ({incomingProviderId}->{existingProviderId})");
 
 		ConflictResolution resolution = resolver.resolve(context, config);
-		assertEquals("Player [Premium] (premium->password)", resolution.getOverrideValue());
+		assertEquals("Player [Premium] (premium->credential)", resolution.getOverrideValue());
 	}
 
 	private AccountProviderLink link(String providerId) {

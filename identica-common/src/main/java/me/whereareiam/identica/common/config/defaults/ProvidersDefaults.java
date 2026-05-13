@@ -19,20 +19,20 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 		defaultRule.setResolvers(List.of(formatResolver("{username}*")));
 		usernameRules.setDefaultRule(defaultRule);
 
-		Providers.ConflictRule premiumVsPassword = new Providers.ConflictRule();
-		premiumVsPassword.setProviders(List.of("premium", "credential"));
-		premiumVsPassword.setResolvers(List.of(formatResolver("{username}_{incomingProvider}")));
-		usernameRules.setPairs(List.of(premiumVsPassword));
+		Providers.ConflictRule premiumVsCredential = new Providers.ConflictRule();
+		premiumVsCredential.setProviders(List.of("premium", "credential"));
+		premiumVsCredential.setResolvers(List.of(formatResolver("{username}_{incomingProvider}")));
+		usernameRules.setPairs(List.of(premiumVsCredential));
 
 		config.getConflicts().put("username", usernameRules);
 
-		Providers.ProviderEntry password = new Providers.ProviderEntry();
-		password.setId("credential");
-		password.setDisplayName("CR");
-		password.setEnabled(true);
-		password.setPriority(50);
-		password.setEntrypoints(List.of("password.arcadeya.com"));
-		password.setVerification(passwordVerification());
+		Providers.ProviderEntry credential = new Providers.ProviderEntry();
+		credential.setId("credential");
+		credential.setDisplayName("CR");
+		credential.setEnabled(true);
+		credential.setPriority(50);
+		credential.setEntrypoints(List.of("credential.arcadeya.com"));
+		credential.setVerification(credentialVerification());
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
 		premium.setId("premium");
@@ -43,7 +43,7 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 		premium.setEntrypoints(List.of("premium.arcadeya.com"));
 		premium.setVerification(premiumVerification());
 
-		config.setProviders(List.of(password, premium));
+		config.setProviders(List.of(credential, premium));
 		return config;
 	}
 
@@ -60,7 +60,7 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 		return entry;
 	}
 
-	private Providers.Verification passwordVerification() {
+	private Providers.Verification credentialVerification() {
 		Providers.Verification verification = new Providers.Verification();
 		verification.setEnabled(true);
 		verification.setRequired(false);

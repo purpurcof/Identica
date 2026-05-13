@@ -115,7 +115,7 @@ class PremiumCommandTest {
 		when(verificationService.findEnrollments(identity.getUniqueId())).thenReturn(List.of(mockEnrollment()));
 		when(verificationService.resolveVerification(any()))
 				.thenReturn(VerificationResolutionResult.of(VerificationResolutionStatus.WAITING, "challenge", "totp", true, false));
-		when(verificationService.submitChallenge(eq(identity.getUniqueId()), eq("password"), eq("migration-confirm"), any()))
+		when(verificationService.submitChallenge(eq(identity.getUniqueId()), eq("credential"), eq("migration-confirm"), any()))
 				.thenReturn(me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult.verified(null));
 		when(migrationService.confirm(any(MigrationConfirm.class)))
 				.thenReturn(MigrationResult.builder().status(MigrationResultStatus.STARTED).build());

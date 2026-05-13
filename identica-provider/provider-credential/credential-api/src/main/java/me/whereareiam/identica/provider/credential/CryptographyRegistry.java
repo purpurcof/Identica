@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Collection;
 
 /**
- * Central registry for password provider cryptography (password hashers).
+ * Central registry for credential provider cryptography (password hashers).
  */
 public interface CryptographyRegistry {
 	@Nullable CryptographyAlgorithm resolve(@Nullable String id);

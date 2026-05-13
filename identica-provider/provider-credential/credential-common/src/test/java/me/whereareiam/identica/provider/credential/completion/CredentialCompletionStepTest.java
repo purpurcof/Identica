@@ -20,7 +20,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DisplayName("Password Completion Step")
+@DisplayName("Credential Completion Step")
 class CredentialCompletionStepTest {
 	@DisplayName("Uses the reused-session completion message for authentication resumes")
 	@Test

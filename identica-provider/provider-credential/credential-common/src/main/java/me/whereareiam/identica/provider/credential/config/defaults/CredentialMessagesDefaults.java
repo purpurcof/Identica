@@ -138,7 +138,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				" <green><bold>Identica</bold>",
 				" ",
 				"  <white>Welcome, <green>{player}</green>.</white>",
-				"  <white>You just registered <gold>via password provider</gold>.</white>",
+				"  <white>You just registered <gold>via credential provider</gold>.</white>",
 				"  <white>Please take a moment to read the server rules.</white>",
 				" ",
 				"  <gray>We hope you enjoy your stay.</gray>",
@@ -156,7 +156,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				" <green><bold>Identica</bold>",
 				" ",
 				"  <white>Welcome back, <green>{player}</green>.</white>",
-				"  <white>Your account now authenticates <gold>via password provider</gold>.</white>",
+				"  <white>Your account now authenticates <gold>via credential provider</gold>.</white>",
 				" ",
 				"  <gray>You can continue using password login.</gray>",
 				" "
@@ -197,7 +197,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Please rejoin the server to proceed with</white>",
-				"<white>migration to the password provider.</white>",
+				"<white>migration to the credential provider.</white>",
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));

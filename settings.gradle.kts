@@ -1,5 +1,3 @@
-import org.gradle.api.initialization.resolve.RepositoriesMode
-
 rootProject.name = "Identica"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
@@ -56,11 +54,20 @@ project(":identica-platform").projectDir = file("identica-platform")
 include(":platform-velocity")
 project(":platform-velocity").projectDir = file("identica-platform/platform-velocity")
 
+include(":platform-bungeecord")
+project(":platform-bungeecord").projectDir = file("identica-platform/platform-bungeecord")
+
 include(":platform-velocity-api")
 project(":platform-velocity-api").projectDir = file("identica-platform/platform-velocity/api")
 
+include(":platform-bungeecord-api")
+project(":platform-bungeecord-api").projectDir = file("identica-platform/platform-bungeecord/api")
+
 include(":platform-velocity-bootstrap")
 project(":platform-velocity-bootstrap").projectDir = file("identica-platform/platform-velocity/bootstrap")
+
+include(":platform-bungeecord-bootstrap")
+project(":platform-bungeecord-bootstrap").projectDir = file("identica-platform/platform-bungeecord/bootstrap")
 
 include(":identica-provider")
 project(":identica-provider").projectDir = file("identica-provider")
@@ -110,3 +117,7 @@ project(":provider-premium-platform").projectDir = file("identica-provider/provi
 include(":provider-premium-platform-velocity")
 project(":provider-premium-platform-velocity").projectDir =
     file("identica-provider/provider-premium/premium-platform/platform-velocity")
+
+include(":provider-premium-platform-bungeecord")
+project(":provider-premium-platform-bungeecord").projectDir =
+    file("identica-provider/provider-premium/premium-platform/platform-bungeecord")

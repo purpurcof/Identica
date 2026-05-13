@@ -1,0 +1,8 @@
+entrypoints:
+  defaults:
+    providers: []
+providers:
+  password:
+    enabled: true
+  premium:
+    enabled: true

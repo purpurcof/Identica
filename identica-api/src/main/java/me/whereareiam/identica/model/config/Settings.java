@@ -6,6 +6,7 @@ import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.configura.annotation.Merge;
 import me.whereareiam.configura.merge.strategy.type.DeclaredKeysOnlyMap;
+import me.whereareiam.configura.merge.strategy.type.DefaultKeysOnlyMap;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
@@ -305,6 +306,7 @@ public class Settings extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Listeners {
+		@Merge(DefaultKeysOnlyMap.class)
 		private @NotNull Map<String, Event> events;
 	}
 }

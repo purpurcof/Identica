@@ -76,6 +76,9 @@ listeners:
     com.velocitypowered.api.event.player.ServerPreConnectEvent:
       register: true
       priority: "HIGH"
+    com.velocitypowered.api.event.player.ServerPostConnectEvent:
+      register: true
+      priority: "NORMAL"
     com.velocitypowered.api.event.connection.PreLoginEvent:
       register: true
       priority: "NORMAL"

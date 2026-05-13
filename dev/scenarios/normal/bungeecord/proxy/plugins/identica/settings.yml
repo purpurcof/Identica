@@ -73,6 +73,9 @@ listeners:
     net.md_5.bungee.api.event.PlayerHandshakeEvent:
       register: true
       priority: "NORMAL"
+    net.md_5.bungee.api.event.LoginEvent:
+      register: true
+      priority: "NORMAL"
     net.md_5.bungee.api.event.PostLoginEvent:
       register: true
       priority: "NORMAL"

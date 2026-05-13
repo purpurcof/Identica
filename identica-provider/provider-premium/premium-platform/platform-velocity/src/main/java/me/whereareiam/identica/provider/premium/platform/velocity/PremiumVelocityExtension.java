@@ -3,6 +3,7 @@ package me.whereareiam.identica.provider.premium.platform.velocity;
 import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.google.inject.Singleton;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
@@ -13,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 @Singleton
+@NoArgsConstructor(force = true)
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public final class PremiumVelocityExtension implements ProviderPlatformExtension {
 	private final DynamicListenerRegistry listenerRegistry;

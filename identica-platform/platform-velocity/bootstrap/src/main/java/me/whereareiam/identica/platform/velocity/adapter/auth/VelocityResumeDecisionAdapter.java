@@ -5,13 +5,14 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.common.adapter.ConnectionDecisionApplier;
 import me.whereareiam.identica.ConnectionCoordinator;
+import me.whereareiam.identica.common.adapter.ConnectionDecisionApplier;
+import me.whereareiam.identica.engine.pipeline.prompt.PendingPromptResendCoordinator;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
@@ -28,6 +29,7 @@ public class VelocityResumeDecisionAdapter {
 	private final @NotNull IdentityService identityService;
 	private final @NotNull PrepareStateStore prepareStateStore;
 	private final @NotNull ConnectionDecisionApplier decisionApplier;
+	private final @NotNull PendingPromptResendCoordinator initialStepPromptCoordinator;
 
 	public void resume(@NotNull ServerPostConnectEvent event) {
 		if (event.getPreviousServer() != null)
@@ -79,7 +81,9 @@ public class VelocityResumeDecisionAdapter {
 		if (decision == null || decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
 			return;
 
-		decisionApplier.apply(decision, liveIdentity, resumeTarget(player));
+		boolean deferred = initialStepPromptCoordinator.deferInitialStepPrompt(player.getUniqueId(), decision);
+		if (!deferred) decisionApplier.apply(decision, liveIdentity, resumeTarget(player));
+
 		ConnectionDecision.Status status = decision.getStatus();
 		if (status == ConnectionDecision.Status.DENY || status == ConnectionDecision.Status.REQUIRE_RECONNECT)
 			return;

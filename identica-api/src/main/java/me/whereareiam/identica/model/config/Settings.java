@@ -11,8 +11,8 @@ import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
 import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
-import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
+import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,6 +61,7 @@ public class Settings extends ConfigDocument {
 		private @NotNull UniqueIdMode uniqueIdMode;
 		private @NotNull Routing routing;
 		private @NotNull Sessions sessions;
+		private @NotNull InitialPrompt initialPrompt;
 		private @NotNull AuthenticationScenario authentication;
 		private @NotNull RegistrationScenario registration;
 		private @NotNull MigrationScenario migration;
@@ -103,6 +104,21 @@ public class Settings extends ConfigDocument {
 			}
 
 			return prepareStateTtl.toMillis();
+		}
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class InitialPrompt {
+		private boolean resendUntilInteraction;
+		private @NotNull Duration resendInterval;
+
+		public long resendIntervalMillis() {
+			if (resendInterval.isZero() || resendInterval.isNegative())
+				throw new IllegalStateException("settings.connection.initialPrompt.resendInterval must be positive");
+
+			return resendInterval.toMillis();
 		}
 	}
 

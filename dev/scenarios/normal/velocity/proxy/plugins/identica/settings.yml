@@ -29,6 +29,9 @@ connection:
     refreshTtl: "10m"
     concurrencyPolicy: "REPLACE_EXISTING"
     concurrencyOverrides: {}
+  initialPrompt:
+    resendUntilInteraction: false
+    resendInterval: "1500ms"
   authentication:
     pipelineTtl: "5m"
     advanceLockTtl: "5s"

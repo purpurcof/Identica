@@ -66,14 +66,15 @@ public class CredentialMigrationAuthenticationStep extends AbstractCredentialSte
 		if (credential == null) return CompletableFuture.completedFuture(StepResult.proceed(context));
 
 		CredentialMessages messages = messagesProvider.get();
+		CredentialMessages.Scenario.Migration.Verification migrationMessages = messages.getScenario().getMigration().getVerification();
 		long ttlMs = migrationTtlMs();
 		CredentialAuthenticationAttempt input = consumeAuthenticationAttempt(context, ttlMs);
-		if (input == null) return CompletableFuture.completedFuture(StepResult.waiting(joinLines(messages.getScenario().getAuthentication().getPrompt())));
+		if (input == null) return CompletableFuture.completedFuture(StepResult.waiting(joinLines(migrationMessages.getPrompt())));
 
 		if (!cryptographyService.verify(credential, input.getPassword())) {
 			AuthenticationAttemptDecision decision = recordBruteForceDecision(credential, context);
 			if (decision.isDeny()) return CompletableFuture.completedFuture(StepResult.denied(decision.getDenyMessage()));
-			return CompletableFuture.completedFuture(invalidWithWarning(messages, decision.getWarningMessage()));
+			return CompletableFuture.completedFuture(invalidWithWarning(migrationMessages, decision.getWarningMessage()));
 		}
 
 		clearBruteForce(credential, context);
@@ -146,8 +147,8 @@ public class CredentialMigrationAuthenticationStep extends AbstractCredentialSte
 		return String.join("\n", lines);
 	}
 
-	private StepResult invalidWithWarning(CredentialMessages messages, String warning) {
-		String invalid = messages.getScenario().getAuthentication().getStatus().getInvalid();
+	private StepResult invalidWithWarning(CredentialMessages.Scenario.Migration.Verification messages, String warning) {
+		String invalid = messages.getStatus().getInvalid();
 		if (warning == null || warning.isBlank()) return StepResult.waiting(invalid);
 		if (invalid == null || invalid.isBlank()) return StepResult.waiting(warning);
 		return StepResult.waiting(invalid + "\n" + warning);

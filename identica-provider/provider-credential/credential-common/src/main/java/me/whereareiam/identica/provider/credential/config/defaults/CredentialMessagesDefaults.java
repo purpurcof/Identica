@@ -91,6 +91,63 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 		verification.setUnavailable("{prefix}<white>Your selected verification method is <red>unavailable</red>.</white>");
 		authentication.setVerification(verification);
 		scenario.setAuthentication(authentication);
+
+		CredentialMessages.Scenario.Migration migration = new CredentialMessages.Scenario.Migration();
+
+		CredentialMessages.Scenario.Migration.Verification migrationVerification = new CredentialMessages.Scenario.Migration.Verification();
+		migrationVerification.setPrompt(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>To migrate this account to the <gold>credential provider</gold>,</white>",
+				"  <white>first verify your current password.</white>",
+				" ",
+				"  <white>Use <yellow>/login</yellow> <gray>[Credential]</gray> to continue.</white>",
+				" "
+		));
+		CredentialMessages.Scenario.Migration.Verification.Status migrationVerificationStatus = new CredentialMessages.Scenario.Migration.Verification.Status();
+		migrationVerificationStatus.setSuccess("{prefix}<white>Current password <green>verified</green>. Continue your credential migration.</white>");
+		migrationVerificationStatus.setInvalid("{prefix}<white>Your current password is <red>invalid</red>.</white>");
+		migrationVerificationStatus.setNotRegistered("{prefix}<white>No credential account found for this migration step.</white>");
+		migrationVerificationStatus.setNoPending("{prefix}<white>No pending credential migration verification.</white>");
+		migrationVerification.setStatus(migrationVerificationStatus);
+		migration.setVerification(migrationVerification);
+
+		CredentialMessages.Scenario.Migration.Setup migrationSetup = new CredentialMessages.Scenario.Migration.Setup();
+		migrationSetup.setPrompt(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Your current password was verified.</white>",
+				"  <white>Now choose the password you want to use with the credential provider.</white>",
+				" ",
+				"  <gray>Information:</gray>",
+				"   <gray>6-32 characters, at least 1 uppercase, 1 lowercase,</gray>",
+				"   <gray>1 number, and 1 special character.</gray>",
+				" ",
+				"  <white>Use <yellow>/pass</yellow> <gray>[Credential]</gray> to continue.</white>",
+				" "
+		));
+		migrationSetup.setConfirmPrompt(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Repeat the same password to finish your</white>",
+				"  <white>migration to the credential provider.</white>",
+				" ",
+				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Credential]</gray> to continue.</white>",
+				" "
+		));
+		CredentialMessages.Scenario.Migration.Setup.Status migrationSetupStatus = new CredentialMessages.Scenario.Migration.Setup.Status();
+		migrationSetupStatus.setSuccess("{prefix}<white>Credential migration <green>completed</green>.</white>");
+		migrationSetupStatus.setDisabled("{prefix}<white>Credential migration is <red>disabled</red>.</white>");
+		migrationSetupStatus.setAlreadyRegistered("{prefix}<white>Your credential migration is already <green>complete</green>.</white>");
+		migrationSetupStatus.setMismatch("{prefix}<white>Migration passwords do not <red>match</red>.</white>");
+		migrationSetupStatus.setNoPending("{prefix}<white>No pending credential migration password step.</white>");
+		migrationSetup.setStatus(migrationSetupStatus);
+		migration.setSetup(migrationSetup);
+
+		scenario.setMigration(migration);
 		messages.setScenario(scenario);
 
 		CredentialMessages.Completion completion = new CredentialMessages.Completion();
@@ -149,7 +206,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 		CredentialMessages.Completion.Pipeline migrationCompletion = new CredentialMessages.Completion.Pipeline();
 		CredentialMessages.Completion.Pipeline.Title migrationTitle = new CredentialMessages.Completion.Pipeline.Title();
 		migrationTitle.setTitle("<gold><bold>Migrated</bold></gold>");
-		migrationTitle.setSubtitle("<dark_gray>You were migrated to password.</dark_gray>");
+		migrationTitle.setSubtitle("<dark_gray>You were migrated to the credential provider.</dark_gray>");
 		migrationCompletion.setTitle(migrationTitle);
 		migrationCompletion.setBody(List.of(
 				" ",
@@ -158,7 +215,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>Welcome back, <green>{player}</green>.</white>",
 				"  <white>Your account now authenticates <gold>via credential provider</gold>.</white>",
 				" ",
-				"  <gray>You can continue using password login.</gray>",
+				"  <gray>You can continue using the credential provider to sign in.</gray>",
 				" "
 		));
 		completion.setMigration(migrationCompletion);
@@ -186,8 +243,8 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 		credentialCommand.setConfirm(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
-				"  <white>You are about to switch to a <gold>password account</gold>.</white>",
-				"  <white>After this, you will log in using a password.</white>",
+				"  <white>You are about to migrate to the <gold>credential provider</gold>.</white>",
+				"  <white>After this, this account will authenticate through credentials.</white>",
 				" ",
 				"  <yellow>/credential confirm</yellow> <dark_gray>- <white>Continue migration</white>",
 				"  <yellow>/credential cancel</yellow> <dark_gray>- <white>Cancel migration</white>",
@@ -201,10 +258,10 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		credentialCommand.setVerificationRequired("{prefix}<white>Confirm your verification code with <yellow>/credential confirm</yellow> <gray>[Code]</gray> before starting password migration.</white>");
+		credentialCommand.setVerificationRequired("{prefix}<white>Confirm your verification code with <yellow>/credential confirm</yellow> <gray>[Code]</gray> before starting credential migration.</white>");
 		credentialCommand.setCancelled("{prefix}<white>Credential migration cancelled.</white>");
 		credentialCommand.setExpired("{prefix}<white>Credential migration request expired.</white>");
-		credentialCommand.setNoPending("{prefix}<white>No pending password migration.</white>");
+		credentialCommand.setNoPending("{prefix}<white>No pending credential migration.</white>");
 		credentialCommand.setPendingExists("{prefix}<white>Credential migration already pending.</white>");
 		credentialCommand.setAlreadyPrimary("{prefix}<white>Credential is already your primary provider.</white>");
 		commands.setCredential(credentialCommand);

@@ -33,19 +33,17 @@ public class PassCommand {
 	@Definition("pass")
 	@Command("pass <password>")
 	public void pass(@NotNull Actor sender, @Argument(value = "password", parser = "password") String password) {
-		if (!(sender instanceof Identity identity))
-			return;
+		if (!(sender instanceof Identity identity)) return;
 
-		CredentialMessages.Scenario.Registration messages = messagesProvider.get().getScenario().getRegistration();
+		PipelineType pipelineType = pendingPipelineType(identity);
 		if (!hasPending(identity)) {
-			sendMessage(identity, messages.getStatus().getNoPending());
+			sendMessage(identity, noPendingMessage(pipelineType));
 			return;
 		}
 
-		PipelineType pipelineType = pendingPipelineType(identity);
 		long ttlMs = resolveTtl(pipelineType);
 		storeRegistrationAttempt(identity, new CredentialRegistrationAttempt(password, false), ttlMs);
-		handleDecision(identity, messages, advanceJourneyMode(identity));
+		handleDecision(identity, pipelineType, advanceJourneyMode(identity));
 	}
 
 	@Definition("passconfirm")
@@ -54,21 +52,20 @@ public class PassCommand {
 		if (!(sender instanceof Identity identity))
 			return;
 
-		CredentialMessages.Scenario.Registration messages = messagesProvider.get().getScenario().getRegistration();
+		PipelineType pipelineType = pendingPipelineType(identity);
 		if (!hasPending(identity)) {
-			sendMessage(identity, messages.getStatus().getNoPending());
+			sendMessage(identity, noPendingMessage(pipelineType));
 			return;
 		}
 
-		PipelineType pipelineType = pendingPipelineType(identity);
 		long ttlMs = resolveTtl(pipelineType);
 		storeRegistrationAttempt(identity, new CredentialRegistrationAttempt(repeat, true), ttlMs);
-		handleDecision(identity, messages, advanceJourneyMode(identity));
+		handleDecision(identity, pipelineType, advanceJourneyMode(identity));
 	}
 
 	private void handleDecision(
 			@NotNull Identity identity,
-			@NotNull CredentialMessages.Scenario.Registration messages,
+			@NotNull PipelineType pipelineType,
 			ConnectionDecision decision
 	) {
 		if (decision == null || decision.getStatus() == null)
@@ -77,8 +74,8 @@ public class PassCommand {
 		switch (decision.getStatus()) {
 			case WAIT -> sendMessage(identity, decision.getMessage());
 			case DENY, REQUIRE_RECONNECT -> disconnect(identity, decision.getMessage());
-			case NO_PENDING -> sendMessage(identity, messages.getStatus().getNoPending());
-			case ALLOW -> sendMessage(identity, messages.getStatus().getSuccess());
+			case NO_PENDING -> sendMessage(identity, noPendingMessage(pipelineType));
+			case ALLOW -> sendMessage(identity, successMessage(pipelineType));
 			default -> {
 			}
 		}
@@ -102,6 +99,22 @@ public class PassCommand {
 		PipelineState state = pipelineStateStore.find(reference(identity)).orElse(null);
 		PipelineType type = state != null ? state.getPipelineType() : null;
 		return type != null ? type : PipelineType.REGISTRATION;
+	}
+
+	private String successMessage(@NotNull PipelineType pipelineType) {
+		CredentialMessages.Scenario scenario = messagesProvider.get().getScenario();
+		if (pipelineType == PipelineType.MIGRATION)
+			return scenario.getMigration().getSetup().getStatus().getSuccess();
+		
+		return scenario.getRegistration().getStatus().getSuccess();
+	}
+
+	private String noPendingMessage(@NotNull PipelineType pipelineType) {
+		CredentialMessages.Scenario scenario = messagesProvider.get().getScenario();
+		if (pipelineType == PipelineType.MIGRATION)
+			return scenario.getMigration().getSetup().getStatus().getNoPending();
+
+		return scenario.getRegistration().getStatus().getNoPending();
 	}
 
 	private long resolveTtl(@NotNull PipelineType pipelineType) {
@@ -153,5 +166,4 @@ public class PassCommand {
 			return;
 		identity.disconnect(Serializer.serialize(identity, message));
 	}
-
 }

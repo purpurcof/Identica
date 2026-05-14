@@ -97,14 +97,26 @@ public class VelocityLoginDecisionAdapter {
 				provider != null ? provider.getProviderSubject() : null
 		);
 
-		decisionApplier.apply(decision, new VelocityCommandPlayer(player), loginTarget(event));
+		decisionApplier.apply(decision, new VelocityCommandPlayer(
+				player.getUniqueId(),
+				identity.getAccountUniqueId(),
+				player,
+				identity.getUsername(),
+				identity.getOrigin()
+		), loginTarget(event));
 		ConnectionDecision.Status status = decision != null ? decision.getStatus() : null;
 		if (status == ConnectionDecision.Status.ALLOW || status == ConnectionDecision.Status.WAIT) {
 			UUID accountUniqueId = resolveAttachedAccountUniqueId(player.getUniqueId(), identity.getAccountUniqueId());
 			identityService.attach(
 					player.getUniqueId(),
 					accountUniqueId,
-					new VelocityCommandPlayer(player.getUniqueId(), accountUniqueId, player, identity.getUsername())
+					new VelocityCommandPlayer(
+							player.getUniqueId(),
+							accountUniqueId,
+							player,
+							identity.getUsername(),
+							identity.getOrigin()
+					)
 			);
 		}
 	}

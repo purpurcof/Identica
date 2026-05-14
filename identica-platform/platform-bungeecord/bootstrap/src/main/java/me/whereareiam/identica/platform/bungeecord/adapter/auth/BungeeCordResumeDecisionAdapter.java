@@ -11,6 +11,7 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
@@ -91,7 +92,8 @@ public class BungeeCordResumeDecisionAdapter {
 				accountUniqueId,
 				player,
 				audiences.player(player),
-				identity.getUsername()
+				identity.getUsername(),
+				identity.getOrigin()
 		);
 		if (decision == null || decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
 			return;
@@ -112,7 +114,7 @@ public class BungeeCordResumeDecisionAdapter {
 			@Nullable UUID fallbackAccountUniqueId
 	) {
 		return completionPendingStore.peek(connectionUniqueId)
-				.map(pending -> pending.getAccountUniqueId())
+				.map(CompletionPendingState::getAccountUniqueId)
 				.orElse(fallbackAccountUniqueId);
 	}
 

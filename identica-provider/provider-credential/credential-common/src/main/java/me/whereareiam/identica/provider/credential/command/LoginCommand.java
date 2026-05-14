@@ -103,6 +103,7 @@ public class LoginCommand {
 		return PipelineStateReference.builder()
 				.connectionUniqueId(identity.getConnectionUniqueId())
 				.accountUniqueId(identity.getAccountUniqueId())
+				.connectionKey(identity.connectionKey())
 				.build();
 	}
 

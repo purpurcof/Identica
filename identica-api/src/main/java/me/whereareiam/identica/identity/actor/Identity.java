@@ -20,11 +20,11 @@ public abstract class Identity extends ConnectionIdentity implements Actor {
 	protected final UUID uniqueId;
 
 	protected Identity(@NotNull UUID uniqueId, @NotNull String username) {
-		this(uniqueId, uniqueId, username, null);
+		this(uniqueId, uniqueId, username, null, null);
 	}
 
 	protected Identity(@NotNull UUID uniqueId, @NotNull String username, @Nullable String ip) {
-		this(uniqueId, uniqueId, username, ip);
+		this(uniqueId, uniqueId, username, ip, null);
 	}
 
 	protected Identity(
@@ -33,10 +33,21 @@ public abstract class Identity extends ConnectionIdentity implements Actor {
 			@NotNull String username,
 			@Nullable String ip
 	) {
+		this(connectionUniqueId, accountUniqueId, username, ip, null);
+	}
+
+	protected Identity(
+			@NotNull UUID connectionUniqueId,
+			@Nullable UUID accountUniqueId,
+			@NotNull String username,
+			@Nullable String ip,
+			@Nullable Origin origin
+	) {
 		super(username, ip);
 		this.uniqueId = connectionUniqueId;
 		setConnectionUniqueId(connectionUniqueId);
 		setAccountUniqueId(accountUniqueId);
+		setOrigin(origin);
 	}
 
 	/**

@@ -15,28 +15,17 @@ public class VelocityCommandPlayer extends Identity {
 	private final Player player;
 
 	public VelocityCommandPlayer(@NotNull Player player) {
-		this(player.getUniqueId(), null, player, player.getUsername());
-	}
-
-	public VelocityCommandPlayer(@NotNull Player player, @NotNull String username) {
-		this(player.getUniqueId(), null, player, username);
-	}
-
-	public VelocityCommandPlayer(
-			@NotNull UUID connectionUniqueId,
-			@NotNull Player player,
-			@NotNull String username
-	) {
-		this(connectionUniqueId, null, player, username);
+		this(player.getUniqueId(), null, player, player.getUsername(), null);
 	}
 
 	public VelocityCommandPlayer(
 			@NotNull UUID connectionUniqueId,
 			@Nullable UUID accountUniqueId,
 			@NotNull Player player,
-			@NotNull String username
+			@NotNull String username,
+			@Nullable Origin origin
 	) {
-		super(connectionUniqueId, accountUniqueId, username, resolveIp(player));
+		super(connectionUniqueId, accountUniqueId, username, resolveIp(player), origin);
 		this.player = player;
 	}
 

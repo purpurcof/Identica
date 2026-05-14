@@ -10,6 +10,7 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
+import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
@@ -90,7 +91,8 @@ public class BungeeCordLoginDecisionAdapter {
 				accountUniqueId,
 				player,
 				audiences.player(player),
-				identity.getUsername()
+				identity.getUsername(),
+				identity.getOrigin()
 		);
 		decisionApplier.apply(decision, liveIdentity, loginTarget(player));
 		ConnectionDecision.Status status = decision != null ? decision.getStatus() : null;
@@ -103,7 +105,7 @@ public class BungeeCordLoginDecisionAdapter {
 			@Nullable UUID fallbackAccountUniqueId
 	) {
 		return completionPendingStore.peek(connectionUniqueId)
-				.map(pending -> pending.getAccountUniqueId())
+				.map(CompletionPendingState::getAccountUniqueId)
 				.orElse(fallbackAccountUniqueId);
 	}
 

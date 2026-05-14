@@ -22,34 +22,18 @@ public class BungeeCordCommandPlayer extends Identity {
 			@NotNull ProxiedPlayer player,
 			@NotNull Audience audience
 	) {
-		this(player.getUniqueId(), null, player, audience, player.getName());
-	}
-
-	public BungeeCordCommandPlayer(
-			@NotNull ProxiedPlayer player,
-			@NotNull Audience audience,
-			@NotNull String username
-	) {
-		this(player.getUniqueId(), null, player, audience, username);
-	}
-
-	public BungeeCordCommandPlayer(
-			@NotNull UUID connectionUniqueId,
-			@NotNull net.md_5.bungee.api.connection.ProxiedPlayer player,
-			@NotNull Audience audience,
-			@NotNull String username
-	) {
-		this(connectionUniqueId, null, player, audience, username);
+		this(player.getUniqueId(), null, player, audience, player.getName(), null);
 	}
 
 	public BungeeCordCommandPlayer(
 			@NotNull UUID connectionUniqueId,
 			@Nullable UUID accountUniqueId,
-			@NotNull net.md_5.bungee.api.connection.ProxiedPlayer player,
+			@NotNull ProxiedPlayer player,
 			@NotNull Audience audience,
-			@NotNull String username
+			@NotNull String username,
+			@Nullable Origin origin
 	) {
-		super(connectionUniqueId, accountUniqueId, username, resolveIp(player));
+		super(connectionUniqueId, accountUniqueId, username, resolveIp(player), origin);
 		this.player = player;
 		this.audience = audience;
 	}

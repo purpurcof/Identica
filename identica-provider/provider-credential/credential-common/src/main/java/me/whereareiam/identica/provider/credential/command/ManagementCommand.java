@@ -29,7 +29,7 @@ public class ManagementCommand {
 	private final PasswordRules passwordPolicy;
 
 	@Definition("admin-force-register")
-	@Command("identica password register <username> <password>")
+	@Command("identica credential register <username> <password>")
 	public void forceRegister(
 			@NotNull Actor sender,
 			@Argument("username") String username,
@@ -73,8 +73,8 @@ public class ManagementCommand {
 		sendMessage(sender, messages.getRegistered());
 	}
 
-	@Definition("admin-set-password")
-	@Command("identica password setpassword <username> <password>")
+	@Definition("admin-set-credential")
+	@Command("identica credential setpassword <username> <password>")
 	public void setPassword(
 			@NotNull Actor sender,
 			@Argument("username") String username,

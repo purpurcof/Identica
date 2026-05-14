@@ -54,7 +54,7 @@ public class CommonConfiguration extends AbstractModule {
 		credentialCommandInstances.addBinding().to(PassCommand.class);
 		credentialCommandInstances.addBinding().to(LoginCommand.class);
 		credentialCommandInstances.addBinding().to(PasswordChangeCommand.class);
-		credentialCommandInstances.addBinding().to(PasswordCommand.class);
+		credentialCommandInstances.addBinding().to(CredentialCommand.class);
 		credentialCommandInstances.addBinding().to(ManagementCommand.class);
 
 		Multibinder.newSetBinder(binder(), ProviderMigrationPrecheck.class)

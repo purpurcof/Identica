@@ -19,8 +19,8 @@ public class CredentialMigrationPrecheck implements ProviderMigrationPrecheck {
 
 	@Override
 	public @NotNull MigrationPrecheckResult precheck(@NotNull MigrationPrecheckContext context) {
-		CredentialMessages.Commands.Password password = messagesProvider.get().getCommands().getPassword();
-		List<String> kick = password.getConfirmed();
+		CredentialMessages.Commands.Credential credential = messagesProvider.get().getCommands().getCredential();
+		List<String> kick = credential.getConfirmed();
 		String message = String.join("\n", kick);
 
 		return MigrationPrecheckResult.allow(message);

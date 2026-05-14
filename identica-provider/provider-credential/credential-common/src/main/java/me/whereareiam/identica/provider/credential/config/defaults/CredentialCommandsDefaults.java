@@ -16,7 +16,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				.enabled(true)
 				.aliases(List.of("pass"))
 				.permission("")
-				.description("Register a password account")
+				.description("Register a credential account")
 				.usage("{alias} <password>")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
@@ -24,7 +24,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 						.group("global")
 						.build()
 				)
-				.arguments(Map.of("password", "Password"))
+				.arguments(Map.of("password", "Credential"))
 				.hide(true)
 				.build();
 
@@ -32,7 +32,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				.enabled(true)
 				.aliases(List.of("passconfirm"))
 				.permission("")
-				.description("Confirm password registration")
+				.description("Confirm credential registration")
 				.usage("{alias} <password>")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
@@ -48,7 +48,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				.enabled(true)
 				.aliases(List.of("login", "l"))
 				.permission("")
-				.description("Login to a password account")
+				.description("Login to a credential account")
 				.usage("{alias} <password>")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
@@ -56,13 +56,13 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 						.group("global")
 						.build()
 				)
-				.arguments(Map.of("password", "Password"))
+				.arguments(Map.of("password", "Credential"))
 				.hide(true)
 				.build();
 
 		CommandDefinition changePassword = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("changepassword", "changepass", "password"))
+				.aliases(List.of("changepassword", "changepass"))
 				.permission("")
 				.description("Change password account password")
 				.usage("{alias} <current> <new> [repeat]")
@@ -75,11 +75,11 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				.arguments(Map.of("current", "Current", "new", "New", "repeat", "Repeat"))
 				.build();
 
-		CommandDefinition password = CommandDefinition.builder()
+		CommandDefinition credential = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("password"))
+				.aliases(List.of("credential"))
 				.permission("")
-				.description("Password account migration")
+				.description("Credential account migration")
 				.usage("{alias}")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
@@ -89,30 +89,30 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				)
 				.build();
 
-		CommandDefinition passwordConfirm = CommandDefinition.builder()
+		CommandDefinition credentialConfirm = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("password confirm"))
+				.aliases(List.of("credential confirm"))
 				.permission("")
-				.description("Confirm password migration")
+				.description("Confirm credential migration")
 				.usage("{alias} [input]")
 				.arguments(Map.of("input", "Code"))
 				.hide(true)
 				.build();
 
-		CommandDefinition passwordCancel = CommandDefinition.builder()
+		CommandDefinition credentialCancel = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("password cancel"))
+				.aliases(List.of("credential cancel"))
 				.permission("")
-				.description("Cancel password migration")
+				.description("Cancel credential migration")
 				.usage("{alias}")
 				.hide(true)
 				.build();
 
 		CommandDefinition adminForceRegister = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("password register"))
+				.aliases(List.of("credential register"))
 				.permission("identica.admin")
-				.description("Force register a password account")
+				.description("Force register a credential account")
 				.usage("{command} {alias} <username> <password>")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
@@ -120,14 +120,14 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 						.group("global")
 						.build()
 				)
-				.arguments(Map.of("username", "Username", "password", "Password"))
+				.arguments(Map.of("username", "Username", "password", "Credential"))
 				.build();
 
 		CommandDefinition adminSetPassword = CommandDefinition.builder()
 				.enabled(true)
-				.aliases(List.of("password setpassword"))
+				.aliases(List.of("credential setpassword"))
 				.permission("identica.admin")
-				.description("Set a password account password")
+				.description("Set a credential account password")
 				.usage("{command} {alias} <username> <password>")
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
@@ -135,16 +135,16 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 						.group("global")
 						.build()
 				)
-				.arguments(Map.of("username", "Username", "password", "Password"))
+				.arguments(Map.of("username", "Username", "password", "Credential"))
 				.build();
 
 		commands.getCommands().put("pass", register);
 		commands.getCommands().put("passconfirm", registerConfirm);
 		commands.getCommands().put("login", login);
 		commands.getCommands().put("change-password", changePassword);
-		commands.getCommands().put("password", password);
-		commands.getCommands().put("password-confirm", passwordConfirm);
-		commands.getCommands().put("password-cancel", passwordCancel);
+		commands.getCommands().put("credential", credential);
+		commands.getCommands().put("credential-confirm", credentialConfirm);
+		commands.getCommands().put("credential-cancel", credentialCancel);
 		commands.getCommands().put("admin-force-register", adminForceRegister);
 		commands.getCommands().put("admin-set-password", adminSetPassword);
 

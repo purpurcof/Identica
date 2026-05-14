@@ -64,7 +64,7 @@ That requires replication to be enabled.
 
     - [Identica](https://modrinth.com/plugin/identica)
     - [Identica Premium Provider](https://modrinth.com/plugin/identica-premium-provider)
-    - [Identica Credential Provider](https://modrinth.com/plugin/identica-password-provider)
+    - [Identica Credential Provider](https://modrinth.com/plugin/identica-credential-provider)
 
     Download flow:
 
@@ -160,8 +160,8 @@ The detailed meaning of each config area belongs in [Configuration](../../config
 Open the generated `providers` config and keep the generated structure as your base.
 In most cases, the defaults are already close to what you want.
 
-For typical mixed setups, it makes sense for `premium` to have a higher priority than `password`.
-In practice, that means if Identica has to choose between those providers for the same player or entrypoint situation, `premium` wins before `password`.
+For typical mixed setups, it makes sense for `premium` to have a higher priority than `credential`.
+In practice, that means if Identica has to choose between those providers for the same player or entrypoint situation, `premium` wins before `credential`.
 That is the behavior most users expect.
 
 For the first pass, the important decisions are:
@@ -183,13 +183,13 @@ providers:
     entrypoints:
       - premium.example.com
 
-  - id: password
+  - id: credential
     displayName: "CR"
     enabled: true
     priority: 100
     overrides: {}
     entrypoints:
-      - password.example.com
+      - credential.example.com
 ```
 
 If you are not using hostname-based routing yet, leave `entrypoints` empty or replace the default values later when you know the real hostnames.
@@ -203,7 +203,7 @@ The generated settings may also include `journeyMode` and `journeyPolicy`.
 - `INTERACTIVE` means the step may prompt the player, wait for input, or otherwise require explicit interaction
 
 For most normal installations, `INTERACTIVE` is the easier and safer choice because the player can clearly see what Identica expects from them.
-Typical interactive behavior includes things like entering a password, choosing a provider, confirming a verification code, or responding to a migration prompt.
+Typical interactive behavior includes things like entering a credential, choosing a provider, confirming a verification code, or responding to a migration prompt.
 
 In the current setup described by this guide, `INTERACTIVE` can also produce a better first impression.
 If you leave the flow on `SEAMLESS`, a player who joins from an offline account while using a premium username may hit the higher-priority `premium` provider first and get an invalid-session-style kick from the server on that first join.
@@ -264,7 +264,7 @@ Do not stop at the first successful startup.
 After the baseline works, walk through the generated configuration and the rest of the docs so you understand what the plugin will do in your network.
 
 Some defaults are intentionally strict.
-For example, password requirements may be stronger than what your players are used to, so review them before treating the setup as final.
+For example, credential requirements may be stronger than what your players are used to, so review them before treating the setup as final.
 
 <Callout type="error" title="Protect the authentication flow">
   Because Identica is an identity plugin, it does not try to own every command or routing behavior on the server. That is why it is strongly recommended to use a command filter or blocker for commands that could let players escape the authentication flow before they finish it.

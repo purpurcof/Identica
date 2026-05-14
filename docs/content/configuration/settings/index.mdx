@@ -648,7 +648,7 @@ That means players cannot resume the authentication flow later.
   <Tab value="SEAMLESS">
     `SEAMLESS` means the authentication flow is expected to continue without player interaction.
 
-    Use case: a provider can identify the player automatically and continue the flow without asking them to choose a provider, type a password, or confirm a verification step manually.
+    Use case: a provider can identify the player automatically and continue the flow without asking them to choose a provider, type a credential, or confirm a verification step manually.
 
     This is best when your authentication path is intentionally automatic and you already know the provider order and available steps produce the behavior you want.
 
@@ -659,7 +659,7 @@ That means players cannot resume the authentication flow later.
   <Tab value="INTERACTIVE">
     `INTERACTIVE` means the authentication flow may prompt the player, wait for input, or otherwise require explicit interaction.
 
-    Use case: the player may need to enter a password, choose between providers, confirm a verification code, or respond to another prompt before authentication can continue.
+    Use case: the player may need to enter a credential, choose between providers, confirm a verification code, or respond to another prompt before authentication can continue.
 
     For most setups, `INTERACTIVE` is the easier and safer choice because the player can clearly see what Identica expects from them.
 
@@ -746,7 +746,7 @@ These settings affect the registration pipeline.
   <Tab value="INTERACTIVE">
     `INTERACTIVE` means the registration flow may prompt the player, wait for input, or otherwise require explicit interaction.
 
-    Use case: the player chooses a provider, enters a password, confirms a prompt, or otherwise participates directly in the registration flow.
+    Use case: the player chooses a provider, enters a credential, confirms a prompt, or otherwise participates directly in the registration flow.
 
     Registration is the place where this matters most because provider selection often benefits from explicit user choice.
     For most setups, `INTERACTIVE` is the easier and safer choice.

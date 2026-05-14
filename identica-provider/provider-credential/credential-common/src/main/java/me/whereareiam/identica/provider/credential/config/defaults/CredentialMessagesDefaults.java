@@ -24,7 +24,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"   <gray>6-32 characters, at least 1 uppercase, 1 lowercase,</gray>",
 				"   <gray>1 number, and 1 special character.</gray>",
 				" ", 
-				"  <white>Use <yellow>/pass</yellow> <gray>[Password]</gray> to continue.</white>",
+				"  <white>Use <yellow>/pass</yellow> <gray>[Credential]</gray> to continue.</white>",
 				" "
 		));
 		registration.setConfirmPrompt(List.of(
@@ -34,7 +34,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>To finish your password account registration,</white>",
 				"  <white>repeat the same password you entered before.</white>",
 				" ",
-				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Password]</gray> to continue.</white>",
+				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Credential]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Registration.Status registrationStatus = new CredentialMessages.Scenario.Registration.Status();
@@ -54,7 +54,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>Welcome back to our server.</white>",
 				"  <white>Please log in to proceed.</white>",
 				" ",
-				"  <white>Use <yellow>/login</yellow> <gray>[Password]</gray> to continue.</white>",
+				"  <white>Use <yellow>/login</yellow> <gray>[Credential]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Authentication.Status authenticationStatus = new CredentialMessages.Scenario.Authentication.Status();
@@ -165,25 +165,25 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 		messages.setCompletion(completion);
 
 		CredentialMessages.Password passwordMessages = new CredentialMessages.Password();
-		passwordMessages.setTooShort("{prefix}<white>Password is too <red>short</red>.</white>");
-		passwordMessages.setTooLong("{prefix}<white>Password is too <red>long</red>.</white>");
-		passwordMessages.setNoSpaces("{prefix}<white>Password cannot contain <red>spaces</red>.</white>");
-		passwordMessages.setMissingUpper("{prefix}<white>Password needs an <red>uppercase</red> letter.</white>");
-		passwordMessages.setMissingLower("{prefix}<white>Password needs a <red>lowercase</red> letter.</white>");
-		passwordMessages.setMissingNumber("{prefix}<white>Password needs a <red>number</red>.</white>");
-		passwordMessages.setMissingSpecial("{prefix}<white>Password needs a <red>special</red> character.</white>");
+		passwordMessages.setTooShort("{prefix}<white>Credential is too <red>short</red>.</white>");
+		passwordMessages.setTooLong("{prefix}<white>Credential is too <red>long</red>.</white>");
+		passwordMessages.setNoSpaces("{prefix}<white>Credential cannot contain <red>spaces</red>.</white>");
+		passwordMessages.setMissingUpper("{prefix}<white>Credential needs an <red>uppercase</red> letter.</white>");
+		passwordMessages.setMissingLower("{prefix}<white>Credential needs a <red>lowercase</red> letter.</white>");
+		passwordMessages.setMissingNumber("{prefix}<white>Credential needs a <red>number</red>.</white>");
+		passwordMessages.setMissingSpecial("{prefix}<white>Credential needs a <red>special</red> character.</white>");
 		messages.setPassword(passwordMessages);
 
 		CredentialMessages.ChangePassword changePassword = new CredentialMessages.ChangePassword();
-		changePassword.setSuccess("{prefix}<white>Password <green>updated</green>.</white>");
+		changePassword.setSuccess("{prefix}<white>Credential <green>updated</green>.</white>");
 		changePassword.setMismatch("{prefix}<white>Passwords do not <red>match</red>.</white>");
 		changePassword.setInvalidCurrent("{prefix}<white>Current password is <red>invalid</red>.</white>");
 		changePassword.setNotLoggedIn("{prefix}<white>You must be <red>logged in</red> to change password.</white>");
 		messages.setChangePassword(changePassword);
 
 		CredentialMessages.Commands commands = new CredentialMessages.Commands();
-		CredentialMessages.Commands.Password passwordCommand = new CredentialMessages.Commands.Password();
-		passwordCommand.setConfirm(List.of(
+		CredentialMessages.Commands.Credential credentialCommand = new CredentialMessages.Commands.Credential();
+		credentialCommand.setConfirm(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
 				"  <white>You are about to switch to a <gold>password account</gold>.</white>",
@@ -193,7 +193,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <yellow>/password cancel</yellow> <dark_gray>- <white>Cancel migration</white>",
 				" "
 		));
-		passwordCommand.setConfirmed(List.of(
+		credentialCommand.setConfirmed(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Please rejoin the server to proceed with</white>",
@@ -201,20 +201,20 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		passwordCommand.setVerificationRequired("{prefix}<white>Confirm your verification code with <yellow>/password confirm</yellow> <gray>[Code]</gray> before starting password migration.</white>");
-		passwordCommand.setCancelled("{prefix}<white>Password migration cancelled.</white>");
-		passwordCommand.setExpired("{prefix}<white>Password migration request expired.</white>");
-		passwordCommand.setNoPending("{prefix}<white>No pending password migration.</white>");
-		passwordCommand.setPendingExists("{prefix}<white>Password migration already pending.</white>");
-		passwordCommand.setAlreadyPrimary("{prefix}<white>Password is already your primary provider.</white>");
-		commands.setPassword(passwordCommand);
+		credentialCommand.setVerificationRequired("{prefix}<white>Confirm your verification code with <yellow>/password confirm</yellow> <gray>[Code]</gray> before starting password migration.</white>");
+		credentialCommand.setCancelled("{prefix}<white>Credential migration cancelled.</white>");
+		credentialCommand.setExpired("{prefix}<white>Credential migration request expired.</white>");
+		credentialCommand.setNoPending("{prefix}<white>No pending password migration.</white>");
+		credentialCommand.setPendingExists("{prefix}<white>Credential migration already pending.</white>");
+		credentialCommand.setAlreadyPrimary("{prefix}<white>Credential is already your primary provider.</white>");
+		commands.setCredential(credentialCommand);
 
 		CredentialMessages.Commands.Admin admin = new CredentialMessages.Commands.Admin();
-		admin.setRegistered("{prefix}<white>Password account <green>registered</green>.</white>");
-		admin.setDeleted("{prefix}<white>Password account <green>deleted</green>.</white>");
-		admin.setPasswordSet("{prefix}<white>Password <green>updated</green>.</white>");
+		admin.setRegistered("{prefix}<white>Credential account <green>registered</green>.</white>");
+		admin.setDeleted("{prefix}<white>Credential account <green>deleted</green>.</white>");
+		admin.setPasswordSet("{prefix}<white>Credential <green>updated</green>.</white>");
 		admin.setNotFound("{prefix}<white>No password account found.</white>");
-		admin.setAlreadyRegistered("{prefix}<white>Password account already <green>registered</green>.</white>");
+		admin.setAlreadyRegistered("{prefix}<white>Credential account already <green>registered</green>.</white>");
 		commands.setAdmin(admin);
 
 		messages.setCommands(commands);

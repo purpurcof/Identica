@@ -44,8 +44,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Password Command")
-class PasswordCommandTest {
+@DisplayName("Credential Command")
+class CredentialCommandTest {
 	@BeforeAll
 	static void initializeSerializer() {
 		Serializer.initialize(() -> TEST_SERIALIZER);
@@ -88,7 +88,7 @@ class PasswordCommandTest {
 				.thenReturn(VerificationResolutionResult.of(VerificationResolutionStatus.WAITING, "challenge", "totp", true, false));
 
 		CredentialMessages passwordMessages = new CredentialMessagesDefaults().supply(new CredentialMessages());
-		PasswordCommand command = new PasswordCommand(
+		CredentialCommand command = new CredentialCommand(
 				() -> passwordMessages,
 				Messages::new,
 				migrationService,
@@ -100,7 +100,7 @@ class PasswordCommandTest {
 		command.confirm(identity, null);
 
 		assertEquals(
-				passwordMessages.getCommands().getPassword().getVerificationRequired(),
+				passwordMessages.getCommands().getCredential().getVerificationRequired(),
 				PlainTextComponentSerializer.plainText().serialize(identity.lastMessage())
 		);
 		verify(migrationService, never()).confirm(any(MigrationConfirm.class));
@@ -120,7 +120,7 @@ class PasswordCommandTest {
 		when(migrationService.confirm(any(MigrationConfirm.class)))
 				.thenReturn(MigrationResult.builder().status(MigrationResultStatus.STARTED).build());
 
-		PasswordCommand command = new PasswordCommand(
+		CredentialCommand command = new CredentialCommand(
 				() -> new CredentialMessagesDefaults().supply(new CredentialMessages()),
 				Messages::new,
 				migrationService,

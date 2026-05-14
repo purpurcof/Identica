@@ -136,13 +136,13 @@ public class CredentialMessages extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Commands {
-		private Password password;
+		private Credential credential;
 		private Admin admin;
 
 		@Getter
 		@Setter
 		@ToString
-		public static class Password {
+		public static class Credential {
 			private List<String> confirm;
 			private List<String> confirmed;
 			private String verificationRequired;

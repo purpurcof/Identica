@@ -53,7 +53,7 @@ public class CredentialAuthenticationVerificationStep extends AbstractCredential
 				.orElse(null);
 		if (uniqueId == null) {
 			Logger.debug(
-					"Password verification skipped missing provider link connection=%s username=%s subject=%s",
+					"Credential verification skipped missing provider link connection=%s username=%s subject=%s",
 					context.getConnectionUniqueId(),
 					context.getUsername(),
 					providerSubject
@@ -67,7 +67,7 @@ public class CredentialAuthenticationVerificationStep extends AbstractCredential
 				.purpose("authentication")
 				.build());
 		Logger.debug(
-				"Password verification resolved connection=%s username=%s uniqueId=%s status=%s method=%s challenge=%s required=%s",
+				"Credential verification resolved connection=%s username=%s uniqueId=%s status=%s method=%s challenge=%s required=%s",
 				context.getConnectionUniqueId(),
 				context.getUsername(),
 				uniqueId,

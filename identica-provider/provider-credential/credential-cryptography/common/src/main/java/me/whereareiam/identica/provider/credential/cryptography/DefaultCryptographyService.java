@@ -82,12 +82,12 @@ public class DefaultCryptographyService implements CryptographyService {
 	private @Nullable CryptographyAlgorithm resolveConfiguredAlgorithm() {
 		String algorithm = primaryAlgorithm();
 		if (algorithm == null || algorithm.isBlank()) {
-			Logger.warn("Password hashing algorithm is not configured");
+			Logger.warn("Credential hashing algorithm is not configured");
 			return null;
 		}
 
 		CryptographyAlgorithm hasher = resolveHasher(algorithm);
-		if (hasher == null) Logger.warn("Password hasher %s is missing", algorithm);
+		if (hasher == null) Logger.warn("Credential hasher %s is missing", algorithm);
 
 		return hasher;
 	}
@@ -95,10 +95,10 @@ public class DefaultCryptographyService implements CryptographyService {
 	private @NotNull CryptographyAlgorithm resolveConfiguredHasherOrThrow() {
 		String algorithm = primaryAlgorithm();
 		if (algorithm == null || algorithm.isBlank())
-			throw new IllegalStateException("Password hashing algorithm is not configured");
+			throw new IllegalStateException("Credential hashing algorithm is not configured");
 
 		CryptographyAlgorithm hasher = resolveHasher(algorithm);
-		if (hasher == null) throw new IllegalStateException(String.format("Password hasher %s is missing", algorithm));
+		if (hasher == null) throw new IllegalStateException(String.format("Credential hasher %s is missing", algorithm));
 		return hasher;
 	}
 

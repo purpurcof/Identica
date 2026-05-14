@@ -28,8 +28,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Password Authentication Password Step")
-class CredentialAuthenticationPasswordStepTest {
+@DisplayName("Credential Authentication Credential Step")
+class CredentialAuthenticationCredentialStepTest {
 	@Mock
 	private CredentialAccountService accountService;
 	@Mock

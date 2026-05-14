@@ -31,7 +31,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class PasswordCommand extends ProtectedActionCommand<MigrationRequest> {
+public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> {
 	private final Provider<CredentialMessages> messagesProvider;
 	private final Provider<Messages> coreMessagesProvider;
 	private final MigrationService migrationService;
@@ -39,7 +39,7 @@ public class PasswordCommand extends ProtectedActionCommand<MigrationRequest> {
 	private final SessionService sessionService;
 
 	@Inject
-	public PasswordCommand(
+	public CredentialCommand(
 			Provider<CredentialMessages> messagesProvider,
 			Provider<Messages> coreMessagesProvider,
 			MigrationService migrationService,
@@ -65,9 +65,9 @@ public class PasswordCommand extends ProtectedActionCommand<MigrationRequest> {
 		return coreMessagesProvider.get().getCommands().getCurrentSessionRequired();
 	}
 
-	@Definition("password")
-	@Command("password")
-	public void password(@NotNull Actor sender) {
+	@Definition("credential")
+	@Command("credential")
+	public void credential(@NotNull Actor sender) {
 		Identity identity = requireIdentity(sender, null);
 		if (identity == null) return;
 
@@ -86,7 +86,7 @@ public class PasswordCommand extends ProtectedActionCommand<MigrationRequest> {
 
 		MigrationResult result = migrationService.request(request);
 
-		CredentialMessages.Commands.Password messages = messagesProvider.get().getCommands().getPassword();
+		CredentialMessages.Commands.Credential messages = messagesProvider.get().getCommands().getCredential();
 		switch (result.getStatus()) {
 			case PENDING_CONFIRMATION -> {
 				if (!requiresStepUp(identity.getUniqueId())) {
@@ -109,8 +109,8 @@ public class PasswordCommand extends ProtectedActionCommand<MigrationRequest> {
 		}
 	}
 
-	@Definition("password-confirm")
-	@Command("password confirm [input]")
+	@Definition("credential-confirm")
+	@Command("credential confirm [input]")
 	public void confirm(@NotNull Actor sender, @Argument("input") @Nullable String input) {
 		Identity identity = requireIdentity(sender, null);
 		if (identity == null) return;
@@ -127,13 +127,13 @@ public class PasswordCommand extends ProtectedActionCommand<MigrationRequest> {
 				switch (preparation.getStatus()) {
 					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
 					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
-					default -> sendMessage(identity, messagesProvider.get().getCommands().getPassword().getNoPending());
+					default -> sendMessage(identity, messagesProvider.get().getCommands().getCredential().getNoPending());
 				}
 				return;
 			}
 
 			if (isBlank(input)) {
-				sendMessage(identity, messagesProvider.get().getCommands().getPassword().getVerificationRequired());
+				sendMessage(identity, messagesProvider.get().getCommands().getCredential().getVerificationRequired());
 				return;
 			}
 
@@ -143,13 +143,13 @@ public class PasswordCommand extends ProtectedActionCommand<MigrationRequest> {
 					case INVALID_CODE -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getInvalidCode());
 					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
 					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
-					default -> sendMessage(identity, messagesProvider.get().getCommands().getPassword().getNoPending());
+					default -> sendMessage(identity, messagesProvider.get().getCommands().getCredential().getNoPending());
 				}
 				return;
 			}
 		}
 
-		CredentialMessages.Commands.Password messages = messagesProvider.get().getCommands().getPassword();
+		CredentialMessages.Commands.Credential messages = messagesProvider.get().getCommands().getCredential();
 		var result = migrationService.confirm(MigrationConfirm.builder()
 				.connectionUniqueId(identity.getUniqueId())
 				.kickMessage(joinMessage(messages.getConfirmed()))
@@ -174,8 +174,8 @@ public class PasswordCommand extends ProtectedActionCommand<MigrationRequest> {
 			sendMessage(identity, result.getMessage());
 	}
 
-	@Definition("password-cancel")
-	@Command("password cancel")
+	@Definition("credential-cancel")
+	@Command("credential cancel")
 	public void cancel(@NotNull Actor sender) {
 		Identity identity = requireIdentity(sender, null);
 		if (identity == null) return;
@@ -186,7 +186,7 @@ public class PasswordCommand extends ProtectedActionCommand<MigrationRequest> {
 				.scope(MigrationCancelScope.CONFIRMATION)
 				.build());
 
-		CredentialMessages.Commands.Password messages = messagesProvider.get().getCommands().getPassword();
+		CredentialMessages.Commands.Credential messages = messagesProvider.get().getCommands().getCredential();
 		if (result.getStatus() == MigrationResultStatus.CANCELLED) {
 			sendMessage(identity, messages.getCancelled());
 			return;

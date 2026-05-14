@@ -42,6 +42,8 @@ public class BungeeCordLoginDecisionAdapter {
 		applyOrigin(identity, player);
 
 		PrepareDecision prepared = resolvePrepared(player, identity);
+		if (prepared != null && prepared.getUniqueId() != null && !prepared.getUniqueId().equals(identity.getUniqueId()))
+			identity.setUniqueId(prepared.getUniqueId());
 
 		ProviderContext provider = prepared != null ? prepared.getProvider() : null;
 		if (provider != null && !provider.getProviderUsername().isBlank())

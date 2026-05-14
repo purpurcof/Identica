@@ -20,11 +20,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class CredentialSchemaContributorTest {
 	private DefaultDatabaseService databaseService;
 	private Jdbi jdbi;
-	private Path dataPath;
 
-	@BeforeEach
+    @BeforeEach
 	void setUp() throws Exception {
-		dataPath = Files.createTempDirectory("credential-schema-contributor-");
+        Path dataPath = Files.createTempDirectory("credential-schema-contributor-");
 
 		H2Persistence persistence = new H2Persistence();
 		persistence.setFile("mem:credential_migrations;DB_CLOSE_DELAY=-1");
@@ -33,7 +32,7 @@ class CredentialSchemaContributorTest {
 		databaseService = new DefaultDatabaseService(
 				persistence,
 				Mockito.mock(EventManager.class),
-				dataPath
+                dataPath
 		);
 		jdbi = databaseService.getJdbi();
 
@@ -84,7 +83,7 @@ class CredentialSchemaContributorTest {
 		assertFalse(tableExists("identica_cracked_account_passwords"));
 		assertTrue(tableExists("identica_provider_credential_accounts"));
 		assertTrue(tableExists("identica_provider_credential_accounts_history"));
-		assertEquals(1L, migrationRows());
+		assertEquals(2L, migrationRows());
 	}
 
 	@Test
@@ -186,7 +185,7 @@ class CredentialSchemaContributorTest {
 		assertTrue(tableExists("identica_provider_credential_accounts"));
 		assertTrue(tableExists("identica_provider_credential_accounts_history"));
 		assertTrue(tableExists("dialectica_schema_migrations"));
-		assertEquals(1L, migrationRows());
+		assertEquals(2L, migrationRows());
 	}
 
 	private boolean tableExists(String tableName) {

@@ -36,9 +36,10 @@ If multiple runtimes will share the same replicated state, keep them on the same
     1. Open the [releases page](https://github.com/whereareiam/Identica/releases).
     2. Open the release version you want to install.
     3. Expand the release assets if they are collapsed.
-    4. Download these three jars from the asset list:
+    4. Download these jars from the asset list:
 
-    - `Identica-VELOCITY-<version>.jar`
+    - `Identica-VELOCITY-<version>.jar` for Velocity
+    - `Identica-BUNGEECORD-<version>.jar` for BungeeCord
     - `Identica-Credential-<version>.jar`
     - `Identica-Premium-<version>.jar`
 
@@ -56,7 +57,8 @@ If multiple runtimes will share the same replicated state, keep them on the same
     5. Extract the downloaded archive.
     6. Use these jars from the extracted files:
 
-    - `Identica-VELOCITY-dev-<commit>.jar`
+    - `Identica-VELOCITY-dev-<commit>.jar` for Velocity
+    - `Identica-BUNGEECORD-dev-<commit>.jar` for BungeeCord
     - `Identica-Credential-dev-<commit>.jar`
     - `Identica-Premium-dev-<commit>.jar`
 
@@ -79,142 +81,34 @@ If multiple runtimes will share the same replicated state, keep them on the same
 
 ## 2. Place the runtime and provider jars
 
-<ContentTabs items={["Velocity"]}>
-  <ContentTab value="Velocity">
-    Place the main Identica runtime jar directly in `plugins/`.
-    It should sit beside your other plugin jars, not inside the `identica/` folder.
-
-    Place provider jars in:
-
-    ```text
-    plugins/identica/providers/
-    ```
-
-    If that folder does not exist yet, create it manually before the first boot.
-
-    Placement flow:
-
-    1. Copy `Identica-VELOCITY-<version>.jar` into `plugins/`.
-    2. Create `plugins/identica/` if it does not exist yet.
-    3. Create `plugins/identica/providers/` if it does not exist yet.
-    4. Copy `Identica-Credential-<version>.jar` into `plugins/identica/providers/`.
-    5. Copy `Identica-Premium-<version>.jar` into `plugins/identica/providers/`.
-
-    Before starting the server, double-check these placement rules:
-
-    - the main Identica runtime jar belongs in `plugins/`
-    - provider jars belong in `plugins/identica/providers/`
-    - provider jars should not be placed directly in the root `plugins/` folder
-
-    A minimal layout looks like this:
-
-    ```text
-    plugins/
-    ├── Identica-VELOCITY-<version>.jar
-    └── identica/
-        └── providers/
-            ├── Identica-Credential-<version>.jar
-            └── Identica-Premium-<version>.jar
-    ```
-  </ContentTab>
-</ContentTabs>
+<Include src="../_partials/platform-placement.mdx" />
 
 ## 3. Start the runtime once and stop it again
 
 Start the platform once so Identica can create its initial files and folders.
 This first boot is only meant to let the plugin prepare its default configuration layout before you begin the shared-state setup.
 
-<Callout type="warning" title="First startup can look stuck">
-  On the first startup, Identica downloads its required libraries, so the server may not print anything new for a while and can feel stuck even though the download is still in progress. This can be fast or slow depending on the internet connection, and the server must have internet access and be able to reach Cloudflare-protected sites.
-</Callout>
+<Include src="../_partials/startup-warning.mdx" />
 
 If everything is fine, Identica will print its welcome message or banner after startup finishes.
 
 Once that first boot has completed and the files were created, stop the proxy cleanly before editing the generated configuration.
 
-<ContentTabs items={["Velocity"]}>
-  <ContentTab value="Velocity">
-    On this first start, the main goal is to let Velocity load the runtime jar and let Identica prepare its config directory.
-
-    Review these generated locations after the first boot:
-
-    - `plugins/identica/settings`
-    - `plugins/identica/messages`
-    - `plugins/identica/commands`
-    - `plugins/identica/verification`
-    - `plugins/identica/replication`
-    - `plugins/identica/providers/providers`
-
-    Provider-specific config directories can also appear under `plugins/identica/providers/`.
-
-    The current default boot path creates a configuration marker with `type=YAML`.
-
-    It is safe to stop the proxy after these files exist.
-  </ContentTab>
-</ContentTabs>
+<Include src="../_partials/platform-first-boot.mdx" />
 
 ## 4. Enable and order the providers
 
-Open the generated `providers` config and keep the generated structure as your base.
-In most cases, the defaults are already close to what you want.
-
-For typical mixed setups, it makes sense for `premium` to have a higher priority than `credential`.
-In practice, that means if Identica has to choose between those providers for the same player or entrypoint situation, `premium` wins before `credential`.
-That is the behavior most users expect.
-
-For the first pass, make these provider decisions explicit:
-
-- which providers stay enabled
-- which provider has higher priority
-- whether entrypoint hostnames should map directly to a provider
-
-A practical starting point looks like this:
-
-```yaml
-providers:
-  - id: premium
-    displayName: "PR"
-    enabled: true
-    priority: 200
-    overrides:
-      sessionTtl: 12h
-    entrypoints:
-      - premium.example.com
-
-  - id: credential
-    displayName: "CR"
-    enabled: true
-    priority: 100
-    overrides: {}
-    entrypoints:
-      - credential.example.com
-```
+<Include src="../_partials/provider-ordering.mdx" />
 
 If hostname-based routing is not part of this rollout yet, leave `entrypoints` empty or replace the default values later when you know the real hostnames.
 
 ## 5. Understand journey mode and journey policy
 
-The generated settings may also include `journeyMode` and `journeyPolicy`.
+<Include src="../_partials/journey-mode.mdx" />
 
-- `SEAMLESS` means a step is expected to continue without player interaction
-- `INTERACTIVE` means the step may prompt the player, wait for input, or otherwise require explicit interaction
+### Platform note about the first interactive prompt
 
-For most advanced installations, `INTERACTIVE` is still the safer default unless you intentionally want a more automatic flow.
-Typical interactive behavior includes things like entering a credential, choosing a provider, confirming a verification code, or responding to a migration prompt.
-
-In the current setup described by this guide, `INTERACTIVE` can also produce a better first impression.
-If you leave the flow on `SEAMLESS`, a player who joins from an offline account while using a premium username may hit the higher-priority `premium` provider first and get an invalid-session-style kick from the server on that first join.
-That can scare users away before they understand what happened, even if a second rejoin would work.
-
-With `INTERACTIVE`, the player can enter the enrollment step instead and choose the provider directly.
-If you want less manual selection in that flow, the generated settings also include `autoSelectSingleProvider`, which you can enable for scenarios where only one provider should be chosen automatically.
-
-`journeyPolicy` controls how strictly the selected mode should be applied:
-
-- `PREFER` means Identica tries to use the configured mode first, but may fall back to another viable mode if needed
-- `STRICT` means Identica should only use the configured mode
-
-For most setups, `PREFER` is the better default.
+<Include src="../_partials/bungeecord-initial-prompt.mdx" />
 
 ## 6. Turn shared state into an intentional environment contract
 
@@ -261,7 +155,7 @@ The default values are examples only.
 It is usually not a good idea to use the same target for both step routing and completion routing.
 In most cases, step targets should point to an authentication or transition destination, while completion should point to the place where the player is actually meant to end up.
 
-<ContentTabs items={["Velocity"]}>
+<ContentTabs items={["Velocity", "BungeeCord"]}>
   <ContentTab value="Velocity">
     In Velocity, these `target` values are backend server names from your proxy configuration.
 
@@ -371,6 +265,110 @@ In most cases, step targets should point to an authentication or transition dest
 
     If your hosting panel limits how many separate backend servers you can run, a lightweight limbo server can help.
     One example is [PicoLimbo](https://picolimbo.quozul.dev/about/introduction.html), which can run with Velocity and gives you a virtual routing destination hosted through the proxy side instead of requiring another full gameplay server.
+  </ContentTab>
+  <ContentTab value="BungeeCord">
+    In BungeeCord, these `target` values are backend server names from your proxy configuration.
+
+    If you want, you can still balance those requests across multiple backend servers, but that is not a feature of Identica itself.
+    Identica only asks BungeeCord to route a player to the target you configured.
+
+    For a segmented topology, a good baseline looks like this:
+
+    ```yaml
+    connection:
+      routing:
+        defaults:
+          step:
+            target: auth
+          complete:
+            target: lobby
+        scenarios:
+          registration:
+            step:
+              target: registration
+          migration:
+            step:
+              target: migration
+    ```
+
+    Use your real server names, not the names shown here.
+    Generated settings leave `scenarios` empty; add scenario entries only when a scenario needs to differ from `routing.defaults`.
+    If one step needs exceptional routing, use a step override instead of changing the whole scenario:
+
+    ```yaml
+    connection:
+      routing:
+        scenarios:
+          registration:
+            overrides:
+              steps:
+                your-step-id:
+                  target: auth
+    ```
+
+    That keeps the normal scenario route stable while still letting one specific step land somewhere else.
+
+    If you want something closer to a real advanced setup, you can also configure retries and more specific targets.
+    A practical example looks like this:
+
+    ```yaml
+    connection:
+      routing:
+        defaults:
+          step:
+            target: auth
+            attempts:
+              mode: RETRY_ONCE
+              maxAttempts: 2
+              retryDelay: 1s
+              consumeOnReached: false
+              consumeOnExhausted: true
+          complete:
+            target: lobby
+            attempts:
+              mode: NONE
+              maxAttempts: 1
+              retryDelay: 0s
+              consumeOnReached: true
+              consumeOnExhausted: true
+        scenarios:
+          registration:
+            step:
+              target: register
+              attempts:
+                mode: RETRY_ONCE
+                maxAttempts: 2
+                retryDelay: 1s
+                consumeOnReached: false
+                consumeOnExhausted: true
+            complete:
+              target: lobby
+            overrides:
+              steps:
+                provider-selection:
+                  target: register-fallback
+          migration:
+            step:
+              target: migrate
+              attempts:
+                mode: RETRY_ONCE
+                maxAttempts: 3
+                retryDelay: 2s
+                consumeOnReached: false
+                consumeOnExhausted: true
+            complete:
+              target: survival
+    ```
+
+    In that example:
+
+    - `authentication`, `registration`, and `migration` each use their own step target
+    - completion sends the player to the place they should end up after the flow is done
+    - retries are enabled for step routing where temporary target issues are more likely
+    - one registration step is overridden to a different server without changing the whole scenario
+
+    Use this kind of setup when different parts of the flow really do belong on different backend servers.
+    If your network is simpler, keep the routing simpler too.
   </ContentTab>
 </ContentTabs>
 

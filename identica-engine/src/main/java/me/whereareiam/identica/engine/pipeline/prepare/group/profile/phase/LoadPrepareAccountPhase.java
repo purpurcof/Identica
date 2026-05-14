@@ -13,14 +13,14 @@ import me.whereareiam.identica.model.auth.request.ProfileRequest;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.type.UsernameSource;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.type.UsernameSource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -80,13 +80,13 @@ public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState>
 		}
 
 		String requestedUsername = request.getIdentity().getUsername();
-		UUID identicaUniqueId = registrationAccountService.reserve(ProfileRequest.builder()
+		UUID accountUniqueId = registrationAccountService.reserve(ProfileRequest.builder()
 				.identity(request.getIdentity())
 				.providerId(provider.getProviderId())
 				.providerSubject(provider.getProviderSubject())
 				.build());
 
-		if (identicaUniqueId == null) {
+		if (accountUniqueId == null) {
 			Logger.warn("Prepare reservation missing username=%s provider=%s",
 					requestedUsername,
 					provider.getProviderId());
@@ -104,16 +104,16 @@ public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState>
 				provider.getProviderSubject()
 		);
 		AccountProviderLink link = storedLink.orElseGet(() -> AccountProviderLink.builder()
-				.uniqueId(identicaUniqueId)
+				.uniqueId(accountUniqueId)
 				.providerId(provider.getProviderId())
 				.providerSubject(provider.getProviderSubject())
 				.primaryLink(true)
 				.build());
-		Account storedAccount = accountPersistenceService.findByUniqueId(identicaUniqueId).orElse(null);
+		Account storedAccount = accountPersistenceService.findByUniqueId(accountUniqueId).orElse(null);
 		Account account = storedAccount != null
 				? storedAccount.toBuilder().username(requestedUsername).build()
 				: Account.builder()
-						.uniqueId(identicaUniqueId)
+						.uniqueId(accountUniqueId)
 						.username(requestedUsername)
 						.source(UsernameSource.PROVIDER)
 						.build();
@@ -128,7 +128,7 @@ public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState>
 
 		boolean created = storedLink.isEmpty() || storedAccount == null;
 		pipelineState.putItem(new PrepareAccountCandidateItem(
-				identicaUniqueId,
+				accountUniqueId,
 				null,
 				account,
 				link,

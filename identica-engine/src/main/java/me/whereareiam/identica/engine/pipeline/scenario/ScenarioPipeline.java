@@ -15,10 +15,10 @@ import me.whereareiam.identica.model.auth.request.AdvanceRequest;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
-import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +40,7 @@ public class ScenarioPipeline {
 		if (request != null) {
 			ConnectionDecision entryDecision = resolveEntryDecision(new ConnectionProcessAttemptEvent(
 					request.getConnectionUniqueId(),
-					request.getIdentity().getUniqueId(),
+					request.getIdentity().getAccountUniqueId(),
 					request.getUsername(),
 					request.getIp()
 			));
@@ -68,7 +68,7 @@ public class ScenarioPipeline {
 	public @NotNull CompletionStage<ConnectionDecision> resume(@NotNull ResumeRequest request) {
 		ConnectionDecision entryDecision = resolveEntryDecision(new ConnectionResumeAttemptEvent(
 				request.getConnectionUniqueId(),
-				request.getIdentityUniqueId(),
+				request.getAccountUniqueId(),
 				request.getUsername(),
 				request.getIp()
 		));
@@ -86,7 +86,7 @@ public class ScenarioPipeline {
 	public @NotNull CompletionStage<ConnectionDecision> advance(@NotNull AdvanceRequest request) {
 		ConnectionDecision entryDecision = resolveEntryDecision(new ConnectionAdvanceAttemptEvent(
 				request.getConnectionUniqueId(),
-				request.getIdentityUniqueId(),
+				request.getAccountUniqueId(),
 				request.getUsername(),
 				request.getIp()
 		));
@@ -192,7 +192,7 @@ public class ScenarioPipeline {
 
 		ConnectionIdentity identity = context.getIdentity();
 		ConnectionIdentity mergedIdentity = new ConnectionIdentity(
-				identity.getUniqueId(),
+				identity.getAccountUniqueId(),
 				identity.getObservedUniqueId(),
 				identity.getUsername(),
 				identity.getIp()

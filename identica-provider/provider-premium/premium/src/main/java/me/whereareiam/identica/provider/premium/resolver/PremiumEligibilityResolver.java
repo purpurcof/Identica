@@ -43,7 +43,7 @@ public class PremiumEligibilityResolver implements ProviderEligibilityResolver {
 		String username = context.getUsername();
 		if (username == null || username.isBlank()) return false;
 
-		UUID uniqueId = context.getIdenticaUniqueId();
+		UUID uniqueId = context.getAccountUniqueId();
 		if (hasPremiumLinkByUniqueId(uniqueId)) {
 			return true;
 		}

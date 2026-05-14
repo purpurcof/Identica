@@ -10,10 +10,10 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +66,7 @@ public class ValidateProviderPhase implements PipelinePhase<IdentityState> {
 			Logger.debug(
 					"Migration validate provider failed connection=%s identica=%s target=%s provider=%s subject=%s username=%s",
 					context.getConnectionUniqueId(),
-					context.getIdenticaUniqueId(),
+					context.getAccountUniqueId(),
 					context.getTargetProviderId(),
 					provider != null ? provider.getProviderId() : null,
 					provider != null ? provider.getProviderSubject() : null,

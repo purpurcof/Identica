@@ -7,10 +7,12 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Locale;
+import java.util.UUID;
 
 public class BungeeCordCommandPlayer extends Identity {
 	private final ProxiedPlayer player;
@@ -20,15 +22,34 @@ public class BungeeCordCommandPlayer extends Identity {
 			@NotNull ProxiedPlayer player,
 			@NotNull Audience audience
 	) {
-		this(player, audience, player.getName());
+		this(player.getUniqueId(), null, player, audience, player.getName());
 	}
 
 	public BungeeCordCommandPlayer(
+			@NotNull ProxiedPlayer player,
+			@NotNull Audience audience,
+			@NotNull String username
+	) {
+		this(player.getUniqueId(), null, player, audience, username);
+	}
+
+	public BungeeCordCommandPlayer(
+			@NotNull UUID connectionUniqueId,
 			@NotNull net.md_5.bungee.api.connection.ProxiedPlayer player,
 			@NotNull Audience audience,
 			@NotNull String username
 	) {
-		super(player.getUniqueId(), username, resolveIp(player));
+		this(connectionUniqueId, null, player, audience, username);
+	}
+
+	public BungeeCordCommandPlayer(
+			@NotNull UUID connectionUniqueId,
+			@Nullable UUID accountUniqueId,
+			@NotNull net.md_5.bungee.api.connection.ProxiedPlayer player,
+			@NotNull Audience audience,
+			@NotNull String username
+	) {
+		super(connectionUniqueId, accountUniqueId, username, resolveIp(player));
 		this.player = player;
 		this.audience = audience;
 	}

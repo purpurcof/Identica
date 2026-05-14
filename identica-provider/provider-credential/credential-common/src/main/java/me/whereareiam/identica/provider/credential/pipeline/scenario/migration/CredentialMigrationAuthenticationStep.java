@@ -107,7 +107,7 @@ public class CredentialMigrationAuthenticationStep extends AbstractCredentialSte
 		return new AuthenticationAttemptContext(
 				credential,
 				context.getConnectionUniqueId(),
-				context.getIdenticaUniqueId(),
+				context.getAccountUniqueId(),
 				context.getUsername(),
 				context.getIp()
 		);

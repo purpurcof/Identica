@@ -4,11 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.adapter.command.suggestion.VerificationMethodSuggestions;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.annotation.Suggestions;
-import me.whereareiam.identica.adapter.command.suggestion.VerificationMethodSuggestions;
 import me.whereareiam.identica.command.ProtectedActionCommand;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -16,8 +16,8 @@ import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.verification.interaction.CodeVerificationInteraction;
 import me.whereareiam.identica.model.verification.interaction.SavedVerificationInteraction;
-import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.identica.verification.VerificationInteraction;
+import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import org.jetbrains.annotations.NotNull;
@@ -66,9 +66,11 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 		if (identity == null) return;
 		Session session = requireCurrentSession(identity);
 		if (session == null) return;
+		var accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return;
 
 		resultRenderer.presentEnrollmentResult(sender, verificationService.beginEnrollment(
-				identity.getUniqueId(),
+				accountUniqueId,
 				identity.getUsername(),
 				session.getProviderId(),
 				methodId
@@ -80,10 +82,12 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 	public void enrollConfirm(@NotNull Actor sender, @Argument("input") String input) {
 		Identity identity = requireIdentity(sender, verificationMessages().getPlayerOnly());
 		if (identity == null) return;
+		var accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return;
 
 		resultRenderer.presentEnrollmentResult(
 				sender,
-				verificationService.submitEnrollment(identity.getUniqueId(), interaction(identity.getUniqueId(), input))
+				verificationService.submitEnrollment(accountUniqueId, interaction(accountUniqueId, input))
 		);
 	}
 
@@ -92,8 +96,10 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 	public void cancel(@NotNull Actor sender) {
 		Identity identity = requireIdentity(sender, verificationMessages().getPlayerOnly());
 		if (identity == null) return;
+		var accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return;
 
-		if (verificationService.cancelPendingEnrollment(identity.getUniqueId())) {
+		if (verificationService.cancelPendingEnrollment(accountUniqueId)) {
 			sendMessage(sender, verificationMessages().getCancel().getCancelled(), Map.of());
 			return;
 		}

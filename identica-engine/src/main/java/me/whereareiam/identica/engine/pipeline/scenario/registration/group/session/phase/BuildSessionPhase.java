@@ -9,11 +9,11 @@ import me.whereareiam.identica.engine.pipeline.scenario.registration.group.sessi
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +60,7 @@ public class BuildSessionPhase implements PipelinePhase<SessionState> {
 
 		ProviderContext provider = context.getProvider();
 		String currentUsername = resolveCurrentUsername(identity);
-		if (provider == null || isBlank(currentUsername) || context.getIdenticaUniqueId() == null) {
+		if (provider == null || isBlank(currentUsername) || context.getAccountUniqueId() == null) {
 			state.setResult(PipelineResult.failed(sessionBuildMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
@@ -75,7 +75,7 @@ public class BuildSessionPhase implements PipelinePhase<SessionState> {
 			effectiveUsername = currentUsername;
 
 		Session session = Session.builder()
-				.uniqueId(context.getIdenticaUniqueId())
+				.uniqueId(context.getAccountUniqueId())
 				.providerId(provider.getProviderId())
 				.providerSubject(provider.getProviderSubject())
 				.originalUsername(originalUsername)

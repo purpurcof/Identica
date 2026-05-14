@@ -16,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PrepareDecisionItem implements PipelineStateItem {
-	private @Nullable UUID uniqueId;
+	private @Nullable UUID accountUniqueId;
 	private @Nullable String effectiveUsername;
 
 	private @Nullable PrepareContextItem context;
@@ -30,7 +30,7 @@ public class PrepareDecisionItem implements PipelineStateItem {
 				.status(status)
 				.denialMessage(denialMessage)
 				.handshake(context != null ? context.resolveHandshake() : null)
-				.uniqueId(uniqueId)
+				.accountUniqueId(accountUniqueId)
 				.effectiveUsername(effectiveUsername)
 				.provider(context != null ? context.getProvider() : null)
 				.build();
@@ -38,11 +38,11 @@ public class PrepareDecisionItem implements PipelineStateItem {
 
 	public static @NotNull PrepareDecisionItem allow(
 			@Nullable PrepareContextItem context,
-			@Nullable UUID identicaUniqueId,
+			@Nullable UUID accountUniqueId,
 			@Nullable String effectiveUsername
 	) {
 		return new PrepareDecisionItem(
-				identicaUniqueId,
+				accountUniqueId,
 				effectiveUsername,
 				context,
 				PrepareDecision.Status.ALLOW,
@@ -53,11 +53,11 @@ public class PrepareDecisionItem implements PipelineStateItem {
 	public static @NotNull PrepareDecisionItem deny(
 			@Nullable String denialMessage,
 			@Nullable PrepareContextItem context,
-			@Nullable UUID identicaUniqueId,
+			@Nullable UUID accountUniqueId,
 			@Nullable String effectiveUsername
 	) {
 		return new PrepareDecisionItem(
-				identicaUniqueId,
+				accountUniqueId,
 				effectiveUsername,
 				context,
 				PrepareDecision.Status.DENY,

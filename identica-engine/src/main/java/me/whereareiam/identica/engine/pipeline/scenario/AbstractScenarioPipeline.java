@@ -11,14 +11,14 @@ import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.pipeline.AdvanceMarkerItem;
+import me.whereareiam.identica.model.pipeline.GroupOutcome;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.AdvanceMarkerItem;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.PipelineGroup;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.model.pipeline.GroupOutcome;
-import me.whereareiam.identica.pipeline.PipelineGroup;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -360,7 +360,7 @@ public abstract class AbstractScenarioPipeline {
 	private @Nullable UUID resolveLockOwner(@NotNull ResumeRequest request) {
 		UUID ownerId = request.getConnectionUniqueId();
 		if (ownerId != null) return ownerId;
-		return request.getIdentityUniqueId();
+		return request.getAccountUniqueId();
 	}
 
 	private long resolveAdvanceLockTtlMillis() {
@@ -422,11 +422,13 @@ public abstract class AbstractScenarioPipeline {
 			return null;
 
 		String ip = request.getIp() != null ? request.getIp() : base.getIp();
-		UUID identicaUniqueId = base.getIdenticaUniqueId();
+		UUID accountUniqueId = base.getAccountUniqueId();
+		UUID connectionUniqueId = resolveConnectionUniqueId(base, request);
 		UUID observedUniqueId = request.getIdentityInfo() != null && request.getIdentityInfo().getObservedUniqueId() != null
 				? request.getIdentityInfo().getObservedUniqueId()
 				: base.getIdentity().getObservedUniqueId();
-		ConnectionIdentity merged = new ConnectionIdentity(identicaUniqueId, observedUniqueId, username, ip);
+		ConnectionIdentity merged = new ConnectionIdentity(accountUniqueId, observedUniqueId, username, ip);
+		merged.setConnectionUniqueId(connectionUniqueId);
 
 		ConnectionIdentity requestIdentity = request.getIdentityInfo();
 		if (requestIdentity != null) {

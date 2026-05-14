@@ -7,8 +7,8 @@ import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
-import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.replication.ReplicationAdapter;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.util.EventUtil;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -135,7 +135,7 @@ class DefaultPipelineStateStoreTest {
 		UUID originalId = UUID.randomUUID();
 		PipelineStateReference originalReference = PipelineStateReference.builder()
 				.connectionUniqueId(originalId)
-				.identityUniqueId(originalId)
+				.accountUniqueId(originalId)
 				.connectionKey("user|127.0.0.1|example.com|25565")
 				.build();
 		PipelineState originalState = pendingState();
@@ -144,7 +144,7 @@ class DefaultPipelineStateStoreTest {
 
 		PipelineStateReference narrowedReference = PipelineStateReference.builder()
 				.connectionUniqueId(originalId)
-				.identityUniqueId(originalId)
+				.accountUniqueId(originalId)
 				.connectionKey("user|127.0.0.1||")
 				.build();
 		PipelineState narrowedState = pendingState();
@@ -155,7 +155,7 @@ class DefaultPipelineStateStoreTest {
 		UUID reconnectId = UUID.randomUUID();
 		PipelineStateReference reconnectReference = PipelineStateReference.builder()
 				.connectionUniqueId(reconnectId)
-				.identityUniqueId(reconnectId)
+				.accountUniqueId(reconnectId)
 				.connectionKey("user|127.0.0.1|example.com|25565")
 				.build();
 

@@ -67,7 +67,7 @@ public class LoginCommand {
 
 	private ConnectionDecision advanceJourneyMode(@NotNull Identity identity) {
 		AdvanceRequest request = AdvanceRequest.builder()
-				.connectionUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
 				.identity(identity)
 				.build();
 		return connectionCoordinator.advance(request).toCompletableFuture().join();
@@ -101,8 +101,8 @@ public class LoginCommand {
 
 	private PipelineStateReference reference(@NotNull Identity identity) {
 		return PipelineStateReference.builder()
-				.connectionUniqueId(identity.getUniqueId())
-				.identityUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
+				.accountUniqueId(identity.getAccountUniqueId())
 				.build();
 	}
 

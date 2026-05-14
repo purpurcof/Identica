@@ -13,20 +13,25 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
+import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class VelocityResumeDecisionAdapter {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
 	private final @NotNull IdentityService identityService;
+	private final @NotNull CompletionPendingStore completionPendingStore;
 	private final @NotNull PrepareStateStore prepareStateStore;
 	private final @NotNull ConnectionDecisionApplier decisionApplier;
 	private final @NotNull PendingPromptResendCoordinator initialStepPromptCoordinator;
@@ -46,7 +51,11 @@ public class VelocityResumeDecisionAdapter {
 		String providerUsername = provider != null && !provider.getProviderUsername().isBlank()
 				? provider.getProviderUsername()
 				: player.getUsername();
-		ConnectionIdentity identity = new ConnectionIdentity(player.getUniqueId(), providerUsername, ip);
+		ConnectionIdentity identity = new ConnectionIdentity(providerUsername, ip);
+		identity.setConnectionUniqueId(player.getUniqueId());
+		identity.setObservedUniqueId(player.getUniqueId());
+		if (prepared != null && prepared.getAccountUniqueId() != null && !prepared.getAccountUniqueId().equals(identity.getAccountUniqueId()))
+			identity.setAccountUniqueId(prepared.getAccountUniqueId());
 		applyOrigin(identity, player);
 		Logger.debug(
 				"Velocity resume request player=%s username=%s ip=%s key=%s preparedUniqueId=%s preparedProvider=%s preparedSubject=%s preparedEffective=%s",
@@ -54,7 +63,7 @@ public class VelocityResumeDecisionAdapter {
 				player.getUsername(),
 				ip,
 				identity.connectionKey(),
-				prepared != null ? prepared.getUniqueId() : null,
+				prepared != null ? prepared.getAccountUniqueId() : null,
 				provider != null ? provider.getProviderId() : null,
 				provider != null ? provider.getProviderSubject() : null,
 				prepared != null ? prepared.getEffectiveUsername() : null
@@ -77,7 +86,13 @@ public class VelocityResumeDecisionAdapter {
 				provider != null ? provider.getProviderSubject() : null
 		);
 
-		VelocityCommandPlayer liveIdentity = new VelocityCommandPlayer(player, identity.getUsername());
+		UUID accountUniqueId = resolveAttachedAccountUniqueId(player.getUniqueId(), identity.getAccountUniqueId());
+		VelocityCommandPlayer liveIdentity = new VelocityCommandPlayer(
+				player.getUniqueId(),
+				accountUniqueId,
+				player,
+				identity.getUsername()
+		);
 		if (decision == null || decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
 			return;
 
@@ -89,7 +104,16 @@ public class VelocityResumeDecisionAdapter {
 			return;
 
 		if (status == ConnectionDecision.Status.ALLOW || status == ConnectionDecision.Status.WAIT)
-			identityService.attach(liveIdentity);
+			identityService.attach(player.getUniqueId(), accountUniqueId, liveIdentity);
+	}
+
+	private @Nullable UUID resolveAttachedAccountUniqueId(
+			@NotNull UUID connectionUniqueId,
+			@Nullable UUID fallbackAccountUniqueId
+	) {
+		return completionPendingStore.peek(connectionUniqueId)
+				.map(CompletionPendingState::getAccountUniqueId)
+				.orElse(fallbackAccountUniqueId);
 	}
 
 	private String resolveIp(@NotNull Player player) {

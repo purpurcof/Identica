@@ -13,7 +13,7 @@ import java.util.UUID;
 @ToString
 public class MigrationRequest {
 	private @Nullable UUID connectionUniqueId;
-	private @Nullable UUID identicaUniqueId;
+	private @Nullable UUID accountUniqueId;
 	private @Nullable String targetProviderId;
 	private @Nullable String username;
 	private @Nullable String ip;

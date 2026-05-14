@@ -1,9 +1,9 @@
 package me.whereareiam.identica.model.auth.request;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.identity.IdentityReference;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -18,9 +18,11 @@ import java.util.UUID;
 @Getter
 @ToString
 @Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @SuppressWarnings("unused")
 public class AdvanceRequest {
-	private final @Nullable UUID connectionUniqueId;
+	@Builder.Default
+	private final @NotNull IdentityReference identityReference = new IdentityReference();
 	private final @Nullable ConnectionIdentity identity;
 	private final @Nullable String intendedServer;
 
@@ -38,8 +40,16 @@ public class AdvanceRequest {
 	 *
 	 * @return identity unique id or {@code null}
 	 */
-	public @Nullable UUID getIdentityUniqueId() {
-		return identity != null ? identity.getUniqueId() : null;
+	public @Nullable UUID getConnectionUniqueId() {
+		if (identityReference.getConnectionUniqueId() != null)
+			return identityReference.getConnectionUniqueId();
+		return identity != null ? identity.getConnectionUniqueId() : null;
+	}
+
+	public @Nullable java.util.UUID getAccountUniqueId() {
+		if (identityReference.getAccountUniqueId() != null)
+			return identityReference.getAccountUniqueId();
+		return identity != null ? identity.getAccountUniqueId() : null;
 	}
 
 	/**
@@ -97,9 +107,27 @@ public class AdvanceRequest {
 			return null;
 
 		return ConnectionRequest.builder()
-				.connectionUniqueId(connectionUniqueId)
+				.identityReference(identityReference)
 				.identity(identity)
 				.intendedServer(intendedServer)
 				.build();
+	}
+
+	public static class AdvanceRequestBuilder {
+		private final IdentityReference identityReference = new IdentityReference();
+
+		public @NotNull AdvanceRequestBuilder connectionUniqueId(@Nullable UUID connectionUniqueId) {
+			identityReference.setConnectionUniqueId(connectionUniqueId);
+			return this;
+		}
+
+		public @NotNull AdvanceRequestBuilder accountUniqueId(@Nullable UUID accountUniqueId) {
+			identityReference.setAccountUniqueId(accountUniqueId);
+			return this;
+		}
+
+		public @NotNull AdvanceRequest build() {
+			return new AdvanceRequest(identityReference, identity, intendedServer);
+		}
 	}
 }

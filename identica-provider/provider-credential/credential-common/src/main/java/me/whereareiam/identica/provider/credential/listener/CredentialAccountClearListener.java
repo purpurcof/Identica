@@ -33,7 +33,7 @@ public class CredentialAccountClearListener implements EventListener {
 
 	@IdenticEvent(EventOrder.LOW)
 	public void onAccountLifecycle(@NotNull AccountLifecycleEvent event) {
-		deleteByUniqueId(event.getIdentity().getUniqueId());
+		deleteByUniqueId(event.getIdentity().getAccountUniqueId());
 	}
 
 	private void deleteByUniqueId(@Nullable UUID uniqueId) {

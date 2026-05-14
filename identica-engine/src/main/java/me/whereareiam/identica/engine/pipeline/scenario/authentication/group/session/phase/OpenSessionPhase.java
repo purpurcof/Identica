@@ -14,9 +14,9 @@ import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
@@ -83,7 +83,7 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 								return PhaseResult.pass(state);
 							}
 
-							authContext.setIdenticaUniqueId(openedSession.getUniqueId());
+							authContext.setAccountUniqueId(openedSession.getUniqueId());
 							pipelineState.setScenario(authContext);
 							pipelineState.removeItem(IdentityMetaItem.class);
 							publishSessionOpened(

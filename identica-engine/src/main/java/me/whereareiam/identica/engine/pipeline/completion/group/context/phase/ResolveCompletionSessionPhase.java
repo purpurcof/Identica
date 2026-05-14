@@ -40,10 +40,10 @@ public class ResolveCompletionSessionPhase implements PipelinePhase<CompletionPi
 			@NotNull PipelineState pipelineState,
 			@NotNull CompletionPipelineState state
 	) {
-		UUID identicaUniqueId = state.getPendingState().getIdenticaUniqueId();
-		if (identicaUniqueId == null) return CompletableFuture.completedFuture(PhaseResult.pass(state));
+		UUID accountUniqueId = state.getPendingState().getAccountUniqueId();
+		if (accountUniqueId == null) return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		Session session = sessionService.findByUniqueId(identicaUniqueId).join().orElse(null);
+		Session session = sessionService.findByUniqueId(accountUniqueId).join().orElse(null);
 		state.setSession(session);
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}

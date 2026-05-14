@@ -112,7 +112,7 @@ public class CredentialAccountPresenceStep extends AbstractCredentialRegistratio
 		return new AuthenticationAttemptContext(
 				credential,
 				context.getConnectionUniqueId(),
-				context.getIdenticaUniqueId(),
+				context.getAccountUniqueId(),
 				context.getUsername(),
 				context.getIp()
 		);

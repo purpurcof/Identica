@@ -10,15 +10,16 @@ import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.scheduler.JobKey;
 import me.whereareiam.identica.model.scheduler.Origin;
 import me.whereareiam.identica.model.scheduler.PeriodicalRunnableTask;
 import me.whereareiam.identica.model.scheduler.Purpose;
-import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.service.Scheduler;
 
 import java.time.Duration;
+
 @Singleton
 public class SessionRefreshCoordinator implements EventListener {
 	private static final Origin ORIGIN = Origin.core(SessionRefreshCoordinator.class);
@@ -81,7 +82,7 @@ public class SessionRefreshCoordinator implements EventListener {
 	private void refreshSessions() {
 		for (Identity identity : identityService.list()) {
 			if (identity == null) continue;
-			sessionService.refresh(identity.getUniqueId());
+			sessionService.refresh(identity.getAccountUniqueId());
 		}
 	}
 }

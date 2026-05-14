@@ -107,7 +107,7 @@ public class CredentialAuthenticationPasswordStep extends AbstractCredentialStep
 		return new AuthenticationAttemptContext(
 				credential,
 				context.getConnectionUniqueId(),
-				context.getIdenticaUniqueId(),
+				context.getAccountUniqueId(),
 				context.getUsername(),
 				context.getIp()
 		);

@@ -15,7 +15,7 @@ import java.util.UUID;
 public class AuthenticationAttemptContext {
 	private final @NotNull CredentialAccount credential;
 	private final @Nullable UUID connectionUniqueId;
-	private final @Nullable UUID identityUniqueId;
+	private final @Nullable UUID accountUniqueId;
 	private final @Nullable String username;
 	private final @Nullable String ip;
 }

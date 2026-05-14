@@ -2,37 +2,68 @@ package me.whereareiam.identica.identity;
 
 import me.whereareiam.identica.identity.actor.Identity;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Service for tracking online identity presence.
+ * Service for tracking live online identity attachments.
  */
 @SuppressWarnings("unused")
 public interface IdentityService {
 	/**
-	 * Attaches an online identity to the presence store.
+	 * Attaches or updates the live identity bound to a connection.
 	 *
+	 * @param connectionUniqueId live connection UUID
+	 * @param accountUniqueId resolved account UUID, when available
 	 * @param identity online identity
 	 */
-	void attach(@NotNull Identity identity);
+	void attach(
+			@NotNull UUID connectionUniqueId,
+			@Nullable UUID accountUniqueId,
+			@NotNull Identity identity
+	);
 
 	/**
-	 * Detaches an online identity from the presence store.
+	 * Detaches the identity attached to the given live connection UUID.
 	 *
-	 * @param uniqueId identity unique id
+	 * @param connectionUniqueId live connection UUID
 	 */
-	void detach(@NotNull UUID uniqueId);
+	void detach(@NotNull UUID connectionUniqueId);
 
 	/**
-	 * Looks up an online identity by unique id.
+	 * Looks up the runtime attachment by live connection UUID.
 	 *
-	 * @param uniqueId identity unique id
+	 * @param connectionUniqueId live connection UUID
+	 * @return optional attachment
+	 */
+	@NotNull Optional<IdentityAttachment> findAttachmentByConnectionUniqueId(@NotNull UUID connectionUniqueId);
+
+	/**
+	 * Looks up the runtime attachment by resolved account UUID.
+	 *
+	 * @param accountUniqueId resolved account UUID
+	 * @return optional attachment
+	 */
+	@NotNull Optional<IdentityAttachment> findAttachmentByAccountUniqueId(@NotNull UUID accountUniqueId);
+
+	/**
+	 * Looks up an online identity by live connection UUID.
+	 *
+	 * @param connectionUniqueId live connection UUID
 	 * @return optional identity
 	 */
-	@NotNull Optional<Identity> find(@NotNull UUID uniqueId);
+	@NotNull Optional<Identity> findByConnectionUniqueId(@NotNull UUID connectionUniqueId);
+
+	/**
+	 * Looks up an online identity by resolved account UUID.
+	 *
+	 * @param accountUniqueId resolved account UUID
+	 * @return optional identity
+	 */
+	@NotNull Optional<Identity> findByAccountUniqueId(@NotNull UUID accountUniqueId);
 
 	/**
 	 * Looks up an online identity by username (case-insensitive).

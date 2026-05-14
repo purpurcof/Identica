@@ -111,7 +111,7 @@ public class PendingPromptResendCoordinator implements EventListener {
 		if (prompt == null || prompt.message().isBlank())
 			return false;
 
-		Identity identity = identityService.find(connectionUniqueId).orElse(null);
+		Identity identity = identityService.findByConnectionUniqueId(connectionUniqueId).orElse(null);
 		if (identity == null) {
 			Logger.debug("Initial step prompt flush missed connection=%s trigger=%s reason=no-identity",
 					connectionUniqueId, trigger);
@@ -209,7 +209,7 @@ public class PendingPromptResendCoordinator implements EventListener {
 			return;
 		}
 
-		Identity identity = identityService.find(connectionUniqueId).orElse(null);
+		Identity identity = identityService.findByConnectionUniqueId(connectionUniqueId).orElse(null);
 		if (identity == null)
 			return;
 
@@ -243,7 +243,6 @@ public class PendingPromptResendCoordinator implements EventListener {
 	private @NotNull PendingMarker resolveCurrentMarker(@NotNull UUID connectionUniqueId) {
 		PipelineStateReference reference = PipelineStateReference.builder()
 				.connectionUniqueId(connectionUniqueId)
-				.identityUniqueId(connectionUniqueId)
 				.build();
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
 		return state != null ? markerFrom(state) : PendingMarker.empty();

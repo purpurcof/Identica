@@ -10,17 +10,17 @@ import me.whereareiam.identica.database.provider.ProviderProfilePersistenceServi
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.PolicyState;
 import me.whereareiam.identica.event.account.AccountPrepareEvent;
+import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.AccountDecision;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -74,7 +74,7 @@ public class AccountReviewPhase implements PipelinePhase<PolicyState> {
 
 		AuthContext context = resolveContext(pipelineState);
 		ProviderContext provider = context != null ? context.getProvider() : null;
-		if (context == null || provider == null || context.getIdenticaUniqueId() == null) {
+		if (context == null || provider == null || context.getAccountUniqueId() == null) {
 			state.setResult(PipelineResult.failed(accountReviewMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
@@ -84,7 +84,7 @@ public class AccountReviewPhase implements PipelinePhase<PolicyState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		Account account = accountPersistenceService.findByUniqueId(context.getIdenticaUniqueId()).orElse(null);
+		Account account = accountPersistenceService.findByUniqueId(context.getAccountUniqueId()).orElse(null);
 		if (account == null) {
 			state.setResult(PipelineResult.failed(accountReviewMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));

@@ -189,8 +189,8 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>You are about to switch to a <gold>password account</gold>.</white>",
 				"  <white>After this, you will log in using a password.</white>",
 				" ",
-				"  <yellow>/password confirm</yellow> <dark_gray>- <white>Continue migration</white>",
-				"  <yellow>/password cancel</yellow> <dark_gray>- <white>Cancel migration</white>",
+				"  <yellow>/credential confirm</yellow> <dark_gray>- <white>Continue migration</white>",
+				"  <yellow>/credential cancel</yellow> <dark_gray>- <white>Cancel migration</white>",
 				" "
 		));
 		credentialCommand.setConfirmed(List.of(
@@ -201,7 +201,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		credentialCommand.setVerificationRequired("{prefix}<white>Confirm your verification code with <yellow>/password confirm</yellow> <gray>[Code]</gray> before starting password migration.</white>");
+		credentialCommand.setVerificationRequired("{prefix}<white>Confirm your verification code with <yellow>/credential confirm</yellow> <gray>[Code]</gray> before starting password migration.</white>");
 		credentialCommand.setCancelled("{prefix}<white>Credential migration cancelled.</white>");
 		credentialCommand.setExpired("{prefix}<white>Credential migration request expired.</white>");
 		credentialCommand.setNoPending("{prefix}<white>No pending password migration.</white>");

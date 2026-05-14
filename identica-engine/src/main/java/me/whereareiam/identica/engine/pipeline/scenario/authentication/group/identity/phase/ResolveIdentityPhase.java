@@ -12,10 +12,10 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
@@ -82,7 +82,7 @@ public class ResolveIdentityPhase implements PipelinePhase<IdentityState> {
 
 		AccountProviderLink link = linkOptional.get();
 		UUID uniqueId = link.getUniqueId();
-		UUID contextId = authContext.getIdenticaUniqueId();
+		UUID contextId = authContext.getAccountUniqueId();
 		if (contextId != null && !contextId.equals(uniqueId)) {
 			state.setResult(PipelineResult.denied(authenticationFailedMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
@@ -95,7 +95,7 @@ public class ResolveIdentityPhase implements PipelinePhase<IdentityState> {
 		}
 
 		accountPersistenceService.updateLastSeen(uniqueId, System.currentTimeMillis());
-		authContext.setIdenticaUniqueId(uniqueId);
+		authContext.setAccountUniqueId(uniqueId);
 		pipelineState.setScenario(authContext);
 		state.setProvider(provider);
 		state.setProviderLink(link);

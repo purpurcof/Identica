@@ -3,40 +3,36 @@ package me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.ru
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
-import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionPlan;
-import me.whereareiam.identica.type.pipeline.journey.JourneyExecutionPolicy;
-import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionStage;
-import me.whereareiam.identica.pipeline.journey.rule.JourneyRule;
-import me.whereareiam.identica.model.pipeline.journey.JourneyRuleContext;
-import me.whereareiam.identica.pipeline.journey.rule.JourneyRuleScope;
-import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
-import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
-import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
-import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
+import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
+import me.whereareiam.identica.model.pipeline.journey.JourneyRuleContext;
+import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
+import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionPlan;
+import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionStage;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.rule.JourneyRule;
+import me.whereareiam.identica.pipeline.journey.rule.JourneyRuleScope;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyExecutionPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.provider.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -190,13 +186,10 @@ public class SelectProvidersRule implements JourneyRule {
 			@NotNull ScenarioContext context,
 			@NotNull PipelineType pipelineType
 	) {
-		if (pipelineType != PipelineType.AUTHENTICATION)
-			return null;
+		if (pipelineType != PipelineType.AUTHENTICATION) return null;
+		if (context.getAccountUniqueId() == null) return null;
 
-		if (context.getIdenticaUniqueId() == null)
-			return null;
-
-		return providerLinkPersistenceService.findByUniqueId(context.getIdenticaUniqueId()).stream()
+		return providerLinkPersistenceService.findByUniqueId(context.getAccountUniqueId()).stream()
 				.filter(AccountProviderLink::isPrimaryLink)
 				.map(AccountProviderLink::getProviderId)
 				.findFirst()

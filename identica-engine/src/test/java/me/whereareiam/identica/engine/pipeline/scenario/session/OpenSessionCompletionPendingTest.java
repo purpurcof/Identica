@@ -38,14 +38,14 @@ class OpenSessionCompletionPendingTest {
 		);
 
 		UUID connectionUniqueId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		AuthContext context = AuthContext.builder()
 				.connectionUniqueId(connectionUniqueId)
-				.identity(new ConnectionIdentity(identicaUniqueId, "PlayerOne", "127.0.0.1"))
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
 				.intendedServer("lobby")
 				.build();
 		Session session = Session.builder()
-				.uniqueId(identicaUniqueId)
+				.uniqueId(accountUniqueId)
 				.providerId("credential")
 				.providerSubject("player-one")
 				.originalUsername("PlayerOne")
@@ -61,7 +61,7 @@ class OpenSessionCompletionPendingTest {
 
 		when(sessionService.open(session, SessionConcurrencyPolicy.REPLACE_EXISTING))
 				.thenReturn(CompletableFuture.completedFuture(session));
-		when(sessionService.findByUniqueId(identicaUniqueId))
+		when(sessionService.findByUniqueId(accountUniqueId))
 				.thenReturn(CompletableFuture.completedFuture(java.util.Optional.empty()));
 
 		phase.execute(pipelineState, state).toCompletableFuture().join();
@@ -69,7 +69,7 @@ class OpenSessionCompletionPendingTest {
 		verify(eventManager).call(argThat(event -> event instanceof SessionOpenedEvent requested
 				&& requested.getConnectionUniqueId().equals(connectionUniqueId)
 				&& requested.getPipelineType() == PipelineType.AUTHENTICATION
-				&& identicaUniqueId.equals(requested.getSession().getUniqueId())
+				&& accountUniqueId.equals(requested.getSession().getUniqueId())
 				&& "credential".equals(requested.getSession().getProviderId())
 				&& !requested.isSessionReused()
 		));

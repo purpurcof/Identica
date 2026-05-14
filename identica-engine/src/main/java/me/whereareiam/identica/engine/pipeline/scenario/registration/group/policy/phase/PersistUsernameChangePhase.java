@@ -9,11 +9,11 @@ import me.whereareiam.identica.engine.pipeline.scenario.registration.group.ident
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.policy.PolicyState;
 import me.whereareiam.identica.model.UsernameHistoryEntry;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -56,7 +56,7 @@ public class PersistUsernameChangePhase implements PipelinePhase<PolicyState> {
 
 		IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
 		RegistrationContext context = resolveContext(pipelineState);
-		if (identity == null || context == null || context.getIdenticaUniqueId() == null)
+		if (identity == null || context == null || context.getAccountUniqueId() == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		IdentityMetaItem.Change<String> usernameChange = identity.getUsername();
@@ -72,9 +72,9 @@ public class PersistUsernameChangePhase implements PipelinePhase<PolicyState> {
 		if (sourceId == null || sourceId.isBlank())
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		accountPersistenceService.updateUsername(context.getIdenticaUniqueId(), candidate);
+		accountPersistenceService.updateUsername(context.getAccountUniqueId(), candidate);
 		accountPersistenceService.updateUsernameSource(
-				context.getIdenticaUniqueId(),
+				context.getAccountUniqueId(),
 				UsernameSource.fromId(sourceId)
 		);
 
@@ -86,7 +86,7 @@ public class PersistUsernameChangePhase implements PipelinePhase<PolicyState> {
 		String providerId = provider != null ? provider.getProviderId() : null;
 
 		UsernameHistoryEntry entry = UsernameHistoryEntry.builder()
-				.uniqueId(context.getIdenticaUniqueId())
+				.uniqueId(context.getAccountUniqueId())
 				.providerId(providerId)
 				.oldUsername(previous)
 				.newUsername(candidate)

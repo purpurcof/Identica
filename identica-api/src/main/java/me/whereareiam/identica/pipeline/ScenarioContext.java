@@ -1,6 +1,7 @@
 package me.whereareiam.identica.pipeline;
 
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.identity.IdentityReference;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +13,13 @@ import java.util.UUID;
  * Base contract for scenario-specific contexts.
  */
 public interface ScenarioContext {
-	@Nullable UUID getConnectionUniqueId();
+	default @NotNull IdentityReference getIdentityReference() {
+		return getIdentity().getIdentityReference();
+	}
+
+	default @Nullable UUID getConnectionUniqueId() {
+		return getIdentityReference().getConnectionUniqueId();
+	}
 
 	@NotNull ConnectionIdentity getIdentity();
 
@@ -26,12 +33,12 @@ public interface ScenarioContext {
 
 	void setTransition(@Nullable ScenarioTransitionItem transition);
 
-	default @Nullable UUID getIdenticaUniqueId() {
-		return getIdentity().getUniqueId();
+	default @Nullable UUID getAccountUniqueId() {
+		return getIdentityReference().getAccountUniqueId();
 	}
 
-	default void setIdenticaUniqueId(@Nullable UUID identicaUniqueId) {
-		getIdentity().setUniqueId(identicaUniqueId);
+	default void setAccountUniqueId(@Nullable UUID accountUniqueId) {
+		getIdentityReference().setAccountUniqueId(accountUniqueId);
 	}
 
 	default @Nullable String getUsername() {

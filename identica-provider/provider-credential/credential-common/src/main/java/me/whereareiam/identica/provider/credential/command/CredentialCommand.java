@@ -30,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 
 public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> {
 	private final Provider<CredentialMessages> messagesProvider;
@@ -74,14 +75,17 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 		Session session = requireCurrentSession(identity);
 		if (session == null) return;
 		if (!supportsMigration()) return;
+		UUID accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return;
 
 		MigrationRequest request = MigrationRequest.builder()
-				.connectionUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
+				.accountUniqueId(accountUniqueId)
 				.targetProviderId(CredentialConstants.PROVIDER_ID)
 				.username(identity.getUsername())
 				.ip(identity.getIp())
 				.initiator(MigrationInitiator.USER)
-				.initiatorUniqueId(identity.getUniqueId())
+				.initiatorUniqueId(identity.getConnectionUniqueId())
 				.build();
 
 		MigrationResult result = migrationService.request(request);
@@ -89,12 +93,12 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 		CredentialMessages.Commands.Credential messages = messagesProvider.get().getCommands().getCredential();
 		switch (result.getStatus()) {
 			case PENDING_CONFIRMATION -> {
-				if (!requiresStepUp(identity.getUniqueId())) {
+				if (!requiresStepUp(accountUniqueId)) {
 					sendMessage(identity, joinMessage(messages.getConfirm()));
 					return;
 				}
 
-				StepUpPreparation preparation = prepareStepUp(identity.getUniqueId(), "migration-confirm");
+				StepUpPreparation preparation = prepareStepUp(accountUniqueId, "migration-confirm");
 				if (preparation.getStatus() == StepUpPreparation.Status.SELECTION_REQUIRED) {
 					sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
 					return;
@@ -116,13 +120,15 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 		if (identity == null) return;
 
 		if (requireCurrentSession(identity) == null) return;
+		UUID accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return;
 
-		PendingMigration pendingMigration = migrationService.findPendingMigration(identity.getUniqueId()).orElse(null);
+		PendingMigration pendingMigration = migrationService.findPendingMigration(identity.getConnectionUniqueId()).orElse(null);
 		boolean verificationRequired = pendingMigration != null
 				&& pendingMigration.getPhase() == PendingMigration.Phase.CONFIRMATION
-				&& requiresStepUp(identity.getUniqueId());
+				&& requiresStepUp(accountUniqueId);
 		if (verificationRequired) {
-			StepUpPreparation preparation = prepareStepUp(identity.getUniqueId(), "migration-confirm");
+			StepUpPreparation preparation = prepareStepUp(accountUniqueId, "migration-confirm");
 			if (preparation.getStatus() != StepUpPreparation.Status.READY) {
 				switch (preparation.getStatus()) {
 					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
@@ -137,7 +143,7 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 				return;
 			}
 
-			StepUpResult result = confirmStepUp(identity.getUniqueId(), input, "migration-confirm");
+			StepUpResult result = confirmStepUp(accountUniqueId, input, "migration-confirm");
 			if (result.getStatus() != StepUpResult.Status.VERIFIED) {
 				switch (result.getStatus()) {
 					case INVALID_CODE -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getInvalidCode());
@@ -151,7 +157,7 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 
 		CredentialMessages.Commands.Credential messages = messagesProvider.get().getCommands().getCredential();
 		var result = migrationService.confirm(MigrationConfirm.builder()
-				.connectionUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
 				.kickMessage(joinMessage(messages.getConfirmed()))
 				.build());
 
@@ -182,7 +188,7 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 		if (requireCurrentSession(identity) == null) return;
 
 		var result = migrationService.cancel(MigrationCancel.builder()
-				.connectionUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
 				.scope(MigrationCancelScope.CONFIRMATION)
 				.build());
 

@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.bundles.bStats.bungeecord)
     compileOnly(libs.bungeecord)
     testImplementation(libs.bungeecord)
+    testImplementation(libs.cloud.bungee)
 
     implementation(libs.attache.bungeecord)
     implementation(libs.adventure.platform.bungeecord)

@@ -31,7 +31,7 @@ import java.util.UUID;
 @ToString
 @Builder(toBuilder = true)
 public class PrepareDecision {
-	private final @Nullable UUID uniqueId;
+	private final @Nullable UUID accountUniqueId;
 	private final @Nullable String effectiveUsername;
 
 	private final @Nullable HandshakeDecision handshake;

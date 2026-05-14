@@ -50,7 +50,7 @@ public class BruteForceSentinelLifecycle implements EventListener {
 		AuthenticationAttemptContext context = event.getContext();
 		return SentinelContext.builder()
 				.connectionUniqueId(context.getConnectionUniqueId())
-				.uniqueId(context.getIdentityUniqueId())
+				.uniqueId(context.getAccountUniqueId())
 				.username(context.getUsername())
 				.ip(context.getIp())
 				.build();
@@ -60,7 +60,7 @@ public class BruteForceSentinelLifecycle implements EventListener {
 		AuthenticationAttemptContext context = event.getContext();
 		return SentinelContext.builder()
 				.connectionUniqueId(context.getConnectionUniqueId())
-				.uniqueId(context.getIdentityUniqueId())
+				.uniqueId(context.getAccountUniqueId())
 				.username(context.getUsername())
 				.ip(context.getIp())
 				.build();

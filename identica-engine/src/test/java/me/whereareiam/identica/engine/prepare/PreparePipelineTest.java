@@ -94,7 +94,7 @@ class PreparePipelineTest {
 	@DisplayName("Profile preparation builds a transient account and applies the event decision")
 	@Test
 	void profileStageBuildsTransientAccountAndHonorsPrepareDecision() {
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		ConnectionIdentity identity = identity("PlayerOne");
 		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
 		PreparePipeline pipeline = pipeline(prepareStateStore);
@@ -113,10 +113,10 @@ class PreparePipelineTest {
 						.host("premium.example.com")
 						.port(25565)
 						.build());
-		when(registrationAccountService.reserve(any())).thenReturn(identicaUniqueId);
+		when(registrationAccountService.reserve(any())).thenReturn(accountUniqueId);
 		when(providerLinkPersistenceService.findBySubject("premium", "premium-subject"))
 				.thenReturn(Optional.empty());
-		when(accountPersistenceService.findByUniqueId(identicaUniqueId))
+		when(accountPersistenceService.findByUniqueId(accountUniqueId))
 				.thenReturn(Optional.empty());
 		when(providerProfilePersistenceService.findBySubject("premium", "premium-subject"))
 				.thenReturn(Optional.empty());
@@ -141,7 +141,7 @@ class PreparePipelineTest {
 		assertTrue(decision.isDenied());
 		assertEquals("use premium entrypoint", decision.getDenialMessage());
 		assertEquals("PlayerOne*", decision.getEffectiveUsername());
-		assertEquals(identicaUniqueId, decision.getUniqueId());
+		assertEquals(accountUniqueId, decision.getAccountUniqueId());
 		assertNotNull(decision.getProvider());
 		assertEquals("premium", decision.getProvider().getProviderId());
 		verify(eventManager).call(any(AccountPrepareEvent.class));
@@ -261,7 +261,7 @@ class PreparePipelineTest {
 	@DisplayName("Premium profile preparation reuses the UUID from an existing linked account")
 	@Test
 	void profileStageReusesExistingLinkedUuidForPremiumJoin() {
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		ConnectionIdentity identity = identity("MigratedPlayer");
 		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
 		PreparePipeline pipeline = pipeline(prepareStateStore);
@@ -279,17 +279,17 @@ class PreparePipelineTest {
 						.host("premium.example.com")
 						.port(25565)
 						.build());
-		when(registrationAccountService.reserve(any())).thenReturn(identicaUniqueId);
+		when(registrationAccountService.reserve(any())).thenReturn(accountUniqueId);
 		when(providerLinkPersistenceService.findBySubject("premium", "premium-subject"))
 				.thenReturn(Optional.of(AccountProviderLink.builder()
-						.uniqueId(identicaUniqueId)
+						.uniqueId(accountUniqueId)
 						.providerId("premium")
 						.providerSubject("premium-subject")
 						.primaryLink(true)
 						.build()));
-		when(accountPersistenceService.findByUniqueId(identicaUniqueId))
+		when(accountPersistenceService.findByUniqueId(accountUniqueId))
 				.thenReturn(Optional.of(Account.builder()
-						.uniqueId(identicaUniqueId)
+						.uniqueId(accountUniqueId)
 						.username("MigratedPlayer")
 						.source(UsernameSource.PROVIDER)
 						.build()));
@@ -310,9 +310,9 @@ class PreparePipelineTest {
 
 		assertNotNull(decision);
 		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
-		assertEquals(identicaUniqueId, decision.getUniqueId());
+		assertEquals(accountUniqueId, decision.getAccountUniqueId());
 		assertEquals("MigratedPlayer", decision.getEffectiveUsername());
-		assertNotNull(prepareStateStore.peek(identicaUniqueId).orElse(null));
+		assertNotNull(prepareStateStore.peek(accountUniqueId).orElse(null));
 	}
 
 	@DisplayName("Profile preparation reuses the UUID already prepared for the same connection")
@@ -372,15 +372,15 @@ class PreparePipelineTest {
 
 		assertNotNull(first);
 		assertNotNull(second);
-		assertEquals(preparedUniqueId, first.getUniqueId());
-		assertEquals(preparedUniqueId, second.getUniqueId());
+		assertEquals(preparedUniqueId, first.getAccountUniqueId());
+		assertEquals(preparedUniqueId, second.getAccountUniqueId());
 		verify(registrationAccountService).reserve(any());
 	}
 
 	@DisplayName("Pending migration state can supply the target account UUID during profile preparation")
 	@Test
 	void profileStageReusesPendingMigrationAccountForTargetProvider() {
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		ConnectionIdentity identity = identity("MigratingPlayer");
 		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
 		PreparePipeline pipeline = pipeline(prepareStateStore);
@@ -391,14 +391,14 @@ class PreparePipelineTest {
 		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
 		pendingMigrationState.setScenario(MigrationContext.builder()
 				.connectionUniqueId(UUID.randomUUID())
-				.identity(new ConnectionIdentity(identicaUniqueId, "MigratingPlayer", "127.0.0.1"))
+				.identity(new ConnectionIdentity(accountUniqueId, "MigratingPlayer", "127.0.0.1"))
 				.targetProviderId("premium")
 				.build());
 		pendingMigrationState.putItem(new MigrationPendingState(
 				"premium",
 				1234L,
 				MigrationInitiator.USER,
-				identicaUniqueId
+				accountUniqueId
 		), 1_000L);
 
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of());
@@ -418,9 +418,9 @@ class PreparePipelineTest {
 				.thenReturn(Optional.of(pendingMigrationState));
 		when(providerLinkPersistenceService.findBySubject("premium", "premium-subject"))
 				.thenReturn(Optional.empty());
-		when(accountPersistenceService.findByUniqueId(identicaUniqueId))
+		when(accountPersistenceService.findByUniqueId(accountUniqueId))
 				.thenReturn(Optional.of(Account.builder()
-						.uniqueId(identicaUniqueId)
+						.uniqueId(accountUniqueId)
 						.username("MigratingPlayer")
 						.source(UsernameSource.PROVIDER)
 						.build()));
@@ -437,14 +437,14 @@ class PreparePipelineTest {
 
 		assertNotNull(decision);
 		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
-		assertEquals(identicaUniqueId, decision.getUniqueId());
+		assertEquals(accountUniqueId, decision.getAccountUniqueId());
 		verify(registrationAccountService, never()).reserve(any());
 	}
 
 	@DisplayName("Profile preparation clears stale migration state when the observed provider no longer matches")
 	@Test
 	void profileStageClearsPendingMigrationWhenObservedProviderDiffers() {
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		ConnectionIdentity identity = identity("MigratingPlayer");
 		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
 		PreparePipeline pipeline = pipeline(prepareStateStore);
@@ -455,14 +455,14 @@ class PreparePipelineTest {
 		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
 		pendingMigrationState.setScenario(MigrationContext.builder()
 				.connectionUniqueId(UUID.randomUUID())
-				.identity(new ConnectionIdentity(identicaUniqueId, "MigratingPlayer", "127.0.0.1"))
+				.identity(new ConnectionIdentity(accountUniqueId, "MigratingPlayer", "127.0.0.1"))
 				.targetProviderId("premium")
 				.build());
 		pendingMigrationState.putItem(new MigrationPendingState(
 				"premium",
 				1234L,
 				MigrationInitiator.USER,
-				identicaUniqueId
+				accountUniqueId
 		), 1_000L);
 
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of());
@@ -480,10 +480,10 @@ class PreparePipelineTest {
 		when(pipelineStateStore.find(org.mockito.ArgumentMatchers.<PipelineStateReference>any())).thenReturn(Optional.empty());
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
 				.thenReturn(Optional.of(pendingMigrationState));
-		when(registrationAccountService.reserve(any())).thenReturn(identicaUniqueId);
+		when(registrationAccountService.reserve(any())).thenReturn(accountUniqueId);
 		when(providerLinkPersistenceService.findBySubject("credential", "credential-subject"))
 				.thenReturn(Optional.empty());
-		when(accountPersistenceService.findByUniqueId(identicaUniqueId))
+		when(accountPersistenceService.findByUniqueId(accountUniqueId))
 				.thenReturn(Optional.empty());
 		when(providerProfilePersistenceService.findBySubject("credential", "credential-subject"))
 				.thenReturn(Optional.empty());
@@ -498,7 +498,7 @@ class PreparePipelineTest {
 
 		assertNotNull(decision);
 		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
-		assertEquals(identicaUniqueId, decision.getUniqueId());
+		assertEquals(accountUniqueId, decision.getAccountUniqueId());
 		verify(pipelineStateStore).clear(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey())));
 	}
 

@@ -10,9 +10,9 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
@@ -58,7 +58,7 @@ public class ResolveAccountPhase implements PipelinePhase<IdentityState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		UUID accountUniqueId = context.getIdenticaUniqueId();
+		UUID accountUniqueId = context.getAccountUniqueId();
 		if (accountUniqueId == null) {
 			state.setResult(PipelineResult.failed(accountMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
@@ -71,7 +71,7 @@ public class ResolveAccountPhase implements PipelinePhase<IdentityState> {
 		}
 
 		accountPersistenceService.updateLastSeen(accountUniqueId, System.currentTimeMillis());
-		context.setIdenticaUniqueId(accountUniqueId);
+		context.setAccountUniqueId(accountUniqueId);
 		pipelineState.setScenario(context);
 		state.setContext(context);
 		state.setAccount(account);

@@ -25,11 +25,11 @@ public class CommandSourceMapper implements SenderMapper<CommandSender, Actor> {
 	public @NotNull Actor map(@NotNull CommandSender source) {
 		Audience audience = audiences.sender(source);
 		if (source instanceof ProxiedPlayer player) {
-			Identity identity = identityService.find(player.getUniqueId()).orElse(null);
+			Identity identity = identityService.findByConnectionUniqueId(player.getUniqueId()).orElse(null);
 			if (identity != null) return identity;
 
 			BungeeCordCommandPlayer created = new BungeeCordCommandPlayer(player, audience);
-			identityService.attach(created);
+			identityService.attach(player.getUniqueId(), null, created);
 			return created;
 		}
 

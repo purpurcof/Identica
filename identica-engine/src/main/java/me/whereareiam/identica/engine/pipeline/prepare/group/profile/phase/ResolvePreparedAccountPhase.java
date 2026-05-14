@@ -67,7 +67,7 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 		if (connectionKey == null || connectionKey.isBlank()) return false;
 
 		return prepareStateStore.peek(connectionKey)
-				.map(PrepareDecision::getUniqueId)
+				.map(PrepareDecision::getAccountUniqueId)
 				.isPresent();
 	}
 
@@ -84,12 +84,12 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 		}
 
 		String connectionKey = request.getConnectionKey();
-		UUID identicaUniqueId = connectionKey == null || connectionKey.isBlank()
+		UUID accountUniqueId = connectionKey == null || connectionKey.isBlank()
 				? null
 				: prepareStateStore.peek(connectionKey)
-						.map(PrepareDecision::getUniqueId)
+						.map(PrepareDecision::getAccountUniqueId)
 						.orElse(null);
-		if (identicaUniqueId == null) {
+		if (accountUniqueId == null) {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
@@ -99,16 +99,16 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 				provider.getProviderSubject()
 		);
 		AccountProviderLink link = storedLink.orElseGet(() -> AccountProviderLink.builder()
-				.uniqueId(identicaUniqueId)
+				.uniqueId(accountUniqueId)
 				.providerId(provider.getProviderId())
 				.providerSubject(provider.getProviderSubject())
 				.primaryLink(true)
 				.build());
-		Account storedAccount = accountPersistenceService.findByUniqueId(identicaUniqueId).orElse(null);
+		Account storedAccount = accountPersistenceService.findByUniqueId(accountUniqueId).orElse(null);
 		Account account = storedAccount != null
 				? storedAccount.toBuilder().username(requestedUsername).build()
 				: Account.builder()
-						.uniqueId(identicaUniqueId)
+						.uniqueId(accountUniqueId)
 						.username(requestedUsername)
 						.source(UsernameSource.PROVIDER)
 						.build();
@@ -123,7 +123,7 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 
 		boolean created = storedLink.isEmpty() || storedAccount == null;
 		pipelineState.putItem(new PrepareAccountCandidateItem(
-				identicaUniqueId,
+				accountUniqueId,
 				null,
 				account,
 				link,

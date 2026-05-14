@@ -3,22 +3,22 @@ package me.whereareiam.identica.adapter.command.executor;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
@@ -79,15 +79,18 @@ public class EnrollCommand {
 
 	private void updatePendingSelection(@NotNull Actor sender, @NotNull String providerId) {
 		UUID connectionUniqueId = sender.getUniqueId();
+		String connectionKey = sender instanceof Identity identity
+				? identity.connectionKey()
+				: null;
 
-		UUID identityUniqueId = null;
-		if (sender instanceof Identity identity) {
-			identityUniqueId = identity.getUniqueId();
-		}
+		UUID accountUniqueId = null;
+		if (sender instanceof Identity identity)
+			accountUniqueId = identity.getAccountUniqueId();
 
 		PipelineStateReference reference = PipelineStateReference.builder()
 				.connectionUniqueId(connectionUniqueId)
-				.identityUniqueId(identityUniqueId)
+				.accountUniqueId(accountUniqueId)
+				.connectionKey(connectionKey)
 				.build();
 
 		PipelineState stored = pipelineStateStore.find(reference).orElse(null);

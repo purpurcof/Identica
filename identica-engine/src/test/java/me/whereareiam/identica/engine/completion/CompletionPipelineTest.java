@@ -54,16 +54,16 @@ class CompletionPipelineTest {
 		);
 
 		UUID connectionUniqueId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		TestIdentity identity = new TestIdentity(connectionUniqueId, "PlayerOne");
 		CompletionPendingState pendingState = CompletionPendingState.builder()
 				.pipelineType(PipelineType.MIGRATION)
 				.connectionUniqueId(connectionUniqueId)
-				.identicaUniqueId(identicaUniqueId)
+				.accountUniqueId(accountUniqueId)
 				.sessionReused(true)
 				.build();
 		Session session = Session.builder()
-				.uniqueId(identicaUniqueId)
+				.uniqueId(accountUniqueId)
 				.providerId("credential")
 				.providerSubject("player-one")
 				.originalUsername("PlayerOne")
@@ -78,7 +78,7 @@ class CompletionPipelineTest {
 		CompletionStep step = mock(CompletionStep.class);
 
 		when(pendingStore.consume(connectionUniqueId)).thenReturn(Optional.of(pendingState));
-		when(sessionService.findByUniqueId(identicaUniqueId)).thenReturn(CompletableFuture.completedFuture(Optional.of(session)));
+		when(sessionService.findByUniqueId(accountUniqueId)).thenReturn(CompletableFuture.completedFuture(Optional.of(session)));
 		when(providerManager.getProviders()).thenReturn(List.of(provider));
 		when(extensionRegistry.resolve("credential", PipelineType.MIGRATION)).thenReturn(List.of(step));
 		when(step.shouldExecute(org.mockito.ArgumentMatchers.any())).thenReturn(true);

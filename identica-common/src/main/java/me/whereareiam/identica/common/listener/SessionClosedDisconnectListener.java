@@ -27,12 +27,10 @@ public class SessionClosedDisconnectListener implements EventListener {
 	@IdenticEvent
 	public void onSessionClosed(@NotNull SessionClosedEvent event) {
 		SessionCloseRequest request = event.getRequest();
-		if (request == null) return;
-
-		String disconnectMessage = request.getDisconnectMessage();
+        String disconnectMessage = request.getDisconnectMessage();
 		if (disconnectMessage == null || disconnectMessage.isBlank()) return;
 
-		identityService.find(event.getUniqueId())
+		identityService.findByAccountUniqueId(event.getUniqueId())
 				.ifPresent(identity -> identity.disconnect(Serializer.serialize(identity, disconnectMessage)));
 	}
 }

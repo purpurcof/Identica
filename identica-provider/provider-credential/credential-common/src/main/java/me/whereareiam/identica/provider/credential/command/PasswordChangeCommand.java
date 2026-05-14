@@ -48,7 +48,7 @@ public class PasswordChangeCommand {
 			return;
 
 		CredentialMessages.ChangePassword messages = messagesProvider.get().getChangePassword();
-		Session session = sessionService.findByUniqueId(identity.getUniqueId()).join().orElse(null);
+		Session session = sessionService.findByUniqueId(identity.getAccountUniqueId()).join().orElse(null);
 		if (session == null) {
 			sendMessage(identity, messages.getNotLoggedIn());
 			return;

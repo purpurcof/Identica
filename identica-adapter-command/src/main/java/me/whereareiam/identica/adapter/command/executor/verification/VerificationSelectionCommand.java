@@ -3,13 +3,14 @@ package me.whereareiam.identica.adapter.command.executor.verification;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.adapter.command.suggestion.ProviderIdSuggestions;
+import me.whereareiam.identica.adapter.command.suggestion.VerificationMethodSuggestions;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.annotation.Suggestions;
-import me.whereareiam.identica.adapter.command.suggestion.ProviderIdSuggestions;
-import me.whereareiam.identica.adapter.command.suggestion.VerificationMethodSuggestions;
 import me.whereareiam.identica.command.ProtectedActionCommand;
+import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
@@ -19,7 +20,6 @@ import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.pipeline.verification.VerificationDisablePendingState;
 import me.whereareiam.identica.model.verification.VerificationResolutionRequest;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
 import org.jetbrains.annotations.NotNull;
@@ -72,8 +72,10 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 		Identity identity = requireIdentity(sender, messagesProvider.get().getCommands().getVerification().getPlayerOnly());
 		if (identity == null) return;
 		if (requireCurrentSession(identity) == null) return;
+		var accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return;
 
-		resultRenderer.presentSelectionResult(sender, verificationService.selectMethod(identity.getUniqueId(), providerId, methodId));
+		resultRenderer.presentSelectionResult(sender, verificationService.selectMethod(accountUniqueId, providerId, methodId));
 	}
 
 	@Definition("verification-disable")
@@ -85,11 +87,13 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 		Identity identity = requireIdentity(sender, messagesProvider.get().getCommands().getVerification().getPlayerOnly());
 		if (identity == null) return;
 		if (requireCurrentSession(identity) == null) return;
+		var accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return;
 
-		boolean enrolled = verificationService.findEnrollments(identity.getUniqueId()).stream()
+		boolean enrolled = verificationService.findEnrollments(accountUniqueId).stream()
 				.anyMatch(entry -> entry != null && methodId.equalsIgnoreCase(entry.getMethodId()));
 		if (!enrolled) {
-			resultRenderer.presentDisableResult(sender, verificationService.disableMethod(identity.getUniqueId(), methodId));
+			resultRenderer.presentDisableResult(sender, verificationService.disableMethod(accountUniqueId, methodId));
 			return;
 		}
 
@@ -99,8 +103,8 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 		state.putItem(new VerificationDisablePendingState(methodId, System.currentTimeMillis()), ttlMs);
 		pipelineStateStore.save(reference, state, ttlMs);
 		verificationService.resolveVerification(VerificationResolutionRequest.builder()
-				.uniqueId(identity.getUniqueId())
-				.providerId(sessionService.findByUniqueId(identity.getUniqueId()).join()
+				.uniqueId(accountUniqueId)
+				.providerId(sessionService.findByUniqueId(accountUniqueId).join()
 						.map(Session::getProviderId)
 						.orElse(""))
 				.purpose("disable-method")
@@ -111,8 +115,9 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 
 	private @NotNull PipelineStateReference reference(@NotNull Identity identity) {
 		return PipelineStateReference.builder()
-				.connectionUniqueId(identity.getUniqueId())
-				.identityUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
+				.accountUniqueId(identity.getAccountUniqueId())
+				.connectionKey(identity.connectionKey())
 				.build();
 	}
 }

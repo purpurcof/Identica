@@ -82,8 +82,8 @@ class CompletionPendingLifecycleTest {
 				eventManager
 		);
 		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
-		when(pendingStore.peek(identity.getUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
-		when(routingIntentStore.peek(identity.getUniqueId())).thenReturn(Optional.empty());
+		when(pendingStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
+		when(routingIntentStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.empty());
 
 		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
 
@@ -106,8 +106,8 @@ class CompletionPendingLifecycleTest {
 				eventManager
 		);
 		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
-		when(pendingStore.peek(identity.getUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
-		when(routingIntentStore.peek(identity.getUniqueId())).thenReturn(Optional.of(completionIntent(identity.getUniqueId())));
+		when(pendingStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
+		when(routingIntentStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.of(completionIntent(identity.getConnectionUniqueId())));
 
 		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
 
@@ -130,9 +130,9 @@ class CompletionPendingLifecycleTest {
 				eventManager
 		);
 		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
-		when(identityService.find(identity.getUniqueId())).thenReturn(Optional.of(identity));
+		when(identityService.findByConnectionUniqueId(identity.getConnectionUniqueId())).thenReturn(Optional.of(identity));
 
-		lifecycle.onRoutingIntentReached(new RoutingIntentReachedEvent(completionIntent(identity.getUniqueId()), "lobby"));
+		lifecycle.onRoutingIntentReached(new RoutingIntentReachedEvent(completionIntent(identity.getConnectionUniqueId()), "lobby"));
 
 		verify(completionPipeline).complete(identity);
 	}

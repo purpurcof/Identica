@@ -4,11 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.connection.attempt.ConnectionAdvanceAttemptEvent;
 import me.whereareiam.identica.event.connection.attempt.ConnectionAttemptEvent;
 import me.whereareiam.identica.event.connection.attempt.ConnectionProcessAttemptEvent;
 import me.whereareiam.identica.event.connection.attempt.ConnectionResumeAttemptEvent;
-import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.sentinel.SentinelContext;
 import me.whereareiam.identica.model.sentinel.SentinelDecision;
@@ -35,7 +35,7 @@ public class ConnectionAttemptSentinelLifecycle implements EventListener {
 
 		SentinelContext context = SentinelContext.builder()
 				.connectionUniqueId(event.getConnectionUniqueId())
-				.uniqueId(event.getIdentityUniqueId())
+				.uniqueId(event.getAccountUniqueId())
 				.username(event.getUsername())
 				.ip(event.getIp())
 				.build();

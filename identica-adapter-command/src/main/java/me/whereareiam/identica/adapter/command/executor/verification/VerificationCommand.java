@@ -8,11 +8,10 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.command.SessionBoundCommand;
-import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.selection.VerificationSelection;
 import me.whereareiam.identica.verification.VerificationRegistry;
@@ -26,11 +25,7 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -64,11 +59,13 @@ public class VerificationCommand extends SessionBoundCommand {
 		Identity identity = requireIdentity(sender, verificationMessages().getPlayerOnly());
 		if (identity == null) return;
 		if (requireCurrentSession(identity) == null) return;
+		var accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return;
 
 		Messages.Commands.Verification messages = verificationMessages();
 		Messages.Commands.Verification.Status statusMessages = messages.getStatus();
-		List<VerificationEnrollment> enrollments = verificationService.findEnrollments(identity.getUniqueId());
-		List<VerificationSelection> selections = verificationService.findSelections(identity.getUniqueId());
+		List<VerificationEnrollment> enrollments = verificationService.findEnrollments(accountUniqueId);
+		List<VerificationSelection> selections = verificationService.findSelections(accountUniqueId);
 
 		List<String> enrollmentLines = buildEnrollmentLines(statusMessages, enrollments);
 		List<String> selectionLines = buildSelectionLines(statusMessages, selections);

@@ -2,10 +2,11 @@ package me.whereareiam.identica.model.auth;
 
 import lombok.*;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.state.PipelineStateItem;
+import me.whereareiam.identica.model.identity.IdentityReference;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.state.PipelineStateItem;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -19,7 +20,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class AuthContext implements ScenarioContext, PipelineStateItem {
-	private @Nullable UUID connectionUniqueId;
+	@Builder.Default
+	private @NotNull IdentityReference identityReference = new IdentityReference();
 	private @NotNull ConnectionIdentity identity;
 	private @Nullable String intendedServer;
 
@@ -38,22 +40,16 @@ public class AuthContext implements ScenarioContext, PipelineStateItem {
 		return identity;
 	}
 
-	/**
-	 * Returns the Identica unique id assigned to this connection.
-	 *
-	 * @return unique id or {@code null}
-	 */
-	public @Nullable UUID getIdenticaUniqueId() {
-		return identity.getUniqueId();
-	}
+	@Override
+	public @NotNull IdentityReference getIdentityReference() {
+        if (identityReference.getConnectionUniqueId() == null)
+            identityReference.setConnectionUniqueId(identity.getConnectionUniqueId());
+        if (identityReference.getObservedUniqueId() == null)
+            identityReference.setObservedUniqueId(identity.getObservedUniqueId());
+        if (identityReference.getAccountUniqueId() == null)
+            identityReference.setAccountUniqueId(identity.getAccountUniqueId());
 
-	/**
-	 * Sets the Identica unique id for this connection.
-	 *
-	 * @param identicaUniqueId unique id to assign
-	 */
-	public void setIdenticaUniqueId(@Nullable UUID identicaUniqueId) {
-		identity.setUniqueId(identicaUniqueId);
+        return identityReference;
 	}
 
 	/**
@@ -72,6 +68,24 @@ public class AuthContext implements ScenarioContext, PipelineStateItem {
 	 */
 	public @Nullable String getIp() {
 		return identity.getIp();
+	}
+
+	public static class AuthContextBuilder {
+		private final IdentityReference identityReference = new IdentityReference();
+
+		public @NotNull AuthContextBuilder connectionUniqueId(@Nullable UUID connectionUniqueId) {
+			identityReference.setConnectionUniqueId(connectionUniqueId);
+			return this;
+		}
+
+		public @NotNull AuthContextBuilder accountUniqueId(@Nullable UUID accountUniqueId) {
+			identityReference.setAccountUniqueId(accountUniqueId);
+			return this;
+		}
+
+		public @NotNull AuthContext build() {
+			return new AuthContext(identityReference, identity, intendedServer, provider, transition);
+		}
 	}
 
 }

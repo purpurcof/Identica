@@ -86,7 +86,7 @@ public class PassCommand {
 
 	private ConnectionDecision advanceJourneyMode(@NotNull Identity identity) {
 		AdvanceRequest request = AdvanceRequest.builder()
-				.connectionUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
 				.identity(identity)
 				.build();
 		return connectionCoordinator.advance(request).toCompletableFuture().join();
@@ -119,8 +119,9 @@ public class PassCommand {
 
 	private PipelineStateReference reference(@NotNull Identity identity) {
 		return PipelineStateReference.builder()
-				.connectionUniqueId(identity.getUniqueId())
-				.identityUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
+				.accountUniqueId(identity.getAccountUniqueId())
+				.connectionKey(identity.connectionKey())
 				.build();
 	}
 

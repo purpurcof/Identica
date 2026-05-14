@@ -60,8 +60,8 @@ public class ProfileRewriteProcessor {
 			@NotNull Request request,
 			@NotNull PrepareDecision prepared
 	) {
-		UUID uniqueId = prepared.getUniqueId() != null
-				? prepared.getUniqueId()
+		UUID uniqueId = prepared.getAccountUniqueId() != null
+				? prepared.getAccountUniqueId()
 				: request.observedUniqueId();
 		String username = prepared.getEffectiveUsername();
 		if (username == null || username.isBlank())

@@ -69,6 +69,7 @@ public class CredentialMigrationRegistrationStep extends AbstractCredentialStep 
 		if (credential != null) return CompletableFuture.completedFuture(StepResult.proceed(context));
 
 		CredentialMessages messages = messagesProvider.get();
+		CredentialMessages.Scenario.Migration.Setup migrationMessages = messages.getScenario().getMigration().getSetup();
 		CredentialSettings settings = settingsProvider.get();
 		CredentialSettings.Scenario.Registration registrationSettings = settings != null
 				&& settings.getScenario() != null
@@ -76,7 +77,7 @@ public class CredentialMigrationRegistrationStep extends AbstractCredentialStep 
 				: null;
 
 		if (registrationSettings == null || !registrationSettings.isEnabled())
-			return CompletableFuture.completedFuture(StepResult.denied(messages.getScenario().getRegistration().getStatus().getDisabled()));
+			return CompletableFuture.completedFuture(StepResult.denied(migrationMessages.getStatus().getDisabled()));
 
 		long ttlMs = migrationTtlMs();
 		boolean requireRepeat = registrationSettings.isRequireRepeat();
@@ -88,8 +89,8 @@ public class CredentialMigrationRegistrationStep extends AbstractCredentialStep 
 			clearRegisterState(context, ttlMs);
 
 		CredentialRegistrationAttempt input = consumeRegistrationAttempt(context, ttlMs);
-		if (input == null) return CompletableFuture.completedFuture(StepResult.waiting(joinLines(messages.getScenario().getRegistration().getPrompt())));
-		if (input.isConfirm()) return CompletableFuture.completedFuture(StepResult.waiting(messages.getScenario().getRegistration().getStatus().getNoPending()));
+		if (input == null) return CompletableFuture.completedFuture(StepResult.waiting(joinLines(migrationMessages.getPrompt())));
+		if (input.isConfirm()) return CompletableFuture.completedFuture(StepResult.waiting(migrationMessages.getStatus().getNoPending()));
 
 		String error = passwordPolicy.validate(input.getPassword());
 		if (error != null && !error.isBlank()) return CompletableFuture.completedFuture(StepResult.waiting(error));

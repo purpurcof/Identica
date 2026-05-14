@@ -49,6 +49,53 @@ public class CredentialMessages extends ConfigDocument {
 	public static class Scenario {
 		private Authentication authentication;
 		private Registration registration;
+		private Migration migration;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Migration {
+			private Verification verification;
+			private Setup setup;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Verification {
+				private List<String> prompt;
+				private Status status;
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Status {
+					private String success;
+					private String invalid;
+					private String notRegistered;
+					private String noPending;
+				}
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Setup {
+				private List<String> prompt;
+				private List<String> confirmPrompt;
+				private Status status;
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Status {
+					private String success;
+					private String disabled;
+					private String alreadyRegistered;
+					private String mismatch;
+					private String noPending;
+				}
+			}
+		}
 
 		@Getter
 		@Setter

@@ -102,15 +102,15 @@ public class CredentialMigrationConfirmStep extends AbstractCredentialStep {
 	}
 
 	private String joinRegisterPrompt(CredentialMessages messages) {
-		return joinLines(messages.getScenario().getRegistration().getPrompt());
+		return joinLines(messages.getScenario().getMigration().getSetup().getPrompt());
 	}
 
 	private String joinConfirmPrompt(CredentialMessages messages) {
-		return joinLines(messages.getScenario().getRegistration().getConfirmPrompt());
+		return joinLines(messages.getScenario().getMigration().getSetup().getConfirmPrompt());
 	}
 
 	private String joinRegisterReset(CredentialMessages messages) {
-		String mismatch = messages.getScenario().getRegistration().getStatus().getMismatch();
+		String mismatch = messages.getScenario().getMigration().getSetup().getStatus().getMismatch();
 		String prompt = joinRegisterPrompt(messages);
 		if (mismatch == null || mismatch.isBlank())
 			return prompt;

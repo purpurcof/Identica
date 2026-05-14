@@ -230,15 +230,45 @@ public class Settings extends ConfigDocument {
 		@Setter
 		@ToString
 		public static class Recognition {
+			/**
+			 * Enables reconnect recognition for eligible providers.
+			 */
 			private boolean enabled;
+			/**
+			 * Amount of time a stored recognition snapshot remains valid.
+			 */
 			private @NotNull Duration validity;
+			/**
+			 * Default signal set used when providers do not override reconnect recognition signals.
+			 */
 			private @NotNull List<RecognitionSignal> defaultSignals = new ArrayList<>();
+			/**
+			 * Guard configuration that suppresses automatic reconnect recognition from configured client IP ranges.
+			 */
+			private @NotNull UntrustedIps untrustedIps = new UntrustedIps();
 
 			public long validityMillis() {
 				if (validity.isZero() || validity.isNegative())
 					throw new IllegalStateException("settings.connection.sessions.recognition.validity must be positive");
 
 				return validity.toMillis();
+			}
+
+			/**
+			 * Guard configuration for automatic reconnect recognition coming from untrusted client IPs.
+			 */
+			@Getter
+			@Setter
+			@ToString
+			public static class UntrustedIps {
+				/**
+				 * Enables the untrusted-IP suppression guard.
+				 */
+				private boolean enabled;
+				/**
+				 * Exact IPs or CIDR ranges that should suppress automatic reconnect recognition.
+				 */
+				private @NotNull List<String> entries = new ArrayList<>();
 			}
 		}
 	}

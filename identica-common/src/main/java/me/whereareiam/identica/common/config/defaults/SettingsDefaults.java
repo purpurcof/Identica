@@ -18,6 +18,7 @@ import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Singleton
@@ -45,6 +46,16 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 				RecognitionSignal.IP,
 				RecognitionSignal.VIRTUAL_HOST
 		));
+		Settings.Sessions.Recognition.UntrustedIps untrustedIps = new Settings.Sessions.Recognition.UntrustedIps();
+		untrustedIps.setEnabled(true);
+		untrustedIps.setEntries(List.of(
+				"127.0.0.1",
+				"::1",
+				"10.0.0.0/8",
+				"172.16.0.0/12",
+				"192.168.0.0/16"
+		));
+		recognition.setUntrustedIps(untrustedIps);
 		sessions.setRecognition(recognition);
 
 		Settings.InitialPrompt initialPrompt = new Settings.InitialPrompt();

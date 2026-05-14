@@ -541,6 +541,38 @@ That includes NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, reverse proxies, 
 
 Enable recognition only if you understand that tradeoff and accept the risk for your environment.
 
+#### recognition.untrustedIps.enabled
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: `true` or `false`
+- Current default: `true`
+- Affects: whether automatic reconnect recognition is suppressed for configured client IPs and CIDR ranges
+
+This guard only affects automatic provider recognition.
+It does not block explicit provider usage through entrypoint-selected or manually selected providers.
+
+Use this when reconnect recognition is generally acceptable, but there are client networks you do not trust for automatic recognition decisions.
+The generated defaults target the common “proxy forwarded a loopback/private proxy IP instead of the real client IP” failure mode.
+
+#### recognition.untrustedIps.entries
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: a list of exact IP literals or IPv4/IPv6 CIDR ranges
+- Current default: `["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]`
+- Affects: which client IPs suppress automatic reconnect recognition
+
+The generated defaults cover loopback and RFC1918 private ranges, which are often a sign that Identica is behind a proxy that is forwarding the wrong source IP.
+
+Entries must be one of:
+
+- an exact IP such as `127.0.0.1`
+- an IPv4 CIDR such as `192.168.0.0/16`
+- an IPv6 CIDR such as `2001:db8::/32`
+
+Malformed entries fail loudly during config use with a settings-path error that points to the bad list index.
+
 #### recognition.validity
 
 <Badge type="warning">Advanced</Badge>
@@ -574,6 +606,14 @@ connection:
         - "USERNAME"
         - "IP"
         - "VIRTUAL_HOST"
+      untrustedIps:
+        enabled: true
+        entries:
+          - "127.0.0.1"
+          - "::1"
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+          - "192.168.0.0/16"
 ```
   </Tab>
   <Tab value="JSON">
@@ -586,7 +626,11 @@ connection:
       "recognition": {
         "enabled": false,
         "validity": "12h",
-        "defaultSignals": ["USERNAME", "IP", "VIRTUAL_HOST"]
+        "defaultSignals": ["USERNAME", "IP", "VIRTUAL_HOST"],
+        "untrustedIps": {
+          "enabled": true,
+          "entries": ["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+        }
       }
     }
   }

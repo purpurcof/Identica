@@ -40,6 +40,9 @@ connection:
         - "USERNAME"
         - "IP"
         - "VIRTUAL_HOST"
+      untrustedIps:
+        enabled: false
+        entries: []
   initialPrompt:
     resendUntilInteraction: true
     resendInterval: "1500ms"

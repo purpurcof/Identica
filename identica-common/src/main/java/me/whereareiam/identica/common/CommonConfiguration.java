@@ -30,6 +30,7 @@ import me.whereareiam.identica.common.identity.account.DefaultRegistrationAccoun
 import me.whereareiam.identica.common.identity.session.DefaultSessionService;
 import me.whereareiam.identica.common.identity.session.recognition.DefaultSessionRecognitionService;
 import me.whereareiam.identica.common.identity.session.recognition.DefaultSessionRecognitionStore;
+import me.whereareiam.identica.common.identity.session.recognition.policy.UntrustedIpRecognitionGuard;
 import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.listener.SessionClosedDisconnectListener;
 import me.whereareiam.identica.common.listener.SessionReplacedListener;
@@ -66,6 +67,7 @@ import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
+import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.logging.BannerContributor;
 import me.whereareiam.identica.model.config.*;
@@ -197,6 +199,7 @@ public class CommonConfiguration extends AbstractModule {
 		// Provider system
 		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
 		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
+		bind(UntrustedIpRecognitionPolicy.class).to(UntrustedIpRecognitionGuard.class).asEagerSingleton();
 		bind(ProviderOperations.class).to(DefaultProviderOperations.class).asEagerSingleton();
 
 		// Core services

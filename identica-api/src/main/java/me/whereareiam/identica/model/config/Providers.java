@@ -97,6 +97,10 @@ public class Providers extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Overrides {
+		/**
+		 * Restores automatic reconnect recognition for this provider even when the client IP is configured as untrusted.
+		 */
+		private boolean allowRecognitionOnUntrustedIp;
 		private @Nullable SessionConcurrencyPolicy sessionConcurrencyPolicy;
 		private @NotNull Recognition recognition = new Recognition();
 

@@ -61,7 +61,7 @@ class CredentialAuthenticationCredentialStepTest {
 				.provider(me.whereareiam.identica.model.provider.ProviderContext.of("credential", "subject", "whereareiam", null))
 				.build();
 		PipelineState state = PipelineState.initial();
-		state.putItem(new CredentialAuthenticationAttempt("credential"), settings().getConnection().getAuthentication().pipelineTtlMillis());
+		state.putItem(new CredentialAuthenticationAttempt("credential"), settings().getConnection().getScenarios().getAuthentication().pipelineTtlMillis());
 		CredentialAccount account = CredentialAccount.builder()
 				.providerId("credential")
 				.providerSubject("subject")
@@ -87,7 +87,7 @@ class CredentialAuthenticationCredentialStepTest {
 		Settings.Connection connection = new Settings.Connection();
 		Settings.AuthenticationScenario authentication = new Settings.AuthenticationScenario();
 		authentication.setPipelineTtl(Duration.ofMinutes(5));
-		connection.setAuthentication(authentication);
+		connection.getScenarios().setAuthentication(authentication);
 
 		Settings settings = new Settings();
 		settings.setConnection(connection);

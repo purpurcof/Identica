@@ -21,9 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Premium Profile Store")
 class PremiumProfileStoreTest {
@@ -81,6 +79,11 @@ class PremiumProfileStoreTest {
 		@Override
 		public @NotNull ReplicationCacheBuilder cache(@NotNull String name) {
 			return new ReplicationCacheBuilder() {
+				@Override
+				public @NotNull ReplicationCacheBuilder defaultTtl(long ttlMs) {
+					return this;
+				}
+
 				@Override
 				public @NotNull <T> LocalCache<T> local() {
 					return new TestReplicatedCache<>();

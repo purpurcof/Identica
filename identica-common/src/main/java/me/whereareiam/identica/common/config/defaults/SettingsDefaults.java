@@ -12,6 +12,7 @@ import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
+import me.whereareiam.identica.type.session.RecognitionSignal;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 
 import java.time.Duration;
@@ -34,10 +35,17 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		settings.setListeners(listeners);
 
 		Settings.Sessions sessions = new Settings.Sessions();
-		sessions.setDefaultTtl(Duration.ofHours(2));
-		sessions.setRefreshTtl(Duration.ofMinutes(10));
 		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
-		sessions.setConcurrencyOverrides(new HashMap<>());
+		sessions.setActiveTtl(Duration.ofHours(12));
+		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
+		recognition.setEnabled(false);
+		recognition.setSnapshotTtl(Duration.ofHours(12));
+		recognition.setDefaultSignals(java.util.List.of(
+				RecognitionSignal.USERNAME,
+				RecognitionSignal.IP,
+				RecognitionSignal.VIRTUAL_HOST
+		));
+		sessions.setRecognition(recognition);
 
 		Settings.InitialPrompt initialPrompt = new Settings.InitialPrompt();
 		initialPrompt.setResendUntilInteraction(false);
@@ -52,9 +60,11 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		connection.setReservationTtl(Duration.ofMinutes(15));
 		connection.setPrepareStateTtl(Duration.ofMinutes(10));
 		connection.setUniqueIdMode(UniqueIdMode.RANDOM);
-		connection.setAuthentication(defaultAuthenticationScenario());
-		connection.setRegistration(defaultRegistrationScenario());
-		connection.setMigration(defaultMigrationScenario());
+		Settings.Scenarios scenarios = new Settings.Scenarios();
+		scenarios.setAuthentication(defaultAuthenticationScenario());
+		scenarios.setRegistration(defaultRegistrationScenario());
+		scenarios.setMigration(defaultMigrationScenario());
+		connection.setScenarios(scenarios);
 		connection.setSentinels(defaultSentinels());
 		settings.setConnection(connection);
 
@@ -66,7 +76,6 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
 		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
-		scenario.setSessionConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
 		scenario.setJourneyMode(JourneyMode.SEAMLESS);
 		scenario.setJourneyPolicy(JourneyPolicy.PREFER);

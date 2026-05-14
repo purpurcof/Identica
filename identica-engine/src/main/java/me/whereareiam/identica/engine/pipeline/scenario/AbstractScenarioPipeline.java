@@ -402,10 +402,10 @@ public abstract class AbstractScenarioPipeline {
 	protected @NotNull Settings.Scenario resolveScenario(@NotNull PipelineType type) {
 		Settings.Connection connection = settingsProvider.get().getConnection();
 		if (type == PipelineType.REGISTRATION)
-			return connection.getRegistration();
+			return connection.getScenarios().getRegistration();
 		if (type == PipelineType.MIGRATION)
-			return connection.getMigration();
-		return connection.getAuthentication();
+			return connection.getScenarios().getMigration();
+		return connection.getScenarios().getAuthentication();
 	}
 
 	protected @NotNull String joinMessage(@NotNull List<String> lines) {

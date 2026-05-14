@@ -7,14 +7,17 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityState;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.session.SessionRecognitionSnapshot;
+import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,6 +29,7 @@ import java.util.concurrent.CompletionStage;
 public class LinkProviderPhase implements PipelinePhase<IdentityState> {
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final ProviderProfilePersistenceService providerProfilePersistenceService;
+	private final SessionRecognitionStore sessionRecognitionStore;
 	private final Provider<Messages> messagesProvider;
 
 	@Override
@@ -54,7 +58,7 @@ public class LinkProviderPhase implements PipelinePhase<IdentityState> {
 
 		Account account = state.getAccount();
 		AccountProviderProfile profile = state.getProfile();
-		if (account == null || profile == null) {
+		if (account == null || profile == null || state.getContext() == null) {
 			state.setResult(PipelineResult.failed(providerLinkMissingMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
@@ -79,9 +83,20 @@ public class LinkProviderPhase implements PipelinePhase<IdentityState> {
 				.build();
 
 		AccountProviderLink stored = providerLinkPersistenceService.upsert(link);
-		providerProfilePersistenceService.upsert(profile);
+		AccountProviderProfile storedProfile = providerProfilePersistenceService.upsert(profile);
+		ConnectionIdentity.Origin origin = state.getContext().getIdentity().getOrigin();
+		sessionRecognitionStore.save(SessionRecognitionSnapshot.builder()
+				.providerId(profile.getProviderId())
+				.providerSubject(profile.getProviderSubject())
+				.providerUsername(profile.getProviderUsername())
+				.lastIp(state.getContext().getIp())
+				.lastVirtualHost(origin != null ? origin.getHost() : null)
+				.lastVirtualPort(origin != null ? origin.getPort() : null)
+				.capturedAt(now)
+				.build());
 
 		state.setLink(stored);
+		state.setProfile(storedProfile);
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}
 

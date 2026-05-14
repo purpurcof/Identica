@@ -4,13 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.common.replication.cache.DefaultReplicatedCache;
 import me.whereareiam.identica.common.replication.cache.InMemoryLocalCache;
-import me.whereareiam.identica.replication.cache.LocalCache;
-import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.replication.ReplicationAdapter;
-import me.whereareiam.identica.replication.cache.base.ReplicationCacheBuilder;
 import me.whereareiam.identica.replication.ReplicationChannel;
 import me.whereareiam.identica.replication.ReplicationSystem;
-import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.replication.cache.LocalCache;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.replication.cache.base.ReplicationCacheBuilder;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.replication.codec.SnapshotCodecFactory;
 import org.jetbrains.annotations.NotNull;
@@ -36,16 +36,31 @@ public final class DefaultReplicationSystem implements ReplicationSystem {
 	@Override
 	public @NotNull ReplicationCacheBuilder cache(@NotNull String name) {
 		return new ReplicationCacheBuilder() {
+			private long defaultTtlMs;
+
+			@Override
+			public @NotNull ReplicationCacheBuilder defaultTtl(long ttlMs) {
+				this.defaultTtlMs = Math.max(0L, ttlMs);
+				return this;
+			}
+
 			@Override
 			public @NotNull <T> LocalCache<T> local() {
-				return new InMemoryLocalCache<>();
+				return new InMemoryLocalCache<>(defaultTtlMs);
 			}
 
 			@Override
 			public @NotNull <T, S> ReplicatedCache<T> replicated(
 					@NotNull ReplicationType<T, S> type
 			) {
-				return new DefaultReplicatedCache<>(name, new InMemoryLocalCache<>(), adapter, type, delegatingFactory);
+				return new DefaultReplicatedCache<>(
+						name,
+						new InMemoryLocalCache<>(defaultTtlMs),
+						adapter,
+						type,
+						delegatingFactory,
+						defaultTtlMs
+				);
 			}
 		};
 	}

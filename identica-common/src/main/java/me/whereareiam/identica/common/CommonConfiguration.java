@@ -28,7 +28,8 @@ import me.whereareiam.identica.common.identity.DefaultReservationCache;
 import me.whereareiam.identica.common.identity.account.DefaultAccountService;
 import me.whereareiam.identica.common.identity.account.DefaultRegistrationAccountService;
 import me.whereareiam.identica.common.identity.session.DefaultSessionService;
-import me.whereareiam.identica.common.identity.session.SessionRefreshCoordinator;
+import me.whereareiam.identica.common.identity.session.recognition.DefaultSessionRecognitionService;
+import me.whereareiam.identica.common.identity.session.recognition.DefaultSessionRecognitionStore;
 import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.listener.SessionClosedDisconnectListener;
 import me.whereareiam.identica.common.listener.SessionReplacedListener;
@@ -63,6 +64,8 @@ import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
+import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.logging.BannerContributor;
 import me.whereareiam.identica.model.config.*;
@@ -161,7 +164,8 @@ public class CommonConfiguration extends AbstractModule {
 
 		// Session lifecycle
 		bind(SessionService.class).to(DefaultSessionService.class).asEagerSingleton();
-		bind(SessionRefreshCoordinator.class).asEagerSingleton();
+		bind(SessionRecognitionStore.class).to(DefaultSessionRecognitionStore.class).asEagerSingleton();
+		bind(SessionRecognitionService.class).to(DefaultSessionRecognitionService.class).asEagerSingleton();
 
 		// Platform adaptation helpers
 		bind(ConnectionDecisionApplier.class).asEagerSingleton();

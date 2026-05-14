@@ -4,20 +4,20 @@ import me.whereareiam.identica.model.config.Providers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Providers Defaults")
 class ProvidersDefaultsTest {
-	@DisplayName("Premium provider owns its session TTL override")
+	@DisplayName("Provider recognition overrides default to disabled")
 	@Test
-	void premiumProviderOwnsSessionTtlOverride() {
+	void providerRecognitionOverridesDefaultToDisabled() {
 		Providers providers = new ProvidersDefaults().supply(new Providers());
 
-		assertEquals(Duration.ofHours(12), provider(providers, "premium").getOverrides().getSessionTtl());
-		assertNull(provider(providers, "credential").getOverrides().getSessionTtl());
+		assertTrue(provider(providers, "premium").getOverrides().getRecognition().getSignals().isEmpty());
+		assertNull(provider(providers, "premium").getOverrides().getRecognition().getEnabled());
+		assertTrue(provider(providers, "credential").getOverrides().getRecognition().getSignals().isEmpty());
+		assertNull(provider(providers, "credential").getOverrides().getRecognition().getEnabled());
 	}
 
 	private Providers.ProviderEntry provider(Providers providers, String id) {

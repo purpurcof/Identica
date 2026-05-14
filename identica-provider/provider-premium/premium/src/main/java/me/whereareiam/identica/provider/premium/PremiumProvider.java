@@ -32,6 +32,7 @@ public class PremiumProvider extends IdenticaProvider {
 	private OfflineCheckStep offlineCheckStep;
 	private FinalizeProfileStep finalizeProfileStep;
 	private PremiumMigrationCompleteStep premiumMigrationCompleteStep;
+	private PremiumRecognitionStep premiumRecognitionStep;
 	private PremiumVerificationStep premiumVerificationStep;
 	private PremiumCompletionStep premiumCompletionStep;
 
@@ -57,6 +58,7 @@ public class PremiumProvider extends IdenticaProvider {
 				offlineCheckStep,
 				finalizeProfileStep,
 				premiumMigrationCompleteStep,
+				premiumRecognitionStep,
 				premiumVerificationStep
 		));
 		completionExtensionRegistry.register(new PremiumCompletionExtension(

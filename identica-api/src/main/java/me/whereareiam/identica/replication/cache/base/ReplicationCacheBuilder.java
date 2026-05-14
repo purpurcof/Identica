@@ -10,6 +10,15 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface ReplicationCacheBuilder {
 	/**
+	 * Sets the default TTL applied by caches created from this builder when
+	 * callers use {@code put(key, value)} without an explicit TTL.
+	 *
+	 * @param ttlMs default TTL in milliseconds
+	 * @return this builder
+	 */
+	@NotNull ReplicationCacheBuilder defaultTtl(long ttlMs);
+
+	/**
 	 * Creates an in-memory local cache for this namespace.
 	 *
 	 * @param <T> value type

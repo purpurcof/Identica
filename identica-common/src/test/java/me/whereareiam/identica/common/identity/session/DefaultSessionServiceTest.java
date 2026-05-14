@@ -13,17 +13,18 @@ import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.scheduler.*;
+import me.whereareiam.identica.service.Scheduler;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Default Session Service")
 class DefaultSessionServiceTest {
@@ -114,42 +115,57 @@ class DefaultSessionServiceTest {
 		assertEquals(uniqueId, original.getUniqueId());
 	}
 
-	@DisplayName("Provider session TTL overrides the settings default")
+	@DisplayName("Sessions use the session-configured default cache TTL")
 	@Test
-	void providerSessionTtlOverridesSettingsDefault() {
+	void sessionsUseSessionConfiguredDefaultCacheTtl() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
 		DefaultReplicationSystem replicationSystem = new DefaultReplicationSystem(adapter);
 		EventController eventController = new EventController();
 
-		DefaultSessionService service = sessionService(
-				"alpha",
-				replicationSystem,
-				eventController,
-				providers(provider("premium", Duration.ofHours(12)))
-		);
+		DefaultSessionService service = sessionService("alpha", replicationSystem, eventController);
 
 		service.open(session(UUID.randomUUID(), "premium")).join();
 
-		assertEquals(Duration.ofHours(12).toMillis(), adapter.lastTtlMs);
+		assertEquals(java.time.Duration.ofHours(12).toMillis(), adapter.lastTtlMs);
 	}
 
-	@DisplayName("Sessions use the settings default when provider TTL is absent")
+	@DisplayName("Active sessions schedule a keepalive refresh while the player is online")
 	@Test
-	void missingProviderSessionTtlUsesSettingsDefault() {
+	void activeSessionsScheduleKeepaliveRefresh() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
 		DefaultReplicationSystem replicationSystem = new DefaultReplicationSystem(adapter);
 		EventController eventController = new EventController();
+		TestScheduler scheduler = new TestScheduler();
+
+		DefaultSessionService service = sessionService("alpha", replicationSystem, eventController, providers(), scheduler);
+		Session session = session(UUID.randomUUID(), "premium");
+
+		service.open(session).join();
+		long firstTtl = adapter.lastTtlMs;
+
+		scheduler.runOnlyPeriodicalTask();
+
+		assertEquals(firstTtl, adapter.lastTtlMs);
+		assertTrue(adapter.putCalls >= 2);
+	}
+
+	@DisplayName("Provider session concurrency overrides the global setting")
+	@Test
+	void providerSessionConcurrencyOverridesGlobalSetting() {
+		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
+		DefaultReplicationSystem replicationSystem = new DefaultReplicationSystem(adapter);
+		EventController eventController = new EventController();
+		UUID uniqueId = UUID.randomUUID();
 
 		DefaultSessionService service = sessionService(
 				"alpha",
 				replicationSystem,
 				eventController,
-				providers(provider("premium", null))
+				providers(provider("premium", SessionConcurrencyPolicy.REJECT_NEW))
 		);
 
-		service.open(session(UUID.randomUUID(), "premium")).join();
-
-		assertEquals(Duration.ofMinutes(5).toMillis(), adapter.lastTtlMs);
+		assertEquals(uniqueId, service.open(session(uniqueId, "premium")).join().getUniqueId());
+		assertNull(service.open(session(uniqueId, "premium", UUID.randomUUID().toString())).join());
 	}
 
 	private DefaultSessionService sessionService(
@@ -157,7 +173,7 @@ class DefaultSessionServiceTest {
 			DefaultReplicationSystem replicationSystem,
 			EventController eventController
 	) {
-		return sessionService(serverId, replicationSystem, eventController, providers());
+		return sessionService(serverId, replicationSystem, eventController, providers(), new TestScheduler());
 	}
 
 	private DefaultSessionService sessionService(
@@ -166,10 +182,21 @@ class DefaultSessionServiceTest {
 			EventController eventController,
 			Providers providers
 	) {
+		return sessionService(serverId, replicationSystem, eventController, providers, new TestScheduler());
+	}
+
+	private DefaultSessionService sessionService(
+			String serverId,
+			DefaultReplicationSystem replicationSystem,
+			EventController eventController,
+			Providers providers,
+			Scheduler scheduler
+	) {
 		return new DefaultSessionService(
 				this::settings,
 				() -> providers,
 				eventController,
+				scheduler,
 				() -> replication(serverId),
 				replicationSystem
 		);
@@ -207,11 +234,11 @@ class DefaultSessionServiceTest {
 		return providers;
 	}
 
-	private Providers.ProviderEntry provider(String id, Duration sessionTtl) {
+	private Providers.ProviderEntry provider(String id, SessionConcurrencyPolicy sessionConcurrencyPolicy) {
 		Providers.ProviderEntry provider = new Providers.ProviderEntry();
 		provider.setId(id);
 		provider.setEnabled(true);
-		provider.getOverrides().setSessionTtl(sessionTtl);
+		provider.getOverrides().setSessionConcurrencyPolicy(sessionConcurrencyPolicy);
 		return provider;
 	}
 
@@ -219,11 +246,20 @@ class DefaultSessionServiceTest {
 		Settings settings = new Settings();
 		Settings.Connection connection = new Settings.Connection();
 		Settings.Sessions sessions = new Settings.Sessions();
-		sessions.setDefaultTtl(Duration.ofMinutes(5));
 		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
+		sessions.setActiveTtl(java.time.Duration.ofHours(12));
+		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
+		recognition.setSnapshotTtl(java.time.Duration.ofHours(12));
+		sessions.setRecognition(recognition);
 		connection.setSessions(sessions);
 		settings.setConnection(connection);
 		return settings;
+	}
+
+	private Session session(UUID uniqueId, String providerId, String sessionId) {
+		Session session = session(uniqueId, providerId);
+		session.setSessionId(sessionId);
+		return session;
 	}
 
 	private Replication replication(String serverId) {
@@ -236,6 +272,9 @@ class DefaultSessionServiceTest {
 		sessions.setUser("sessions:user");
 		sessions.setSession("sessions:session");
 		sessions.setSubject("sessions:subject");
+		Replication.Sessions.Recognition recognition = new Replication.Sessions.Recognition();
+		recognition.setSnapshot("session-recognition:snapshot");
+		sessions.setRecognition(recognition);
 		cache.setSessions(sessions);
 		replication.setCache(cache);
 
@@ -255,6 +294,53 @@ class DefaultSessionServiceTest {
 		@IdenticEvent
 		public void onSessionClosed(SessionClosedEvent event) {
 			this.event = event;
+		}
+	}
+
+	private static final class TestScheduler implements Scheduler {
+		private final Map<JobKey, PeriodicalRunnableTask> periodicalTasks = new HashMap<>();
+
+		@Override
+		public void schedule(RunnableTask runnableTask) {
+		}
+
+		@Override
+		public void schedule(DelayedRunnableTask runnableTask) {
+		}
+
+		@Override
+		public void schedule(PeriodicalRunnableTask runnableTask) {
+			periodicalTasks.put(runnableTask.getKey(), runnableTask);
+		}
+
+		@Override
+		public void schedule(RunnableTask runnableTask, boolean async) {
+			schedule(runnableTask);
+		}
+
+		@Override
+		public void schedule(DelayedRunnableTask runnableTask, boolean async) {
+			schedule(runnableTask);
+		}
+
+		@Override
+		public void schedule(PeriodicalRunnableTask runnableTask, boolean async) {
+			schedule(runnableTask);
+		}
+
+		@Override
+		public void cancel(JobKey key) {
+			periodicalTasks.remove(key);
+		}
+
+		@Override
+		public void cancelByOrigin(Origin origin) {
+			periodicalTasks.entrySet().removeIf(entry -> entry.getKey().getOrigin().equals(origin));
+		}
+
+		private void runOnlyPeriodicalTask() {
+			PeriodicalRunnableTask task = periodicalTasks.values().stream().findFirst().orElseThrow();
+			task.getRunnable().run();
 		}
 	}
 }

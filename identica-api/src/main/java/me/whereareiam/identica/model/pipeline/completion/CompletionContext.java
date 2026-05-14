@@ -20,7 +20,7 @@ public class CompletionContext {
 	private @NotNull PipelineType pipelineType;
 	private @NotNull Session session;
 	private @Nullable InternalProvider provider;
-	private boolean sessionReused;
+	private boolean recognitionApplied;
 
 	public @Nullable UUID getAccountUniqueId() {
 		return session.getUniqueId();

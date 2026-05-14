@@ -666,11 +666,11 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	private @NotNull Settings.Scenario scenarioSettings(@Nullable PipelineType pipelineType) {
 		Settings.Connection connection = settingsProvider.get().getConnection();
 		if (pipelineType == PipelineType.REGISTRATION)
-			return connection.getRegistration();
+			return connection.getScenarios().getRegistration();
 		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getMigration();
+			return connection.getScenarios().getMigration();
 
-		return connection.getAuthentication();
+		return connection.getScenarios().getAuthentication();
 	}
 
 	private void applyProviderContext(@NotNull ScenarioContext context, @NotNull String providerId) {

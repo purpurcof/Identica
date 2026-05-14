@@ -148,7 +148,7 @@ class PremiumHandshakePolicyTest {
 
 		Settings.Connection connection = new Settings.Connection();
 		connection.setHandshakeInstructionTtl(Duration.ofSeconds(30));
-		connection.setAuthentication(authentication);
+		connection.getScenarios().setAuthentication(authentication);
 
 		Settings settings = new Settings();
 		settings.setConnection(connection);

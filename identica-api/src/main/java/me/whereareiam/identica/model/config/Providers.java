@@ -9,11 +9,12 @@ import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.configura.annotation.Merge;
 import me.whereareiam.configura.merge.strategy.type.StructuralObject;
+import me.whereareiam.identica.type.session.RecognitionSignal;
+import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -96,11 +97,16 @@ public class Providers extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Overrides {
-		/**
-		 * Optional session TTL override for sessions opened by this provider.
-		 * Falls back to settings.connection.sessions.defaultTtl when absent.
-		 */
-		private @Nullable Duration sessionTtl;
+		private @Nullable SessionConcurrencyPolicy sessionConcurrencyPolicy;
+		private @NotNull Recognition recognition = new Recognition();
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Recognition {
+			private @Nullable Boolean enabled;
+			private @NotNull List<RecognitionSignal> signals = new ArrayList<>();
+		}
 	}
 
 	@Getter

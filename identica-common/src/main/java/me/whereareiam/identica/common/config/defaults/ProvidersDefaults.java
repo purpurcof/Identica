@@ -7,7 +7,6 @@ import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 
-import java.time.Duration;
 import java.util.List;
 
 @Singleton
@@ -39,7 +38,6 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 		premium.setDisplayName("PR");
 		premium.setEnabled(true);
 		premium.setPriority(100);
-		premium.getOverrides().setSessionTtl(Duration.ofHours(12));
 		premium.setEntrypoints(List.of("premium.arcadeya.com"));
 		premium.setVerification(premiumVerification());
 

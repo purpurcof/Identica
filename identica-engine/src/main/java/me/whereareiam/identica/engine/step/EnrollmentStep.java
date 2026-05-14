@@ -7,13 +7,13 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.pipeline.scenario.registration.EnrollmentOptionsEvent;
 import me.whereareiam.identica.model.auth.EnrollmentEntry;
-import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -84,7 +84,7 @@ public class EnrollmentStep extends InteractiveStep {
 	private boolean shouldAutoSelectSingleProvider() {
 		return settingsProvider.get()
 				.getConnection()
-				.getRegistration()
+				.getScenarios().getRegistration()
 				.isAutoSelectSingleProvider();
 	}
 

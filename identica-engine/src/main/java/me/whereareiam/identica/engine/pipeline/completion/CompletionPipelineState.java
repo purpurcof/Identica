@@ -23,6 +23,6 @@ public class CompletionPipelineState {
 	private @NotNull PipelineType pipelineType;
 	private @Nullable Session session;
 	private @Nullable InternalProvider provider;
-	private boolean sessionReused;
 	private @Nullable CompletionContext context;
+	private boolean recognitionApplied;
 }

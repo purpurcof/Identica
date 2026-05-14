@@ -4,12 +4,12 @@ description: Field-by-field explanation of Identica's provider configuration are
 ---
 
 The providers configuration controls which identity providers are enabled and how provider-specific behavior is applied.
-Global session defaults stay in `settings.yml`; provider-specific session overrides live here on the matching provider entry.
+Use this file to enable providers, set priority and entrypoints, configure verification, and apply provider-specific overrides.
 
 ### providers
 
 - Takes: a list of provider entries
-- Affects: provider enablement, ordering, entrypoint routing, verification policy, and provider-specific session TTLs
+- Affects: provider enablement, ordering, entrypoint routing, verification policy, and provider-specific session overrides
 
 Provider ids should match installed provider descriptors, such as `premium` or `credential`.
 
@@ -22,7 +22,12 @@ providers:
     enabled: true
     priority: 100
     overrides:
-      sessionTtl: "12h"
+      sessionConcurrencyPolicy: "REJECT_NEW"
+      recognition:
+        enabled: true
+        signals:
+          - "USERNAME"
+          - "VIRTUAL_HOST"
 ```
   </Tab>
   <Tab value="JSON">
@@ -35,7 +40,11 @@ providers:
       "enabled": true,
       "priority": 100,
       "overrides": {
-        "sessionTtl": "12h"
+        "sessionConcurrencyPolicy": "REJECT_NEW",
+        "recognition": {
+          "enabled": true,
+          "signals": ["USERNAME", "VIRTUAL_HOST"]
+        }
       }
     }
   ]
@@ -53,13 +62,38 @@ providers:
 The `overrides` object is kept in generated config as a stable place for provider-specific exceptions.
 Configura keeps the object structure without filling every possible child field.
 
-#### overrides.sessionTtl
+#### overrides.sessionConcurrencyPolicy
 
 <Badge type="warning">Advanced</Badge>
 
-- Takes: a positive duration
-- Current default: `"12h"` for `premium`; absent for `credential`
-- Affects: how long sessions opened by this provider live
+- Takes: `"ALLOW_MULTIPLE"`, `"REPLACE_EXISTING"`, or `"REJECT_NEW"`
+- Current default: absent
+- Affects: how live-session replacement behaves for this specific provider
 
-If `sessionTtl` is absent, Identica uses `settings.connection.sessions.defaultTtl`.
-Use this when one provider should keep sessions longer or shorter than the global default.
+If this is absent, Identica uses `settings.connection.sessions.concurrencyPolicy`.
+
+#### overrides.recognition.enabled
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: `true` or `false`
+- Current default: absent
+- Affects: whether this provider inherits or overrides `settings.connection.sessions.recognition.enabled`
+
+When this field is absent, the provider inherits `settings.connection.sessions.recognition.enabled`.
+Use it when one provider should allow reconnect recognition while another should require full provider authentication every time.
+
+#### overrides.recognition.signals
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: a list containing any of `"USERNAME"`, `"IP"`, `"VIRTUAL_HOST"`
+- Current default: absent
+- Affects: the signal set used when this provider evaluates reconnect recognition
+
+When this field is absent or empty, the provider inherits `settings.connection.sessions.recognition.defaultSignals`.
+
+Recognition is intentionally disabled by default because signal matching can be unsafe in shared-network environments.
+IP-based matching in particular can be exploited behind NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, hosting proxies, or other setups where several different players appear to come from the same address.
+
+Enable recognition only if you understand that tradeoff and accept the risk for your environment.

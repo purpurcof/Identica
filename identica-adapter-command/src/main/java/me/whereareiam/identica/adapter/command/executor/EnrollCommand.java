@@ -123,7 +123,7 @@ public class EnrollCommand {
 			stored.setPipelineType(PipelineType.REGISTRATION);
 		}
 
-		long ttlMs = settingsProvider.get().getConnection().getRegistration().pipelineTtlMillis();
+		long ttlMs = settingsProvider.get().getConnection().getScenarios().getRegistration().pipelineTtlMillis();
 		if (ttlMs > 0) {
 			stored.putItem(new JourneyStateItem(
 					pending.getJourneyMode(),

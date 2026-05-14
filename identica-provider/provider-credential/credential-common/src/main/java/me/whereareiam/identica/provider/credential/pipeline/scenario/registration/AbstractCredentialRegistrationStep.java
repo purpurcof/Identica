@@ -36,7 +36,7 @@ abstract class AbstractCredentialRegistrationStep extends AbstractCredentialStep
 	protected long registrationTtlMs() {
 		Settings settings = coreSettingsProvider.get();
 		if (settings == null) return 0L;
-		return settings.getConnection().getRegistration().pipelineTtlMillis();
+		return settings.getConnection().getScenarios().getRegistration().pipelineTtlMillis();
 	}
 
 	protected @NotNull PipelineStateReference reference(@NotNull ScenarioContext context) {

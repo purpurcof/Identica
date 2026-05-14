@@ -46,7 +46,7 @@ public class CompletionPendingLifecycle implements EventListener {
 				.pipelineType(event.getPipelineType())
 				.connectionUniqueId(event.getConnectionUniqueId())
 				.accountUniqueId(event.getSession().getUniqueId())
-				.sessionReused(event.isSessionReused())
+				.recognitionApplied(event.isRecognitionApplied())
 				.build());
 	}
 

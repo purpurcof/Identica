@@ -14,6 +14,7 @@ import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
+import me.whereareiam.identica.type.session.RecognitionSignal;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,13 +61,11 @@ public class Settings extends ConfigDocument {
 		 * Strategy used to assign UUIDs to newly discovered accounts.
 		 */
 		private @NotNull UniqueIdMode uniqueIdMode;
-		private @NotNull Routing routing;
-		private @NotNull Sessions sessions;
-		private @NotNull InitialPrompt initialPrompt;
-		private @NotNull AuthenticationScenario authentication;
-		private @NotNull RegistrationScenario registration;
-		private @NotNull MigrationScenario migration;
-		private @NotNull Sentinels sentinels;
+		private @NotNull Routing routing = new Routing();
+		private @NotNull Sessions sessions = new Sessions();
+		private @NotNull InitialPrompt initialPrompt = new InitialPrompt();
+		private @NotNull Scenarios scenarios = new Scenarios();
+		private @NotNull Sentinels sentinels = new Sentinels();
 
 		/**
 		 * Returns handshake instruction TTL in milliseconds with validation.
@@ -106,6 +105,7 @@ public class Settings extends ConfigDocument {
 
 			return prepareStateTtl.toMillis();
 		}
+
 	}
 
 	@Getter
@@ -204,16 +204,50 @@ public class Settings extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Sessions {
-		private @NotNull Duration defaultTtl;
-		private @NotNull Duration refreshTtl;
 		/**
 		 * Default policy for concurrent sessions.
 		 */
 		private @NotNull SessionConcurrencyPolicy concurrencyPolicy;
 		/**
-		 * Policy overrides keyed by provider id.
+		 * Time-to-live used to keep live-session cache entries available while the player is online.
 		 */
-		private @NotNull Map<String, SessionConcurrencyPolicy> concurrencyOverrides = new HashMap<>();
+		private @NotNull Duration activeTtl;
+		/**
+		 * Recognition policy for reconnecting players.
+		 */
+		private @NotNull Recognition recognition = new Recognition();
+
+		public long activeTtlMillis() {
+			if (activeTtl.isZero() || activeTtl.isNegative())
+				throw new IllegalStateException("settings.connection.sessions.activeTtl must be positive");
+
+			return activeTtl.toMillis();
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Recognition {
+			private boolean enabled;
+			private @NotNull Duration snapshotTtl;
+			private @NotNull java.util.List<RecognitionSignal> defaultSignals = new java.util.ArrayList<>();
+
+			public long snapshotTtlMillis() {
+				if (snapshotTtl.isZero() || snapshotTtl.isNegative())
+					throw new IllegalStateException("settings.connection.sessions.recognition.snapshotTtl must be positive");
+
+				return snapshotTtl.toMillis();
+			}
+		}
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Scenarios {
+		private @NotNull AuthenticationScenario authentication = new AuthenticationScenario();
+		private @NotNull RegistrationScenario registration = new RegistrationScenario();
+		private @NotNull MigrationScenario migration = new MigrationScenario();
 	}
 
 	@Getter
@@ -272,13 +306,6 @@ public class Settings extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class AuthenticationScenario extends Scenario {
-		/**
-		 * Policy for concurrent sessions when a player is already online.
-		 */
-		private @NotNull SessionConcurrencyPolicy sessionConcurrencyPolicy;
-		/**
-		 * Policy for concurrent in-flight pipelines for the same identity.
-		 */
 		private @NotNull PipelineConcurrencyPolicy pipelineConcurrencyPolicy;
 	}
 

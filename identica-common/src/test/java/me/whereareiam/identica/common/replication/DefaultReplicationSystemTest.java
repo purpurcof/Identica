@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Default Replication System")
 class DefaultReplicationSystemTest {
@@ -44,6 +45,22 @@ class DefaultReplicationSystemTest {
 		assertEquals(1, adapter.putCalls);
 		assertEquals("replicated", adapter.lastNamespace);
 		assertEquals("key", adapter.lastKey);
+	}
+
+	@DisplayName("Builder default TTL is applied when a cache write omits an explicit TTL")
+	@Test
+	void builderDefaultTtlIsApplied() {
+		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
+		DefaultReplicationSystem system = new DefaultReplicationSystem(adapter);
+		system.setDefaultCodecFactory(ReplicationTestFixtures.stringCodecFactory());
+
+		ReplicatedCache<String> cache = system.cache("replicated")
+				.defaultTtl(1500)
+				.replicated(ReplicationTestFixtures.stringType());
+		cache.put("key", "value").join();
+
+		assertEquals(1500, adapter.lastTtlMs);
+		assertTrue(cache.defaultTtlMs() >= 1500);
 	}
 
 	@DisplayName("Updating the default codec factory affects existing channels")

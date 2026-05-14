@@ -98,7 +98,7 @@ public class CredentialMigrationConfirmStep extends AbstractCredentialStep {
 	private long migrationTtlMs() {
 		Settings settings = coreSettingsProvider.get();
 		if (settings == null) return 0L;
-		return settings.getConnection().getMigration().pipelineTtlMillis();
+		return settings.getConnection().getScenarios().getMigration().pipelineTtlMillis();
 	}
 
 	private String joinRegisterPrompt(CredentialMessages messages) {

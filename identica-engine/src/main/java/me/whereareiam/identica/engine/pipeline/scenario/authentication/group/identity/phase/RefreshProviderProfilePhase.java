@@ -6,13 +6,17 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.IdentityState;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
+import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.model.session.SessionRecognitionSnapshot;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,6 +28,7 @@ import java.util.concurrent.CompletionStage;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class RefreshProviderProfilePhase implements PipelinePhase<IdentityState> {
 	private final ProviderProfilePersistenceService providerProfilePersistenceService;
+	private final SessionRecognitionStore sessionRecognitionStore;
 	private final Provider<Messages> messagesProvider;
 
 	@Override
@@ -60,6 +65,10 @@ public class RefreshProviderProfilePhase implements PipelinePhase<IdentityState>
 		}
 
 		AccountProviderProfile profile = state.getProfile();
+		AuthContext authContext = pipelineState.getScenario(pipelineState.getPipelineType()) instanceof AuthContext context
+				? context
+				: null;
+		ConnectionIdentity.Origin origin = authContext != null ? authContext.getIdentity().getOrigin() : null;
 		if (profile == null) {
 			profile = AccountProviderProfile.builder()
 					.providerId(provider.getProviderId())
@@ -69,13 +78,20 @@ public class RefreshProviderProfilePhase implements PipelinePhase<IdentityState>
 		}
 
 		String candidate = provider.getProviderUsername().trim();
-		if (!candidate.equals(profile.getProviderUsername())) {
-			AccountProviderProfile updated = profile.toBuilder()
-					.providerUsername(candidate)
-					.build();
-			AccountProviderProfile stored = providerProfilePersistenceService.upsert(updated);
-			state.setProfile(stored);
-		}
+		AccountProviderProfile updated = profile.toBuilder()
+				.providerUsername(candidate)
+				.build();
+		AccountProviderProfile stored = providerProfilePersistenceService.upsert(updated);
+		state.setProfile(stored);
+		sessionRecognitionStore.save(SessionRecognitionSnapshot.builder()
+				.providerId(provider.getProviderId())
+				.providerSubject(provider.getProviderSubject())
+				.providerUsername(candidate)
+				.lastIp(authContext != null ? authContext.getIp() : null)
+				.lastVirtualHost(origin != null ? origin.getHost() : null)
+				.lastVirtualPort(origin != null ? origin.getPort() : null)
+				.capturedAt(System.currentTimeMillis())
+				.build());
 
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
 	}

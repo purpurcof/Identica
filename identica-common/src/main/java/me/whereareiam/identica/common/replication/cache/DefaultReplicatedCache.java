@@ -2,11 +2,11 @@ package me.whereareiam.identica.common.replication.cache;
 
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.replication.cache.ReplicatedCache;
-import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.model.replication.ReplicationEnvelope;
 import me.whereareiam.identica.model.replication.ReplicationPage;
 import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.replication.ReplicationAdapter;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.replication.codec.SnapshotCodecFactory;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +21,7 @@ public final class DefaultReplicatedCache<T, S> implements ReplicatedCache<T> {
 	private final ReplicationAdapter adapter;
 	private final ReplicationType<T, S> type;
 	private final SnapshotCodecFactory codecFactory;
+	private final long defaultTtlMs;
 
 	@Override
 	public @NotNull CompletableFuture<Optional<T>> get(String key) {
@@ -106,6 +107,11 @@ public final class DefaultReplicatedCache<T, S> implements ReplicatedCache<T> {
 		byte[] envelope = ReplicationEnvelope.encode(type.version(), expiresAt, payload);
 
 		return local.thenCompose(ignored -> adapter.put(name, key, envelope, ttlMs));
+	}
+
+	@Override
+	public long defaultTtlMs() {
+		return defaultTtlMs;
 	}
 
 	@Override

@@ -27,9 +27,12 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.account.AccountPrepareEvent;
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionDecision;
+import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.config.Messages;
@@ -67,8 +70,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -90,6 +92,8 @@ class PreparePipelineTest {
 	private EventManager eventManager;
 	@Mock
 	private PipelineStateStore pipelineStateStore;
+	@Mock
+	private UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
 
 	@DisplayName("Profile preparation builds a transient account and applies the event decision")
 	@Test
@@ -241,6 +245,8 @@ class PreparePipelineTest {
 		), 1_000L);
 
 		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
+		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+				.thenReturn(allowedDecision());
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
 				.thenReturn(Optional.of(pendingMigrationState));
@@ -256,6 +262,233 @@ class PreparePipelineTest {
 		assertNotNull(decision);
 		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
 		assertEquals(0, premiumPolicy.invocations);
+	}
+
+	@DisplayName("Handshake preparation skips provider-scoped handshake policies on blocked untrusted IPs")
+	@Test
+	void handshakeStageSkipsScopedPoliciesOnBlockedUntrustedIp() {
+		ConnectionIdentity identity = identity("MigratingPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratingPlayer|127.0.0.1|premium.example.com|25565";
+
+		PipelineState pendingMigrationState = PipelineState.initial();
+		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
+		MigrationContext migrationContext = MigrationContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "MigratingPlayer", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build();
+		ProviderContext providerContext = ProviderContext.of("premium", null, "MigratingPlayer", ProviderOrigin.AUTO);
+		migrationContext.setProvider(providerContext);
+		pendingMigrationState.setScenario(migrationContext);
+		pendingMigrationState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.USER,
+				UUID.randomUUID()
+		), 1_000L);
+
+		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
+		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+				.thenReturn(blockedDecision());
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
+		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
+				.thenReturn(Optional.of(pendingMigrationState));
+
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.HANDSHAKE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(0, premiumPolicy.invocations);
+	}
+
+	@DisplayName("Premium auto-recognition handshake path is skipped on blocked untrusted IPs")
+	@Test
+	void premiumAutoRecognitionHandshakePathIsSkippedOnBlockedUntrustedIp() {
+		ConnectionIdentity identity = identity("MigratingPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratingPlayer|127.0.0.1|premium.example.com|25565";
+
+		PipelineState pendingMigrationState = PipelineState.initial();
+		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
+		MigrationContext migrationContext = MigrationContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "MigratingPlayer", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build();
+		ProviderContext providerContext = ProviderContext.of("premium", null, "MigratingPlayer", ProviderOrigin.AUTO);
+		migrationContext.setProvider(providerContext);
+		pendingMigrationState.setScenario(migrationContext);
+		pendingMigrationState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.USER,
+				UUID.randomUUID()
+		), 1_000L);
+
+		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
+		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+				.thenReturn(blockedDecision());
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
+		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
+				.thenReturn(Optional.of(pendingMigrationState));
+
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.HANDSHAKE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(0, premiumPolicy.invocations);
+	}
+
+	@DisplayName("Provider-scoped handshake still runs when the provider override allows recognition")
+	@Test
+	void handshakeStageRunsScopedPolicyWhenOverrideAllowsRecognition() {
+		ConnectionIdentity identity = identity("MigratingPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratingPlayer|127.0.0.1|premium.example.com|25565";
+
+		PipelineState pendingMigrationState = PipelineState.initial();
+		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
+		MigrationContext migrationContext = MigrationContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "MigratingPlayer", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build();
+		ProviderContext providerContext = ProviderContext.of("premium", null, "MigratingPlayer", ProviderOrigin.AUTO);
+		migrationContext.setProvider(providerContext);
+		pendingMigrationState.setScenario(migrationContext);
+		pendingMigrationState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.USER,
+				UUID.randomUUID()
+		), 1_000L);
+
+		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
+		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+				.thenReturn(allowedDecision());
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
+		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
+				.thenReturn(Optional.of(pendingMigrationState));
+
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.HANDSHAKE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(1, premiumPolicy.invocations);
+	}
+
+	@DisplayName("Handshake still runs for explicitly selected providers on blocked untrusted IPs")
+	@Test
+	void handshakeStageRunsForExplicitProviderSelectionOnUntrustedIp() {
+		ConnectionIdentity identity = identity("MigratingPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratingPlayer|127.0.0.1|premium.example.com|25565";
+
+		PipelineState pendingMigrationState = PipelineState.initial();
+		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
+		MigrationContext migrationContext = MigrationContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "MigratingPlayer", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build();
+		ProviderContext providerContext = ProviderContext.of("premium", null, "MigratingPlayer", ProviderOrigin.MANUAL);
+		migrationContext.setProvider(providerContext);
+		pendingMigrationState.setScenario(migrationContext);
+		pendingMigrationState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.USER,
+				UUID.randomUUID()
+		), 1_000L);
+
+		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
+		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+				.thenReturn(allowedDecision());
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
+		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
+				.thenReturn(Optional.of(pendingMigrationState));
+
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.HANDSHAKE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(1, premiumPolicy.invocations);
+	}
+
+	@DisplayName("Non-provider-scoped handshake policies still run when provider-scoped recognition is blocked")
+	@Test
+	void handshakeStageKeepsNonProviderScopedPoliciesWhenScopedRecognitionBlocked() {
+		ConnectionIdentity identity = identity("MigratingPlayer");
+		TestPrepareStateStore prepareStateStore = new TestPrepareStateStore();
+		PreparePipeline pipeline = pipeline(prepareStateStore);
+		String connectionKey = "MigratingPlayer|127.0.0.1|premium.example.com|25565";
+
+		PipelineState pendingMigrationState = PipelineState.initial();
+		pendingMigrationState.setPipelineType(PipelineType.MIGRATION);
+		MigrationContext migrationContext = MigrationContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "MigratingPlayer", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build();
+		ProviderContext providerContext = ProviderContext.of("premium", null, "MigratingPlayer", ProviderOrigin.AUTO);
+		migrationContext.setProvider(providerContext);
+		pendingMigrationState.setScenario(migrationContext);
+		pendingMigrationState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.USER,
+				UUID.randomUUID()
+		), 1_000L);
+
+		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
+		CountingHandshakePolicy globalPolicy = new CountingHandshakePolicy();
+		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+				.thenReturn(blockedDecision());
+		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy, globalPolicy));
+		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
+				.thenReturn(Optional.of(pendingMigrationState));
+
+		PrepareDecision decision = pipeline.prepare(PrepareRequest.builder()
+						.stage(PrepareStage.HANDSHAKE)
+						.connectionKey(connectionKey)
+						.identity(identity)
+						.build())
+				.toCompletableFuture()
+				.join();
+
+		assertNotNull(decision);
+		assertEquals(PrepareDecision.Status.ALLOW, decision.getStatus());
+		assertEquals(0, premiumPolicy.invocations);
+		assertEquals(1, globalPolicy.invocations);
 	}
 
 	@DisplayName("Premium profile preparation reuses the UUID from an existing linked account")
@@ -513,7 +746,7 @@ class PreparePipelineTest {
 				new RestorePrepareStatePhase(prepareStateStore),
 				new ResolveEntrypointPhase(providerOperations, contextResolver),
 				new ResolvePendingMigrationContextPhase(pipelineStateStore),
-				new EvaluateHandshakePhase(handshakeStore),
+				new EvaluateHandshakePhase(handshakeStore, untrustedIpRecognitionPolicy),
 				new FinalizeHandshakePhase(eventManager, Messages::new),
 				new ResolveProfilePhase(providerOperations, contextResolver),
 				new ResolvePendingMigrationAccountPhase(
@@ -544,6 +777,18 @@ class PreparePipelineTest {
 		ConnectionIdentity identity = new ConnectionIdentity(username, "127.0.0.1");
 		identity.setOrigin(new ConnectionIdentity.Origin("premium.example.com", 25565));
 		return identity;
+	}
+
+	private UntrustedIpRecognitionDecision allowedDecision() {
+		return new UntrustedIpRecognitionDecision(
+				UntrustedIpRecognitionDecision.Outcome.ALLOWED_IP_NOT_MATCHED
+		);
+	}
+
+	private UntrustedIpRecognitionDecision blockedDecision() {
+		return new UntrustedIpRecognitionDecision(
+				UntrustedIpRecognitionDecision.Outcome.BLOCKED_UNTRUSTED_IP
+		);
 	}
 
 	private static final class TestPrepareStateStore implements PrepareStateStore {
@@ -595,6 +840,16 @@ class PreparePipelineTest {
 		public java.util.concurrent.CompletionStage<HandshakeDecision> evaluate(
 				HandshakeRequest request
 		) {
+			invocations++;
+			return java.util.concurrent.CompletableFuture.completedFuture(HandshakeDecision.allow());
+		}
+	}
+
+	private static final class CountingHandshakePolicy implements HandshakePolicy {
+		private int invocations;
+
+		@Override
+		public java.util.concurrent.CompletionStage<HandshakeDecision> evaluate(HandshakeRequest request) {
 			invocations++;
 			return java.util.concurrent.CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}

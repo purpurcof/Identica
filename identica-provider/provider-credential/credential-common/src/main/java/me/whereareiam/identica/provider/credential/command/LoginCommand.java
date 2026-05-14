@@ -105,11 +105,11 @@ public class LoginCommand {
 
 		Settings.Connection connection = settings.getConnection();
 		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getMigration().pipelineTtlMillis();
+			return connection.getScenarios().getMigration().pipelineTtlMillis();
 		if (pipelineType == PipelineType.AUTHENTICATION)
-			return connection.getAuthentication().pipelineTtlMillis();
+			return connection.getScenarios().getAuthentication().pipelineTtlMillis();
 
-		return connection.getRegistration().pipelineTtlMillis();
+		return connection.getScenarios().getRegistration().pipelineTtlMillis();
 	}
 
 	private PipelineStateReference reference(@NotNull Identity identity) {

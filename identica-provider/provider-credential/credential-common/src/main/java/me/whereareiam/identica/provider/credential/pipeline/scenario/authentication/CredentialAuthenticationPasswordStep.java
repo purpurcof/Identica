@@ -116,7 +116,7 @@ public class CredentialAuthenticationPasswordStep extends AbstractCredentialStep
 	private long authenticationTtlMs() {
 		Settings settings = coreSettingsProvider.get();
 		if (settings == null) return 0L;
-		return settings.getConnection().getAuthentication().pipelineTtlMillis();
+		return settings.getConnection().getScenarios().getAuthentication().pipelineTtlMillis();
 	}
 
 	private @NotNull PipelineStateReference reference(@NotNull ScenarioContext context) {

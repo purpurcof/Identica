@@ -30,7 +30,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				ReplicationTestFixtures.stringType(),
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		assertEquals(Optional.of("value"), cache.get("key").join());
@@ -46,7 +47,8 @@ class DefaultReplicatedCacheTest {
 				new InMemoryLocalCache<>(),
 				adapter,
 				ReplicationTestFixtures.stringType(),
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		assertEquals(Optional.empty(), cache.getFresh(null).join());
@@ -66,7 +68,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				ReplicationTestFixtures.stringType(),
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		assertEquals(Optional.of("value"), cache.getFresh("key").join());
@@ -89,7 +92,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				type,
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		assertEquals(Optional.of("remote"), cache.getFresh("key").join());
@@ -114,7 +118,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				type,
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		assertEquals(Optional.empty(), cache.getFresh("key").join());
@@ -139,7 +144,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				type,
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		assertEquals(Optional.empty(), cache.getFresh("key").join());
@@ -175,7 +181,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				type,
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		assertEquals(Optional.empty(), cache.getFresh("key").join());
@@ -195,7 +202,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				type,
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		cache.put("key", "value", 400).join();
@@ -224,7 +232,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				type,
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		cache.put("key", "value", 0).join();
@@ -252,7 +261,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				type,
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		assertEquals(Optional.of("remote"), cache.consume("key").join());
@@ -271,7 +281,8 @@ class DefaultReplicatedCacheTest {
 				new InMemoryLocalCache<>(),
 				adapter,
 				ReplicationTestFixtures.stringType(),
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		ReplicationPage page = cache.listKeys(1, 10).join();
@@ -293,7 +304,8 @@ class DefaultReplicatedCacheTest {
 				local,
 				adapter,
 				ReplicationTestFixtures.stringType(),
-				ReplicationTestFixtures.stringCodecFactory()
+				ReplicationTestFixtures.stringCodecFactory(),
+				0L
 		);
 
 		ReplicationPage page = cache.listKeys(1, 10).join();

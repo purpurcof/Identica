@@ -5,14 +5,13 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -29,11 +28,12 @@ class OpenSessionCompletionPendingTest {
 	@Test
 	void authenticationOpenSessionStoresPendingCompletionInvocation() {
 		SessionService sessionService = mock(SessionService.class);
+		SessionRecognitionService recognitionService = mock(SessionRecognitionService.class);
 		EventManager eventManager = mock(EventManager.class);
 		OpenSessionPhase phase = new OpenSessionPhase(
 				sessionService,
+				recognitionService,
 				this::messages,
-				this::settings,
 				eventManager
 		);
 
@@ -59,10 +59,10 @@ class OpenSessionCompletionPendingTest {
 		PipelineState pipelineState = PipelineState.initial();
 		pipelineState.setPipelineType(PipelineType.AUTHENTICATION);
 
-		when(sessionService.open(session, SessionConcurrencyPolicy.REPLACE_EXISTING))
+		when(recognitionService.matches(any(), any(), any(), any(), any()))
+				.thenReturn(false);
+		when(sessionService.open(session))
 				.thenReturn(CompletableFuture.completedFuture(session));
-		when(sessionService.findByUniqueId(accountUniqueId))
-				.thenReturn(CompletableFuture.completedFuture(java.util.Optional.empty()));
 
 		phase.execute(pipelineState, state).toCompletableFuture().join();
 
@@ -71,7 +71,7 @@ class OpenSessionCompletionPendingTest {
 				&& requested.getPipelineType() == PipelineType.AUTHENTICATION
 				&& accountUniqueId.equals(requested.getSession().getUniqueId())
 				&& "credential".equals(requested.getSession().getProviderId())
-				&& !requested.isSessionReused()
+				&& !requested.isRecognitionApplied()
 		));
 	}
 
@@ -83,15 +83,5 @@ class OpenSessionCompletionPendingTest {
 		connection.setAuthentication(authentication);
 		messages.setConnection(connection);
 		return messages;
-	}
-
-	private Settings settings() {
-		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
-		Settings.AuthenticationScenario authentication = new Settings.AuthenticationScenario();
-		authentication.setSessionConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
-		connection.setAuthentication(authentication);
-		settings.setConnection(connection);
-		return settings;
 	}
 }

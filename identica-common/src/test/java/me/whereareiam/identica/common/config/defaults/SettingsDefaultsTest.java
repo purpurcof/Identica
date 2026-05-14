@@ -7,6 +7,7 @@ import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.PlatformType;
 import me.whereareiam.identica.type.event.EventPriority;
+import me.whereareiam.identica.type.session.RecognitionSignal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,8 +27,16 @@ class SettingsDefaultsTest {
 
 		assertNotNull(settings.getConnection());
 		assertNotNull(settings.getConnection().getRouting());
+		assertNotNull(settings.getConnection().getScenarios());
+		assertNotNull(settings.getConnection().getSessions().getRecognition());
 		assertNotNull(settings.getConnection().getRouting().getScenarios());
 		assertTrue(settings.getConnection().getRouting().getScenarios().isEmpty());
+		assertEquals(
+				java.util.List.of(RecognitionSignal.USERNAME, RecognitionSignal.IP, RecognitionSignal.VIRTUAL_HOST),
+				settings.getConnection().getSessions().getRecognition().getDefaultSignals()
+		);
+		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getActiveTtl());
+		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getRecognition().getValidity());
 	}
 
 	@DisplayName("Listener defaults match the active platform listener set")

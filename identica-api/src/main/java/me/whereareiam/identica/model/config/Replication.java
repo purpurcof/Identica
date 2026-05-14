@@ -70,6 +70,14 @@ public class Replication extends ConfigDocument {
 		private @NotNull String user;
 		private @NotNull String session;
 		private @NotNull String subject;
+		private @NotNull Recognition recognition;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Recognition {
+			private @NotNull String snapshot;
+		}
 	}
 
 	/**

@@ -11,7 +11,7 @@ import me.whereareiam.identica.provider.credential.config.CredentialSettings;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.CredentialValidationStep;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.authentication.CredentialAuthenticationPasswordStep;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.authentication.CredentialAuthenticationVerificationStep;
-import me.whereareiam.identica.provider.credential.pipeline.scenario.authentication.CredentialSessionReuseStep;
+import me.whereareiam.identica.provider.credential.pipeline.scenario.authentication.CredentialRecognitionStep;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.migration.CredentialMigrationAuthenticationStep;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.migration.CredentialMigrationConfirmStep;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.migration.CredentialMigrationRegistrationStep;
@@ -37,7 +37,7 @@ public class CredentialPipelineExtension implements PipelineExtension {
 	private final @NotNull CredentialRegistrationConfirmStep credentialRegistrationConfirmStep;
 
 	// Steps - Authentication
-	private final @NotNull CredentialSessionReuseStep sessionReuseStep;
+	private final @NotNull CredentialRecognitionStep recognitionStep;
 	private final @NotNull CredentialAuthenticationPasswordStep authenticationPasswordStep;
 	private final @NotNull CredentialAuthenticationVerificationStep authenticationVerificationStep;
 
@@ -112,7 +112,7 @@ public class CredentialPipelineExtension implements PipelineExtension {
 				PipelineScope.AUTHENTICATION,
 				providerId,
 				PipelineType.AUTHENTICATION,
-				sessionReuseStep
+				recognitionStep
 		);
 
 		registerForBothJourneyModes(

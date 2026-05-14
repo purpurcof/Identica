@@ -4,10 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.identity.session.SessionClosedEvent;
-import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.identity.session.SessionReplacedEvent;
+import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.SessionCloseRequest;
@@ -15,28 +16,35 @@ import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.model.scheduler.JobKey;
+import me.whereareiam.identica.model.scheduler.Origin;
+import me.whereareiam.identica.model.scheduler.PeriodicalRunnableTask;
+import me.whereareiam.identica.model.scheduler.Purpose;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.service.Scheduler;
 import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 @Singleton
 public class DefaultSessionService implements SessionService, EventListener {
+	private static final Origin ORIGIN = Origin.core(DefaultSessionService.class);
+	private static final Purpose PURPOSE = Purpose.of("live-session-keepalive");
+
 	private final Provider<Settings> settingsProvider;
 	private final Provider<Providers> providersProvider;
 	private final Provider<Replication> replicationProvider;
 	private final EventManager eventManager;
+	private final Scheduler scheduler;
+	private final long sessionCacheTtlMs;
 
 	private final ReplicatedCache<Session> userCache;
 	private final ReplicatedCache<Session> sessionCache;
@@ -47,6 +55,7 @@ public class DefaultSessionService implements SessionService, EventListener {
 			Provider<Settings> settingsProvider,
 			Provider<Providers> providersProvider,
 			EventManager eventManager,
+			Scheduler scheduler,
 			Provider<Replication> replicationProvider,
 			ReplicationSystem replicationSystem
 	) {
@@ -54,12 +63,21 @@ public class DefaultSessionService implements SessionService, EventListener {
 		this.providersProvider = providersProvider;
 		this.replicationProvider = replicationProvider;
 		this.eventManager = eventManager;
+		this.scheduler = scheduler;
 
 		Replication.Sessions sessions = resolveSessions(replicationProvider);
+		long defaultTtlMs = settingsProvider.get().getConnection().getSessions().activeTtlMillis();
 		ReplicationType<Session, Session> type = ReplicationType.identity(Session.class);
-		this.userCache = replicationSystem.cache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user")).replicated(type);
-		this.sessionCache = replicationSystem.cache(resolveNamespace(sessions.getSession(), "replication.cache.sessions.session")).replicated(type);
-		this.subjectCache = replicationSystem.cache(resolveNamespace(sessions.getSubject(), "replication.cache.sessions.subject")).replicated(type);
+		this.sessionCacheTtlMs = defaultTtlMs;
+		this.userCache = replicationSystem.cache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user"))
+				.defaultTtl(defaultTtlMs)
+				.replicated(type);
+		this.sessionCache = replicationSystem.cache(resolveNamespace(sessions.getSession(), "replication.cache.sessions.session"))
+				.defaultTtl(defaultTtlMs)
+				.replicated(type);
+		this.subjectCache = replicationSystem.cache(resolveNamespace(sessions.getSubject(), "replication.cache.sessions.subject"))
+				.defaultTtl(defaultTtlMs)
+				.replicated(type);
 		eventManager.register(this);
 	}
 
@@ -116,15 +134,6 @@ public class DefaultSessionService implements SessionService, EventListener {
 	}
 
 	@Override
-	public @NotNull CompletableFuture<Void> refresh(@Nullable UUID uniqueId) {
-		if (uniqueId == null) return CompletableFuture.completedFuture(null);
-		return findByUniqueId(uniqueId)
-				.thenCompose(existing -> existing.<CompletionStage<Void>>map(session -> open(session)
-								.thenApply(ignored -> null))
-						.orElseGet(() -> CompletableFuture.completedFuture(null)));
-	}
-
-	@Override
 	public @NotNull CompletableFuture<Page> list(int page, int pageSize) {
 		return userCache.listKeys(page, pageSize)
 				.thenApply(keys -> {
@@ -137,17 +146,17 @@ public class DefaultSessionService implements SessionService, EventListener {
 				});
 	}
 
-	private CompletableFuture<Void> putAll(Session session, long ttlMs) {
-		CompletableFuture<Void> futures = userCache.put(keyUser(session.getUniqueId()), session, ttlMs);
+	private CompletableFuture<Void> putAll(Session session) {
+		CompletableFuture<Void> futures = userCache.put(keyUser(session.getUniqueId()), session);
 
 		String sessionIdKey = keySession(session.getSessionId());
 		if (sessionIdKey != null) {
-			futures = futures.thenCompose(ignored -> sessionCache.put(sessionIdKey, session, ttlMs));
+			futures = futures.thenCompose(ignored -> sessionCache.put(sessionIdKey, session));
 		}
 
 		String subjectKey = keySubject(session.getProviderId(), session.getProviderSubject());
 		if (subjectKey != null) {
-			futures = futures.thenCompose(ignored -> subjectCache.put(subjectKey, session, ttlMs));
+			futures = futures.thenCompose(ignored -> subjectCache.put(subjectKey, session));
 		}
 
 		return futures;
@@ -171,6 +180,7 @@ public class DefaultSessionService implements SessionService, EventListener {
 
 	@IdenticEvent(EventOrder.LOWEST)
 	public void onSessionClosed(@NotNull SessionClosedEvent event) {
+		cancelKeepalive(event.getUniqueId());
 		Session session = event.getSession();
 		if (session != null) {
 			invalidateKeys(session).join();
@@ -178,6 +188,11 @@ public class DefaultSessionService implements SessionService, EventListener {
 		}
 
 		userCache.invalidate(keyUser(event.getUniqueId())).join();
+	}
+
+	@IdenticEvent
+	public void onShutdown(@NotNull IdenticaShutdownEvent event) {
+		scheduler.cancelByOrigin(ORIGIN);
 	}
 
 	private @NotNull CompletableFuture<Void> dispatchClose(@NotNull SessionCloseRequest request) {
@@ -233,10 +248,13 @@ public class DefaultSessionService implements SessionService, EventListener {
 			return CompletableFuture.completedFuture(null);
 
 		prepareSession(incoming);
-		long ttlMs = resolveTtl(incoming.getProviderId()).toMillis();
 		return cleanupForOpen(existing, incoming, policy)
-				.thenCompose(ignored -> putAll(incoming, ttlMs))
-				.thenApply(ignored -> incoming);
+				.thenCompose(ignored -> putAll(incoming))
+				.thenApply(ignored -> {
+					scheduleKeepalive(incoming);
+					return incoming;
+				})
+				;
 	}
 
 	private boolean shouldRejectIncoming(
@@ -263,25 +281,13 @@ public class DefaultSessionService implements SessionService, EventListener {
 	}
 
 	private SessionConcurrencyPolicy resolveConcurrencyPolicy(@Nullable String providerId) {
-		Settings.Sessions sessions = settingsProvider.get().getConnection().getSessions();
-		SessionConcurrencyPolicy policy = sessions.getConcurrencyPolicy();
-		SessionConcurrencyPolicy override = findOverride(sessions.getConcurrencyOverrides(), providerId);
-
-		return override != null ? override : policy;
-	}
-
-	private Duration resolveTtl(String providerId) {
-		Settings.Sessions sessions = settingsProvider.get().getConnection().getSessions();
-
-		Duration resolved = requireDuration(sessions.getDefaultTtl(), "settings.connection.sessions.defaultTtl");
 		Providers.ProviderEntry provider = findProvider(providerId);
-		Duration override = provider != null
-				? provider.getOverrides().getSessionTtl()
+		SessionConcurrencyPolicy override = provider != null
+				? provider.getOverrides().getSessionConcurrencyPolicy()
 				: null;
-
-		if (override != null) return requireDuration(override, "providers.providers." + providerId + ".overrides.sessionTtl");
-
-		return resolved;
+		return override != null
+				? override
+				: settingsProvider.get().getConnection().getSessions().getConcurrencyPolicy();
 	}
 
 	private @Nullable Providers.ProviderEntry findProvider(@Nullable String rawId) {
@@ -297,28 +303,6 @@ public class DefaultSessionService implements SessionService, EventListener {
 		}
 
 		return null;
-	}
-
-	private <T> @Nullable T findOverride(@NotNull Map<String, T> overrides, @Nullable String rawKey) {
-		String key = trimToNull(rawKey);
-		if (key == null) return null;
-
-		T exact = overrides.get(rawKey);
-		if (exact != null) return exact;
-
-		T trimmed = overrides.get(key);
-		if (trimmed != null) return trimmed;
-
-		return overrides.get(key.toLowerCase());
-	}
-
-	private Duration requireDuration(Duration duration, String key) {
-		if (duration == null)
-			throw new IllegalStateException(key + " is missing");
-		if (duration.isZero() || duration.isNegative())
-			throw new IllegalStateException(key + " must be positive");
-
-		return duration;
 	}
 
 	private String keySession(String sessionId) {
@@ -374,6 +358,46 @@ public class DefaultSessionService implements SessionService, EventListener {
 		if (key == null)
 			return CompletableFuture.completedFuture(Optional.empty());
 		return cache.get(key);
+	}
+
+	private void scheduleKeepalive(@NotNull Session session) {
+		UUID uniqueId = session.getUniqueId();
+
+        long intervalMs = keepaliveIntervalMs();
+		if (intervalMs <= 0)
+			return;
+
+		scheduler.schedule(PeriodicalRunnableTask.builder()
+				.key(jobKey(uniqueId))
+				.delay(intervalMs)
+				.period(intervalMs)
+				.runnable(() -> refreshLiveSession(uniqueId))
+				.build());
+	}
+
+	private void refreshLiveSession(@NotNull UUID uniqueId) {
+		findByUniqueId(uniqueId)
+				.thenCompose(existing -> existing
+						.map(this::putAll)
+						.orElseGet(() -> {
+							cancelKeepalive(uniqueId);
+							return CompletableFuture.completedFuture(null);
+						}))
+				.join();
+	}
+
+	private void cancelKeepalive(@Nullable UUID uniqueId) {
+		if (uniqueId == null) return;
+		scheduler.cancel(jobKey(uniqueId));
+	}
+
+	private long keepaliveIntervalMs() {
+		if (sessionCacheTtlMs <= 0) return 0L;
+		return Math.max(1000L, sessionCacheTtlMs / 2L);
+	}
+
+	private @NotNull JobKey jobKey(@NotNull UUID uniqueId) {
+		return JobKey.of(ORIGIN, PURPOSE, uniqueId.toString());
 	}
 
 	private static Replication.Sessions resolveSessions(Provider<Replication> replicationProvider) {

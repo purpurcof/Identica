@@ -485,71 +485,13 @@ If `false`, the exhausted intent stays in the store with status `EXHAUSTED`.
 
 ### Connection Sessions
 
-Session settings control how long sessions live and how concurrent sessions are handled.
+`connection.sessions` controls live-session behavior and optional reconnect recognition.
 
-#### defaultTtl
+- live session behavior for currently connected players
+- optional reconnect recognition for known players
 
-- Takes: a positive duration
-- Current default: `"2h"`
-- Affects: how long sessions live when no provider-specific override exists
-
-This is the base TTL used by the session cache.
-Every time a session is re-opened or refreshed, the TTL is written again.
-Provider-specific TTL exceptions belong to provider entries as `overrides.sessionTtl`.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  sessions:
-    defaultTtl: "4h"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "sessions": {
-      "defaultTtl": "4h"
-    }
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### refreshTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a duration
-- Current default: `"10m"`
-- Affects: how often Identica schedules automatic session refreshes for online identities
-
-The refresh coordinator starts a repeating task with this interval.
-A positive value keeps active sessions alive by reopening them periodically.
-A non-positive value effectively disables that scheduler.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  sessions:
-    refreshTtl: "5m"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "sessions": {
-      "refreshTtl": "5m"
-    }
-  }
-}
-```
-  </Tab>
-</Tabs>
+A session exists while a player is online.
+Recognition is a separate optional shortcut that can let a reconnecting player skip full provider authentication when the configured signals match a previously saved recognition state that is still valid.
 
 #### concurrencyPolicy
 
@@ -565,24 +507,113 @@ The policies behave like this:
 - `REPLACE_EXISTING`: remove the existing session and keep the new one
 - `REJECT_NEW`: keep the existing session and reject the new one
 
-This is the shared default used by registration, migration, and any code path that opens a session without a scenario-specific override.
+This is the default policy used when a session opens after authentication, registration, or migration.
+If one provider needs different behavior, set `overrides.sessionConcurrencyPolicy` for that provider in `providers.yml`.
 
-One implementation detail is worth knowing: the current session store is still keyed by account identity, so `ALLOW_MULTIPLE` should be read as "do not reject the incoming session" rather than as a promise that several independently stored sessions for the same account will coexist cleanly.
+#### activeTtl
 
-#### concurrencyOverrides
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"12h"`
+- Affects: how long live-session cache entries survive between keepalive refreshes while a player is still online
+
+Identica closes the logical session immediately on disconnect.
+This is not an offline remember-me duration.
+It only controls the backing cache survival time for active sessions.
+
+Use a value comfortably longer than transient replication delays and scheduler jitter.
+If it is too small, an online player can temporarily disappear from replicated session lookups before the next keepalive refresh rewrites the cache entry.
+
+#### recognition.enabled
 
 <Badge type="warning">Warning</Badge>
 
-- Takes: a map of provider id to session concurrency policy
-- Affects: provider-specific overrides for `connection.sessions.concurrencyPolicy`
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: the default reconnect-recognition policy inherited by providers that do not override it
+
+Recognition is disabled by default.
+It can make reconnects easier, but it relies on matching signals such as username, IP, and virtual host after the provider subject is already known.
+
+This is risky in environments where several players can appear to share the same network identity.
+That includes NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, reverse proxies, and hosting setups where different users can present the same IP path.
+
+Enable recognition only if you understand that tradeoff and accept the risk for your environment.
+
+#### recognition.untrustedIps.enabled
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: `true` or `false`
+- Current default: `true`
+- Affects: whether automatic reconnect recognition is suppressed for configured client IPs and CIDR ranges
+
+This guard only affects automatic provider recognition.
+It does not block explicit provider usage through entrypoint-selected or manually selected providers.
+
+Use this when reconnect recognition is generally acceptable, but there are client networks you do not trust for automatic recognition decisions.
+The generated defaults target the common “proxy forwarded a loopback/private proxy IP instead of the real client IP” failure mode.
+
+#### recognition.untrustedIps.entries
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: a list of exact IP literals or IPv4/IPv6 CIDR ranges
+- Current default: `["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]`
+- Affects: which client IPs suppress automatic reconnect recognition
+
+The generated defaults cover loopback and RFC1918 private ranges, which are often a sign that Identica is behind a proxy that is forwarding the wrong source IP.
+
+Entries must be one of:
+
+- an exact IP such as `127.0.0.1`
+- an IPv4 CIDR such as `192.168.0.0/16`
+- an IPv6 CIDR such as `2001:db8::/32`
+
+Malformed entries fail loudly during config use with a settings-path error that points to the bad list index.
+
+#### recognition.validity
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"12h"`
+- Affects: how long a previously authenticated player can still be recognized on reconnect
+
+This duration belongs to recognition, not to the live-session lifetime.
+Once it expires, the player simply goes through normal provider authentication on the next reconnect.
+
+#### recognition.defaultSignals
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: a list containing any of `"USERNAME"`, `"IP"`, `"VIRTUAL_HOST"`
+- Current default: `["USERNAME", "IP", "VIRTUAL_HOST"]`
+- Affects: the signal set inherited by providers that do not override their own recognition signals
 
 <Tabs items={["YAML", "JSON"]}>
   <Tab value="YAML">
 ```yaml
 connection:
   sessions:
-    concurrencyOverrides:
-      premium: "REJECT_NEW"
+    concurrencyPolicy: "REPLACE_EXISTING"
+    activeTtl: "12h"
+    recognition:
+      enabled: false
+      validity: "12h"
+      defaultSignals:
+        - "USERNAME"
+        - "IP"
+        - "VIRTUAL_HOST"
+      untrustedIps:
+        enabled: true
+        entries:
+          - "127.0.0.1"
+          - "::1"
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+          - "192.168.0.0/16"
 ```
   </Tab>
   <Tab value="JSON">
@@ -590,8 +621,16 @@ connection:
 {
   "connection": {
     "sessions": {
-      "concurrencyOverrides": {
-        "premium": "REJECT_NEW"
+      "concurrencyPolicy": "REPLACE_EXISTING",
+      "activeTtl": "12h",
+      "recognition": {
+        "enabled": false,
+        "validity": "12h",
+        "defaultSignals": ["USERNAME", "IP", "VIRTUAL_HOST"],
+        "untrustedIps": {
+          "enabled": true,
+          "entries": ["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+        }
       }
     }
   }
@@ -600,9 +639,10 @@ connection:
   </Tab>
 </Tabs>
 
-### Connection Authentication
+### Connection Scenarios Authentication
 
 These settings affect the authentication pipeline.
+Configure them under `connection.scenarios.authentication`.
 
 #### pipelineTtl
 
@@ -686,19 +726,10 @@ Behavior in current source:
 For most setups, `PREFER` is the better default.
 If you set `STRICT`, a flow that could have worked in the other mode may fail or end up with no useful steps instead of falling back.
 
-#### sessionConcurrencyPolicy
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: `"ALLOW_MULTIPLE"`, `"REPLACE_EXISTING"`, or `"REJECT_NEW"`
-- Current default: `"REPLACE_EXISTING"`
-- Affects: the policy used specifically when authentication opens a session after success
-
-This overrides the generic session default for the authentication success path.
-
-### Connection Registration
+### Connection Scenarios Registration
 
 These settings affect the registration pipeline.
+Configure them under `connection.scenarios.registration`.
 
 #### pipelineTtl
 
@@ -783,16 +814,19 @@ If `false`, the player still receives the normal provider-selection prompt.
   <Tab value="YAML">
 ```yaml
 connection:
-  registration:
-    autoSelectSingleProvider: true
+  scenarios:
+    registration:
+      autoSelectSingleProvider: true
 ```
   </Tab>
   <Tab value="JSON">
 ```json
 {
   "connection": {
-    "registration": {
-      "autoSelectSingleProvider": true
+    "scenarios": {
+      "registration": {
+        "autoSelectSingleProvider": true
+      }
     }
   }
 }
@@ -803,9 +837,10 @@ connection:
 This only changes the single-provider case.
 It does not auto-pick between multiple eligible providers.
 
-### Connection Migration
+### Connection Scenarios Migration
 
 These settings affect the migration pipeline.
+Configure them under `connection.scenarios.migration`.
 
 #### pipelineTtl
 

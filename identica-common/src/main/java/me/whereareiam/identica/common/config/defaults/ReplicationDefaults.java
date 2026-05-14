@@ -35,7 +35,11 @@ public class ReplicationDefaults implements MergeDefaultsProvider<Replication> {
 		sessions.setUser("identica:sessions:user");
 		sessions.setSession("identica:sessions:session");
 		sessions.setSubject("identica:sessions:subject");
+		Replication.Sessions.Recognition recognition = new Replication.Sessions.Recognition();
+		recognition.setSnapshot("identica:session-recognition:snapshot");
+		sessions.setRecognition(recognition);
 		cache.setSessions(sessions);
+
 		cache.setPipelineState("identica:pipeline-state");
 
 		replication.setRedis(redis);

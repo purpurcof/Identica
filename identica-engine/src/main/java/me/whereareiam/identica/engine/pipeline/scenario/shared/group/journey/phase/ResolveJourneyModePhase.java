@@ -10,18 +10,18 @@ import me.whereareiam.identica.event.pipeline.scenario.authentication.Authentica
 import me.whereareiam.identica.event.pipeline.scenario.registration.RegistrationScenarioStartedEvent;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.registration.RegistrationContext;
-import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
-import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
-import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
-import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
-import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
@@ -185,10 +185,10 @@ public class ResolveJourneyModePhase implements PipelinePhase<JourneyState> {
 	private @NotNull Settings.Scenario scenario(@NotNull PipelineType pipelineType) {
 		Settings.Connection connection = settingsProvider.get().getConnection();
 		return pipelineType == PipelineType.REGISTRATION
-				? connection.getRegistration()
+				? connection.getScenarios().getRegistration()
 				: pipelineType == PipelineType.MIGRATION
-						? connection.getMigration()
-						: connection.getAuthentication();
+						? connection.getScenarios().getMigration()
+						: connection.getScenarios().getAuthentication();
 	}
 
 	private @NotNull String providerId(InternalProvider provider) {

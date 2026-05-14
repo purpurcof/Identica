@@ -16,7 +16,7 @@ public class CompletionPendingState {
 	private @NotNull PipelineType pipelineType;
 	private @Nullable UUID connectionUniqueId;
 	private @Nullable UUID accountUniqueId;
-	private boolean sessionReused;
+	private boolean recognitionApplied;
 
 	public static class CompletionPendingStateBuilder {
 		public @NotNull CompletionPendingStateBuilder identicaUniqueId(@Nullable UUID accountUniqueId) {

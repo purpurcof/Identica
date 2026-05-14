@@ -153,7 +153,7 @@ public class DefaultMigrationService implements MigrationService {
 		if (!stored) return result(MigrationResultStatus.FAILED, null);
 
 		closeSession(accountUniqueId);
-		disconnect(connectionUniqueId, pendingMigration.username(), kickMessage);
+		disconnect(connectionUniqueId, kickMessage);
 		pending.remove(connectionUniqueId);
 
 		return result(MigrationResultStatus.STARTED, null);
@@ -203,7 +203,7 @@ public class DefaultMigrationService implements MigrationService {
 			return result(MigrationResultStatus.FAILED, null);
 
 		closeSession(accountUniqueId);
-		disconnect(connectionUniqueId, pendingMigration.username(), kickMessage);
+		disconnect(connectionUniqueId, kickMessage);
 		return result(MigrationResultStatus.STARTED, null);
 	}
 
@@ -236,10 +236,10 @@ public class DefaultMigrationService implements MigrationService {
 	}
 
 	private boolean storePendingMigration(@NotNull PendingConfirmationMigration pendingMigration, @NotNull UUID accountUniqueId) {
-		long ttlMs = settingsProvider.get().getConnection().getMigration().pipelineTtlMillis();
+		long ttlMs = settingsProvider.get().getConnection().getScenarios().getMigration().pipelineTtlMillis();
 		if (ttlMs <= 0) return false;
 
-		JourneyMode journeyMode = settingsProvider.get().getConnection().getMigration().getJourneyMode();
+		JourneyMode journeyMode = settingsProvider.get().getConnection().getScenarios().getMigration().getJourneyMode();
 		MigrationContext context = MigrationContext.builder()
 				.connectionUniqueId(pendingMigration.connectionUniqueId())
 				.identity(new ConnectionIdentity(
@@ -369,10 +369,11 @@ public class DefaultMigrationService implements MigrationService {
 		sessionService.close(accountUniqueId).join();
 	}
 
-	private void disconnect(@NotNull UUID connectionUniqueId, @Nullable String username, @Nullable String message) {
+	private void disconnect(@NotNull UUID connectionUniqueId, @Nullable String message) {
 		String resolved = message != null ? message : "";
 		Identity identity = identityService.findByConnectionUniqueId(connectionUniqueId).orElse(null);
 		if (identity == null) return;
+
 		identity.disconnect(Serializer.serialize(identity, resolved));
 	}
 

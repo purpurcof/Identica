@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DisplayName("Credential Completion Step")
 class CredentialCompletionStepTest {
-	@DisplayName("Uses the reused-session completion message for authentication resumes")
+	@DisplayName("Uses the recognition completion message for recognized authentication")
 	@Test
-	void authenticationUsesReusedSessionMessageWhenSessionWasReused() {
+	void authenticationUsesRecognitionMessageWhenRecognitionApplied() {
 		CredentialMessages messages = new CredentialMessagesDefaults().supply(new CredentialMessages());
 		InspectableCredentialCompletionStep step = new InspectableCredentialCompletionStep(() -> messages);
 
@@ -66,7 +66,7 @@ class CredentialCompletionStepTest {
 		assertEquals(messages.getCompletion().getMigration().getBody(), lines);
 	}
 
-	private CompletionContext context(boolean sessionReused, PipelineType pipelineType) {
+	private CompletionContext context(boolean recognitionApplied, PipelineType pipelineType) {
 		return CompletionContext.builder()
 				.identity(new TestIdentity())
 				.pipelineType(pipelineType)
@@ -77,7 +77,7 @@ class CredentialCompletionStepTest {
 						.originalUsername("PlayerOne")
 						.effectiveUsername("PlayerOne")
 						.build())
-				.sessionReused(sessionReused)
+				.recognitionApplied(recognitionApplied)
 				.build();
 	}
 

@@ -145,7 +145,7 @@ class EnrollmentStepTest {
 
 	private Settings settings(boolean autoSelectSingleProvider) {
 		Settings settings = new SettingsDefaults().supply(new Settings());
-		settings.getConnection().getRegistration().setAutoSelectSingleProvider(autoSelectSingleProvider);
+		settings.getConnection().getScenarios().getRegistration().setAutoSelectSingleProvider(autoSelectSingleProvider);
 		return settings;
 	}
 

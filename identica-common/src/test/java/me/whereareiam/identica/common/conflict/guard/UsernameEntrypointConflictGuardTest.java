@@ -68,7 +68,7 @@ class UsernameEntrypointConflictGuardTest {
 		assertEquals(ConflictResolution.Action.DENY, resolution.getAction());
 		assertNotNull(resolution.getMessage());
 		assertTrue(resolution.getMessage().contains("Premium Network"));
-		assertTrue(resolution.getMessage().contains("Offline Network"));
+		assertTrue(resolution.getMessage().contains("Credential Network"));
 		assertTrue(resolution.getMessage().contains("premium.example.com"));
 		assertTrue(resolution.getMessage().contains("credential.example.com"));
 	}

@@ -14,9 +14,9 @@ import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.platform.bungeecord.actor.BungeeCordCommandPlayer;
+import me.whereareiam.identica.platform.bungeecord.util.BaseComponentMapper;
 import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
 import net.kyori.adventure.text.Component;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import org.jetbrains.annotations.NotNull;
@@ -113,13 +113,13 @@ public class BungeeCordLoginDecisionAdapter {
 			@Override
 			public void deny(@NotNull Component message) {
 				audiences.player(player).sendMessage(message);
-				player.disconnect(TextComponent.fromLegacy(""));
+				player.disconnect(BaseComponentMapper.map(message));
 			}
 
 			@Override
 			public void requireReconnect(@NotNull Component message) {
 				audiences.player(player).sendMessage(message);
-				player.disconnect(TextComponent.fromLegacy(""));
+				player.disconnect(BaseComponentMapper.map(message));
 			}
 		};
 	}

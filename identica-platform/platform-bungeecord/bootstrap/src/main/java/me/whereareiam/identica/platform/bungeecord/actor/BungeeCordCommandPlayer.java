@@ -1,10 +1,10 @@
 package me.whereareiam.identica.platform.bungeecord.actor;
 
 import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.platform.bungeecord.util.BaseComponentMapper;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -50,7 +50,7 @@ public class BungeeCordCommandPlayer extends Identity {
 	@Override
 	public void disconnect(@NotNull Component reason) {
 		audience.sendMessage(reason);
-		player.disconnect(TextComponent.fromLegacy(""));
+		player.disconnect(BaseComponentMapper.map(reason));
 	}
 
 	@Override

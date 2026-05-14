@@ -14,12 +14,12 @@ import me.whereareiam.identica.model.routing.RoutingIntent;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
+import me.whereareiam.identica.platform.bungeecord.util.BaseComponentMapper;
 import me.whereareiam.identica.routing.RoutingAttemptService;
 import me.whereareiam.identica.type.routing.RoutingAttemptTrigger;
 import me.whereareiam.identica.type.routing.reason.RoutingAttemptFailureReason;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.ServerConnectRequest;
-import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import org.jetbrains.annotations.NotNull;
@@ -92,7 +92,7 @@ public class BungeeCordRoutingIntentListener implements EventListener {
 			);
 			eventManager.call(missingEvent);
 			if (missingEvent.isDisconnect() && missingEvent.getMessage() != null)
-				player.disconnect(TextComponent.fromLegacy(""));
+				player.disconnect(BaseComponentMapper.map(missingEvent.getMessage()));
 
 			routingAttemptService.record(RoutingAttemptReport.failed(
 					player.getUniqueId(),

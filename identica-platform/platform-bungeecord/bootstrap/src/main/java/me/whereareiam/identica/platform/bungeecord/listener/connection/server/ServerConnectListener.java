@@ -11,6 +11,7 @@ import me.whereareiam.identica.model.routing.RoutingIntent;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
+import me.whereareiam.identica.platform.bungeecord.util.BaseComponentMapper;
 import me.whereareiam.identica.routing.RoutingAttemptService;
 import me.whereareiam.identica.type.routing.RoutingAttemptTrigger;
 import me.whereareiam.identica.type.routing.reason.RoutingAttemptFailureReason;
@@ -28,7 +29,7 @@ public class ServerConnectListener implements DynamicListener<ServerConnectEvent
 	private final EventManager eventManager;
 
 	@Override
-	public void onEvent(net.md_5.bungee.api.event.ServerConnectEvent event) {
+	public void onEvent(ServerConnectEvent event) {
 		UUID connectionId = event.getPlayer().getUniqueId();
 		RoutingIntent currentIntent = routingAttemptService.current(connectionId).orElse(null);
 		if (currentIntent == null) return;
@@ -60,7 +61,7 @@ public class ServerConnectListener implements DynamicListener<ServerConnectEvent
 			);
 			eventManager.call(missingEvent);
 			if (missingEvent.isDisconnect() && missingEvent.getMessage() != null)
-				event.getPlayer().disconnect(net.md_5.bungee.api.chat.TextComponent.fromLegacy(""));
+				event.getPlayer().disconnect(BaseComponentMapper.map(missingEvent.getMessage()));
 
 			routingAttemptService.record(RoutingAttemptReport.failed(
 					connectionId,

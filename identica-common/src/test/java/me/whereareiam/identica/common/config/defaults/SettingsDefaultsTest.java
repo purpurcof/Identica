@@ -36,7 +36,7 @@ class SettingsDefaultsTest {
 				settings.getConnection().getSessions().getRecognition().getDefaultSignals()
 		);
 		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getActiveTtl());
-		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getRecognition().getSnapshotTtl());
+		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getRecognition().getValidity());
 	}
 
 	@DisplayName("Listener defaults match the active platform listener set")

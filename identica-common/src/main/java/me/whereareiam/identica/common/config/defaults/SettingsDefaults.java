@@ -39,7 +39,7 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		sessions.setActiveTtl(Duration.ofHours(12));
 		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
 		recognition.setEnabled(false);
-		recognition.setSnapshotTtl(Duration.ofHours(12));
+		recognition.setValidity(Duration.ofHours(12));
 		recognition.setDefaultSignals(java.util.List.of(
 				RecognitionSignal.USERNAME,
 				RecognitionSignal.IP,

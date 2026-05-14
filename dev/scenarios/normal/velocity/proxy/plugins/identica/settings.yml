@@ -29,7 +29,7 @@ connection:
     activeTtl: "12h"
     recognition:
       enabled: true
-      snapshotTtl: "12h"
+      validity: "12h"
       defaultSignals:
         - "USERNAME"
         - "IP"

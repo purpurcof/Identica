@@ -20,7 +20,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -229,14 +231,14 @@ public class Settings extends ConfigDocument {
 		@ToString
 		public static class Recognition {
 			private boolean enabled;
-			private @NotNull Duration snapshotTtl;
-			private @NotNull java.util.List<RecognitionSignal> defaultSignals = new java.util.ArrayList<>();
+			private @NotNull Duration validity;
+			private @NotNull List<RecognitionSignal> defaultSignals = new ArrayList<>();
 
-			public long snapshotTtlMillis() {
-				if (snapshotTtl.isZero() || snapshotTtl.isNegative())
-					throw new IllegalStateException("settings.connection.sessions.recognition.snapshotTtl must be positive");
+			public long validityMillis() {
+				if (validity.isZero() || validity.isNegative())
+					throw new IllegalStateException("settings.connection.sessions.recognition.validity must be positive");
 
-				return snapshotTtl.toMillis();
+				return validity.toMillis();
 			}
 		}
 	}

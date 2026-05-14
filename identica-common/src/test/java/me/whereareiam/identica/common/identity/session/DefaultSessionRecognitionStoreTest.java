@@ -72,7 +72,7 @@ class DefaultSessionRecognitionStoreTest {
 		Settings.Connection connection = new Settings.Connection();
 		Settings.Sessions sessions = new Settings.Sessions();
 		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
-		recognition.setSnapshotTtl(java.time.Duration.ofHours(12));
+		recognition.setValidity(java.time.Duration.ofHours(12));
 		sessions.setRecognition(recognition);
 		connection.setSessions(sessions);
 		settings.setConnection(connection);

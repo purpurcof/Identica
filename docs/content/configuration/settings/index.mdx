@@ -491,7 +491,7 @@ If `false`, the exhausted intent stays in the store with status `EXHAUSTED`.
 - optional reconnect recognition for known players
 
 A session exists while a player is online.
-Recognition is a separate optional shortcut that can let a reconnecting player skip full provider authentication when the configured signals match a stored recognition snapshot.
+Recognition is a separate optional shortcut that can let a reconnecting player skip full provider authentication when the configured signals match a previously saved recognition state that is still valid.
 
 #### concurrencyPolicy
 
@@ -541,16 +541,16 @@ That includes NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, reverse proxies, 
 
 Enable recognition only if you understand that tradeoff and accept the risk for your environment.
 
-#### recognition.snapshotTtl
+#### recognition.validity
 
 <Badge type="warning">Advanced</Badge>
 
 - Takes: a positive duration
 - Current default: `"12h"`
-- Affects: how long a saved recognition snapshot survives for reconnect recognition checks
+- Affects: how long a previously authenticated player can still be recognized on reconnect
 
-This TTL belongs to recognition, not to the live-session lifetime.
-If it expires, the player simply goes through normal provider authentication on the next reconnect.
+This duration belongs to recognition, not to the live-session lifetime.
+Once it expires, the player simply goes through normal provider authentication on the next reconnect.
 
 #### recognition.defaultSignals
 
@@ -569,7 +569,7 @@ connection:
     activeTtl: "12h"
     recognition:
       enabled: false
-      snapshotTtl: "12h"
+      validity: "12h"
       defaultSignals:
         - "USERNAME"
         - "IP"
@@ -585,7 +585,7 @@ connection:
       "activeTtl": "12h",
       "recognition": {
         "enabled": false,
-        "snapshotTtl": "12h",
+        "validity": "12h",
         "defaultSignals": ["USERNAME", "IP", "VIRTUAL_HOST"]
       }
     }

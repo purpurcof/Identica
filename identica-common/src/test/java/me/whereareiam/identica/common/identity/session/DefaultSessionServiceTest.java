@@ -249,7 +249,7 @@ class DefaultSessionServiceTest {
 		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		sessions.setActiveTtl(java.time.Duration.ofHours(12));
 		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
-		recognition.setSnapshotTtl(java.time.Duration.ofHours(12));
+		recognition.setValidity(java.time.Duration.ofHours(12));
 		sessions.setRecognition(recognition);
 		connection.setSessions(sessions);
 		settings.setConnection(connection);

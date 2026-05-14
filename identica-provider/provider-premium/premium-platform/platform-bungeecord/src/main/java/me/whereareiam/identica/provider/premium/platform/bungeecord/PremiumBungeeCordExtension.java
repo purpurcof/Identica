@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
+import me.whereareiam.identica.provider.premium.platform.bungeecord.listener.connection.PremiumLoginListener;
 import me.whereareiam.identica.provider.premium.platform.bungeecord.listener.connection.PremiumPostLoginListener;
 import me.whereareiam.identica.type.PlatformType;
 import org.jetbrains.annotations.NotNull;
@@ -18,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public final class PremiumBungeeCordExtension implements ProviderPlatformExtension {
 	private final DynamicListenerRegistry listenerRegistry;
+	private final PremiumLoginListener loginListener;
 	private final PremiumPostLoginListener postLoginListener;
 
 	@Override
@@ -32,6 +34,7 @@ public final class PremiumBungeeCordExtension implements ProviderPlatformExtensi
 
 	@Override
 	public void onEnable() {
+		listenerRegistry.register(loginListener);
 		listenerRegistry.register(postLoginListener);
 	}
 }

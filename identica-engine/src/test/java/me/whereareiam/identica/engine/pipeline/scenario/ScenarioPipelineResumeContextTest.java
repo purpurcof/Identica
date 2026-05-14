@@ -29,12 +29,12 @@ class ScenarioPipelineResumeContextTest {
 	@Test
 	void registrationResumePreservesIdenticaUniqueId() {
 		UUID connectionId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		TestRegistrationPipeline pipeline = new TestRegistrationPipeline();
 
 		RegistrationContext base = RegistrationContext.builder()
 				.connectionUniqueId(connectionId)
-				.identity(new ConnectionIdentity(identicaUniqueId, "PlayerOne", "1.1.1.1"))
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "1.1.1.1"))
 				.intendedServer("lobby")
 				.build();
 
@@ -45,19 +45,19 @@ class ScenarioPipelineResumeContextTest {
 				.build());
 
 		assertEquals(connectionId, merged.getConnectionUniqueId());
-		assertEquals(identicaUniqueId, merged.getIdenticaUniqueId(), "resume should keep the account UUID");
+		assertEquals(accountUniqueId, merged.getAccountUniqueId(), "resume should keep the account UUID");
 	}
 
 	@DisplayName("Authentication resumes preserve the account UUID from the original context")
 	@Test
 	void authenticationResumePreservesIdenticaUniqueId() {
 		UUID connectionId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		TestAuthenticationPipeline pipeline = new TestAuthenticationPipeline();
 
 		AuthContext base = AuthContext.builder()
 				.connectionUniqueId(connectionId)
-				.identity(new ConnectionIdentity(identicaUniqueId, "PlayerOne", "1.1.1.1"))
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "1.1.1.1"))
 				.intendedServer("lobby")
 				.build();
 
@@ -68,19 +68,19 @@ class ScenarioPipelineResumeContextTest {
 				.build());
 
 		assertEquals(connectionId, merged.getConnectionUniqueId());
-		assertEquals(identicaUniqueId, merged.getIdenticaUniqueId(), "resume should keep the account UUID");
+		assertEquals(accountUniqueId, merged.getAccountUniqueId(), "resume should keep the account UUID");
 	}
 
 	@DisplayName("Migration resumes preserve the account UUID from the original context")
 	@Test
 	void migrationResumePreservesIdenticaUniqueId() {
 		UUID connectionId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		TestMigrationPipeline pipeline = new TestMigrationPipeline();
 
 		MigrationContext base = MigrationContext.builder()
 				.connectionUniqueId(connectionId)
-				.identity(new ConnectionIdentity(identicaUniqueId, "PlayerOne", "1.1.1.1"))
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "1.1.1.1"))
 				.intendedServer("lobby")
 				.targetProviderId("premium")
 				.build();
@@ -92,7 +92,7 @@ class ScenarioPipelineResumeContextTest {
 				.build());
 
 		assertEquals(connectionId, merged.getConnectionUniqueId());
-		assertEquals(identicaUniqueId, merged.getIdenticaUniqueId(), "resume should keep the account UUID");
+		assertEquals(accountUniqueId, merged.getAccountUniqueId(), "resume should keep the account UUID");
 	}
 
 	private static final class TestRegistrationPipeline extends RegistrationPipeline {

@@ -33,7 +33,7 @@ public class SessionReplacedListener implements EventListener {
 
 	@IdenticEvent
 	public void onSessionReplaced(@NotNull SessionReplacedEvent event) {
-		identityService.find(event.getExistingSession().getUniqueId())
+		identityService.findByAccountUniqueId(event.getExistingSession().getUniqueId())
 				.ifPresent(identity -> identity.disconnect(Serializer.serialize(identity, String.join("\n",
 						messagesProvider.get()
 								.getConnection()

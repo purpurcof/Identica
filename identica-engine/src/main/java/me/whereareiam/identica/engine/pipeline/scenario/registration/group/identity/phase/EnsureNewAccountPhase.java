@@ -11,14 +11,14 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
-import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -77,7 +77,7 @@ public class EnsureNewAccountPhase implements PipelinePhase<IdentityState> {
 			UUID linkedUniqueId = existingLink.getUniqueId();
 
 			pipelineState.setScenario(context);
-			context.setIdenticaUniqueId(linkedUniqueId);
+			context.setAccountUniqueId(linkedUniqueId);
 			Account linkedAccount = accountPersistenceService.findByUniqueId(linkedUniqueId).orElse(null);
 			if (linkedAccount == null) {
 				state.setResult(PipelineResult.denied(accountAlreadyExistsMessage()));
@@ -99,7 +99,7 @@ public class EnsureNewAccountPhase implements PipelinePhase<IdentityState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		UUID reservedId = context.getIdenticaUniqueId();
+		UUID reservedId = context.getAccountUniqueId();
 		if (reservedId != null && accountPersistenceService.findByUniqueId(reservedId).isPresent()) {
 			state.setResult(PipelineResult.denied(accountAlreadyExistsMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));

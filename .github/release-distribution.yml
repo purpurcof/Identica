@@ -81,69 +81,144 @@ supported_game_versions: &supported_game_versions
   - "26.1.1"
   - "26.1.2"
 
+supported_velocity_versions: &supported_velocity_versions
+  - "3.5"
+
+release:
+  classification:
+    rules:
+      - phase: release
+        patterns:
+          - '^v?\d+\.\d+\.\d+$'
+      - phase: beta
+        patterns:
+          - '^v?\d+\.\d+\.\d+-rc\d+$'
+      - phase: alpha
+        patterns:
+          - '^dev-[0-9a-f]+$'
+    default_phase: release
+
 artifacts:
   identica:
     file: Identica-VELOCITY-{version}.jar
-    platform: velocity
-    game_versions: *supported_game_versions
-    loaders:
-      - velocity
+    platforms:
+      velocity:
+        loaders:
+          - velocity
+        game_versions: *supported_game_versions
+        platform_versions: *supported_velocity_versions
 
-  cracked-provider:
-    file: Identica-Cracked-{version}.jar
-    platform: velocity
-    game_versions: *supported_game_versions
-    loaders:
-      - velocity
+  credential-provider:
+    file: Identica-Credential-{version}.jar
+    platforms:
+      velocity:
+        loaders:
+          - velocity
+        game_versions: *supported_game_versions
+        platform_versions: *supported_velocity_versions
 
   premium-provider:
     file: Identica-Premium-{version}.jar
-    platform: velocity
-    game_versions: *supported_game_versions
-    loaders:
-      - velocity
+    platforms:
+      velocity:
+        loaders:
+          - velocity
+        game_versions: *supported_game_versions
+        platform_versions: *supported_velocity_versions
 
 publications:
   identica-modrinth:
-    provider: modrinth
+    provider:
+      id: modrinth
+      project_id: D26hHMI2
+      release_type_map:
+        release: release
+        beta: beta
+        alpha: alpha
     artifact: identica
-    project_id: D26hHMI2
+    platforms:
+      - velocity
 
-  cracked-provider-modrinth:
-    provider: modrinth
-    artifact: cracked-provider
-    project_id: cFnEyCND
-    dependencies:
-      - project_id: D26hHMI2
-        dependency_type: required
+  credential-provider-modrinth:
+    provider:
+      id: modrinth
+      project_id: cFnEyCND
+      release_type_map:
+        release: release
+        beta: beta
+        alpha: alpha
+      upload_loaders:
+        - java-agent
+      reclassify:
+        loaders:
+          - velocity
+      dependencies:
+        - project_id: D26hHMI2
+          dependency_type: required
+    artifact: credential-provider
+    platforms:
+      - velocity
 
   premium-provider-modrinth:
-    provider: modrinth
+    provider:
+      id: modrinth
+      project_id: OOO3uDTT
+      release_type_map:
+        release: release
+        beta: beta
+        alpha: alpha
+      upload_loaders:
+        - java-agent
+      reclassify:
+        loaders:
+          - velocity
+      dependencies:
+        - project_id: D26hHMI2
+          dependency_type: required
     artifact: premium-provider
-    project_id: OOO3uDTT
-    dependencies:
-      - project_id: D26hHMI2
-        dependency_type: required
+    platforms:
+      - velocity
 
   identica-hangar:
-    provider: hangar
+    provider:
+      id: hangar
+      project_slug: "whereareiam/Identica"
+      release_type_map:
+        release: Release
+        beta: Beta
+        alpha: Beta
     artifact: identica
-    project_slug: "whereareiam/Identica"
+    platforms:
+      - velocity
 
-  cracked-provider-hangar:
-    provider: hangar
-    artifact: cracked-provider
-    project_slug: "whereareiam/Identica-Offline-Provider"
-    dependencies:
-      - kind: hangar
-        name: Identica
-        required: true
+  credential-provider-hangar:
+    provider:
+      id: hangar
+      project_slug: "whereareiam/Identica-Offline-Provider"
+      release_type_map:
+        release: Release
+        beta: Beta
+        alpha: Beta
+      dependencies:
+        - kind: hangar
+          name: Identica
+          required: true
+    artifact: credential-provider
+    platforms:
+      - velocity
 
   premium-provider-hangar:
-    provider: hangar
+    provider:
+      id: hangar
+      project_slug: "whereareiam/Identica-Premium-Provider"
+      release_type_map:
+        release: Release
+        beta: Beta
+        alpha: Beta
+      dependencies:
+        - kind: hangar
+          name: Identica
+          required: true
     artifact: premium-provider
-    project_slug: "whereareiam/Identica-Premium-Provider"
-    dependencies:
-      - kind: hangar
-        name: Identica
-        required: true
+    platforms:
+      - velocity

@@ -1,11 +1,8 @@
 package me.whereareiam.identica.model.migration;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.identity.IdentityReference;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
@@ -23,7 +20,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class MigrationContext implements ScenarioContext, PipelineStateItem {
-	private @Nullable UUID connectionUniqueId;
+	@Builder.Default
+	private @NotNull IdentityReference identityReference = new IdentityReference();
 	private @NotNull ConnectionIdentity identity;
 	private @Nullable String intendedServer;
 
@@ -35,4 +33,34 @@ public class MigrationContext implements ScenarioContext, PipelineStateItem {
 
 	@Setter
 	private @Nullable String targetProviderId;
+
+	@Override
+	public @NotNull IdentityReference getIdentityReference() {
+        if (identityReference.getConnectionUniqueId() == null)
+            identityReference.setConnectionUniqueId(identity.getConnectionUniqueId());
+        if (identityReference.getObservedUniqueId() == null)
+            identityReference.setObservedUniqueId(identity.getObservedUniqueId());
+        if (identityReference.getAccountUniqueId() == null)
+            identityReference.setAccountUniqueId(identity.getAccountUniqueId());
+
+        return identityReference;
+	}
+
+	public static class MigrationContextBuilder {
+		private final IdentityReference identityReference = new IdentityReference();
+
+		public @NotNull MigrationContextBuilder connectionUniqueId(@Nullable UUID connectionUniqueId) {
+			identityReference.setConnectionUniqueId(connectionUniqueId);
+			return this;
+		}
+
+		public @NotNull MigrationContextBuilder accountUniqueId(@Nullable UUID accountUniqueId) {
+			identityReference.setAccountUniqueId(accountUniqueId);
+			return this;
+		}
+
+		public @NotNull MigrationContext build() {
+			return new MigrationContext(identityReference, identity, intendedServer, provider, transition, targetProviderId);
+		}
+	}
 }

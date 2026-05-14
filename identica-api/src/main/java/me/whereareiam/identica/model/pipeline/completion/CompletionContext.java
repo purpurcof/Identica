@@ -1,10 +1,6 @@
 package me.whereareiam.identica.model.pipeline.completion;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.provider.InternalProvider;
@@ -24,9 +20,9 @@ public class CompletionContext {
 	private @NotNull PipelineType pipelineType;
 	private @NotNull Session session;
 	private @Nullable InternalProvider provider;
-	private boolean sessionReused;
+	private boolean recognitionApplied;
 
-	public @Nullable UUID getIdenticaUniqueId() {
+	public @Nullable UUID getAccountUniqueId() {
 		return session.getUniqueId();
 	}
 

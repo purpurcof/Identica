@@ -62,4 +62,3 @@ public class DefaultProviderProfilePersistenceService implements ProviderProfile
 		repository.delete(providerId, providerSubject);
 	}
 }
-

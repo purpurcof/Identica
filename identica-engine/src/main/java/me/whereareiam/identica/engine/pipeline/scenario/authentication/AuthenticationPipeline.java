@@ -6,8 +6,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.event.pipeline.scenario.authentication.AuthenticationContextBuiltEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
@@ -16,8 +16,8 @@ import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -48,7 +48,7 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 
 	@Override
 	protected @Nullable ScenarioContext buildContext(@NotNull ConnectionRequest request) {
-		if (request.getIdentity().getUniqueId() == null) {
+		if (request.getIdentity().getAccountUniqueId() == null) {
 			UUID fallbackUniqueId = request.getConnectionUniqueId();
 			String username = request.getUsername();
 			if (fallbackUniqueId == null && username != null)
@@ -60,7 +60,7 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 			}
 
 			Logger.warn("%s request missing Identica UUID, applying fallback UUID %s", type(), fallbackUniqueId);
-			request.getIdentity().setUniqueId(fallbackUniqueId);
+			request.getIdentity().setAccountUniqueId(fallbackUniqueId);
 		}
 
 		AuthContext context = AuthContext.builder()
@@ -116,7 +116,7 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 	@Override
 	public boolean matchesNewScenario(@Nullable ConnectionRequest request) {
 		if (request == null) return false;
-		UUID uniqueId = request.getIdentity().getUniqueId();
+		UUID uniqueId = request.getIdentity().getAccountUniqueId();
 		if (uniqueId == null) return false;
 
 		return !providerLinkPersistenceService.findByUniqueId(uniqueId).isEmpty();

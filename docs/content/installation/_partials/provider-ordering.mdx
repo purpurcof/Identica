@@ -1,0 +1,34 @@
+Open the generated `providers` config and keep the generated structure as your base.
+In most cases, the defaults are already close to what you want.
+
+For typical mixed setups, it makes sense for `premium` to have a higher priority than `credential`.
+In practice, that means if Identica has to choose between those providers for the same player or entrypoint situation, `premium` wins before `credential`.
+That is the behavior most users expect.
+
+For the first pass, the important decisions are:
+
+- which providers stay enabled
+- which provider gets higher priority
+- whether entrypoint hostnames should map directly to a provider
+
+A practical starting point looks like this:
+
+```yaml
+providers:
+  - id: premium
+    displayName: "PR"
+    enabled: true
+    priority: 200
+    overrides:
+      sessionTtl: 12h
+    entrypoints:
+      - premium.example.com
+
+  - id: credential
+    displayName: "CR"
+    enabled: true
+    priority: 100
+    overrides: {}
+    entrypoints:
+      - credential.example.com
+```

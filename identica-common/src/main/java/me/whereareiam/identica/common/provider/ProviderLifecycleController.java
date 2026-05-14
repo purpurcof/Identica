@@ -5,24 +5,29 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.handshake.policy.HandshakePolicy;
-import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.common.config.ConfigInitializer;
 import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
 import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
 import me.whereareiam.identica.common.provider.injector.ProviderInjectorFactory;
+import me.whereareiam.identica.common.provider.resolver.ProviderPlatformExtensionResolver;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.conflict.ConflictService;
+import me.whereareiam.identica.database.schema.SchemaBootstrap;
+import me.whereareiam.identica.database.schema.SchemaContributor;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.provider.state.ProviderDisabledEvent;
 import me.whereareiam.identica.event.provider.state.ProviderEnabledEvent;
 import me.whereareiam.identica.event.provider.state.ProviderLoadedEvent;
 import me.whereareiam.identica.event.provider.state.ProviderUnloadedEvent;
+import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.provider.ProviderPlatformExtension;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
@@ -31,6 +36,7 @@ import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,14 +47,17 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<ProviderEligibilityResolver>> ELIGIBILITY_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProfileSubjectResolver>> PROFILE_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderMigrationPrecheck>> MIGRATION_PRECHECKS = new TypeLiteral<>() {};
+	private static final TypeLiteral<Set<SchemaContributor>> SCHEMA_CONTRIBUTORS = new TypeLiteral<>() {};
 
 	private final ProviderWorkingPathResolver workingPathResolver;
 	private final ProviderClassLoaderFactory classLoaderFactory;
 	private final ProviderDependencyResolver dependencyResolver;
 	private final ProviderInjectorFactory injectorFactory;
 	private final ProviderInstanceFactory instanceFactory;
+	private final ProviderPlatformExtensionResolver platformExtensionResolver;
 	private final ProviderResolverRegistry resolverRegistry;
 	private final ConflictService conflictService;
+	private final SchemaBootstrap schemaBootstrap;
 	private final EventManager eventManager;
 	private final HandshakeStore handshakeStore;
 
@@ -75,17 +84,28 @@ public class ProviderLifecycleController {
 			}
 
 			IdenticaProvider probeProvider = instanceFactory.instantiateProvider(providerClass);
-			if (probeProvider != null) {
-				probeProvider.setDescriptor(descriptor);
-				probeProvider.setWorkingPath(workingPath);
-			}
+				if (probeProvider != null) {
+					probeProvider.setDescriptor(descriptor);
+					probeProvider.setWorkingPath(workingPath);
+				}
 
-			dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
+				Class<? extends ProviderPlatformExtension> platformExtensionClass = platformExtensionResolver.resolve(probeProvider);
+				ProviderPlatformExtension probePlatformExtension = platformExtensionClass != null
+						? instanceFactory.instantiatePlatformExtension(platformExtensionClass)
+						: null;
 
-			Injector providerInjector = injectorFactory.create(workingPath, descriptor, probeProvider);
-			IdenticaProvider provider = instanceFactory.createInjectedProvider(
-					providerInjector,
-					providerClass,
+				dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
+
+				Injector providerInjector = injectorFactory.create(
+						workingPath,
+						descriptor,
+						probeProvider,
+						probePlatformExtension
+				);
+				applySchemaContributors(providerInjector);
+				IdenticaProvider provider = instanceFactory.createInjectedProvider(
+						providerInjector,
+						providerClass,
 					probeProvider
 			);
 			if (provider == null) {
@@ -94,12 +114,21 @@ public class ProviderLifecycleController {
 				return;
 			}
 
-			provider.setDescriptor(descriptor);
-			provider.setWorkingPath(workingPath);
+				provider.setDescriptor(descriptor);
+				provider.setWorkingPath(workingPath);
+				if (platformExtensionClass != null) {
+					ProviderPlatformExtension platformExtension = instanceFactory.createInjectedPlatformExtension(
+							providerInjector,
+							platformExtensionClass,
+							probePlatformExtension
+					);
+					provider.setPlatformExtension(platformExtension);
+				}
 
 			internal.setProvider(provider);
 			internal.setWorkingPath(workingPath);
 			internal.setClassLoader(classLoader);
+			prewarmProviderConfigs(providerInjector, internal);
 			storeBindings(internal, providerInjector);
 			internal.setState(ProviderState.LOADED);
 			if (checkRequirements(internal))
@@ -213,6 +242,11 @@ public class ProviderLifecycleController {
 				handshakeStore.registerPolicy(policy);
 	}
 
+	private void applySchemaContributors(Injector injector) {
+		for (SchemaContributor contributor : resolveSet(injector, SCHEMA_CONTRIBUTORS))
+			schemaBootstrap.apply(contributor);
+	}
+
 	private void unregisterProviderBindings(InternalProvider internal) {
 		if (internal == null) return;
 		Set<HandshakePolicy> policies = providerHandshakePolicies.remove(internal);
@@ -255,6 +289,16 @@ public class ProviderLifecycleController {
 	private void fireProviderUnloaded(InternalProvider internal) {
 		if (eventManager == null || internal == null) return;
 		eventManager.call(new ProviderUnloadedEvent(internal));
+	}
+
+	private void prewarmProviderConfigs(Injector providerInjector, InternalProvider internal) {
+		List<String> prepared = ConfigInitializer.initialize(
+				providerInjector,
+				type -> type.getSimpleName().endsWith("Provider")
+		);
+
+		if (!prepared.isEmpty())
+			Logger.info("Prepared provider configs for %s: %s", safeId(internal), String.join(", ", prepared));
 	}
 
 	private String safeId(InternalProvider internal) {

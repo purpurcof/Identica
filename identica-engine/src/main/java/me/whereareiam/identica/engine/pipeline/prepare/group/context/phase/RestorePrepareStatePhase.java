@@ -3,13 +3,13 @@ package me.whereareiam.identica.engine.pipeline.prepare.group.context.phase;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -40,7 +40,7 @@ public class RestorePrepareStatePhase implements PipelinePhase<PrepareGroupState
 			@NotNull PipelineState pipelineState,
 			@NotNull PrepareGroupState state
 	) {
-		if (state.getRequest() == null)
+		if (state.getRequest() == null || !state.getRequest().getStage().includesProfile())
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		String connectionKey = state.getRequest().getConnectionKey();

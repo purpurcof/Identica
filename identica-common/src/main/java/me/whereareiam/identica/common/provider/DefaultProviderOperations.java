@@ -6,17 +6,20 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.provider.ProviderEligibilityEvent;
-import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionDecision;
+import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
-import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
-import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
-import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
-import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
+import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
@@ -32,12 +35,7 @@ import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 
 @Singleton
@@ -52,6 +50,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 	private final MigrationJourneyRegistry migrationJourneyRegistry;
 	private final Provider<Providers> providersProvider;
 	private final EventManager eventManager;
+	private final UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
 
 	@Override
 	public @Nullable ProfileResolution resolveProfile(@NotNull ProfileResolveContext context) {
@@ -202,6 +201,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 		if (descriptor == null || isBlank(descriptor.getId())) return false;
 		if (!supportsJourney(context, provider, pipelineType, journeyMode)) return false;
 		if (!resolversAllow(context, provider, journeyMode)) return false;
+		if (blocksAutomaticRecognition(context, descriptor.getId())) return false;
 
 		ProviderEligibilityEvent event = new ProviderEligibilityEvent(context, provider, journeyMode);
 		eventManager.call(event);
@@ -256,6 +256,23 @@ public class DefaultProviderOperations implements ProviderOperations {
 			if (!resolver.isEligible(context, provider, journeyMode)) return false;
 		}
 
+		return true;
+	}
+
+	private boolean blocksAutomaticRecognition(@NotNull ScenarioContext context, @NotNull String providerId) {
+		UntrustedIpRecognitionDecision decision = untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(
+				providerId,
+				context.getIp(),
+				context.getProvider()
+		);
+		if (!decision.isBlocked()) return false;
+		Logger.debug(
+				"Skipping automatic provider recognition provider=%s username=%s ip=%s outcome=%s",
+				providerId,
+				context.getUsername(),
+				context.getIp(),
+				decision.getOutcome()
+		);
 		return true;
 	}
 

@@ -6,19 +6,23 @@ import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.configura.annotation.Merge;
 import me.whereareiam.configura.merge.strategy.type.DeclaredKeysOnlyMap;
+import me.whereareiam.configura.merge.strategy.type.DefaultKeysOnlyMap;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
 import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
-import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
+import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
+import me.whereareiam.identica.type.session.RecognitionSignal;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,12 +63,11 @@ public class Settings extends ConfigDocument {
 		 * Strategy used to assign UUIDs to newly discovered accounts.
 		 */
 		private @NotNull UniqueIdMode uniqueIdMode;
-		private @NotNull Routing routing;
-		private @NotNull Sessions sessions;
-		private @NotNull AuthenticationScenario authentication;
-		private @NotNull RegistrationScenario registration;
-		private @NotNull MigrationScenario migration;
-		private @NotNull Sentinels sentinels;
+		private @NotNull Routing routing = new Routing();
+		private @NotNull Sessions sessions = new Sessions();
+		private @NotNull InitialPrompt initialPrompt = new InitialPrompt();
+		private @NotNull Scenarios scenarios = new Scenarios();
+		private @NotNull Sentinels sentinels = new Sentinels();
 
 		/**
 		 * Returns handshake instruction TTL in milliseconds with validation.
@@ -103,6 +106,22 @@ public class Settings extends ConfigDocument {
 			}
 
 			return prepareStateTtl.toMillis();
+		}
+
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class InitialPrompt {
+		private boolean resendUntilInteraction;
+		private @NotNull Duration resendInterval;
+
+		public long resendIntervalMillis() {
+			if (resendInterval.isZero() || resendInterval.isNegative())
+				throw new IllegalStateException("settings.connection.initialPrompt.resendInterval must be positive");
+
+			return resendInterval.toMillis();
 		}
 	}
 
@@ -187,16 +206,80 @@ public class Settings extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Sessions {
-		private @NotNull Duration defaultTtl;
-		private @NotNull Duration refreshTtl;
 		/**
 		 * Default policy for concurrent sessions.
 		 */
 		private @NotNull SessionConcurrencyPolicy concurrencyPolicy;
 		/**
-		 * Policy overrides keyed by provider id.
+		 * Time-to-live used to keep live-session cache entries available while the player is online.
 		 */
-		private @NotNull Map<String, SessionConcurrencyPolicy> concurrencyOverrides = new HashMap<>();
+		private @NotNull Duration activeTtl;
+		/**
+		 * Recognition policy for reconnecting players.
+		 */
+		private @NotNull Recognition recognition = new Recognition();
+
+		public long activeTtlMillis() {
+			if (activeTtl.isZero() || activeTtl.isNegative())
+				throw new IllegalStateException("settings.connection.sessions.activeTtl must be positive");
+
+			return activeTtl.toMillis();
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Recognition {
+			/**
+			 * Enables reconnect recognition for eligible providers.
+			 */
+			private boolean enabled;
+			/**
+			 * Amount of time a stored recognition snapshot remains valid.
+			 */
+			private @NotNull Duration validity;
+			/**
+			 * Default signal set used when providers do not override reconnect recognition signals.
+			 */
+			private @NotNull List<RecognitionSignal> defaultSignals = new ArrayList<>();
+			/**
+			 * Guard configuration that suppresses automatic reconnect recognition from configured client IP ranges.
+			 */
+			private @NotNull UntrustedIps untrustedIps = new UntrustedIps();
+
+			public long validityMillis() {
+				if (validity.isZero() || validity.isNegative())
+					throw new IllegalStateException("settings.connection.sessions.recognition.validity must be positive");
+
+				return validity.toMillis();
+			}
+
+			/**
+			 * Guard configuration for automatic reconnect recognition coming from untrusted client IPs.
+			 */
+			@Getter
+			@Setter
+			@ToString
+			public static class UntrustedIps {
+				/**
+				 * Enables the untrusted-IP suppression guard.
+				 */
+				private boolean enabled;
+				/**
+				 * Exact IPs or CIDR ranges that should suppress automatic reconnect recognition.
+				 */
+				private @NotNull List<String> entries = new ArrayList<>();
+			}
+		}
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Scenarios {
+		private @NotNull AuthenticationScenario authentication = new AuthenticationScenario();
+		private @NotNull RegistrationScenario registration = new RegistrationScenario();
+		private @NotNull MigrationScenario migration = new MigrationScenario();
 	}
 
 	@Getter
@@ -255,13 +338,6 @@ public class Settings extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class AuthenticationScenario extends Scenario {
-		/**
-		 * Policy for concurrent sessions when a player is already online.
-		 */
-		private @NotNull SessionConcurrencyPolicy sessionConcurrencyPolicy;
-		/**
-		 * Policy for concurrent in-flight pipelines for the same identity.
-		 */
 		private @NotNull PipelineConcurrencyPolicy pipelineConcurrencyPolicy;
 	}
 
@@ -289,6 +365,7 @@ public class Settings extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Listeners {
+		@Merge(DefaultKeysOnlyMap.class)
 		private @NotNull Map<String, Event> events;
 	}
 }

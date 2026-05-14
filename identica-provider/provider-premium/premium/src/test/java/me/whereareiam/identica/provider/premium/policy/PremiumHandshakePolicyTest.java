@@ -9,8 +9,8 @@ import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
@@ -33,9 +33,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Premium Handshake Policy")
@@ -83,7 +81,7 @@ class PremiumHandshakePolicyTest {
 				.thenReturn(Optional.of(link(uniqueId, "premium", false)));
 		when(providerLinkPersistenceService.findByUniqueId(uniqueId)).thenReturn(List.of(
 				link(uniqueId, "premium", false),
-				link(uniqueId, "cracked", true)
+				link(uniqueId, "credential", true)
 		));
 
 		HandshakeDecision decision = policy.evaluate(request(username)).toCompletableFuture().join();
@@ -102,14 +100,14 @@ class PremiumHandshakePolicyTest {
 		when(attemptStore.hasAttempt("premium", "verify", username, "127.0.0.1")).thenReturn(false);
 		when(providerManager.getProviders()).thenReturn(List.of(
 				provider("premium", 100),
-				provider("cracked", 50)
+				provider("credential", 50)
 		));
 		when(profileStore.find(username)).thenReturn(new PremiumProfileSnapshot("premium-subject", System.currentTimeMillis()));
 		when(providerLinkPersistenceService.findBySubject("premium", "premium-subject"))
 				.thenReturn(Optional.of(link(uniqueId, "premium", false)));
 		when(providerLinkPersistenceService.findByUniqueId(uniqueId)).thenReturn(List.of(
 				link(uniqueId, "premium", false),
-				link(uniqueId, "cracked", false)
+				link(uniqueId, "credential", false)
 		));
 
 		HandshakeDecision decision = policy.evaluate(request(username)).toCompletableFuture().join();
@@ -150,7 +148,7 @@ class PremiumHandshakePolicyTest {
 
 		Settings.Connection connection = new Settings.Connection();
 		connection.setHandshakeInstructionTtl(Duration.ofSeconds(30));
-		connection.setAuthentication(authentication);
+		connection.getScenarios().setAuthentication(authentication);
 
 		Settings settings = new Settings();
 		settings.setConnection(connection);

@@ -14,8 +14,8 @@ import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.migration.MigrationContext;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -41,7 +41,7 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 
 	@Override
 	protected @Nullable ScenarioContext buildContext(@NotNull ConnectionRequest request) {
-		if (request.getIdentity().getUniqueId() == null) {
+		if (request.getIdentity().getAccountUniqueId() == null) {
 			UUID fallbackUniqueId = request.getConnectionUniqueId();
 			String username = request.getUsername();
 			if (fallbackUniqueId == null && username != null)
@@ -53,7 +53,7 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 			}
 
 			Logger.warn("%s request missing Identica UUID, applying fallback UUID %s", type(), fallbackUniqueId);
-			request.getIdentity().setUniqueId(fallbackUniqueId);
+			request.getIdentity().setAccountUniqueId(fallbackUniqueId);
 		}
 
 		MigrationContext context = MigrationContext.builder()
@@ -91,7 +91,7 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 			Logger.debug(
 					"Migration resume merged connection=%s identica=%s username=%s ip=%s target=%s provider=%s subject=%s",
 					merged.getConnectionUniqueId(),
-					merged.getIdenticaUniqueId(),
+					merged.getAccountUniqueId(),
 					merged.getUsername(),
 					merged.getIp(),
 					merged.getTargetProviderId(),

@@ -1,11 +1,6 @@
 package me.whereareiam.identica.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,7 +30,7 @@ public class Session {
 	private @NotNull UUID uniqueId;
 
 	/**
-	 * Provider ID that issued the session (e.g., Premium/Cracked).
+	 * Provider ID that issued the session (e.g., Premium/Credential).
 	 */
 	private @Nullable String providerId;
 	/**

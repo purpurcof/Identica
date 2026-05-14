@@ -7,7 +7,6 @@ import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 
-import java.time.Duration;
 import java.util.List;
 
 @Singleton
@@ -19,31 +18,30 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 		defaultRule.setResolvers(List.of(formatResolver("{username}*")));
 		usernameRules.setDefaultRule(defaultRule);
 
-		Providers.ConflictRule premiumVsCracked = new Providers.ConflictRule();
-		premiumVsCracked.setProviders(List.of("premium", "cracked"));
-		premiumVsCracked.setResolvers(List.of(formatResolver("{username}_{incomingProvider}")));
-		usernameRules.setPairs(List.of(premiumVsCracked));
+		Providers.ConflictRule premiumVsCredential = new Providers.ConflictRule();
+		premiumVsCredential.setProviders(List.of("premium", "credential"));
+		premiumVsCredential.setResolvers(List.of(formatResolver("{username}_{incomingProvider}")));
+		usernameRules.setPairs(List.of(premiumVsCredential));
 
 		config.getConflicts().put("username", usernameRules);
 
-		Providers.ProviderEntry cracked = new Providers.ProviderEntry();
-		cracked.setId("cracked");
-		cracked.setDisplayName("CR");
-		cracked.setEnabled(true);
-		cracked.setPriority(50);
-		cracked.setEntrypoints(List.of("cracked.arcadeya.com"));
-		cracked.setVerification(crackedVerification());
+		Providers.ProviderEntry credential = new Providers.ProviderEntry();
+		credential.setId("credential");
+		credential.setDisplayName("CR");
+		credential.setEnabled(true);
+		credential.setPriority(50);
+		credential.setEntrypoints(List.of("credential.arcadeya.com"));
+		credential.setVerification(credentialVerification());
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
 		premium.setId("premium");
 		premium.setDisplayName("PR");
 		premium.setEnabled(true);
 		premium.setPriority(100);
-		premium.getOverrides().setSessionTtl(Duration.ofHours(12));
 		premium.setEntrypoints(List.of("premium.arcadeya.com"));
 		premium.setVerification(premiumVerification());
 
-		config.setProviders(List.of(cracked, premium));
+		config.setProviders(List.of(credential, premium));
 		return config;
 	}
 
@@ -60,7 +58,7 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 		return entry;
 	}
 
-	private Providers.Verification crackedVerification() {
+	private Providers.Verification credentialVerification() {
 		Providers.Verification verification = new Providers.Verification();
 		verification.setEnabled(true);
 		verification.setRequired(false);

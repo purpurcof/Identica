@@ -7,7 +7,7 @@ tasks.register("providerModules") {
     description = "Builds all Identica provider modules."
 
     dependsOn(
-        ":provider-cracked:build",
+        ":provider-credential:build",
         ":provider-premium:build"
     )
 }

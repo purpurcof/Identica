@@ -4,23 +4,23 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.handshake.HandshakeStore;
-import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.handshake.HandshakeStore;
+import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
-import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
-import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.model.identity.Account;
+import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
-import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.premium.handshake.PremiumHandshakeAttributes;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
@@ -29,8 +29,8 @@ import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
 import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -108,7 +108,7 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 
 		Settings settings = settingsProvider.get();
 		Settings.Connection connection = settings != null ? settings.getConnection() : null;
-		Settings.Scenario scenario = connection != null ? connection.getAuthentication() : null;
+		Settings.Scenario scenario = connection != null ? connection.getScenarios().getAuthentication() : null;
 		JourneyMode preferredJourneyMode = scenario != null ? scenario.getJourneyMode() : null;
 		if (preferredJourneyMode == JourneyMode.INTERACTIVE) {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());

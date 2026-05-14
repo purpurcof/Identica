@@ -1,9 +1,8 @@
 package me.whereareiam.identica.model.auth.request;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.identity.IdentityReference;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import org.jetbrains.annotations.NotNull;
@@ -17,9 +16,11 @@ import java.util.UUID;
 @Getter
 @ToString
 @Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @SuppressWarnings("unused")
 public class ConnectionRequest {
-	private final @Nullable UUID connectionUniqueId;
+	@Builder.Default
+	private final @NotNull IdentityReference identityReference = new IdentityReference();
 	private final @NotNull ConnectionIdentity identity;
 	private final @Nullable String intendedServer;
 	/**
@@ -45,6 +46,20 @@ public class ConnectionRequest {
 	 *
 	 * @return username or {@code null}
 	 */
+	public @Nullable UUID getConnectionUniqueId() {
+		if (identityReference.getConnectionUniqueId() != null)
+			return identityReference.getConnectionUniqueId();
+
+		return identity.getConnectionUniqueId();
+	}
+
+	public @Nullable UUID getAccountUniqueId() {
+		if (identityReference.getAccountUniqueId() != null)
+			return identityReference.getAccountUniqueId();
+
+		return identity.getAccountUniqueId();
+	}
+
 	public @Nullable String getUsername() {
 		return identity.getUsername();
 	}
@@ -56,5 +71,23 @@ public class ConnectionRequest {
 	 */
 	public @Nullable String getIp() {
 		return identity.getIp();
+	}
+
+	public static class ConnectionRequestBuilder {
+		private final IdentityReference identityReference = new IdentityReference();
+
+		public @NotNull ConnectionRequestBuilder connectionUniqueId(@Nullable UUID connectionUniqueId) {
+			identityReference.setConnectionUniqueId(connectionUniqueId);
+			return this;
+		}
+
+		public @NotNull ConnectionRequestBuilder accountUniqueId(@Nullable UUID accountUniqueId) {
+			identityReference.setAccountUniqueId(accountUniqueId);
+			return this;
+		}
+
+		public @NotNull ConnectionRequest build() {
+			return new ConnectionRequest(identityReference, identity, intendedServer, provider, transition);
+		}
 	}
 }

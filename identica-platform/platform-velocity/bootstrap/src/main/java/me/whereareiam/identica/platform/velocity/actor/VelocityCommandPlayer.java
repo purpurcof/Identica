@@ -6,18 +6,26 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
+import java.util.UUID;
 
 public class VelocityCommandPlayer extends Identity {
 	private final Player player;
 
 	public VelocityCommandPlayer(@NotNull Player player) {
-		this(player, player.getUsername());
+		this(player.getUniqueId(), null, player, player.getUsername(), null);
 	}
 
-	public VelocityCommandPlayer(@NotNull Player player, @NotNull String username) {
-		super(player.getUniqueId(), username, resolveIp(player));
+	public VelocityCommandPlayer(
+			@NotNull UUID connectionUniqueId,
+			@Nullable UUID accountUniqueId,
+			@NotNull Player player,
+			@NotNull String username,
+			@Nullable Origin origin
+	) {
+		super(connectionUniqueId, accountUniqueId, username, resolveIp(player), origin);
 		this.player = player;
 	}
 
@@ -59,9 +67,7 @@ public class VelocityCommandPlayer extends Identity {
 	}
 
 	private static String resolveIp(@NotNull Player player) {
-		if (player.getRemoteAddress() == null)
-			return null;
-
+		if (player.getRemoteAddress() == null) return null;
 		if (player.getRemoteAddress().getAddress() != null)
 			return player.getRemoteAddress().getAddress().getHostAddress();
 

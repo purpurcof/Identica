@@ -1,5 +1,3 @@
-import org.gradle.api.initialization.resolve.RepositoriesMode
-
 rootProject.name = "Identica"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
@@ -56,44 +54,53 @@ project(":identica-platform").projectDir = file("identica-platform")
 include(":platform-velocity")
 project(":platform-velocity").projectDir = file("identica-platform/platform-velocity")
 
+include(":platform-bungeecord")
+project(":platform-bungeecord").projectDir = file("identica-platform/platform-bungeecord")
+
 include(":platform-velocity-api")
 project(":platform-velocity-api").projectDir = file("identica-platform/platform-velocity/api")
+
+include(":platform-bungeecord-api")
+project(":platform-bungeecord-api").projectDir = file("identica-platform/platform-bungeecord/api")
 
 include(":platform-velocity-bootstrap")
 project(":platform-velocity-bootstrap").projectDir = file("identica-platform/platform-velocity/bootstrap")
 
+include(":platform-bungeecord-bootstrap")
+project(":platform-bungeecord-bootstrap").projectDir = file("identica-platform/platform-bungeecord/bootstrap")
+
 include(":identica-provider")
 project(":identica-provider").projectDir = file("identica-provider")
 
-include(":provider-cracked")
-project(":provider-cracked").projectDir = file("identica-provider/provider-cracked")
+include(":provider-credential")
+project(":provider-credential").projectDir = file("identica-provider/provider-credential")
 
-include(":provider-cracked-runtime")
-project(":provider-cracked-runtime").projectDir = file("identica-provider/provider-cracked/cracked")
+include(":provider-credential-runtime")
+project(":provider-credential-runtime").projectDir = file("identica-provider/provider-credential/credential")
 
-include(":provider-cracked-common")
-project(":provider-cracked-common").projectDir = file("identica-provider/provider-cracked/cracked-common")
+include(":provider-credential-common")
+project(":provider-credential-common").projectDir = file("identica-provider/provider-credential/credential-common")
 
-include(":provider-cracked-api")
-project(":provider-cracked-api").projectDir = file("identica-provider/provider-cracked/cracked-api")
+include(":provider-credential-api")
+project(":provider-credential-api").projectDir = file("identica-provider/provider-credential/credential-api")
 
-include(":provider-cracked-cryptography")
-project(":provider-cracked-cryptography").projectDir = file("identica-provider/provider-cracked/cracked-cryptography")
+include(":provider-credential-cryptography")
+project(":provider-credential-cryptography").projectDir = file("identica-provider/provider-credential/credential-cryptography")
 
-include(":provider-cracked-cryptography-common")
-project(":provider-cracked-cryptography-common").projectDir =
-    file("identica-provider/provider-cracked/cracked-cryptography/common")
+include(":provider-credential-cryptography-common")
+project(":provider-credential-cryptography-common").projectDir =
+    file("identica-provider/provider-credential/credential-cryptography/common")
 
-include(":provider-cracked-cryptography-argon2")
-project(":provider-cracked-cryptography-argon2").projectDir =
-    file("identica-provider/provider-cracked/cracked-cryptography/cryptography-argon2")
+include(":provider-credential-cryptography-argon2")
+project(":provider-credential-cryptography-argon2").projectDir =
+    file("identica-provider/provider-credential/credential-cryptography/cryptography-argon2")
 
-include(":provider-cracked-cryptography-bcrypt")
-project(":provider-cracked-cryptography-bcrypt").projectDir =
-    file("identica-provider/provider-cracked/cracked-cryptography/cryptography-bcrypt")
+include(":provider-credential-cryptography-bcrypt")
+project(":provider-credential-cryptography-bcrypt").projectDir =
+    file("identica-provider/provider-credential/credential-cryptography/cryptography-bcrypt")
 
-include(":provider-cracked-database")
-project(":provider-cracked-database").projectDir = file("identica-provider/provider-cracked/cracked-database")
+include(":provider-credential-database")
+project(":provider-credential-database").projectDir = file("identica-provider/provider-credential/credential-database")
 
 include(":provider-premium")
 project(":provider-premium").projectDir = file("identica-provider/provider-premium")
@@ -110,3 +117,7 @@ project(":provider-premium-platform").projectDir = file("identica-provider/provi
 include(":provider-premium-platform-velocity")
 project(":provider-premium-platform-velocity").projectDir =
     file("identica-provider/provider-premium/premium-platform/platform-velocity")
+
+include(":provider-premium-platform-bungeecord")
+project(":provider-premium-platform-bungeecord").projectDir =
+    file("identica-provider/provider-premium/premium-platform/platform-bungeecord")

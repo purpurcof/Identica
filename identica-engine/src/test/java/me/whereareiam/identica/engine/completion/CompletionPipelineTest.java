@@ -9,16 +9,16 @@ import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.Re
 import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.ResolveCompletionSessionPhase;
 import me.whereareiam.identica.engine.pipeline.completion.group.step.CompletionStepGroup;
 import me.whereareiam.identica.engine.pipeline.completion.group.step.phase.ExecuteCompletionStepsPhase;
-import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
-import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
-import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
-import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
-import me.whereareiam.identica.pipeline.completion.step.CompletionStep;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
+import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
+import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
+import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
+import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
+import me.whereareiam.identica.pipeline.completion.step.CompletionStep;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.provider.ProviderState;
@@ -36,9 +36,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @DisplayName("Completion Pipeline")
 class CompletionPipelineTest {
@@ -56,23 +54,23 @@ class CompletionPipelineTest {
 		);
 
 		UUID connectionUniqueId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		TestIdentity identity = new TestIdentity(connectionUniqueId, "PlayerOne");
 		CompletionPendingState pendingState = CompletionPendingState.builder()
 				.pipelineType(PipelineType.MIGRATION)
 				.connectionUniqueId(connectionUniqueId)
-				.identicaUniqueId(identicaUniqueId)
-				.sessionReused(true)
+				.accountUniqueId(accountUniqueId)
+				.recognitionApplied(true)
 				.build();
 		Session session = Session.builder()
-				.uniqueId(identicaUniqueId)
-				.providerId("cracked")
+				.uniqueId(accountUniqueId)
+				.providerId("credential")
 				.providerSubject("player-one")
 				.originalUsername("PlayerOne")
 				.effectiveUsername("PlayerOne")
 				.build();
 		ProviderDescriptor descriptor = new ProviderDescriptor();
-		descriptor.setId("cracked");
+		descriptor.setId("credential");
 		InternalProvider provider = InternalProvider.builder()
 				.descriptor(descriptor)
 				.state(ProviderState.ENABLED)
@@ -80,9 +78,9 @@ class CompletionPipelineTest {
 		CompletionStep step = mock(CompletionStep.class);
 
 		when(pendingStore.consume(connectionUniqueId)).thenReturn(Optional.of(pendingState));
-		when(sessionService.findByUniqueId(identicaUniqueId)).thenReturn(CompletableFuture.completedFuture(Optional.of(session)));
+		when(sessionService.findByUniqueId(accountUniqueId)).thenReturn(CompletableFuture.completedFuture(Optional.of(session)));
 		when(providerManager.getProviders()).thenReturn(List.of(provider));
-		when(extensionRegistry.resolve("cracked", PipelineType.MIGRATION)).thenReturn(List.of(step));
+		when(extensionRegistry.resolve("credential", PipelineType.MIGRATION)).thenReturn(List.of(step));
 		when(step.shouldExecute(org.mockito.ArgumentMatchers.any())).thenReturn(true);
 		when(step.getName()).thenReturn("test-step");
 
@@ -91,9 +89,9 @@ class CompletionPipelineTest {
 		verify(step).execute(argThat((CompletionContext context) ->
 				context.getIdentity() == identity
 						&& context.getPipelineType() == PipelineType.MIGRATION
-						&& context.getSession().getProviderId().equals("cracked")
+						&& context.getSession().getProviderId().equals("credential")
 						&& context.getProvider() == provider
-						&& context.isSessionReused()
+						&& context.isRecognitionApplied()
 		));
 	}
 

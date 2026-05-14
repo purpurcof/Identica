@@ -5,22 +5,22 @@ import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.model.migration.PendingMigration;
-import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.identity.session.SessionService;
-import me.whereareiam.identica.model.migration.operation.MigrationRequest;
-import me.whereareiam.identica.model.migration.operation.MigrationResult;
-import me.whereareiam.identica.model.migration.operation.MigrationStart;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.migration.PendingMigration;
+import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
+import me.whereareiam.identica.model.migration.operation.MigrationRequest;
+import me.whereareiam.identica.model.migration.operation.MigrationResult;
+import me.whereareiam.identica.model.migration.operation.MigrationStart;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
@@ -32,19 +32,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Default Migration Service")
@@ -135,10 +133,10 @@ class DefaultMigrationServiceTest {
 		);
 
 		UUID connectionUniqueId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		MigrationResult result = service.request(MigrationRequest.builder()
 				.connectionUniqueId(connectionUniqueId)
-				.identicaUniqueId(identicaUniqueId)
+				.accountUniqueId(accountUniqueId)
 				.targetProviderId("premium")
 				.username("PlayerOne")
 				.ip("127.0.0.1")
@@ -149,7 +147,7 @@ class DefaultMigrationServiceTest {
 		PendingMigration pendingMigration = service.findPendingMigration(connectionUniqueId).orElse(null);
 
 		assertNotNull(pendingMigration);
-		assertEquals(identicaUniqueId, pendingMigration.getUniqueId(), "pending migration should store the account UUID separately");
+		assertEquals(accountUniqueId, pendingMigration.getUniqueId(), "pending migration should store the account UUID separately");
 		assertEquals(connectionUniqueId, pendingMigration.getConnectionUniqueId(), "pending migration should store the connection UUID separately");
 		assertEquals("premium", pendingMigration.getTargetProviderId());
 		assertEquals(PendingMigration.Phase.CONFIRMATION, pendingMigration.getPhase());
@@ -159,14 +157,14 @@ class DefaultMigrationServiceTest {
 	@Test
 	void findPendingMigrationReturnsStartedMigrationFromPipelineState() {
 		UUID connectionUniqueId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		UUID initiatorUniqueId = UUID.randomUUID();
 
 		PipelineState pipelineState = PipelineState.initial();
 		pipelineState.setPipelineType(PipelineType.MIGRATION);
 		pipelineState.setScenario(MigrationContext.builder()
 				.connectionUniqueId(connectionUniqueId)
-				.identity(new ConnectionIdentity(identicaUniqueId, "PlayerOne", "127.0.0.1"))
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
 				.targetProviderId("premium")
 				.build());
 		pipelineState.putItem(new MigrationPendingState(
@@ -193,7 +191,7 @@ class DefaultMigrationServiceTest {
 		PendingMigration pendingMigration = service.findPendingMigration(connectionUniqueId).orElse(null);
 
 		assertNotNull(pendingMigration);
-		assertEquals(identicaUniqueId, pendingMigration.getUniqueId());
+		assertEquals(accountUniqueId, pendingMigration.getUniqueId());
 		assertEquals(connectionUniqueId, pendingMigration.getConnectionUniqueId());
 		assertEquals("premium", pendingMigration.getTargetProviderId());
 		assertEquals(1234L, pendingMigration.getRequestedAt());
@@ -210,13 +208,12 @@ class DefaultMigrationServiceTest {
 		when(providerLinkPersistenceService.findByUniqueIdAndProviderId(any(UUID.class), any(String.class)))
 				.thenReturn(Optional.of(AccountProviderLink.builder()
 						.uniqueId(UUID.randomUUID())
-						.providerId("cracked")
+						.providerId("credential")
 						.providerSubject("existing-subject")
 						.primaryLink(false)
 						.build()));
 		when(sessionService.close(any(UUID.class))).thenReturn(CompletableFuture.completedFuture(null));
-		when(identityService.find(any(UUID.class))).thenReturn(Optional.empty());
-		when(identityService.find(any(String.class))).thenReturn(Optional.empty());
+		when(identityService.findByConnectionUniqueId(any(UUID.class))).thenReturn(Optional.empty());
 
 		Settings settings = new SettingsDefaults().supply(new Settings());
 		DefaultMigrationService service = new DefaultMigrationService(
@@ -232,11 +229,11 @@ class DefaultMigrationServiceTest {
 		);
 
 		UUID connectionUniqueId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		MigrationResult requested = service.request(MigrationRequest.builder()
 				.connectionUniqueId(connectionUniqueId)
-				.identicaUniqueId(identicaUniqueId)
-				.targetProviderId("cracked")
+				.accountUniqueId(accountUniqueId)
+				.targetProviderId("credential")
 				.username("PlayerOne")
 				.ip("127.0.0.1")
 				.build());

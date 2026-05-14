@@ -8,15 +8,15 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.routing.RoutingPlan;
 import me.whereareiam.identica.model.routing.RoutingSignal;
-import me.whereareiam.identica.type.routing.RoutingRetryMode;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.pipeline.journey.step.StepContextRequirement;
-import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import me.whereareiam.identica.type.routing.RoutingPlanAction;
+import me.whereareiam.identica.type.routing.RoutingRetryMode;
+import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,7 +40,7 @@ class RoutingPlannerTest {
 				context(UUID.randomUUID()),
 				PipelineType.AUTHENTICATION,
 				StageType.PROVIDER,
-				step("password"),
+				step("credential"),
 				StepResult.waiting("")
 		));
 
@@ -75,7 +75,7 @@ class RoutingPlannerTest {
 				context(UUID.randomUUID()),
 				PipelineType.REGISTRATION,
 				StageType.PROVIDER,
-				step("password"),
+				step("credential"),
 				StepResult.waiting("")
 		));
 		RoutingPlan completionPlan = planner.plan(RoutingSignal.pipelineFinished(
@@ -131,14 +131,14 @@ class RoutingPlannerTest {
 		stepTarget.setTarget("step-server");
 		Settings.Routing.Targets targets = settings.getConnection().getRouting().getScenarios().get("authentication");
 		targets.getOverrides().getStages().put(StageType.PROVIDER.id(), stageTarget);
-		targets.getOverrides().getSteps().put("password", stepTarget);
+		targets.getOverrides().getSteps().put("credential", stepTarget);
 
 		RoutingPlanner planner = new RoutingPlanner(() -> settings);
 		RoutingPlan plan = planner.plan(RoutingSignal.stepFinished(
 				context(UUID.randomUUID()),
 				PipelineType.AUTHENTICATION,
 				StageType.PROVIDER,
-				step("password"),
+				step("credential"),
 				StepResult.waiting("")
 		));
 
@@ -157,7 +157,7 @@ class RoutingPlannerTest {
 				context(UUID.randomUUID()),
 				PipelineType.AUTHENTICATION,
 				StageType.PROVIDER,
-				step("password"),
+				step("credential"),
 				StepResult.waiting("")
 		));
 

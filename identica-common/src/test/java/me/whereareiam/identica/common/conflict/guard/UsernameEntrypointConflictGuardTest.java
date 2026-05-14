@@ -3,16 +3,17 @@ package me.whereareiam.identica.common.conflict.guard;
 import me.whereareiam.identica.common.config.defaults.messages.MessagesDefaults;
 import me.whereareiam.identica.common.provider.DefaultProviderOperations;
 import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
-import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.pipeline.journey.registry.type.AuthenticationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
+import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,10 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Username Entrypoint Conflict Guard")
@@ -41,6 +39,8 @@ class UsernameEntrypointConflictGuardTest {
 	private MigrationJourneyRegistry migrationJourneyRegistry;
 	@Mock
 	private EventManager eventManager;
+	@Mock
+	private UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
 
 	@DisplayName("Denies the conflict when the entrypoint was auto-detected and remains ambiguous")
 	@Test
@@ -48,7 +48,7 @@ class UsernameEntrypointConflictGuardTest {
 		Providers providers = new Providers();
 		providers.setProviders(List.of(
 				entry("premium", "Premium Network", 100, List.of("premium.example.com")),
-				entry("cracked", "Offline Network", 50, List.of("cracked.example.com"))
+				entry("credential", "Credential Network", 50, List.of("credential.example.com"))
 		));
 		Messages messages = new MessagesDefaults().supply(new Messages());
 
@@ -62,7 +62,7 @@ class UsernameEntrypointConflictGuardTest {
 				.key("username")
 				.candidate("Player")
 				.incomingLink(link("premium"))
-				.existingLink(link("cracked"))
+				.existingLink(link("credential"))
 				.build();
 		context.putExtra("entrypointSource", ProviderOrigin.AUTO);
 
@@ -71,9 +71,9 @@ class UsernameEntrypointConflictGuardTest {
 		assertEquals(ConflictResolution.Action.DENY, resolution.getAction());
 		assertNotNull(resolution.getMessage());
 		assertTrue(resolution.getMessage().contains("Premium Network"));
-		assertTrue(resolution.getMessage().contains("Offline Network"));
+		assertTrue(resolution.getMessage().contains("Credential Network"));
 		assertTrue(resolution.getMessage().contains("premium.example.com"));
-		assertTrue(resolution.getMessage().contains("cracked.example.com"));
+		assertTrue(resolution.getMessage().contains("credential.example.com"));
 	}
 
 	@DisplayName("Allows the conflict when the user has already selected an entrypoint")
@@ -82,7 +82,7 @@ class UsernameEntrypointConflictGuardTest {
 		Providers providers = new Providers();
 		providers.setProviders(List.of(
 				entry("premium", "Premium Network", 100, List.of("premium.example.com")),
-				entry("cracked", "Offline Network", 50, List.of("cracked.example.com"))
+				entry("credential", "Credential Network", 50, List.of("credential.example.com"))
 		));
 
 		ProviderOperations providerOperations = providerOperations(providers);
@@ -95,7 +95,7 @@ class UsernameEntrypointConflictGuardTest {
 				.key("username")
 				.candidate("Player")
 				.incomingLink(link("premium"))
-				.existingLink(link("cracked"))
+				.existingLink(link("credential"))
 				.build();
 		context.putExtra("entrypointSource", ProviderOrigin.ENTRYPOINT);
 
@@ -127,7 +127,8 @@ class UsernameEntrypointConflictGuardTest {
 				registrationJourneyRegistry,
 				migrationJourneyRegistry,
 				() -> providers,
-				eventManager
+				eventManager,
+				untrustedIpRecognitionPolicy
 		);
 	}
 }

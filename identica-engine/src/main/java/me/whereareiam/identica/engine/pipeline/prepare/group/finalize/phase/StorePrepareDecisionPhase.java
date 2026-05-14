@@ -3,15 +3,15 @@ package me.whereareiam.identica.engine.pipeline.prepare.group.finalize.phase;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
-import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
+import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -70,7 +70,7 @@ public class StorePrepareDecisionPhase implements PipelinePhase<PrepareGroupStat
 		if (connectionKey != null && !connectionKey.isBlank())
 			prepareStateStore.put(connectionKey, decision);
 
-		UUID uniqueId = decision.getUniqueId();
+		UUID uniqueId = decision.getAccountUniqueId();
 		if (uniqueId != null) prepareStateStore.put(uniqueId, connectionKey, decision);
 
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));

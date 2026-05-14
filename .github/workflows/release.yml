@@ -98,7 +98,7 @@ jobs:
       - name: Move runtime jars
         run: |
           mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-VELOCITY.jar output/${{ needs.prepare.outputs.name }}-VELOCITY-${{ needs.prepare.outputs.version }}.jar
-          mv build/libs/Cracked-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Cracked-${{ needs.prepare.outputs.version }}.jar
+          mv build/libs/Credential-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Credential-${{ needs.prepare.outputs.version }}.jar
           mv build/libs/Premium-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
 
       - name: Release
@@ -108,13 +108,13 @@ jobs:
           files: |
             output/${{ needs.prepare.outputs.name }}-API-${{ needs.prepare.outputs.version }}.jar
             output/${{ needs.prepare.outputs.name }}-VELOCITY-${{ needs.prepare.outputs.version }}.jar
-            output/${{ needs.prepare.outputs.name }}-Cracked-${{ needs.prepare.outputs.version }}.jar
+            output/${{ needs.prepare.outputs.name }}-Credential-${{ needs.prepare.outputs.version }}.jar
             output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v6
         with:
-          name: release-distribution-${{ needs.prepare.outputs.version }}
+          name: Release Artifacts
           path: output/
 
   resolve-distribution:
@@ -160,16 +160,17 @@ jobs:
 
     steps:
       - name: Download distribution artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
-          name: release-distribution-${{ needs.prepare.outputs.version }}
+          name: Release Artifacts
           path: output
 
       - name: Publish distribution
         uses: whereareiam/blockops/actions/publish/publish-publication@dev
         with:
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          hangar-token: ${{ secrets.HANGAR_TOKEN }}
+          provider-credentials: |
+            modrinth: ${{ secrets.MODRINTH_TOKEN }}
+            hangar: ${{ secrets.HANGAR_TOKEN }}
           plan-json: ${{ needs.resolve-distribution.outputs.plan-json }}
           artifact-directory: output
           publication: ${{ matrix.publication.publication }}

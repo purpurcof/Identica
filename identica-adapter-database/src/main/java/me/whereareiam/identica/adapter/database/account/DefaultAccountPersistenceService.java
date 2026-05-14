@@ -13,8 +13,8 @@ import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.identity.Account;
-import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.type.UsernameSource;
+import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -126,7 +126,7 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 
 	@IdenticEvent(EventOrder.HIGHEST)
 	public void onAccountLifecycle(@NotNull AccountLifecycleEvent event) {
-		UUID uniqueId = event.getIdentity().getUniqueId();
+		UUID uniqueId = event.getIdentity().getAccountUniqueId();
 		if (uniqueId == null) return;
 
 		delete(uniqueId);

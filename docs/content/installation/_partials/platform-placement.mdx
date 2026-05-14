@@ -1,0 +1,76 @@
+<ContentTabs items={["Velocity", "BungeeCord"]}>
+  <ContentTab value="Velocity">
+    Place the main Identica runtime jar directly in `plugins/`.
+    It should sit beside your other plugin jars, not inside the `identica/` folder.
+
+    Place provider jars in:
+
+    ```text
+    plugins/identica/providers/
+    ```
+
+    If that folder does not exist yet, create it manually before the first boot.
+
+    Placement flow:
+
+    1. Copy `Identica-VELOCITY-<version>.jar` into `plugins/`.
+    2. Create `plugins/identica/` if it does not exist yet.
+    3. Create `plugins/identica/providers/` if it does not exist yet.
+    4. Copy `Identica-Credential-<version>.jar` into `plugins/identica/providers/`.
+    5. Copy `Identica-Premium-<version>.jar` into `plugins/identica/providers/`.
+
+    Before starting the proxy, double-check these placement rules:
+
+    - the main Identica runtime jar belongs in `plugins/`
+    - provider jars belong in `plugins/identica/providers/`
+    - provider jars should not be placed directly in the root `plugins/` folder
+
+    A minimal layout looks like this:
+
+    ```text
+    plugins/
+    ├── Identica-VELOCITY-<version>.jar
+    └── identica/
+        └── providers/
+            ├── Identica-Credential-<version>.jar
+            └── Identica-Premium-<version>.jar
+    ```
+  </ContentTab>
+  <ContentTab value="BungeeCord">
+    Place the main Identica runtime jar directly in `plugins/`.
+    It should sit beside your other plugin jars, not inside the `identica/` folder.
+
+    Place provider jars in:
+
+    ```text
+    plugins/identica/providers/
+    ```
+
+    If that folder does not exist yet, create it manually before the first boot.
+
+    Placement flow:
+
+    1. Copy `Identica-BUNGEECORD-<version>.jar` into `plugins/`.
+    2. Create `plugins/identica/` if it does not exist yet.
+    3. Create `plugins/identica/providers/` if it does not exist yet.
+    4. Copy `Identica-Credential-<version>.jar` into `plugins/identica/providers/`.
+    5. Copy `Identica-Premium-<version>.jar` into `plugins/identica/providers/`.
+
+    Before starting the proxy, double-check these placement rules:
+
+    - the main Identica runtime jar belongs in `plugins/`
+    - provider jars belong in `plugins/identica/providers/`
+    - provider jars should not be placed directly in the root `plugins/` folder
+
+    A minimal layout looks like this:
+
+    ```text
+    plugins/
+    ├── Identica-BUNGEECORD-<version>.jar
+    └── identica/
+        └── providers/
+            ├── Identica-Credential-<version>.jar
+            └── Identica-Premium-<version>.jar
+    ```
+  </ContentTab>
+</ContentTabs>

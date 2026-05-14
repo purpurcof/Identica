@@ -1,8 +1,8 @@
 package me.whereareiam.identica.common.replication.cache;
 
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.replication.cache.LocalCache;
 import me.whereareiam.identica.model.replication.ReplicationPage;
+import me.whereareiam.identica.replication.cache.LocalCache;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -14,6 +14,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class InMemoryLocalCache<T> implements LocalCache<T> {
 	private final ConcurrentHashMap<String, Entry<T>> entries = new ConcurrentHashMap<>();
+	private final long defaultTtlMs;
+
+	public InMemoryLocalCache() {
+		this(0L);
+	}
+
+	public InMemoryLocalCache(long defaultTtlMs) {
+		this.defaultTtlMs = Math.max(0L, defaultTtlMs);
+	}
 
 	@Override
 	public @NotNull CompletableFuture<Optional<T>> get(String key) {
@@ -41,6 +50,11 @@ public final class InMemoryLocalCache<T> implements LocalCache<T> {
 		entries.put(key, new Entry<>(value, expiresAt));
 
 		return CompletableFuture.completedFuture(null);
+	}
+
+	@Override
+	public long defaultTtlMs() {
+		return defaultTtlMs;
 	}
 
 	@Override

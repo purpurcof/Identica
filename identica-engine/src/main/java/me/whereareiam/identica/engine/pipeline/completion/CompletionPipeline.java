@@ -32,7 +32,7 @@ public class CompletionPipeline {
 				.identity(identity)
 				.pendingState(pendingState)
 				.pipelineType(pendingState.getPipelineType())
-				.sessionReused(pendingState.isSessionReused())
+				.recognitionApplied(pendingState.isRecognitionApplied())
 				.build();
 
 		PipelineState pipelineState = PipelineState.initial();

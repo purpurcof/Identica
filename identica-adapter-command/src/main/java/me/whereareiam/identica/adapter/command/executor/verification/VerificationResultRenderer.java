@@ -8,11 +8,11 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.verification.VerificationDisableResult;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
 import me.whereareiam.identica.model.verification.process.VerificationProcessDisplay;
 import me.whereareiam.identica.model.verification.selection.VerificationSelectionResult;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
-import me.whereareiam.identica.type.verification.status.VerificationDisableStatus;
 import me.whereareiam.identica.type.verification.VerificationEnrollmentStatus;
+import me.whereareiam.identica.type.verification.status.VerificationDisableStatus;
 import me.whereareiam.identica.type.verification.status.VerificationSelectionStatus;
 import me.whereareiam.identica.verification.VerificationRegistry;
 import me.whereareiam.keystone.Actor;
@@ -23,12 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -225,8 +220,7 @@ public class VerificationResultRenderer {
 	private Map<String, String> enrollmentPlaceholders(@NotNull VerificationEnrollmentResult result) {
 		Map<String, String> placeholders = new LinkedHashMap<>(methodPlaceholders(result.getMethodId()));
 		VerificationProcessDisplay display = result.getDisplay();
-		if (display != null && display.getPlaceholders() != null)
-			placeholders.putAll(display.getPlaceholders());
+		if (display != null) placeholders.putAll(display.getPlaceholders());
 		if (result.getMethodData() != null)
 			placeholders.putAll(result.getMethodData());
 

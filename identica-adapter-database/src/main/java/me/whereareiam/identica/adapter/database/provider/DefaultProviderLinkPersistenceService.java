@@ -14,11 +14,7 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Singleton
 public class DefaultProviderLinkPersistenceService implements ProviderLinkPersistenceService, EventListener {
@@ -115,7 +111,7 @@ public class DefaultProviderLinkPersistenceService implements ProviderLinkPersis
 
 	@IdenticEvent(EventOrder.HIGH)
 	public void onAccountLifecycle(@NotNull AccountLifecycleEvent event) {
-		UUID uniqueId = event.getIdentity().getUniqueId();
+		UUID uniqueId = event.getIdentity().getAccountUniqueId();
 		if (uniqueId == null) return;
 
 		deleteAll(uniqueId);

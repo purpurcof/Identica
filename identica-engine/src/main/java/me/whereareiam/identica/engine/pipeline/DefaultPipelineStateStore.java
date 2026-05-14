@@ -158,7 +158,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 				"Pipeline state %s miss connection=%s identity=%s key=%s aliases=%s",
 				consume ? "consume" : "find",
 				reference.getConnectionUniqueId(),
-				reference.getIdentityUniqueId(),
+				reference.getAccountUniqueId(),
 				reference.getConnectionKey(),
 				aliases
 		);
@@ -186,7 +186,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 	}
 
 	private @Nullable UUID resolveConnectionUniqueId(@NotNull AccountLifecycleEvent event) {
-		UUID connectionUniqueId = event.getIdentity().getUniqueId();
+		UUID connectionUniqueId = event.getIdentity().getAccountUniqueId();
 		if (connectionUniqueId != null) return connectionUniqueId;
 
 		String username = event.getIdentity().getUsername();
@@ -240,8 +240,8 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 		if (reference.getConnectionUniqueId() != null)
 			aliases.add(KEY_CONNECTION_ID_PREFIX + reference.getConnectionUniqueId());
 
-		if (reference.getIdentityUniqueId() != null)
-			aliases.add(KEY_IDENTITY_ID_PREFIX + reference.getIdentityUniqueId());
+		if (reference.getAccountUniqueId() != null)
+			aliases.add(KEY_IDENTITY_ID_PREFIX + reference.getAccountUniqueId());
 
 		String connectionKey = reference.getConnectionKey();
 		if (connectionKey != null && !connectionKey.isBlank()) {

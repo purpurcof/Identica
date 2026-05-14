@@ -91,14 +91,6 @@ public interface SessionService {
 	@NotNull CompletableFuture<Void> close(@NotNull SessionCloseRequest request);
 
 	/**
-	 * Refreshes a session for an identity id.
-	 *
-	 * @param uniqueId identity id
-	 * @return completion journey
-	 */
-	@NotNull CompletableFuture<Void> refresh(@Nullable UUID uniqueId);
-
-	/**
 	 * Lists active session ids for the given page.
 	 *
 	 * @param page page number (1-based)

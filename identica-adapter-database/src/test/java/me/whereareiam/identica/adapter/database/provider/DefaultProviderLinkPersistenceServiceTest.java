@@ -16,17 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Default Provider-Link Persistence Service")
@@ -78,7 +73,7 @@ class DefaultProviderLinkPersistenceServiceTest {
 	@DisplayName("Returns grouped provider-link usage counts")
 	@Test
 	void countByProviderReturnsRepositorySnapshot() {
-		Map<String, Long> counts = Map.of("premium", 4L, "cracked", 2L);
+		Map<String, Long> counts = Map.of("premium", 4L, "credential", 2L);
 		when(repository.countByProvider()).thenReturn(counts);
 
 		Map<String, Long> result = service.countByProvider();

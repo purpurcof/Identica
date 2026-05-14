@@ -11,10 +11,10 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.util.UniqueIdGenerator;
@@ -64,7 +64,7 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		UUID uniqueId = context.getIdenticaUniqueId();
+		UUID uniqueId = context.getAccountUniqueId();
 		if (uniqueId == null || uniqueIdGenerator.requiresConfiguredUniqueId())
 			uniqueId = resolveNewAccountId(context, profile);
 
@@ -90,7 +90,7 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 		accountPersistenceService.create(account);
 		deleteReservation(profile.getProviderUsername());
 
-		context.setIdenticaUniqueId(uniqueId);
+		context.setAccountUniqueId(uniqueId);
 		pipelineState.setScenario(context);
 
 		state.setAccount(account);

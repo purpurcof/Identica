@@ -46,6 +46,27 @@ public interface Cache<T> {
 	@NotNull CompletableFuture<Void> put(@Nullable String key, @Nullable T value, long ttlMs);
 
 	/**
+	 * Stores a cached entry using the cache's configured default TTL.
+	 *
+	 * @param key cache key
+	 * @param value cached value
+	 * @return completion journey
+	 */
+	@NotNull
+	default CompletableFuture<Void> put(@Nullable String key, @Nullable T value) {
+		return put(key, value, defaultTtlMs());
+	}
+
+	/**
+	 * Returns the cache's configured default TTL in milliseconds.
+	 *
+	 * @return default TTL in milliseconds, or {@code 0} when unset
+	 */
+	default long defaultTtlMs() {
+		return 0L;
+	}
+
+	/**
 	 * Invalidates a cached entry.
 	 *
 	 * @param key cache key

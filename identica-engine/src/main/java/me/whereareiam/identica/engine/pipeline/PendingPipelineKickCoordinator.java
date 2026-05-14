@@ -13,14 +13,14 @@ import me.whereareiam.identica.event.pipeline.state.PipelineStateSavedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.scheduler.DelayedRunnableTask;
 import me.whereareiam.identica.model.scheduler.JobKey;
 import me.whereareiam.identica.model.scheduler.Origin;
 import me.whereareiam.identica.model.scheduler.Purpose;
-import me.whereareiam.identica.model.scheduler.DelayedRunnableTask;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.service.Scheduler;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -120,10 +120,10 @@ public class PendingPipelineKickCoordinator implements EventListener {
 	private @Nullable Identity resolveIdentity(@NotNull PipelineStateReference reference) {
 		UUID connectionUniqueId = reference.getConnectionUniqueId();
 		if (connectionUniqueId != null)
-			return identityService.find(connectionUniqueId).orElse(null);
+			return identityService.findByConnectionUniqueId(connectionUniqueId).orElse(null);
 
-		UUID identityUniqueId = reference.getIdentityUniqueId();
-		return identityUniqueId != null ? identityService.find(identityUniqueId).orElse(null) : null;
+		UUID accountUniqueId = reference.getAccountUniqueId();
+		return accountUniqueId != null ? identityService.findByAccountUniqueId(accountUniqueId).orElse(null) : null;
 	}
 
 	private @NotNull String resolveExpiredMessage(@NotNull PipelineType pipelineType) {
@@ -145,7 +145,7 @@ public class PendingPipelineKickCoordinator implements EventListener {
 	private @NotNull JobKey jobKey(@NotNull PipelineType type, @NotNull PipelineStateReference reference) {
 		String correlation = "pending:" + type.name() +
 				"|c=" + reference.getConnectionUniqueId() +
-				"|i=" + reference.getIdentityUniqueId();
+				"|i=" + reference.getAccountUniqueId();
 
 		return JobKey.of(ORIGIN, PURPOSE, correlation);
 	}

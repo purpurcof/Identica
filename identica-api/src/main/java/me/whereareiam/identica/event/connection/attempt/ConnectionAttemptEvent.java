@@ -17,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public abstract class ConnectionAttemptEvent implements Event, SynchronousEvent {
 	private final @Nullable UUID connectionUniqueId;
-	private final @Nullable UUID identityUniqueId;
+	private final @Nullable UUID accountUniqueId;
 	private final @Nullable String username;
 	private final @Nullable String ip;
 	private @Nullable ConnectionDecision decision;

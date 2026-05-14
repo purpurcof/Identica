@@ -1,8 +1,8 @@
 package me.whereareiam.identica.common.completion;
 
-import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.junit.jupiter.api.DisplayName;
@@ -27,11 +27,11 @@ class DefaultCompletionPendingStoreTest {
 				this::settings
 		);
 		UUID connectionUniqueId = UUID.randomUUID();
-		UUID identicaUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
 		CompletionPendingState pendingState = CompletionPendingState.builder()
 				.pipelineType(PipelineType.AUTHENTICATION)
 				.connectionUniqueId(connectionUniqueId)
-				.identicaUniqueId(identicaUniqueId)
+				.accountUniqueId(accountUniqueId)
 				.build();
 
 		store.put(connectionUniqueId, pendingState);

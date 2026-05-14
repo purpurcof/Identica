@@ -88,10 +88,12 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 
 	private boolean submitProtectedAction(@NotNull Identity identity, @NotNull String input) {
 		VerificationDisablePendingState pendingDisable = findPendingDisable(identity);
-		if (pendingDisable == null)
-			return false;
+		if (pendingDisable == null) return false;
 
-		StepUpResult result = confirmStepUp(identity.getUniqueId(), input, "disable-method");
+		var accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return false;
+
+		StepUpResult result = confirmStepUp(accountUniqueId, input, "disable-method");
 		switch (result.getStatus()) {
 			case INVALID_CODE -> sendMessage(identity, verificationMessages().getConfirm().getInvalidCode(), Map.of());
 			case CURRENT_SESSION_REQUIRED -> sendMessage(identity, verificationMessages().getConfirm().getProtectedActionSessionRequired(), Map.of());
@@ -101,7 +103,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 				if (pendingDisable.getMethodId().isBlank()) {
 					sendMessage(identity, verificationMessages().getConfirm().getNoPending(), Map.of());
 				} else {
-					resultRenderer.presentDisableResult(identity, verificationService.disableMethod(identity.getUniqueId(), pendingDisable.getMethodId()));
+					resultRenderer.presentDisableResult(identity, verificationService.disableMethod(accountUniqueId, pendingDisable.getMethodId()));
 				}
 			}
 			default -> {
@@ -115,21 +117,23 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 		PipelineStateReference reference = reference(identity);
 		PipelineState state = pipelineStateStore.find(reference).orElse(null);
 		if (state == null || state.item(JourneyStateItem.class).isEmpty()) return false;
+		var accountUniqueId = requireAccountUniqueId(identity);
+		if (accountUniqueId == null) return false;
 
 		String providerId = currentProvider(state);
 		VerificationChallengeResult<?> result = verificationService.submitChallenge(
-				identity.getUniqueId(),
+				accountUniqueId,
 				providerId,
 				"authentication",
 				CodeVerificationInteraction.builder()
-						.subjectUniqueId(identity.getUniqueId())
+						.subjectUniqueId(accountUniqueId)
 						.code(input)
 						.build()
 		);
 
 		Logger.debug(
 				"Verification confirm submitted uniqueId=%s provider=%s status=%s challenge=%s method=%s codeLength=%s",
-				identity.getUniqueId(),
+				accountUniqueId,
 				providerId,
 				result.getStatus(),
 				result.getChallengeId(),
@@ -158,7 +162,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 		}
 
 		ConnectionDecision decision = connectionCoordinator.advance(AdvanceRequest.builder()
-				.connectionUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
 				.identity(identity)
 				.build()).toCompletableFuture().join();
 		if (decision == null || decision.getStatus() == null) return true;
@@ -203,8 +207,9 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 
 	private @NotNull PipelineStateReference reference(@NotNull Identity identity) {
 		return PipelineStateReference.builder()
-				.connectionUniqueId(identity.getUniqueId())
-				.identityUniqueId(identity.getUniqueId())
+				.connectionUniqueId(identity.getConnectionUniqueId())
+				.accountUniqueId(identity.getAccountUniqueId())
+				.connectionKey(identity.connectionKey())
 				.build();
 	}
 

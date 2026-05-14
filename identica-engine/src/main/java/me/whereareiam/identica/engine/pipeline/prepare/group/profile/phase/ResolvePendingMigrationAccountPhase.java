@@ -117,23 +117,23 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		UUID identicaUniqueId = migration.getIdenticaUniqueId();
-		if (identicaUniqueId == null)
+		UUID accountUniqueId = migration.getAccountUniqueId();
+		if (accountUniqueId == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		Optional<AccountProviderLink> storedLink = providerLinkPersistenceService.findBySubject(providerId, providerSubject);
 		AccountProviderLink link = storedLink.orElseGet(() -> AccountProviderLink.builder()
-				.uniqueId(identicaUniqueId)
+				.uniqueId(accountUniqueId)
 				.providerId(providerId)
 				.providerSubject(providerSubject)
 				.primaryLink(true)
 				.build());
 
-		Account storedAccount = accountPersistenceService.findByUniqueId(identicaUniqueId).orElse(null);
+		Account storedAccount = accountPersistenceService.findByUniqueId(accountUniqueId).orElse(null);
 		Account account = storedAccount != null
 				? storedAccount.toBuilder().username(requestedUsername).build()
 				: Account.builder()
-						.uniqueId(identicaUniqueId)
+						.uniqueId(accountUniqueId)
 						.username(requestedUsername)
 						.source(UsernameSource.PROVIDER)
 						.build();
@@ -146,7 +146,7 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 
 		boolean created = storedLink.isEmpty() || storedAccount == null;
 		pipelineState.putItem(new PrepareAccountCandidateItem(
-				identicaUniqueId,
+				accountUniqueId,
 				null,
 				account,
 				link,
@@ -156,7 +156,7 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 		Logger.debug(
 				"Prepare reusing pending migration account provider=%s identica=%s key=%s",
 				providerId,
-				identicaUniqueId,
+				accountUniqueId,
 				connectionKey
 		);
 

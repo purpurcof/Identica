@@ -6,15 +6,19 @@ import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
+import me.whereareiam.identica.type.PlatformType;
 import me.whereareiam.identica.type.event.EventPriority;
 import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
+import me.whereareiam.identica.type.session.RecognitionSignal;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Singleton
@@ -32,22 +36,46 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		settings.setListeners(listeners);
 
 		Settings.Sessions sessions = new Settings.Sessions();
-		sessions.setDefaultTtl(Duration.ofHours(2));
-		sessions.setRefreshTtl(Duration.ofMinutes(10));
 		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
-		sessions.setConcurrencyOverrides(new HashMap<>());
+		sessions.setActiveTtl(Duration.ofHours(12));
+		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
+		recognition.setEnabled(false);
+		recognition.setValidity(Duration.ofHours(12));
+		recognition.setDefaultSignals(java.util.List.of(
+				RecognitionSignal.USERNAME,
+				RecognitionSignal.IP,
+				RecognitionSignal.VIRTUAL_HOST
+		));
+		Settings.Sessions.Recognition.UntrustedIps untrustedIps = new Settings.Sessions.Recognition.UntrustedIps();
+		untrustedIps.setEnabled(true);
+		untrustedIps.setEntries(List.of(
+				"127.0.0.1",
+				"::1",
+				"10.0.0.0/8",
+				"172.16.0.0/12",
+				"192.168.0.0/16"
+		));
+		recognition.setUntrustedIps(untrustedIps);
+		sessions.setRecognition(recognition);
+
+		Settings.InitialPrompt initialPrompt = new Settings.InitialPrompt();
+		initialPrompt.setResendUntilInteraction(false);
+		initialPrompt.setResendInterval(Duration.ofMillis(1500));
 
 		Settings.Connection connection = new Settings.Connection();
 		connection.setRouting(routing);
 		connection.setSessions(sessions);
+		connection.setInitialPrompt(initialPrompt);
 		connection.setHandshakeInstructionTtl(Duration.ofMinutes(10));
 		connection.setAttemptTtl(Duration.ofMinutes(10));
 		connection.setReservationTtl(Duration.ofMinutes(15));
 		connection.setPrepareStateTtl(Duration.ofMinutes(10));
 		connection.setUniqueIdMode(UniqueIdMode.RANDOM);
-		connection.setAuthentication(defaultAuthenticationScenario());
-		connection.setRegistration(defaultRegistrationScenario());
-		connection.setMigration(defaultMigrationScenario());
+		Settings.Scenarios scenarios = new Settings.Scenarios();
+		scenarios.setAuthentication(defaultAuthenticationScenario());
+		scenarios.setRegistration(defaultRegistrationScenario());
+		scenarios.setMigration(defaultMigrationScenario());
+		connection.setScenarios(scenarios);
 		connection.setSentinels(defaultSentinels());
 		settings.setConnection(connection);
 
@@ -59,7 +87,6 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
 		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
-		scenario.setSessionConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
 		scenario.setJourneyMode(JourneyMode.SEAMLESS);
 		scenario.setJourneyPolicy(JourneyPolicy.PREFER);
@@ -125,13 +152,37 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 	}
 
 	private Map<String, Event> defaultListenerEvents() {
-		Map<String, Event> events = new HashMap<>();
+		return defaultListenerEvents(PlatformType.getType());
+	}
+
+	Map<String, Event> defaultListenerEvents(PlatformType platformType) {
+		return switch (platformType) {
+			case BUNGEECORD -> defaultBungeeCordListenerEvents();
+			case VELOCITY, UNKNOWN -> defaultVelocityListenerEvents();
+		};
+	}
+
+	private Map<String, Event> defaultVelocityListenerEvents() {
+		Map<String, Event> events = new LinkedHashMap<>();
 		events.put("com.velocitypowered.api.event.connection.PreLoginEvent", defaultEvent());
-		events.put("com.velocitypowered.api.event.connection.LoginEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.player.GameProfileRequestEvent", defaultEvent());
+		events.put("com.velocitypowered.api.event.connection.LoginEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent", defaultEvent(EventPriority.HIGH));
 		events.put("com.velocitypowered.api.event.player.ServerPreConnectEvent", defaultEvent(EventPriority.HIGH));
+		events.put("com.velocitypowered.api.event.player.ServerPostConnectEvent", defaultEvent());
 		events.put("com.velocitypowered.api.event.connection.DisconnectEvent", defaultEvent());
+		return events;
+	}
+
+	private Map<String, Event> defaultBungeeCordListenerEvents() {
+		Map<String, Event> events = new LinkedHashMap<>();
+		events.put("net.md_5.bungee.api.event.PlayerHandshakeEvent", defaultEvent());
+		events.put("net.md_5.bungee.api.event.LoginEvent", defaultEvent());
+		events.put("net.md_5.bungee.api.event.PostLoginEvent", defaultEvent());
+		events.put("net.md_5.bungee.api.event.ServerConnectEvent", defaultEvent(EventPriority.HIGH));
+		events.put("net.md_5.bungee.api.event.ServerConnectedEvent", defaultEvent(EventPriority.HIGH));
+		events.put("net.md_5.bungee.api.event.ServerSwitchEvent", defaultEvent());
+		events.put("net.md_5.bungee.api.event.PlayerDisconnectEvent", defaultEvent());
 
 		return events;
 	}

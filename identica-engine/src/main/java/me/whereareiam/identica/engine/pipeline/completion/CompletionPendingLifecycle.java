@@ -45,15 +45,17 @@ public class CompletionPendingLifecycle implements EventListener {
 		completionPendingStore.put(event.getConnectionUniqueId(), CompletionPendingState.builder()
 				.pipelineType(event.getPipelineType())
 				.connectionUniqueId(event.getConnectionUniqueId())
-				.identicaUniqueId(event.getSession().getUniqueId())
-				.sessionReused(event.isSessionReused())
+				.accountUniqueId(event.getSession().getUniqueId())
+				.recognitionApplied(event.isRecognitionApplied())
 				.build());
 	}
 
 	@IdenticEvent
 	public void onIdentityAttached(@NotNull IdentityAttachedEvent event) {
-		if (completionPendingStore.peek(event.getIdentity().getUniqueId()).isEmpty()) return;
-		if (hasRoutingIntent(event.getIdentity().getUniqueId())) return;
+		UUID connectionUniqueId = event.getIdentity().getConnectionUniqueId();
+		if (connectionUniqueId == null) return;
+		if (completionPendingStore.peek(connectionUniqueId).isEmpty()) return;
+		if (hasRoutingIntent(connectionUniqueId)) return;
 
 		completionPipeline.complete(event.getIdentity());
 	}
@@ -63,7 +65,7 @@ public class CompletionPendingLifecycle implements EventListener {
 		RoutingIntent intent = event.getIntent();
 		if (intent.getReason() != RoutingReason.COMPLETION) return;
 
-		identityService.find(intent.getConnectionUniqueId())
+		identityService.findByConnectionUniqueId(intent.getConnectionUniqueId())
 				.ifPresent(completionPipeline::complete);
 	}
 

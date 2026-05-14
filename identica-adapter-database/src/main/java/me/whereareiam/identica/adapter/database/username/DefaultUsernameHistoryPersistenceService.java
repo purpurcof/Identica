@@ -56,7 +56,7 @@ public class DefaultUsernameHistoryPersistenceService implements UsernameHistory
 
 	@IdenticEvent(EventOrder.HIGH)
 	public void onAccountLifecycle(@NotNull AccountLifecycleEvent event) {
-		UUID uniqueId = event.getIdentity().getUniqueId();
+		UUID uniqueId = event.getIdentity().getAccountUniqueId();
 		if (uniqueId == null) return;
 
 		deleteAll(uniqueId);

@@ -21,7 +21,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -81,7 +80,7 @@ class DefaultAccountServiceTest {
 		ArgumentCaptor<AccountLifecycleEvent> eventCaptor = ArgumentCaptor.forClass(AccountLifecycleEvent.class);
 		verify(eventManager).call(eventCaptor.capture());
 		assertInstanceOf(AccountClearEvent.class, eventCaptor.getValue());
-		assertEquals(account.getUniqueId(), eventCaptor.getValue().getIdentity().getUniqueId());
+		assertEquals(account.getUniqueId(), eventCaptor.getValue().getIdentity().getAccountUniqueId());
 	}
 
 	@DisplayName("Deleting an account closes its session and publishes a delete event")
@@ -99,7 +98,7 @@ class DefaultAccountServiceTest {
 		ArgumentCaptor<AccountLifecycleEvent> eventCaptor = ArgumentCaptor.forClass(AccountLifecycleEvent.class);
 		verify(eventManager).call(eventCaptor.capture());
 		assertInstanceOf(AccountDeleteEvent.class, eventCaptor.getValue());
-		assertEquals(account.getUniqueId(), eventCaptor.getValue().getIdentity().getUniqueId());
+		assertEquals(account.getUniqueId(), eventCaptor.getValue().getIdentity().getAccountUniqueId());
 	}
 
 	private Account account() {

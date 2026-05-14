@@ -22,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DisplayName("Premium Completion Step")
 class PremiumCompletionStepTest {
-	@DisplayName("Uses the reused-session completion message for authentication resumes")
+	@DisplayName("Uses the recognition completion message for recognized authentication")
 	@Test
-	void authenticationUsesReusedSessionMessageWhenSessionWasReused() {
+	void authenticationUsesRecognitionMessageWhenRecognitionApplied() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
@@ -33,7 +33,7 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getSession().getBody(), lines);
 	}
 
-	@DisplayName("Keeps the migration completion message even when the session was reused")
+	@DisplayName("Keeps the migration completion message even when recognition was applied")
 	@Test
 	void migrationIgnoresReusedSessionMessage() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
@@ -55,7 +55,7 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
 
-	@DisplayName("Keeps the registration completion message even when the session was reused")
+	@DisplayName("Keeps the registration completion message even when recognition was applied")
 	@Test
 	void registrationIgnoresReusedSessionMessage() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
@@ -66,7 +66,7 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
 
-	private CompletionContext context(boolean sessionReused, PipelineType pipelineType) {
+	private CompletionContext context(boolean recognitionApplied, PipelineType pipelineType) {
 		return CompletionContext.builder()
 				.identity(new TestIdentity())
 				.pipelineType(pipelineType)
@@ -77,7 +77,7 @@ class PremiumCompletionStepTest {
 						.originalUsername("PlayerOne")
 						.effectiveUsername("PlayerOne")
 						.build())
-				.sessionReused(sessionReused)
+				.recognitionApplied(recognitionApplied)
 				.build();
 	}
 

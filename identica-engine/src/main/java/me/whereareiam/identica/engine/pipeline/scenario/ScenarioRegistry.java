@@ -6,8 +6,8 @@ import me.whereareiam.identica.engine.pipeline.scenario.authentication.Authentic
 import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipeline;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
+import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
@@ -49,7 +49,7 @@ public class ScenarioRegistry {
 						"Scenario select chose resume pipeline=%s connection=%s identity=%s key=%s",
 						resumeRunner.type(),
 						resumeRequest.getConnectionUniqueId(),
-						resumeRequest.getIdentityUniqueId(),
+						resumeRequest.getAccountUniqueId(),
 						resumeRequest.getIdentity() != null ? resumeRequest.getIdentity().connectionKey() : null
 				);
 				return ScenarioSelection.resume(resumeRunner, resumeRequest);
@@ -61,7 +61,7 @@ public class ScenarioRegistry {
 				"Scenario select chose new pipeline pipeline=%s connection=%s identity=%s key=%s",
 				runner.type(),
 				request != null ? request.getConnectionUniqueId() : null,
-                request != null ? request.getIdentity().getUniqueId() : null,
+                request != null ? request.getIdentity().getAccountUniqueId() : null,
                 request != null ? request.getIdentity().connectionKey() : null
 		);
 		return ScenarioSelection.newScenario(runner);
@@ -120,7 +120,7 @@ public class ScenarioRegistry {
 			Logger.debug(
 					"Scenario resume lookup missed connection=%s identity=%s key=%s",
 					reference.getConnectionUniqueId(),
-					reference.getIdentityUniqueId(),
+					reference.getAccountUniqueId(),
 					reference.getConnectionKey()
 			);
 			return null;
@@ -131,7 +131,7 @@ public class ScenarioRegistry {
 			Logger.debug(
 					"Scenario resume lookup found state without pipeline type connection=%s identity=%s key=%s",
 					reference.getConnectionUniqueId(),
-					reference.getIdentityUniqueId(),
+					reference.getAccountUniqueId(),
 					reference.getConnectionKey()
 			);
 			return null;
@@ -143,7 +143,7 @@ public class ScenarioRegistry {
 					"Scenario resume lookup found unmapped pipeline type=%s connection=%s identity=%s key=%s",
 					storedType,
 					reference.getConnectionUniqueId(),
-					reference.getIdentityUniqueId(),
+					reference.getAccountUniqueId(),
 					reference.getConnectionKey()
 			);
 			return null;
@@ -155,7 +155,7 @@ public class ScenarioRegistry {
 				storedType,
 				pending,
 				reference.getConnectionUniqueId(),
-				reference.getIdentityUniqueId(),
+				reference.getAccountUniqueId(),
 				reference.getConnectionKey()
 		);
 		return pending ? runner : null;

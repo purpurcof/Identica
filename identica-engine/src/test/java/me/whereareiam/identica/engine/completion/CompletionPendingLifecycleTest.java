@@ -1,22 +1,22 @@
 package me.whereareiam.identica.engine.completion;
 
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
-import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
+import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
 import me.whereareiam.identica.event.routing.intent.RoutingIntentReachedEvent;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptState;
+import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.routing.RoutingEndpoint;
 import me.whereareiam.identica.model.routing.RoutingIntent;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptState;
+import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.routing.RoutingIntentStore;
-import me.whereareiam.identica.type.routing.reason.RoutingReason;
-import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
@@ -29,10 +29,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @DisplayName("Completion Pending Lifecycle")
 class CompletionPendingLifecycleTest {
@@ -54,7 +51,7 @@ class CompletionPendingLifecycleTest {
 		UUID connectionUniqueId = UUID.randomUUID();
 		Session session = Session.builder()
 				.uniqueId(UUID.randomUUID())
-				.providerId("cracked")
+				.providerId("credential")
 				.providerSubject("player-one")
 				.build();
 
@@ -85,8 +82,8 @@ class CompletionPendingLifecycleTest {
 				eventManager
 		);
 		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
-		when(pendingStore.peek(identity.getUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
-		when(routingIntentStore.peek(identity.getUniqueId())).thenReturn(Optional.empty());
+		when(pendingStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
+		when(routingIntentStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.empty());
 
 		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
 
@@ -109,8 +106,8 @@ class CompletionPendingLifecycleTest {
 				eventManager
 		);
 		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
-		when(pendingStore.peek(identity.getUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
-		when(routingIntentStore.peek(identity.getUniqueId())).thenReturn(Optional.of(completionIntent(identity.getUniqueId())));
+		when(pendingStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
+		when(routingIntentStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.of(completionIntent(identity.getConnectionUniqueId())));
 
 		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
 
@@ -133,9 +130,9 @@ class CompletionPendingLifecycleTest {
 				eventManager
 		);
 		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
-		when(identityService.find(identity.getUniqueId())).thenReturn(Optional.of(identity));
+		when(identityService.findByConnectionUniqueId(identity.getConnectionUniqueId())).thenReturn(Optional.of(identity));
 
-		lifecycle.onRoutingIntentReached(new RoutingIntentReachedEvent(completionIntent(identity.getUniqueId()), "lobby"));
+		lifecycle.onRoutingIntentReached(new RoutingIntentReachedEvent(completionIntent(identity.getConnectionUniqueId()), "lobby"));
 
 		verify(completionPipeline).complete(identity);
 	}
@@ -150,7 +147,7 @@ class CompletionPendingLifecycleTest {
 				new RoutingAttemptState(),
 				PipelineType.AUTHENTICATION,
 				null,
-				"cracked",
+				"credential",
 				null,
 				System.currentTimeMillis()
 		);

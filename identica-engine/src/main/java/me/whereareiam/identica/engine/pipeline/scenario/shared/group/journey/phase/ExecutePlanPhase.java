@@ -5,52 +5,47 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
-import me.whereareiam.identica.event.pipeline.scenario.shared.ProviderSelectedEvent;
 import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.event.pipeline.scenario.shared.ProviderSelectedEvent;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
 import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.event.step.StepStartedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.routing.RoutingSignal;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
-import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionPlan;
-import me.whereareiam.identica.type.pipeline.journey.JourneyExecutionPolicy;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionStage;
-import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
+import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.model.routing.RoutingSignal;
+import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyExecutionPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.step.StepContextRequirement;
 import me.whereareiam.identica.type.pipeline.journey.step.StepWaitReason;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
-import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -660,15 +655,9 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 	private boolean isOnline(@NotNull ScenarioContext context) {
 		UUID connectionId = context.getConnectionUniqueId();
-		if (connectionId != null && identityService.find(connectionId).isPresent())
-			return true;
-
-		String username = context.getUsername();
-		if (username != null && !username.isBlank())
-			return identityService.find(username).isPresent();
-
-		return false;
-	}
+        return connectionId != null
+				&& identityService.findByConnectionUniqueId(connectionId).isPresent();
+    }
 
 	private boolean requiresOnlinePresence(@NotNull JourneyStep step) {
 		return step.getStep().contextRequirement() == StepContextRequirement.ONLINE;
@@ -677,11 +666,11 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	private @NotNull Settings.Scenario scenarioSettings(@Nullable PipelineType pipelineType) {
 		Settings.Connection connection = settingsProvider.get().getConnection();
 		if (pipelineType == PipelineType.REGISTRATION)
-			return connection.getRegistration();
+			return connection.getScenarios().getRegistration();
 		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getMigration();
+			return connection.getScenarios().getMigration();
 
-		return connection.getAuthentication();
+		return connection.getScenarios().getAuthentication();
 	}
 
 	private void applyProviderContext(@NotNull ScenarioContext context, @NotNull String providerId) {

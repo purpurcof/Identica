@@ -3,7 +3,7 @@ package me.whereareiam.identica.platform.bungeecord.api.handshake;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.handshake.HandshakeContext;
-import net.md_5.bungee.api.event.PlayerHandshakeEvent;
+import net.md_5.bungee.api.connection.PendingConnection;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -13,5 +13,5 @@ import org.jetbrains.annotations.NotNull;
 @Getter
 @RequiredArgsConstructor
 public final class BungeeCordHandshakeContext implements HandshakeContext {
-	private final @NotNull PlayerHandshakeEvent event;
+	private final @NotNull PendingConnection connection;
 }

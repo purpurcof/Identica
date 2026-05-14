@@ -13,10 +13,10 @@ public class PremiumHandshakeApplier implements HandshakeApplier<BungeeCordHands
 		if (!instruction.getAttribute(PremiumHandshakeAttributes.FORCE_ONLINE).orElse(false))
 			return;
 
-		context.getEvent().getConnection().setOnlineMode(true);
+		context.getConnection().setOnlineMode(true);
 		Logger.debug(
 				"Premium Bungee handshake applied force-online username=%s",
-				context.getEvent().getConnection().getName()
+				context.getConnection().getName()
 		);
 	}
 }

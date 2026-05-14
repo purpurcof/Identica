@@ -5,15 +5,15 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.platform.bungeecord.adapter.auth.BungeeCordHandshakeDecisionAdapter;
-import net.md_5.bungee.api.event.PlayerHandshakeEvent;
+import net.md_5.bungee.api.event.PreLoginEvent;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class PlayerHandshakeListener implements DynamicListener<PlayerHandshakeEvent> {
+public class PreLoginListener implements DynamicListener<PreLoginEvent> {
 	private final BungeeCordHandshakeDecisionAdapter handshakeDecisionAdapter;
 
 	@Override
-	public void onEvent(PlayerHandshakeEvent event) {
+	public void onEvent(PreLoginEvent event) {
 		handshakeDecisionAdapter.process(event).toCompletableFuture().join();
 	}
 }

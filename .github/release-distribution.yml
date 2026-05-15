@@ -179,7 +179,7 @@ publications:
     platforms:
       - velocity
 
-  # Hangar publications are disabled for now because the plugin is blocked there.
+  # Hangar publications are disabled, because the plugin is blocked there
   # identica-hangar:
   #   provider:
   #     id: hangar

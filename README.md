@@ -1,3 +1,5 @@
+![Header](.github/assets/Header.png)
+
 # Information
 
 ![release](https://img.shields.io/github/v/release/whereareiam/Identica)

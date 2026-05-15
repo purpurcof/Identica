@@ -69,9 +69,7 @@ public class CredentialMessages extends ConfigDocument {
 				@Setter
 				@ToString
 				public static class Status {
-					private String success;
 					private String invalid;
-					private String notRegistered;
 					private String noPending;
 				}
 			}
@@ -88,9 +86,7 @@ public class CredentialMessages extends ConfigDocument {
 				@Setter
 				@ToString
 				public static class Status {
-					private String success;
 					private String disabled;
-					private String alreadyRegistered;
 					private String mismatch;
 					private String noPending;
 				}
@@ -109,7 +105,6 @@ public class CredentialMessages extends ConfigDocument {
 			@Setter
 			@ToString
 			public static class Status {
-				private String success;
 				private String disabled;
 				private String alreadyRegistered;
 				private String mismatch;
@@ -130,7 +125,6 @@ public class CredentialMessages extends ConfigDocument {
 			@Setter
 			@ToString
 			public static class Status {
-				private String success;
 				private String invalid;
 				private String notRegistered;
 				private String noPending;

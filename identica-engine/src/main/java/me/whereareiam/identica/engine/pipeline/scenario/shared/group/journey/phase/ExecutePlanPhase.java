@@ -643,12 +643,11 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 		if (clearProvider) {
 			context.setProvider(null);
-			pipelineState.setScenario(context);
 		} else if (overrideProviderId != null && !overrideProviderId.isBlank()) {
 			applyProviderContext(context, overrideProviderId);
-			pipelineState.setScenario(context);
 		}
 
+		pipelineState.setScenario(context);
 		long ttlMs = scenarioSettings(pipelineState.getPipelineType()).pipelineTtlMillis();
 		pipelineState.putItem(new JourneyStateItem(resolvedJourneyMode, resolvedStageId, resolvedStepIndex), ttlMs);
 	}

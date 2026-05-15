@@ -64,16 +64,59 @@ public final class PipelineStateReference {
 	public static class PipelineStateReferenceBuilder {
 		private final IdentityReference identityReference = new IdentityReference();
 
+		/**
+		 * Copies UUID roles from an identity reference into this state reference.
+		 *
+		 * @param identityReference source identity reference, or {@code null}
+		 * @return this builder
+		 */
+		public @NotNull PipelineStateReferenceBuilder identityReference(@Nullable IdentityReference identityReference) {
+			if (identityReference == null) return this;
+
+			this.identityReference.setConnectionUniqueId(identityReference.getConnectionUniqueId());
+			this.identityReference.setObservedUniqueId(identityReference.getObservedUniqueId());
+			this.identityReference.setAccountUniqueId(identityReference.getAccountUniqueId());
+			return this;
+		}
+
+		/**
+		 * Sets the live connection UUID alias for this state reference.
+		 *
+		 * @param connectionUniqueId live connection UUID
+		 * @return this builder
+		 */
 		public @NotNull PipelineStateReferenceBuilder connectionUniqueId(@Nullable UUID connectionUniqueId) {
 			identityReference.setConnectionUniqueId(connectionUniqueId);
 			return this;
 		}
 
+		/**
+		 * Sets the observed platform UUID for this state reference.
+		 *
+		 * @param observedUniqueId observed platform UUID
+		 * @return this builder
+		 */
+		public @NotNull PipelineStateReferenceBuilder observedUniqueId(@Nullable UUID observedUniqueId) {
+			identityReference.setObservedUniqueId(observedUniqueId);
+			return this;
+		}
+
+		/**
+		 * Sets the resolved account UUID alias for this state reference.
+		 *
+		 * @param accountUniqueId resolved account UUID
+		 * @return this builder
+		 */
 		public @NotNull PipelineStateReferenceBuilder accountUniqueId(@Nullable UUID accountUniqueId) {
 			identityReference.setAccountUniqueId(accountUniqueId);
 			return this;
 		}
 
+		/**
+		 * Builds the immutable state reference.
+		 *
+		 * @return state reference
+		 */
 		public @NotNull PipelineStateReference build() {
 			return new PipelineStateReference(identityReference, connectionKey);
 		}

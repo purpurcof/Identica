@@ -1,12 +1,13 @@
 package me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase;
 
+import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionPlan;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionStage;
@@ -15,21 +16,24 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.routing.RoutingCoordinator;
-import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyExecutionPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
+import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.pipeline.journey.step.StepContextRequirement;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -37,14 +41,9 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @DisplayName("Execute Plan Phase")
 class ExecutePlanPhaseTest {
@@ -62,8 +61,8 @@ class ExecutePlanPhaseTest {
 		ExecutePlanPhase phase = new ExecutePlanPhase(
 				identityService,
 				eventManager,
-				() -> new Settings(),
-				() -> new Messages(),
+				this::settings,
+                Messages::new,
 				providerManager,
 				pipelineStateStore,
 				routingCoordinator
@@ -147,6 +146,94 @@ class ExecutePlanPhaseTest {
 		verify(routingCoordinator, atLeastOnce()).accept(any());
 	}
 
+	@DisplayName("Waiting steps persist the current scenario identity reference")
+	@Test
+	void waitingStepPersistsCurrentScenarioIdentityReference() {
+		IdentityService identityService = mock(IdentityService.class);
+		EventManager eventManager = mock(EventManager.class);
+		ProviderManager providerManager = mock(ProviderManager.class);
+		PipelineStateStore pipelineStateStore = mock(PipelineStateStore.class);
+		RoutingCoordinator routingCoordinator = mock(RoutingCoordinator.class);
+		when(pipelineStateStore.find(any(PipelineStateReference.class)))
+				.thenReturn(Optional.empty());
+		when(identityService.findByConnectionUniqueId(any(UUID.class))).thenReturn(Optional.empty());
+
+		ExecutePlanPhase phase = new ExecutePlanPhase(
+				identityService,
+				eventManager,
+				this::settings,
+				Messages::new,
+				providerManager,
+				pipelineStateStore,
+				routingCoordinator
+		);
+
+		UUID connectionUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
+		AuthContext staleContext = AuthContext.builder()
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
+				.intendedServer("auth")
+				.build();
+		AuthContext currentContext = AuthContext.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.accountUniqueId(accountUniqueId)
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
+				.intendedServer("auth")
+				.build();
+		PipelineState pipelineState = PipelineState.initial();
+		pipelineState.setPipelineType(PipelineType.AUTHENTICATION);
+		pipelineState.setScenario(staleContext);
+
+		JourneyStage providerStage = JourneyStage.builder()
+				.id(StageType.PROVIDER.id())
+				.type(StageType.PROVIDER)
+				.order(200)
+				.pipelineTypes(EnumSet.of(PipelineType.AUTHENTICATION))
+				.journeyModes(EnumSet.of(JourneyMode.INTERACTIVE))
+				.allowFallback(true)
+				.build();
+		Step onlineStep = step("online-wait", StepContextRequirement.ONLINE, context -> StepResult.proceed(context));
+		JourneyExecutionPlan plan = new JourneyExecutionPlan(List.of(new JourneyExecutionBlock(
+				"group-provider",
+				JourneyExecutionPolicy.SEQUENTIAL,
+				null,
+				List.of(new JourneyExecutionStage(providerStage, List.of(journeyStep(StageType.PROVIDER, onlineStep, 10))))
+		)));
+
+		JourneyState state = new JourneyState();
+		state.setContext(currentContext);
+		state.setJourneyMode(JourneyMode.INTERACTIVE);
+		state.setExecutionPlan(plan);
+
+		PhaseResult<JourneyState> result = phase.execute(pipelineState, state).toCompletableFuture().join();
+		AuthContext persistedContext = (AuthContext) pipelineState.getScenario(PipelineType.AUTHENTICATION);
+
+		assertEquals(PipelineStatus.WAITING, result.getState().getResult().getStatus());
+		assertEquals(connectionUniqueId, persistedContext.getConnectionUniqueId());
+		assertEquals(accountUniqueId, persistedContext.getAccountUniqueId());
+		assertTrue(pipelineState.item(JourneyStateItem.class).isPresent());
+	}
+
+	private Settings settings() {
+		Settings settings = new Settings();
+		Settings.Connection connection = new Settings.Connection();
+		Settings.Scenarios scenarios = new Settings.Scenarios();
+		configureScenario(scenarios.getAuthentication());
+		configureScenario(scenarios.getRegistration());
+		configureScenario(scenarios.getMigration());
+		connection.setScenarios(scenarios);
+		settings.setConnection(connection);
+		return settings;
+	}
+
+	private void configureScenario(@NotNull Settings.Scenario scenario) {
+		scenario.setPipelineTtl(Duration.ofSeconds(60));
+		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
+		scenario.setAllowResume(true);
+		scenario.setJourneyMode(JourneyMode.INTERACTIVE);
+		scenario.setJourneyPolicy(JourneyPolicy.PREFER);
+	}
+
 	private JourneyStep journeyStep(@NotNull StageType stageType, @NotNull Step step, int order) {
 		return JourneyStep.builder()
 				.stageId(stageType.id())
@@ -158,6 +245,14 @@ class ExecutePlanPhaseTest {
 	}
 
 	private Step step(@NotNull String name, @NotNull StepExecutor executor) {
+		return step(name, StepContextRequirement.LOGIN, executor);
+	}
+
+	private Step step(
+			@NotNull String name,
+			@NotNull StepContextRequirement contextRequirement,
+			@NotNull StepExecutor executor
+	) {
 		return new Step() {
 			@Override
 			public @NotNull String getName() {
@@ -171,7 +266,7 @@ class ExecutePlanPhaseTest {
 
 			@Override
 			public @NotNull StepContextRequirement contextRequirement() {
-				return StepContextRequirement.LOGIN;
+				return contextRequirement;
 			}
 
 			@Override

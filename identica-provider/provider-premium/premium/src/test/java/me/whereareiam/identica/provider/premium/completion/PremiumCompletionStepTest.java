@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Premium Completion Step")
 class PremiumCompletionStepTest {
@@ -42,6 +42,18 @@ class PremiumCompletionStepTest {
 		List<String> lines = step.lines(context(true, PipelineType.MIGRATION));
 
 		assertEquals(messages.getCompletion().getMigration().getBody(), lines);
+	}
+
+	@DisplayName("Migration completion copy announces premium migration completion")
+	@Test
+	void migrationCompletionCopyAnnouncesPremiumMigrationCompletion() {
+		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
+		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
+
+		List<String> lines = step.lines(context(true, PipelineType.MIGRATION));
+
+		assertTrue(lines.contains("  <white>Premium provider migration <green>completed</green>.</white>"));
+		assertFalse(lines.stream().anyMatch(line -> line.contains("Welcome back")));
 	}
 
 	@DisplayName("Uses the registration completion message when one is configured")

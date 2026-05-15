@@ -91,13 +91,13 @@ public class PremiumMessagesDefaults implements MergeDefaultsProvider<PremiumMes
 		PremiumMessages.Completion.Pipeline migrationCompletion = new PremiumMessages.Completion.Pipeline();
 		PremiumMessages.Completion.Pipeline.Title migrationTitle = new PremiumMessages.Completion.Pipeline.Title();
 		migrationTitle.setTitle("<gold><bold>Migrated</bold></gold>");
-		migrationTitle.setSubtitle("<dark_gray>You were migrated to premium.</dark_gray>");
+		migrationTitle.setSubtitle("<dark_gray>Premium migration completed.</dark_gray>");
 		migrationCompletion.setTitle(migrationTitle);
 		migrationCompletion.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
 				" ",
-				"  <white>Welcome back, <green>{player}</green>.</white>",
+				"  <white>Premium provider migration <green>completed</green>.</white>",
 				"  <white>Your account now authenticates <gold>via premium provider</gold>.</white>",
 				" ",
 				"  <gray>Rejoin with your licensed Minecraft account from now on.</gray>",

@@ -179,46 +179,47 @@ publications:
     platforms:
       - velocity
 
-  identica-hangar:
-    provider:
-      id: hangar
-      project_slug: "whereareiam/Identica"
-      release_type_map:
-        release: Release
-        beta: Beta
-        alpha: Beta
-    artifact: identica
-    platforms:
-      - velocity
+  # Hangar publications are disabled, because the plugin is blocked there
+  # identica-hangar:
+  #   provider:
+  #     id: hangar
+  #     project_slug: "whereareiam/Identica"
+  #     release_type_map:
+  #       release: Release
+  #       beta: Beta
+  #       alpha: Beta
+  #   artifact: identica
+  #   platforms:
+  #     - velocity
 
-  credential-provider-hangar:
-    provider:
-      id: hangar
-      project_slug: "whereareiam/Identica-Offline-Provider"
-      release_type_map:
-        release: Release
-        beta: Beta
-        alpha: Beta
-      dependencies:
-        - kind: hangar
-          name: Identica
-          required: true
-    artifact: credential-provider
-    platforms:
-      - velocity
+  # credential-provider-hangar:
+  #   provider:
+  #     id: hangar
+  #     project_slug: "whereareiam/Identica-Offline-Provider"
+  #     release_type_map:
+  #       release: Release
+  #       beta: Beta
+  #       alpha: Beta
+  #     dependencies:
+  #       - kind: hangar
+  #         name: Identica
+  #         required: true
+  #   artifact: credential-provider
+  #   platforms:
+  #     - velocity
 
-  premium-provider-hangar:
-    provider:
-      id: hangar
-      project_slug: "whereareiam/Identica-Premium-Provider"
-      release_type_map:
-        release: Release
-        beta: Beta
-        alpha: Beta
-      dependencies:
-        - kind: hangar
-          name: Identica
-          required: true
-    artifact: premium-provider
-    platforms:
-      - velocity
+  # premium-provider-hangar:
+  #   provider:
+  #     id: hangar
+  #     project_slug: "whereareiam/Identica-Premium-Provider"
+  #     release_type_map:
+  #       release: Release
+  #       beta: Beta
+  #       alpha: Beta
+  #     dependencies:
+  #       - kind: hangar
+  #         name: Identica
+  #         required: true
+  #   artifact: premium-provider
+  #   platforms:
+  #     - velocity

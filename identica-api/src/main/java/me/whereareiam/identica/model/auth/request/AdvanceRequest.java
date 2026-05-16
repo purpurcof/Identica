@@ -52,6 +52,20 @@ public class AdvanceRequest {
 		return identity != null ? identity.getAccountUniqueId() : null;
 	}
 
+	public @NotNull IdentityReference getIdentityReference() {
+		if (identity == null)
+			return identityReference;
+
+		if (identityReference.getConnectionUniqueId() == null)
+			identityReference.setConnectionUniqueId(identity.getConnectionUniqueId());
+		if (identityReference.getObservedUniqueId() == null)
+			identityReference.setObservedUniqueId(identity.getObservedUniqueId());
+		if (identityReference.getAccountUniqueId() == null)
+			identityReference.setAccountUniqueId(identity.getAccountUniqueId());
+
+		return identityReference;
+	}
+
 	/**
 	 * Returns the username for this advance request.
 	 *

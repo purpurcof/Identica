@@ -8,6 +8,9 @@ import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
 import me.whereareiam.identica.logging.Logger;
+import me.whereareiam.identica.model.delivery.DeliveryPayload;
+import me.whereareiam.identica.model.delivery.DeliveryRequest;
+import me.whereareiam.identica.model.delivery.DeliveryTarget;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
@@ -22,7 +25,11 @@ import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.type.UsernameSource;
+import me.whereareiam.identica.type.messaging.DeliveryCheckpoint;
+import me.whereareiam.identica.type.messaging.DeliverySemantics;
+import me.whereareiam.identica.type.messaging.DeliverySource;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,6 +45,7 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 	private final AccountPersistenceService accountPersistenceService;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final ProviderProfilePersistenceService providerProfilePersistenceService;
+	private final DeliveryService deliveryService;
 
 	@Override
 	public @NotNull String id() {
@@ -105,6 +113,23 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 		String targetProviderId = migration.getTargetProviderId();
 		if (targetProviderId == null) return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		if (!targetProviderId.equalsIgnoreCase(providerId)) {
+			UUID cancelledAccountUniqueId = migration.getAccountUniqueId();
+			if (cancelledAccountUniqueId != null) {
+				deliveryService.queue(DeliveryRequest.builder()
+						.id(UUID.randomUUID())
+						.source(DeliverySource.NOTICE)
+						.target(DeliveryTarget.builder()
+								.accountUniqueId(cancelledAccountUniqueId)
+								.build())
+						.payload(DeliveryPayload.builder()
+								.chatMessage("<green>ɪᴅᴇɴᴛɪᴄᴀ\n\n<white>Your pending migration was cancelled.</white>\n<white>You are still using your previous login provider.</white>\n\n<dark_gray>discord.arcadeya.com")
+								.build())
+						.checkpoint(DeliveryCheckpoint.PLATFORM_READY_INITIAL)
+						.semantics(DeliverySemantics.ONCE)
+						.createdAt(System.currentTimeMillis())
+						.updatedAt(System.currentTimeMillis())
+						.build());
+			}
 			pipelineStateStore.clear(PipelineStateReference.builder()
 					.connectionKey(connectionKey)
 					.build());

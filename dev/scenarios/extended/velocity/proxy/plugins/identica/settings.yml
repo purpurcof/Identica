@@ -43,9 +43,6 @@ connection:
       untrustedIps:
         enabled: false
         entries: []
-  initialPrompt:
-    resendUntilInteraction: false
-    resendInterval: "1500ms"
   scenarios:
     authentication:
       pipelineTtl: "5m"

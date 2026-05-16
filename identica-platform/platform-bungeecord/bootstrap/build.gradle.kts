@@ -18,7 +18,7 @@ dependencies {
     testImplementation(libs.cloud.bungee)
 
     implementation(libs.attache.bungeecord)
-    implementation(libs.adventure.platform.bungeecord)
+    attache(libs.adventure.platform.bungeecord)
     attache(libs.cloud.bungee)
 }
 

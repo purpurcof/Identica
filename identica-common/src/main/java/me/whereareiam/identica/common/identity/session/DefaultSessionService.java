@@ -25,6 +25,7 @@ import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.service.Scheduler;
 import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
+import me.whereareiam.identica.util.UniqueIdUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -139,7 +140,7 @@ public class DefaultSessionService implements SessionService, EventListener {
 				.thenApply(keys -> {
 					List<UUID> entries = new ArrayList<>();
 					for (String key : keys.getEntries()) {
-						UUID uniqueId = parseUniqueId(key);
+						UUID uniqueId = UniqueIdUtil.parseUniqueId(key);
 						if (uniqueId != null) entries.add(uniqueId);
 					}
 					return new Page(entries, keys.getPage(), keys.getPageSize(), keys.getTotal());
@@ -319,18 +320,8 @@ public class DefaultSessionService implements SessionService, EventListener {
 		String normalizedProviderSubject = normalize(providerSubject);
 		if (normalizedProviderId == null || normalizedProviderSubject == null)
 			return null;
+
 		return normalizedProviderId + ":" + normalizedProviderSubject;
-	}
-
-	private UUID parseUniqueId(String value) {
-		String trimmed = trimToNull(value);
-		if (trimmed == null) return null;
-
-		try {
-			return UUID.fromString(trimmed);
-		} catch (IllegalArgumentException ignored) {
-			return null;
-		}
 	}
 
 	private @Nullable String normalize(@Nullable String value) {

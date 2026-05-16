@@ -38,7 +38,6 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				" "
 		));
 		CredentialMessages.Scenario.Registration.Status registrationStatus = new CredentialMessages.Scenario.Registration.Status();
-		registrationStatus.setSuccess("{prefix}<white>You have been <green>successfully registered</green>.</white>");
 		registrationStatus.setDisabled("{prefix}<white>Registration is <red>disabled</red>.</white>");
 		registrationStatus.setAlreadyRegistered("{prefix}<white>Your account is already <green>registered</green>.</white>");
 		registrationStatus.setMismatch("{prefix}<white>Passwords do not <red>match</red>.</white>");
@@ -58,7 +57,6 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				" "
 		));
 		CredentialMessages.Scenario.Authentication.Status authenticationStatus = new CredentialMessages.Scenario.Authentication.Status();
-		authenticationStatus.setSuccess("{prefix}<white>Successfully <green>logged in</green>.</white>");
 		authenticationStatus.setInvalid("{prefix}<white>Invalid <red>password</red>.</white>");
 		authenticationStatus.setNotRegistered("{prefix}<white>No password account found.</white>");
 		authenticationStatus.setNoPending("{prefix}<white>No pending login.</white>");
@@ -106,9 +104,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				" "
 		));
 		CredentialMessages.Scenario.Migration.Verification.Status migrationVerificationStatus = new CredentialMessages.Scenario.Migration.Verification.Status();
-		migrationVerificationStatus.setSuccess("{prefix}<white>Current password <green>verified</green>. Continue your credential migration.</white>");
 		migrationVerificationStatus.setInvalid("{prefix}<white>Your current password is <red>invalid</red>.</white>");
-		migrationVerificationStatus.setNotRegistered("{prefix}<white>No credential account found for this migration step.</white>");
 		migrationVerificationStatus.setNoPending("{prefix}<white>No pending credential migration verification.</white>");
 		migrationVerification.setStatus(migrationVerificationStatus);
 		migration.setVerification(migrationVerification);
@@ -139,9 +135,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				" "
 		));
 		CredentialMessages.Scenario.Migration.Setup.Status migrationSetupStatus = new CredentialMessages.Scenario.Migration.Setup.Status();
-		migrationSetupStatus.setSuccess("{prefix}<white>Credential migration <green>completed</green>.</white>");
 		migrationSetupStatus.setDisabled("{prefix}<white>Credential migration is <red>disabled</red>.</white>");
-		migrationSetupStatus.setAlreadyRegistered("{prefix}<white>Your credential migration is already <green>complete</green>.</white>");
 		migrationSetupStatus.setMismatch("{prefix}<white>Migration passwords do not <red>match</red>.</white>");
 		migrationSetupStatus.setNoPending("{prefix}<white>No pending credential migration password step.</white>");
 		migrationSetup.setStatus(migrationSetupStatus);
@@ -206,16 +200,16 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 		CredentialMessages.Completion.Pipeline migrationCompletion = new CredentialMessages.Completion.Pipeline();
 		CredentialMessages.Completion.Pipeline.Title migrationTitle = new CredentialMessages.Completion.Pipeline.Title();
 		migrationTitle.setTitle("<gold><bold>Migrated</bold></gold>");
-		migrationTitle.setSubtitle("<dark_gray>You were migrated to the credential provider.</dark_gray>");
+		migrationTitle.setSubtitle("<dark_gray>Credential migration completed.</dark_gray>");
 		migrationCompletion.setTitle(migrationTitle);
 		migrationCompletion.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
 				" ",
-				"  <white>Welcome back, <green>{player}</green>.</white>",
+				"  <white>Credential provider migration <green>completed</green>.</white>",
 				"  <white>Your account now authenticates <gold>via credential provider</gold>.</white>",
 				" ",
-				"  <gray>You can continue using the credential provider to sign in.</gray>",
+				"  <gray>Use credential login from now on.</gray>",
 				" "
 		));
 		completion.setMigration(migrationCompletion);

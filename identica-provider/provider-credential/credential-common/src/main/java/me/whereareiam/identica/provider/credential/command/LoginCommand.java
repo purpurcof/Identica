@@ -58,7 +58,6 @@ public class LoginCommand {
 			case WAIT -> sendMessage(identity, decision.getMessage());
 			case DENY, REQUIRE_RECONNECT -> disconnect(identity, decision.getMessage());
 			case NO_PENDING -> sendMessage(identity, noPendingMessage(pipelineType));
-			case ALLOW -> sendMessage(identity, successMessage(pipelineType));
 			default -> {
 			}
 		}
@@ -83,13 +82,6 @@ public class LoginCommand {
 		PipelineState state = pipelineStateStore.find(reference(identity)).orElse(null);
 		PipelineType type = state != null ? state.getPipelineType() : null;
 		return type != null ? type : PipelineType.AUTHENTICATION;
-	}
-
-	private String successMessage(@NotNull PipelineType pipelineType) {
-		CredentialMessages.Scenario scenario = messagesProvider.get().getScenario();
-		if (pipelineType == PipelineType.MIGRATION)
-			return scenario.getMigration().getVerification().getStatus().getSuccess();
-		return scenario.getAuthentication().getStatus().getSuccess();
 	}
 
 	private String noPendingMessage(@NotNull PipelineType pipelineType) {

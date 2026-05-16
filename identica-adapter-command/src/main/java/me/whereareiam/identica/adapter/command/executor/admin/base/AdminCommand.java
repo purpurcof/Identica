@@ -4,17 +4,14 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
+import me.whereareiam.identica.util.UniqueIdUtil;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class AdminCommand {
 	private final @NotNull AccountService accountService;
@@ -34,7 +31,7 @@ public abstract class AdminCommand {
 			@NotNull Messages.Commands.Admin.Clear.Multiple multiple,
 			@NotNull String command
 	) {
-		UUID parsed = parseUniqueId(target);
+		UUID parsed = UniqueIdUtil.parseUniqueId(target);
 		if (parsed != null) {
 			Optional<Account> account = accountService.find(parsed);
 			if (account.isEmpty()) {
@@ -173,15 +170,5 @@ public abstract class AdminCommand {
 		}
 
 		return result;
-	}
-
-	private UUID parseUniqueId(String value) {
-		if (value == null || value.isBlank()) return null;
-
-		try {
-			return UUID.fromString(value.trim());
-		} catch (IllegalArgumentException ignored) {
-			return null;
-		}
 	}
 }

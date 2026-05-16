@@ -18,13 +18,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Premium Completion Step")
 class PremiumCompletionStepTest {
 	@DisplayName("Uses the recognition completion message for recognized authentication")
 	@Test
-	void authenticationUsesRecognitionMessageWhenRecognitionApplied() {
+	void authenticationUsesRecognitionMessageWhenAuthenticationRecognized() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
@@ -35,13 +35,25 @@ class PremiumCompletionStepTest {
 
 	@DisplayName("Keeps the migration completion message even when recognition was applied")
 	@Test
-	void migrationIgnoresReusedSessionMessage() {
+	void migrationIgnoresReusedSessionMessageWhenAuthenticationRecognized() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
 		List<String> lines = step.lines(context(true, PipelineType.MIGRATION));
 
 		assertEquals(messages.getCompletion().getMigration().getBody(), lines);
+	}
+
+	@DisplayName("Migration completion copy announces premium migration completion")
+	@Test
+	void migrationCompletionCopyAnnouncesPremiumMigrationCompletion() {
+		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
+		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
+
+		List<String> lines = step.lines(context(true, PipelineType.MIGRATION));
+
+		assertTrue(lines.contains("  <white>Premium provider migration <green>completed</green>.</white>"));
+		assertFalse(lines.stream().anyMatch(line -> line.contains("Welcome back")));
 	}
 
 	@DisplayName("Uses the registration completion message when one is configured")
@@ -57,7 +69,7 @@ class PremiumCompletionStepTest {
 
 	@DisplayName("Keeps the registration completion message even when recognition was applied")
 	@Test
-	void registrationIgnoresReusedSessionMessage() {
+	void registrationIgnoresReusedSessionMessageWhenAuthenticationRecognized() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
@@ -66,7 +78,7 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
 
-	private CompletionContext context(boolean recognitionApplied, PipelineType pipelineType) {
+	private CompletionContext context(boolean authenticationRecognized, PipelineType pipelineType) {
 		return CompletionContext.builder()
 				.identity(new TestIdentity())
 				.pipelineType(pipelineType)
@@ -77,7 +89,7 @@ class PremiumCompletionStepTest {
 						.originalUsername("PlayerOne")
 						.effectiveUsername("PlayerOne")
 						.build())
-				.recognitionApplied(recognitionApplied)
+				.authenticationRecognized(authenticationRecognized)
 				.build();
 	}
 

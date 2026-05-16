@@ -13,6 +13,9 @@ import me.whereareiam.identica.event.pipeline.state.PipelineStateSavedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.delivery.DeliveryPayload;
+import me.whereareiam.identica.model.delivery.DeliveryRequest;
+import me.whereareiam.identica.model.delivery.DeliveryTarget;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
@@ -20,7 +23,11 @@ import me.whereareiam.identica.model.scheduler.DelayedRunnableTask;
 import me.whereareiam.identica.model.scheduler.JobKey;
 import me.whereareiam.identica.model.scheduler.Origin;
 import me.whereareiam.identica.model.scheduler.Purpose;
+import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.service.Scheduler;
+import me.whereareiam.identica.type.messaging.DeliveryCheckpoint;
+import me.whereareiam.identica.type.messaging.DeliverySemantics;
+import me.whereareiam.identica.type.messaging.DeliverySource;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,17 +42,20 @@ public class PendingPipelineKickCoordinator implements EventListener {
 
 	private final Provider<Messages> messagesProvider;
 	private final IdentityService identityService;
+	private final DeliveryService deliveryService;
 	private final Scheduler scheduler;
 
 	@Inject
 	public PendingPipelineKickCoordinator(
 			Provider<Messages> messagesProvider,
 			IdentityService identityService,
+			DeliveryService deliveryService,
 			Scheduler scheduler,
 			EventManager eventManager
 	) {
 		this.messagesProvider = messagesProvider;
 		this.identityService = identityService;
+		this.deliveryService = deliveryService;
 		this.scheduler = scheduler;
 		eventManager.register(this);
 	}
@@ -85,9 +95,8 @@ public class PendingPipelineKickCoordinator implements EventListener {
 			return;
 		}
 
-		for (PipelineType candidate : PipelineType.values()) {
+		for (PipelineType candidate : PipelineType.values())
 			cancelByKey(jobKey(candidate, reference));
-		}
 	}
 
 	private void scheduleKick(
@@ -112,9 +121,37 @@ public class PendingPipelineKickCoordinator implements EventListener {
 	private void disconnectExpired(@NotNull PipelineStateReference reference, @NotNull PipelineType type) {
 		Identity identity = resolveIdentity(reference);
 		if (identity == null) return;
+		queueCancelledNotice(reference, type, identity);
 
 		String message = resolveExpiredMessage(type);
 		identity.disconnect(Serializer.serialize(identity, message));
+	}
+
+	private void queueCancelledNotice(
+			@NotNull PipelineStateReference reference,
+			@NotNull PipelineType type,
+			@NotNull Identity identity
+	) {
+		if (type != PipelineType.MIGRATION) return;
+
+		UUID accountUniqueId = reference.getAccountUniqueId();
+		if (accountUniqueId == null) accountUniqueId = identity.getAccountUniqueId();
+		if (accountUniqueId == null) return;
+
+		deliveryService.queue(DeliveryRequest.builder()
+				.id(UUID.randomUUID())
+				.source(DeliverySource.NOTICE)
+				.target(DeliveryTarget.builder()
+						.accountUniqueId(accountUniqueId)
+						.build())
+				.payload(DeliveryPayload.builder()
+						.chatMessage(String.join("\n", messagesProvider.get().getConnection().getMigration().getCancelled()))
+						.build())
+				.checkpoint(DeliveryCheckpoint.PLATFORM_READY_INITIAL)
+				.semantics(DeliverySemantics.ONCE)
+				.createdAt(System.currentTimeMillis())
+				.updatedAt(System.currentTimeMillis())
+				.build());
 	}
 
 	private @Nullable Identity resolveIdentity(@NotNull PipelineStateReference reference) {
@@ -135,17 +172,20 @@ public class PendingPipelineKickCoordinator implements EventListener {
 
 	private @NotNull Messages.Connection.Scenario resolveScenarioMessages(@NotNull PipelineType type) {
 		Messages.Connection connection = messagesProvider.get().getConnection();
+
 		if (type == PipelineType.REGISTRATION)
 			return connection.getRegistration();
 		if (type == PipelineType.MIGRATION)
 			return connection.getMigration();
+
 		return connection.getAuthentication();
 	}
 
 	private @NotNull JobKey jobKey(@NotNull PipelineType type, @NotNull PipelineStateReference reference) {
 		String correlation = "pending:" + type.name() +
 				"|c=" + reference.getConnectionUniqueId() +
-				"|i=" + reference.getAccountUniqueId();
+				"|i=" + reference.getAccountUniqueId() +
+				"|k=" + reference.getConnectionKey();
 
 		return JobKey.of(ORIGIN, PURPOSE, correlation);
 	}

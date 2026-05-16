@@ -16,7 +16,11 @@ public class CompletionPendingState {
 	private @NotNull PipelineType pipelineType;
 	private @Nullable UUID connectionUniqueId;
 	private @Nullable UUID accountUniqueId;
-	private boolean recognitionApplied;
+	/**
+	 * Whether the authentication journey completed through framework
+	 * recognition before completion messaging is rendered.
+	 */
+	private boolean authenticationRecognized;
 
 	public static class CompletionPendingStateBuilder {
 		public @NotNull CompletionPendingStateBuilder identicaUniqueId(@Nullable UUID accountUniqueId) {

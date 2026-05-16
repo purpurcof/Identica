@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.journey.step.type.AuthenticationRecognitionStep;
 import me.whereareiam.identica.provider.credential.CredentialConstants;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.AbstractCredentialStep;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
-public class CredentialRecognitionStep extends AbstractCredentialStep {
+public class CredentialRecognitionStep extends AbstractCredentialStep implements AuthenticationRecognitionStep {
 	private final SessionRecognitionService sessionRecognitionService;
 
 	@Inject

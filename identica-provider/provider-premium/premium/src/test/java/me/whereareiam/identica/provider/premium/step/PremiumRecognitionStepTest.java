@@ -5,10 +5,12 @@ import me.whereareiam.identica.identity.session.recognition.SessionRecognitionSe
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.pipeline.journey.step.type.AuthenticationRecognitionStep;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -20,10 +22,12 @@ class PremiumRecognitionStepTest {
 		SessionRecognitionService recognitionService = mock(SessionRecognitionService.class);
 		when(recognitionService.matches(any(), any(), any(), any(), any())).thenReturn(true);
 		PremiumRecognitionStep step = new PremiumRecognitionStep(recognitionService);
+		AuthContext context = context();
 
-		StepResult result = step.execute(context()).join();
+		StepResult result = step.execute(context).join();
 
 		assertEquals(StepResult.StepStatus.COMPLETE, result.getStatus());
+		assertTrue(step instanceof AuthenticationRecognitionStep);
 		verify(recognitionService).matches("premium", "premium-subject", "whereareiam", "127.0.0.1", null);
 	}
 
@@ -33,10 +37,12 @@ class PremiumRecognitionStepTest {
 		SessionRecognitionService recognitionService = mock(SessionRecognitionService.class);
 		when(recognitionService.matches(any(), any(), any(), any(), any())).thenReturn(false);
 		PremiumRecognitionStep step = new PremiumRecognitionStep(recognitionService);
+		AuthContext context = context();
 
-		StepResult result = step.execute(context()).join();
+		StepResult result = step.execute(context).join();
 
 		assertEquals(StepResult.StepStatus.CONTINUE, result.getStatus());
+		assertTrue(step instanceof AuthenticationRecognitionStep);
 	}
 
 	private AuthContext context() {

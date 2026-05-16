@@ -24,5 +24,5 @@ public class CompletionPipelineState {
 	private @Nullable Session session;
 	private @Nullable InternalProvider provider;
 	private @Nullable CompletionContext context;
-	private boolean recognitionApplied;
+	private boolean authenticationRecognized;
 }

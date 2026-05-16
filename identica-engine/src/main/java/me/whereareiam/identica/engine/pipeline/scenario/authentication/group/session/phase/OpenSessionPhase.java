@@ -9,11 +9,12 @@ import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.ses
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.session.SessionService;
-import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
+import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem.AuthenticationOutcome;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelinePhase;
@@ -30,7 +31,6 @@ import java.util.concurrent.CompletionStage;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class OpenSessionPhase implements PipelinePhase<SessionState> {
 	private final SessionService sessionService;
-	private final SessionRecognitionService sessionRecognitionService;
 	private final Provider<Messages> messagesProvider;
 	private final EventManager eventManager;
 
@@ -70,14 +70,12 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 			state.setResult(PipelineResult.failed(authenticationFailedMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
+		PipelineState source = result.getState() != null ? result.getState() : pipelineState;
+		boolean authenticationRecognized = source.item(AuthenticationOutcomeItem.class)
+				.map(AuthenticationOutcomeItem::getOutcome)
+				.map(outcome -> outcome == AuthenticationOutcome.RECOGNIZED)
+				.orElse(false);
 
-		boolean recognitionApplied = sessionRecognitionService.matches(
-				session.getProviderId(),
-				session.getProviderSubject(),
-				authContext.getProvider() != null ? authContext.getProvider().getProviderUsername() : authContext.getUsername(),
-				authContext.getIp(),
-				authContext.getIdentity().getOrigin()
-		);
 		return sessionService.open(session)
 				.thenApply(openedSession -> {
 					if (openedSession == null) {
@@ -92,7 +90,7 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 							pipelineType,
 							authContext.getConnectionUniqueId(),
 							openedSession,
-							recognitionApplied
+							authenticationRecognized
 					);
 					state.setResult(result);
 					return PhaseResult.pass(state);
@@ -103,14 +101,14 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 			@NotNull PipelineType pipelineType,
 			UUID connectionUniqueId,
 			@NotNull Session session,
-			boolean recognitionApplied
+			boolean authenticationRecognized
 	) {
 		if (connectionUniqueId == null) return;
 		eventManager.call(new SessionOpenedEvent(
 				connectionUniqueId,
 				pipelineType,
 				session,
-				recognitionApplied
+				authenticationRecognized
 		));
 	}
 

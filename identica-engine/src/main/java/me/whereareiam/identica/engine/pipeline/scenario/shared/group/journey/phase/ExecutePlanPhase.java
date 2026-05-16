@@ -16,6 +16,8 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
+import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
+import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem.AuthenticationOutcome;
 import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
@@ -32,6 +34,8 @@ import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.routing.RoutingSignal;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.journey.step.Step;
+import me.whereareiam.identica.pipeline.journey.step.type.AuthenticationRecognitionStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.routing.RoutingCoordinator;
@@ -468,6 +472,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				if (status == PipelineStatus.CONTINUE)
 					continue;
 				if (status == PipelineStatus.COMPLETE) {
+					applyAuthenticationOutcome(pipelineState, pipelineType, journeyStep.getStep());
 					completedStage = true;
 					break;
 				}
@@ -557,6 +562,18 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		return result;
 	}
 
+	private void applyAuthenticationOutcome(
+			@NotNull PipelineState pipelineState,
+			@NotNull PipelineType pipelineType,
+			@NotNull Step step
+	) {
+		if (pipelineType != PipelineType.AUTHENTICATION) return;
+		if (!(step instanceof AuthenticationRecognitionStep))
+			return;
+
+		pipelineState.putItem(new AuthenticationOutcomeItem(AuthenticationOutcome.RECOGNIZED), 0L);
+	}
+
 	private int resolveStartIndex(
 			@NotNull List<JourneyExecutionBlock> blocks,
 			@Nullable JourneyStateItem pending,
@@ -643,12 +660,11 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 		if (clearProvider) {
 			context.setProvider(null);
-			pipelineState.setScenario(context);
 		} else if (overrideProviderId != null && !overrideProviderId.isBlank()) {
 			applyProviderContext(context, overrideProviderId);
-			pipelineState.setScenario(context);
 		}
 
+		pipelineState.setScenario(context);
 		long ttlMs = scenarioSettings(pipelineState.getPipelineType()).pipelineTtlMillis();
 		pipelineState.putItem(new JourneyStateItem(resolvedJourneyMode, resolvedStageId, resolvedStepIndex), ttlMs);
 	}

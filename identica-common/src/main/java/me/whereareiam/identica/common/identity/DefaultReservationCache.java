@@ -3,12 +3,13 @@ package me.whereareiam.identica.common.identity;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.replication.cache.ReplicatedCache;
-import me.whereareiam.identica.replication.ReplicationSystem;
-import me.whereareiam.identica.model.replication.ReplicationType;
-import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.identity.ReservationCache;
 import me.whereareiam.identica.model.config.Replication;
+import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.replication.ReplicationSystem;
+import me.whereareiam.identica.replication.cache.ReplicatedCache;
+import me.whereareiam.identica.replication.codec.SnapshotCodec;
+import me.whereareiam.identica.util.UniqueIdUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -35,7 +36,7 @@ public class DefaultReservationCache implements ReservationCache {
 			return CompletableFuture.completedFuture(Optional.empty());
 		}
 		return cache.get(key)
-				.thenApply(value -> value.flatMap(DefaultReservationCache::parse));
+				.thenApply(value -> value.flatMap(UniqueIdUtil::parseOptionalUniqueId));
 	}
 
 	@Override
@@ -52,15 +53,6 @@ public class DefaultReservationCache implements ReservationCache {
 			return CompletableFuture.completedFuture(null);
 		}
 		return cache.invalidate(key);
-	}
-
-	private static Optional<UUID> parse(String value) {
-		if (value == null || value.isBlank()) return Optional.empty();
-		try {
-			return Optional.of(UUID.fromString(value));
-		} catch (IllegalArgumentException ignored) {
-			return Optional.empty();
-		}
 	}
 
 	private static String resolveNamespace(Provider<Replication> replicationProvider) {

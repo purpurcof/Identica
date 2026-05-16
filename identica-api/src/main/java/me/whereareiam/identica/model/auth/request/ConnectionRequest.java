@@ -60,6 +60,17 @@ public class ConnectionRequest {
 		return identity.getAccountUniqueId();
 	}
 
+	public @NotNull IdentityReference getIdentityReference() {
+		if (identityReference.getConnectionUniqueId() == null)
+			identityReference.setConnectionUniqueId(identity.getConnectionUniqueId());
+		if (identityReference.getObservedUniqueId() == null)
+			identityReference.setObservedUniqueId(identity.getObservedUniqueId());
+		if (identityReference.getAccountUniqueId() == null)
+			identityReference.setAccountUniqueId(identity.getAccountUniqueId());
+
+		return identityReference;
+	}
+
 	public @Nullable String getUsername() {
 		return identity.getUsername();
 	}

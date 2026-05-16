@@ -8,21 +8,18 @@ import me.whereareiam.commandant.Pagination;
 import me.whereareiam.commandant.builder.PaginationBuilder;
 import me.whereareiam.commandant.model.message.PaginationMessages;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.annotation.Argument;
-import me.whereareiam.identica.annotation.Command;
-import me.whereareiam.identica.annotation.Default;
-import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.annotation.Range;
+import me.whereareiam.identica.annotation.*;
 import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.SessionCloseRequest;
-import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.model.identity.Account;
+import me.whereareiam.identica.util.UniqueIdUtil;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
@@ -31,12 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 @Singleton
@@ -165,7 +157,7 @@ public class SessionsCommand {
 			@NotNull String command,
 			String notFoundMessage
 	) {
-		UUID parsed = parseUuid(target);
+		UUID parsed = UniqueIdUtil.parseUniqueId(target);
 		if (parsed != null) {
 			return new ResolvedTarget(parsed);
 		}
@@ -410,15 +402,6 @@ public class SessionsCommand {
 				.build();
 
 		sender.sendMessage(Serializer.serialize(content));
-	}
-
-	private UUID parseUuid(String value) {
-		if (value == null || value.isBlank()) return null;
-		try {
-			return UUID.fromString(value.trim());
-		} catch (IllegalArgumentException ignored) {
-			return null;
-		}
 	}
 
 	private String safe(String value, String unknown) {

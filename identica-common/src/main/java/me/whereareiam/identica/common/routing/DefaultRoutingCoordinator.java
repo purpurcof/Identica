@@ -3,31 +3,27 @@ package me.whereareiam.identica.common.routing;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.routing.attempt.RoutingAttemptFinishedEvent;
 import me.whereareiam.identica.event.routing.attempt.RoutingAttemptStartedEvent;
 import me.whereareiam.identica.event.routing.completion.CompletionRoutingReachedEvent;
 import me.whereareiam.identica.event.routing.completion.CompletionRoutingStartedEvent;
-import me.whereareiam.identica.event.routing.intent.RoutingIntentClearedEvent;
-import me.whereareiam.identica.event.routing.intent.RoutingIntentExhaustedEvent;
-import me.whereareiam.identica.event.routing.intent.RoutingIntentReachedEvent;
-import me.whereareiam.identica.event.routing.intent.RoutingIntentStartedEvent;
-import me.whereareiam.identica.event.routing.intent.RoutingIntentUpdatedEvent;
+import me.whereareiam.identica.event.routing.intent.*;
 import me.whereareiam.identica.event.routing.step.StepRoutingReachedEvent;
 import me.whereareiam.identica.event.routing.step.StepRoutingStartedEvent;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
+import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.routing.RoutingIntent;
 import me.whereareiam.identica.model.routing.RoutingPlan;
 import me.whereareiam.identica.model.routing.RoutingSignal;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptDecision;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptReport;
+import me.whereareiam.identica.model.routing.attempt.RoutingAttemptRequest;
 import me.whereareiam.identica.routing.RoutingAttemptService;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.routing.RoutingIntentStore;
-import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import me.whereareiam.identica.type.routing.RoutingIntentStatus;
 import me.whereareiam.identica.type.routing.RoutingPlanAction;
+import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
 import me.whereareiam.identica.type.routing.reason.RoutingReason;
 import org.jetbrains.annotations.NotNull;
 
@@ -101,6 +97,7 @@ public class DefaultRoutingCoordinator implements RoutingCoordinator, RoutingAtt
 		if (currentServer != null && currentServer.equalsIgnoreCase(intent.getEndpoint().getServer())) {
 			Logger.debug("Routing attempt skipped connection=%s trigger=%s reason=already-reached target=%s",
 					request.getConnectionUniqueId(), request.getTrigger(), intent.getEndpoint().getServer());
+			markReached(request.getConnectionUniqueId(), currentServer);
 			return RoutingAttemptDecision.skipped("already-reached");
 		}
 

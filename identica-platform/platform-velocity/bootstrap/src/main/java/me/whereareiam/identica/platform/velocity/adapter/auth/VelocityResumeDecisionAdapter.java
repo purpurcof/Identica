@@ -7,21 +7,17 @@ import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.common.adapter.ConnectionDecisionApplier;
-import me.whereareiam.identica.engine.pipeline.prompt.PendingPromptResendCoordinator;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
@@ -31,14 +27,11 @@ import java.util.UUID;
 public class VelocityResumeDecisionAdapter {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
 	private final @NotNull IdentityService identityService;
-	private final @NotNull CompletionPendingStore completionPendingStore;
 	private final @NotNull PrepareStateStore prepareStateStore;
 	private final @NotNull ConnectionDecisionApplier decisionApplier;
-	private final @NotNull PendingPromptResendCoordinator initialStepPromptCoordinator;
 
 	public void resume(@NotNull ServerPostConnectEvent event) {
-		if (event.getPreviousServer() != null)
-			return;
+		if (event.getPreviousServer() != null) return;
 
 		Player player = event.getPlayer();
 		String ip = resolveIp(player);
@@ -86,7 +79,7 @@ public class VelocityResumeDecisionAdapter {
 				provider != null ? provider.getProviderSubject() : null
 		);
 
-		UUID accountUniqueId = resolveAttachedAccountUniqueId(player.getUniqueId(), identity.getAccountUniqueId());
+		UUID accountUniqueId = identity.getAccountUniqueId();
 		VelocityCommandPlayer liveIdentity = new VelocityCommandPlayer(
 				player.getUniqueId(),
 				accountUniqueId,
@@ -97,8 +90,13 @@ public class VelocityResumeDecisionAdapter {
 		if (decision == null || decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
 			return;
 
-		boolean deferred = initialStepPromptCoordinator.deferInitialStepPrompt(player.getUniqueId(), decision);
-		if (!deferred) decisionApplier.apply(decision, liveIdentity, resumeTarget(player));
+		decisionApplier.applyOrQueueWait(
+				decision,
+				liveIdentity,
+				resumeTarget(player),
+				player.getUniqueId(),
+				accountUniqueId
+		);
 
 		ConnectionDecision.Status status = decision.getStatus();
 		if (status == ConnectionDecision.Status.DENY || status == ConnectionDecision.Status.REQUIRE_RECONNECT)
@@ -106,15 +104,6 @@ public class VelocityResumeDecisionAdapter {
 
 		if (status == ConnectionDecision.Status.ALLOW || status == ConnectionDecision.Status.WAIT)
 			identityService.attach(player.getUniqueId(), accountUniqueId, liveIdentity);
-	}
-
-	private @Nullable UUID resolveAttachedAccountUniqueId(
-			@NotNull UUID connectionUniqueId,
-			@Nullable UUID fallbackAccountUniqueId
-	) {
-		return completionPendingStore.peek(connectionUniqueId)
-				.map(CompletionPendingState::getAccountUniqueId)
-				.orElse(fallbackAccountUniqueId);
 	}
 
 	private String resolveIp(@NotNull Player player) {

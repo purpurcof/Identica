@@ -110,7 +110,7 @@ public class UniqueIdGenerator {
 			@Nullable String providerSubject,
 			@Nullable UUID observedUniqueId
 	) {
-		UUID parsed = parse(providerSubject);
+		UUID parsed = UniqueIdUtil.parseUniqueId(providerSubject);
 		if (parsed != null) return parsed;
 
 		UUID offlineUniqueId = offlinePlayerUniqueId(username);
@@ -124,15 +124,5 @@ public class UniqueIdGenerator {
 		if (settings == null) return UniqueIdMode.RANDOM;
 
         return settings.getConnection().getUniqueIdMode();
-	}
-
-	private static @Nullable UUID parse(@Nullable String value) {
-		if (value == null || value.isBlank()) return null;
-
-		try {
-			return UUID.fromString(value.trim());
-		} catch (IllegalArgumentException ignored) {
-			return null;
-		}
 	}
 }

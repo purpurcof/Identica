@@ -5,40 +5,36 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.annotation.Suggestions;
-import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.model.migration.operation.MigrationCancel;
-import me.whereareiam.identica.model.migration.operation.MigrationResult;
-import me.whereareiam.identica.service.MigrationService;
-import me.whereareiam.identica.model.migration.operation.MigrationStart;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
+import me.whereareiam.identica.model.migration.operation.MigrationCancel;
+import me.whereareiam.identica.model.migration.operation.MigrationResult;
+import me.whereareiam.identica.model.migration.operation.MigrationStart;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationCancelScope;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.util.UniqueIdUtil;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 
 @Singleton
@@ -258,7 +254,7 @@ public class MigrationCommand {
 			@NotNull String target,
 			@NotNull Messages.Commands.Migration messages
 	) {
-		UUID parsed = parseUniqueId(target);
+		UUID parsed = UniqueIdUtil.parseUniqueId(target);
 		if (parsed != null) {
 			Optional<Account> account = accountPersistenceService.findByUniqueId(parsed);
 			if (account.isEmpty()) {
@@ -424,15 +420,6 @@ public class MigrationCommand {
 				.build();
 
 		sender.sendMessage(Serializer.serialize(content));
-	}
-
-	private UUID parseUniqueId(String value) {
-		if (value == null || value.isBlank()) return null;
-		try {
-			return UUID.fromString(value.trim());
-		} catch (IllegalArgumentException ignored) {
-			return null;
-		}
 	}
 
 	private record ResolvedTarget(UUID uniqueId, String username) {

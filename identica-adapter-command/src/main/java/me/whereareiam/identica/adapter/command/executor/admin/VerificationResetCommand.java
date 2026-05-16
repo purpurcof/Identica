@@ -5,17 +5,18 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.annotation.Suggestions;
-import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.type.verification.status.VerificationResetStatus;
+import me.whereareiam.identica.util.UniqueIdUtil;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
@@ -52,7 +53,7 @@ public class VerificationResetCommand {
 	}
 
 	private @Nullable ResolvedTarget resolveTarget(@NotNull Actor sender, @NotNull String target) {
-		UUID parsed = parseUniqueId(target);
+		UUID parsed = UniqueIdUtil.parseUniqueId(target);
 		if (parsed != null) return new ResolvedTarget(parsed, target);
 
 		Optional<Identity> identity = identityService.find(target);
@@ -79,14 +80,6 @@ public class VerificationResetCommand {
 				.message(message)
 				.placeholders(placeholders)
 				.build()));
-	}
-
-	private UUID parseUniqueId(String target) {
-		try {
-			return UUID.fromString(target);
-		} catch (IllegalArgumentException ignored) {
-			return null;
-		}
 	}
 
 	private boolean isBlank(@Nullable String value) {

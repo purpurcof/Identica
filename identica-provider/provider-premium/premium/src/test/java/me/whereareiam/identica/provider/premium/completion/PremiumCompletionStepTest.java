@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class PremiumCompletionStepTest {
 	@DisplayName("Uses the recognition completion message for recognized authentication")
 	@Test
-	void authenticationUsesRecognitionMessageWhenRecognitionApplied() {
+	void authenticationUsesRecognitionMessageWhenAuthenticationRecognized() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
@@ -35,7 +35,7 @@ class PremiumCompletionStepTest {
 
 	@DisplayName("Keeps the migration completion message even when recognition was applied")
 	@Test
-	void migrationIgnoresReusedSessionMessage() {
+	void migrationIgnoresReusedSessionMessageWhenAuthenticationRecognized() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
@@ -69,7 +69,7 @@ class PremiumCompletionStepTest {
 
 	@DisplayName("Keeps the registration completion message even when recognition was applied")
 	@Test
-	void registrationIgnoresReusedSessionMessage() {
+	void registrationIgnoresReusedSessionMessageWhenAuthenticationRecognized() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
 
@@ -78,7 +78,7 @@ class PremiumCompletionStepTest {
 		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
 
-	private CompletionContext context(boolean recognitionApplied, PipelineType pipelineType) {
+	private CompletionContext context(boolean authenticationRecognized, PipelineType pipelineType) {
 		return CompletionContext.builder()
 				.identity(new TestIdentity())
 				.pipelineType(pipelineType)
@@ -89,7 +89,7 @@ class PremiumCompletionStepTest {
 						.originalUsername("PlayerOne")
 						.effectiveUsername("PlayerOne")
 						.build())
-				.recognitionApplied(recognitionApplied)
+				.authenticationRecognized(authenticationRecognized)
 				.build();
 	}
 

@@ -32,7 +32,7 @@ public class CompletionPipeline {
 				.identity(identity)
 				.pendingState(pendingState)
 				.pipelineType(pendingState.getPipelineType())
-				.recognitionApplied(pendingState.isRecognitionApplied())
+				.authenticationRecognized(pendingState.isAuthenticationRecognized())
 				.build();
 
 		PipelineState pipelineState = PipelineState.initial();

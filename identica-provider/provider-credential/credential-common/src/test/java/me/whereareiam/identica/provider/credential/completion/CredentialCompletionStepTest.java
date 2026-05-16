@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CredentialCompletionStepTest {
 	@DisplayName("Uses the recognition completion message for recognized authentication")
 	@Test
-	void authenticationUsesRecognitionMessageWhenRecognitionApplied() {
+	void authenticationUsesRecognitionMessageWhenAuthenticationRecognized() {
 		CredentialMessages messages = new CredentialMessagesDefaults().supply(new CredentialMessages());
 		InspectableCredentialCompletionStep step = new InspectableCredentialCompletionStep(() -> messages);
 
@@ -78,7 +78,7 @@ class CredentialCompletionStepTest {
 		assertFalse(lines.stream().anyMatch(line -> line.contains("Welcome back")));
 	}
 
-	private CompletionContext context(boolean recognitionApplied, PipelineType pipelineType) {
+	private CompletionContext context(boolean authenticationRecognized, PipelineType pipelineType) {
 		return CompletionContext.builder()
 				.identity(new TestIdentity())
 				.pipelineType(pipelineType)
@@ -89,7 +89,7 @@ class CredentialCompletionStepTest {
 						.originalUsername("PlayerOne")
 						.effectiveUsername("PlayerOne")
 						.build())
-				.recognitionApplied(recognitionApplied)
+				.authenticationRecognized(authenticationRecognized)
 				.build();
 	}
 

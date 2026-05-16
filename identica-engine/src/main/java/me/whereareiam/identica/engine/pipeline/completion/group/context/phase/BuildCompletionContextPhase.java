@@ -42,7 +42,7 @@ public class BuildCompletionContextPhase implements PipelinePhase<CompletionPipe
 				.pipelineType(state.getPipelineType())
 				.session(session)
 				.provider(state.getProvider())
-				.recognitionApplied(state.isRecognitionApplied())
+				.authenticationRecognized(state.isAuthenticationRecognized())
 				.build();
 		state.setContext(context);
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));

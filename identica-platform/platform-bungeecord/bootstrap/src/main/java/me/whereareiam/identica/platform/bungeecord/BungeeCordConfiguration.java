@@ -20,10 +20,12 @@ import me.whereareiam.identica.listener.ListenerRegistrar;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.platform.bungeecord.adapter.BungeeCordHandshakeApplierRegistry;
 import me.whereareiam.identica.platform.bungeecord.api.handshake.BungeeCordHandshakeContext;
+import me.whereareiam.identica.platform.bungeecord.delivery.BungeeCordDeliveryCoordinator;
 import me.whereareiam.identica.platform.bungeecord.listener.BungeeCordListenerRegistrar;
 import me.whereareiam.identica.platform.bungeecord.listener.routing.BungeeCordRoutingIntentListener;
 import me.whereareiam.identica.platform.bungeecord.logging.BungeeCordLoggingHelper;
 import me.whereareiam.identica.platform.bungeecord.mapper.CommandSourceMapper;
+import me.whereareiam.identica.service.PlatformDeliveryAdapter;
 import me.whereareiam.identica.service.Scheduler;
 import me.whereareiam.keystone.Actor;
 import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
@@ -49,6 +51,7 @@ public class BungeeCordConfiguration extends AbstractModule {
 		bind(BungeeAudiences.class).toInstance(audiences);
 		bind(LoggingHelper.class).to(BungeeCordLoggingHelper.class);
 		bind(ListenerRegistrar.class).to(BungeeCordListenerRegistrar.class);
+		bind(PlatformDeliveryAdapter.class).to(BungeeCordDeliveryCoordinator.class).asEagerSingleton();
 		bind(BungeeCordRoutingIntentListener.class).asEagerSingleton();
 		bind(new TypeLiteral<HandshakeApplierRegistry<BungeeCordHandshakeContext>>() {})
 				.to(BungeeCordHandshakeApplierRegistry.class)

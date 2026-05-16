@@ -170,6 +170,14 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		migration.setCancelled(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>Your pending migration was cancelled.</white>",
+				"<white>You are still using your previous login provider.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
 		return migration;
 	}
 

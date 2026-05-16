@@ -52,6 +52,7 @@ import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
+import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.type.PrepareStage;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
@@ -94,6 +95,8 @@ class PreparePipelineTest {
 	private PipelineStateStore pipelineStateStore;
 	@Mock
 	private UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
+	@Mock
+	private DeliveryService deliveryService;
 
 	@DisplayName("Profile preparation builds a transient account and applies the event decision")
 	@Test
@@ -753,7 +756,8 @@ class PreparePipelineTest {
 						pipelineStateStore,
 						accountPersistenceService,
 						providerLinkPersistenceService,
-						providerProfilePersistenceService
+						providerProfilePersistenceService,
+						deliveryService
 				),
 				new ResolvePreparedAccountPhase(
 						prepareStateStore,

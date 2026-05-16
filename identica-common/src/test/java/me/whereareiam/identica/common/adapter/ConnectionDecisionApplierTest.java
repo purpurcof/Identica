@@ -9,10 +9,10 @@ import me.whereareiam.keystone.model.SerializerOptions;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Locale;
@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.mock;
 
 @DisplayName("Connection Decision Applier")
 class ConnectionDecisionApplierTest {
@@ -50,7 +51,11 @@ class ConnectionDecisionApplierTest {
 	@DisplayName("Sends waiting decisions back to the actor as a message")
 	@Test
 	void waitDecisionSendsActorMessage() {
-		ConnectionDecisionApplier applier = new ConnectionDecisionApplier(this::messages);
+		ConnectionDecisionApplier applier = new ConnectionDecisionApplier(
+				this::messages,
+				mock(ConnectionDecisionDeliveryCoordinator.class),
+				mock(me.whereareiam.identica.service.PlatformDeliveryAdapter.class)
+		);
 		TestActor actor = new TestActor();
 		TestTarget target = new TestTarget();
 
@@ -64,7 +69,11 @@ class ConnectionDecisionApplierTest {
 	@DisplayName("Delegates denied decisions to the target")
 	@Test
 	void denyDecisionUsesTarget() {
-		ConnectionDecisionApplier applier = new ConnectionDecisionApplier(this::messages);
+		ConnectionDecisionApplier applier = new ConnectionDecisionApplier(
+				this::messages,
+				mock(ConnectionDecisionDeliveryCoordinator.class),
+				mock(me.whereareiam.identica.service.PlatformDeliveryAdapter.class)
+		);
 		TestActor actor = new TestActor();
 		TestTarget target = new TestTarget();
 
@@ -76,7 +85,11 @@ class ConnectionDecisionApplierTest {
 	@DisplayName("Delegates reconnect decisions to the target")
 	@Test
 	void reconnectDecisionUsesTarget() {
-		ConnectionDecisionApplier applier = new ConnectionDecisionApplier(this::messages);
+		ConnectionDecisionApplier applier = new ConnectionDecisionApplier(
+				this::messages,
+				mock(ConnectionDecisionDeliveryCoordinator.class),
+				mock(me.whereareiam.identica.service.PlatformDeliveryAdapter.class)
+		);
 		TestActor actor = new TestActor();
 		TestTarget target = new TestTarget();
 

@@ -3,32 +3,19 @@ package me.whereareiam.identica.engine.completion;
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
-import me.whereareiam.identica.event.routing.intent.RoutingIntentReachedEvent;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
-import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
-import me.whereareiam.identica.model.routing.RoutingEndpoint;
-import me.whereareiam.identica.model.routing.RoutingIntent;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptState;
-import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
-import me.whereareiam.identica.routing.RoutingIntentStore;
+import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.delivery.DeliveryRequest;
+import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.routing.reason.RoutingReason;
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.title.Title;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Locale;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @DisplayName("Completion Pending Lifecycle")
@@ -36,16 +23,16 @@ class CompletionPendingLifecycleTest {
 	@DisplayName("Opening a session stores pending completion state")
 	@Test
 	void sessionOpenedStoresPendingCompletion() {
-		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
+		DeliveryService deliveryService = mock(DeliveryService.class);
 		CompletionPipeline completionPipeline = mock(CompletionPipeline.class);
-		IdentityService identityService = mock(IdentityService.class);
-		RoutingIntentStore routingIntentStore = mock(RoutingIntentStore.class);
 		EventManager eventManager = mock(EventManager.class);
+		Settings settings = new Settings();
+		settings.setConnection(new Settings.Connection());
+		settings.getConnection().getRouting().getDefaults().getComplete().setTarget("limbo");
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
-				pendingStore,
+				deliveryService,
 				completionPipeline,
-				identityService,
-				routingIntentStore,
+				() -> settings,
 				eventManager
 		);
 		UUID connectionUniqueId = UUID.randomUUID();
@@ -62,127 +49,12 @@ class CompletionPendingLifecycleTest {
 				true
 		));
 
-		verify(pendingStore).put(any(), any());
+		verify(deliveryService).queue(argThat((DeliveryRequest request) ->
+				request != null
+						&& request.getPayload().getCompletion() != null
+						&& request.getPayload().getCompletion().isAuthenticationRecognized()
+						&& "limbo".equals(request.getRequiredServer())
+		));
 		verify(completionPipeline, never()).complete(any());
-	}
-
-	@DisplayName("Attaching an identity completes pending work when no routing target blocks it")
-	@Test
-	void identityAttachedConsumesPendingCompletionWithoutRoutingTarget() {
-		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
-		CompletionPipeline completionPipeline = mock(CompletionPipeline.class);
-		IdentityService identityService = mock(IdentityService.class);
-		RoutingIntentStore routingIntentStore = mock(RoutingIntentStore.class);
-		EventManager eventManager = mock(EventManager.class);
-		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
-				pendingStore,
-				completionPipeline,
-				identityService,
-				routingIntentStore,
-				eventManager
-		);
-		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
-		when(pendingStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
-		when(routingIntentStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.empty());
-
-		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
-
-		verify(completionPipeline).complete(identity);
-	}
-
-	@DisplayName("Attaching an identity waits while a completion routing target still exists")
-	@Test
-	void identityAttachedDefersWhileCompletedRoutingTargetExists() {
-		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
-		CompletionPipeline completionPipeline = mock(CompletionPipeline.class);
-		IdentityService identityService = mock(IdentityService.class);
-		RoutingIntentStore routingIntentStore = mock(RoutingIntentStore.class);
-		EventManager eventManager = mock(EventManager.class);
-		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
-				pendingStore,
-				completionPipeline,
-				identityService,
-				routingIntentStore,
-				eventManager
-		);
-		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
-		when(pendingStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.of(mock(me.whereareiam.identica.model.pipeline.completion.CompletionPendingState.class)));
-		when(routingIntentStore.peek(identity.getConnectionUniqueId())).thenReturn(Optional.of(completionIntent(identity.getConnectionUniqueId())));
-
-		lifecycle.onIdentityAttached(new IdentityAttachedEvent(identity));
-
-		verify(completionPipeline, never()).complete(identity);
-	}
-
-	@DisplayName("Reaching the completion target executes pending completion work")
-	@Test
-	void routingTargetReachedExecutesPendingCompletionForCompletedTarget() {
-		CompletionPendingStore pendingStore = mock(CompletionPendingStore.class);
-		CompletionPipeline completionPipeline = mock(CompletionPipeline.class);
-		IdentityService identityService = mock(IdentityService.class);
-		RoutingIntentStore routingIntentStore = mock(RoutingIntentStore.class);
-		EventManager eventManager = mock(EventManager.class);
-		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
-				pendingStore,
-				completionPipeline,
-				identityService,
-				routingIntentStore,
-				eventManager
-		);
-		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
-		when(identityService.findByConnectionUniqueId(identity.getConnectionUniqueId())).thenReturn(Optional.of(identity));
-
-		lifecycle.onRoutingIntentReached(new RoutingIntentReachedEvent(completionIntent(identity.getConnectionUniqueId()), "lobby"));
-
-		verify(completionPipeline).complete(identity);
-	}
-
-	private static RoutingIntent completionIntent(UUID connectionUniqueId) {
-		return new RoutingIntent(
-				UUID.randomUUID(),
-				connectionUniqueId,
-				new RoutingEndpoint("lobby"),
-				RoutingReason.COMPLETION,
-				RoutingAttemptPolicy.defaultCompletion(),
-				new RoutingAttemptState(),
-				PipelineType.AUTHENTICATION,
-				null,
-				"credential",
-				null,
-				System.currentTimeMillis()
-		);
-	}
-
-	private static final class TestIdentity extends Identity {
-		private TestIdentity(UUID uniqueId, String username) {
-			super(uniqueId, username);
-		}
-
-		@Override
-		public void sendMessage(@NonNull Component message) {
-		}
-
-		@Override
-		public void sendTitle(@NonNull Title title) {
-		}
-
-		@Override
-		public boolean hasPermission(@NonNull String permission) {
-			return true;
-		}
-
-		@Override
-		public @NonNull Locale getLocale() {
-			return Locale.ENGLISH;
-		}
-
-		@Override
-		public @NonNull Audience getAudience() {
-			return Audience.empty();
-		}
-
-		@Override
-		public void disconnect(@NonNull Component reason) {
-		}
 	}
 }

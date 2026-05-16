@@ -15,6 +15,9 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.delivery.DeliveryPayload;
+import me.whereareiam.identica.model.delivery.DeliveryRequest;
+import me.whereareiam.identica.model.delivery.DeliveryTarget;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
@@ -31,7 +34,11 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckContext;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckResult;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
+import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.service.MigrationService;
+import me.whereareiam.identica.type.messaging.DeliveryCheckpoint;
+import me.whereareiam.identica.type.messaging.DeliverySemantics;
+import me.whereareiam.identica.type.messaging.DeliverySource;
 import me.whereareiam.identica.type.migration.MigrationCancelScope;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
@@ -58,6 +65,7 @@ public class DefaultMigrationService implements MigrationService {
 	private final PipelineStateStore pipelineStateStore;
 	private final SessionService sessionService;
 	private final IdentityService identityService;
+	private final DeliveryService deliveryService;
 	private final Provider<Settings> settingsProvider;
 	private final Provider<Commands> commandsProvider;
 	private final Provider<Messages> messagesProvider;
@@ -225,6 +233,7 @@ public class DefaultMigrationService implements MigrationService {
 					.build();
 			PipelineState stored = pipelineStateStore.find(reference).orElse(null);
 			if (stored != null && stored.item(MigrationPendingState.class).isPresent()) {
+				queueCancelledNotice(resolvePendingAccountUniqueId(stored), stored);
 				pipelineStateStore.clear(reference);
 				removed = true;
 			}
@@ -515,6 +524,40 @@ public class DefaultMigrationService implements MigrationService {
 				.initiatorUniqueId(pendingState.getInitiatorUniqueId())
 				.phase(PendingMigration.Phase.STARTED)
 				.build();
+	}
+
+	private void queueCancelledNotice(@Nullable UUID accountUniqueId, @Nullable PipelineState state) {
+		if (accountUniqueId == null || state == null) return;
+		if (state.getPipelineType() != PipelineType.MIGRATION) return;
+		if (state.item(MigrationPendingState.class).isEmpty()) return;
+
+        deliveryService.queue(DeliveryRequest.builder()
+				.id(UUID.randomUUID())
+				.source(DeliverySource.NOTICE)
+				.target(DeliveryTarget.builder()
+						.accountUniqueId(accountUniqueId)
+						.build())
+				.payload(DeliveryPayload.builder()
+						.chatMessage(resolveMigrationCancelledMessage())
+						.build())
+				.checkpoint(DeliveryCheckpoint.PLATFORM_READY_INITIAL)
+				.semantics(DeliverySemantics.ONCE)
+				.createdAt(System.currentTimeMillis())
+				.updatedAt(System.currentTimeMillis())
+				.build());
+	}
+
+	private @Nullable UUID resolvePendingAccountUniqueId(@Nullable PipelineState state) {
+		if (state == null) return null;
+
+		MigrationContext context = (MigrationContext) state.getScenario(PipelineType.MIGRATION);
+		if (context != null && context.getAccountUniqueId() != null) return context.getAccountUniqueId();
+
+		return null;
+	}
+
+	private @NotNull String resolveMigrationCancelledMessage() {
+		return String.join("\n", messagesProvider.get().getConnection().getMigration().getCancelled());
 	}
 
 	private record PendingConfirmationMigration(

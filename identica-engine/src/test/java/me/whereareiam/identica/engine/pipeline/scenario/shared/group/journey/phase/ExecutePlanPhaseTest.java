@@ -7,6 +7,8 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
+import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem.AuthenticationOutcome;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionPlan;
@@ -146,6 +148,70 @@ class ExecutePlanPhaseTest {
 		verify(routingCoordinator, atLeastOnce()).accept(any());
 	}
 
+	@DisplayName("Completed recognition steps store an authentication outcome item during journey execution")
+	@Test
+	void recognitionCompletionStoresAuthenticationOutcome() {
+		IdentityService identityService = mock(IdentityService.class);
+		EventManager eventManager = mock(EventManager.class);
+		ProviderManager providerManager = mock(ProviderManager.class);
+		PipelineStateStore pipelineStateStore = mock(PipelineStateStore.class);
+		RoutingCoordinator routingCoordinator = mock(RoutingCoordinator.class);
+		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());
+
+		ExecutePlanPhase phase = new ExecutePlanPhase(
+				identityService,
+				eventManager,
+				this::settings,
+				Messages::new,
+				providerManager,
+				pipelineStateStore,
+				routingCoordinator
+		);
+
+		Step contributeOutcome = new RecognitionStep();
+
+		JourneyStage providerStage = JourneyStage.builder()
+				.id(StageType.PROVIDER.id())
+				.type(StageType.PROVIDER)
+				.order(200)
+				.pipelineTypes(EnumSet.of(PipelineType.AUTHENTICATION))
+				.journeyModes(EnumSet.of(JourneyMode.INTERACTIVE))
+				.requireCompletion(true)
+				.allowFallback(true)
+				.build();
+
+		JourneyExecutionPlan plan = new JourneyExecutionPlan(List.of(
+				new JourneyExecutionBlock(
+						"group-provider",
+						JourneyExecutionPolicy.SEQUENTIAL,
+						null,
+						List.of(new JourneyExecutionStage(providerStage, List.of(
+								journeyStep(StageType.PROVIDER, contributeOutcome, 10)
+						)))
+				)
+		));
+
+		AuthContext context = AuthContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "PlayerOne", "127.0.0.1"))
+				.intendedServer("auth")
+				.build();
+		PipelineState pipelineState = PipelineState.initial();
+		pipelineState.setPipelineType(PipelineType.AUTHENTICATION);
+		pipelineState.setScenario(context);
+
+		JourneyState state = new JourneyState();
+		state.setContext(context);
+		state.setJourneyMode(JourneyMode.INTERACTIVE);
+		state.setExecutionPlan(plan);
+
+		PhaseResult<JourneyState> result = phase.execute(pipelineState, state).toCompletableFuture().join();
+
+		assertEquals(PipelineStatus.COMPLETE, result.getState().getResult().getStatus());
+		assertEquals(AuthenticationOutcome.RECOGNIZED,
+				pipelineState.item(AuthenticationOutcomeItem.class).orElseThrow().getOutcome());
+	}
+
 	@DisplayName("Waiting steps persist the current scenario identity reference")
 	@Test
 	void waitingStepPersistsCurrentScenarioIdentityReference() {
@@ -279,5 +345,27 @@ class ExecutePlanPhaseTest {
 	@FunctionalInterface
 	private interface StepExecutor {
 		@NotNull StepResult execute(@NotNull ScenarioContext context);
+	}
+
+	private static final class RecognitionStep implements me.whereareiam.identica.pipeline.journey.step.type.AuthenticationRecognitionStep {
+		@Override
+		public @NotNull String getName() {
+			return "recognize";
+		}
+
+		@Override
+		public @NotNull java.util.Set<JourneyMode> journeyModes() {
+			return EnumSet.of(JourneyMode.INTERACTIVE);
+		}
+
+		@Override
+		public @NotNull StepContextRequirement contextRequirement() {
+			return StepContextRequirement.LOGIN;
+		}
+
+		@Override
+		public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
+			return CompletableFuture.completedFuture(StepResult.complete(context));
+		}
 	}
 }

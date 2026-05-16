@@ -5,11 +5,12 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.SessionService;
-import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
+import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem.AuthenticationOutcome;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.junit.jupiter.api.DisplayName;
@@ -28,11 +29,9 @@ class OpenSessionCompletionPendingTest {
 	@Test
 	void authenticationOpenSessionStoresPendingCompletionInvocation() {
 		SessionService sessionService = mock(SessionService.class);
-		SessionRecognitionService recognitionService = mock(SessionRecognitionService.class);
 		EventManager eventManager = mock(EventManager.class);
 		OpenSessionPhase phase = new OpenSessionPhase(
 				sessionService,
-				recognitionService,
 				this::messages,
 				eventManager
 		);
@@ -58,9 +57,8 @@ class OpenSessionCompletionPendingTest {
 		state.setResult(PipelineResult.complete());
 		PipelineState pipelineState = PipelineState.initial();
 		pipelineState.setPipelineType(PipelineType.AUTHENTICATION);
+		pipelineState.putItem(new AuthenticationOutcomeItem(AuthenticationOutcome.RECOGNIZED), 0L);
 
-		when(recognitionService.matches(any(), any(), any(), any(), any()))
-				.thenReturn(false);
 		when(sessionService.open(session))
 				.thenReturn(CompletableFuture.completedFuture(session));
 
@@ -71,7 +69,7 @@ class OpenSessionCompletionPendingTest {
 				&& requested.getPipelineType() == PipelineType.AUTHENTICATION
 				&& accountUniqueId.equals(requested.getSession().getUniqueId())
 				&& "credential".equals(requested.getSession().getProviderId())
-				&& !requested.isRecognitionApplied()
+				&& requested.isAuthenticationRecognized()
 		));
 	}
 

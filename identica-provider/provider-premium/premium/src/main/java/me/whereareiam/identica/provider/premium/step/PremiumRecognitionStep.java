@@ -6,13 +6,14 @@ import me.whereareiam.identica.identity.session.recognition.SessionRecognitionSe
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.journey.step.type.AuthenticationRecognitionStep;
 import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
-public class PremiumRecognitionStep extends InteractiveStep {
+public class PremiumRecognitionStep extends InteractiveStep implements AuthenticationRecognitionStep {
 	private final SessionRecognitionService sessionRecognitionService;
 
 	@Inject

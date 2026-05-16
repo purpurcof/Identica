@@ -26,6 +26,7 @@ import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
 import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.util.EventUtil;
+import me.whereareiam.identica.util.UniqueIdUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -265,13 +266,13 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 			if (alias == null || alias.length() < 3) continue;
 
 			if (alias.startsWith(KEY_CONNECTION_ID_PREFIX)) {
-				parseUniqueId(alias.substring(KEY_CONNECTION_ID_PREFIX.length()))
+				UniqueIdUtil.parseOptionalUniqueId(alias.substring(KEY_CONNECTION_ID_PREFIX.length()))
 						.ifPresent(builder::connectionUniqueId);
 				continue;
 			}
 
 			if (alias.startsWith(KEY_IDENTITY_ID_PREFIX)) {
-				parseUniqueId(alias.substring(KEY_IDENTITY_ID_PREFIX.length()))
+				UniqueIdUtil.parseOptionalUniqueId(alias.substring(KEY_IDENTITY_ID_PREFIX.length()))
 						.ifPresent(builder::accountUniqueId);
 				continue;
 			}
@@ -322,16 +323,6 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 		if (resolved.isBlank()) throw new IllegalStateException("replication.cache.pipelineState is missing");
 
 		return resolved;
-	}
-
-	private @NotNull Optional<UUID> parseUniqueId(@Nullable String value) {
-		if (value == null || value.isBlank()) return Optional.empty();
-
-		try {
-			return Optional.of(UUID.fromString(value));
-		} catch (IllegalArgumentException ignored) {
-			return Optional.empty();
-		}
 	}
 
 	@NoArgsConstructor

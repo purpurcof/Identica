@@ -19,6 +19,7 @@ import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.replication.ReplicationType;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.replication.cache.ReplicatedCache;
@@ -68,7 +69,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 
 	@Override
 	public @NotNull Optional<PipelineState> find(@NotNull PipelineStateReference reference) {
-		return read(reference, false);
+		return read(reference, false).state();
 	}
 
 	@Override
@@ -83,29 +84,31 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 		List<String> aliases = resolveAliases(reference);
 		if (aliases.isEmpty()) return;
 
-		long expiresAt = System.currentTimeMillis() + ttlMs;
+		long now = System.currentTimeMillis();
+		PipelineStateRecord existing = resolvePrimaryRecord(aliases, now);
+		long expiresAt = now + ttlMs;
 		PipelineStateRecord record = new PipelineStateRecord(
-				UUID.randomUUID().toString(),
+				existing != null && !existing.id.isBlank() ? existing.id : UUID.randomUUID().toString(),
 				state,
 				aliases,
 				expiresAt
 		);
 
-		replaceAliases(record, ttlMs);
+		replaceAliases(record, existing, ttlMs);
 		EventUtil.callEvent(new PipelineStateSavedEvent(reference, state, expiresAt));
 	}
 
 	@Override
 	public @NotNull Optional<PipelineState> consume(@NotNull PipelineStateReference reference) {
-		Optional<PipelineState> resolved = read(reference, true);
-		resolved.ifPresent(state -> EventUtil.callEvent(new PipelineStateClearedEvent(reference, state)));
-		return resolved;
+		ReadResult resolved = read(reference, true);
+		resolved.state().ifPresent(state -> EventUtil.callEvent(new PipelineStateClearedEvent(reference, state)));
+		return resolved.state();
 	}
 
 	@Override
 	public void clear(@NotNull PipelineStateReference reference) {
-		Optional<PipelineState> resolved = read(reference, true);
-		resolved.ifPresent(state -> EventUtil.callEvent(new PipelineStateClearedEvent(reference, state)));
+		ReadResult resolved = read(reference, true);
+		resolved.state().ifPresent(state -> EventUtil.callEvent(new PipelineStateClearedEvent(reference, state)));
 	}
 
 	@IdenticEvent(EventOrder.LOW)
@@ -121,16 +124,14 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 		eventManager.call(new ConnectionPendingClearedEvent(connectionUniqueId, removed));
 	}
 
-	private @NotNull Optional<PipelineState> read(
+	private @NotNull ReadResult read(
 			@NotNull PipelineStateReference reference,
 			boolean consume
 	) {
-		if (reference.isEmpty())
-			return Optional.empty();
+		if (reference.isEmpty()) return ReadResult.empty();
 
 		List<String> aliases = resolveAliases(reference);
-		if (aliases.isEmpty())
-			return Optional.empty();
+		if (aliases.isEmpty()) return ReadResult.empty();
 
 		long now = System.currentTimeMillis();
 		for (String alias : aliases) {
@@ -151,7 +152,7 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 					record.expiresAt,
 					record.id
 			);
-			return Optional.ofNullable(resolved);
+			return new ReadResult(record.id, Optional.ofNullable(resolved));
 		}
 
 		Logger.debug(
@@ -162,27 +163,45 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 				reference.getConnectionKey(),
 				aliases
 		);
-		return Optional.empty();
+		return ReadResult.empty();
 	}
 
-	private void replaceAliases(@NotNull PipelineStateRecord next, long ttlMs) {
-		for (String alias : next.aliases) {
-			String existingStateId = aliasCache.getFresh(alias).join().orElse(null);
-			if (existingStateId == null || existingStateId.equals(next.id))
-				continue;
-
-			PipelineStateRecord existing = readRecord(existingStateId);
-			if (existing != null) {
-				invalidateRecord(existing);
-				continue;
+	private void replaceAliases(
+			@NotNull PipelineStateRecord next,
+			@Nullable PipelineStateRecord existing,
+			long ttlMs
+	) {
+		if (next.aliases == null) return;
+		if (existing != null && existing.aliases != null) {
+			for (String alias : existing.aliases) {
+				if (next.aliases.contains(alias))
+					continue;
+				aliasCache.invalidate(alias).join();
 			}
-
-			aliasCache.invalidate(alias).join();
 		}
 
 		stateCache.put(next.id, next, ttlMs).join();
 		for (String alias : next.aliases)
 			aliasCache.put(alias, next.id, ttlMs).join();
+	}
+
+	private @Nullable PipelineStateRecord resolvePrimaryRecord(@NotNull List<String> aliases, long now) {
+		PipelineStateRecord primary = null;
+		for (String alias : aliases) {
+			PipelineStateRecord found = findRecord(alias, now).orElse(null);
+			if (found == null) continue;
+
+			if (primary == null || primary.id.equals(found.id)) {
+				primary = found;
+				continue;
+			}
+
+			invalidateRecord(found);
+			PipelineStateReference reference = referenceFrom(found);
+			EventUtil.callEvent(new PipelineStateClearedEvent(reference, found.state));
+		}
+
+		return primary;
 	}
 
 	private @Nullable UUID resolveConnectionUniqueId(@NotNull AccountLifecycleEvent event) {
@@ -234,6 +253,36 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 			aliasCache.invalidate(alias).join();
 	}
 
+	private @NotNull PipelineStateReference referenceFrom(@NotNull PipelineStateRecord record) {
+		ScenarioContext context = record.state != null ? record.state.getScenario() : null;
+		if (context != null) return PipelineStateReference.from(context);
+
+		if (record.aliases == null || record.aliases.isEmpty())
+			return PipelineStateReference.builder().build();
+
+		PipelineStateReference.PipelineStateReferenceBuilder builder = PipelineStateReference.builder();
+		for (String alias : record.aliases) {
+			if (alias == null || alias.length() < 3) continue;
+
+			if (alias.startsWith(KEY_CONNECTION_ID_PREFIX)) {
+				parseUniqueId(alias.substring(KEY_CONNECTION_ID_PREFIX.length()))
+						.ifPresent(builder::connectionUniqueId);
+				continue;
+			}
+
+			if (alias.startsWith(KEY_IDENTITY_ID_PREFIX)) {
+				parseUniqueId(alias.substring(KEY_IDENTITY_ID_PREFIX.length()))
+						.ifPresent(builder::accountUniqueId);
+				continue;
+			}
+
+			if (alias.startsWith(KEY_CONNECTION_KEY_PREFIX))
+				builder.connectionKey(alias.substring(KEY_CONNECTION_KEY_PREFIX.length()));
+		}
+
+		return builder.build();
+	}
+
 	private @NotNull List<String> resolveAliases(@NotNull PipelineStateReference reference) {
 		List<String> aliases = new ArrayList<>(4);
 
@@ -275,6 +324,16 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 		return resolved;
 	}
 
+	private @NotNull Optional<UUID> parseUniqueId(@Nullable String value) {
+		if (value == null || value.isBlank()) return Optional.empty();
+
+		try {
+			return Optional.of(UUID.fromString(value));
+		} catch (IllegalArgumentException ignored) {
+			return Optional.empty();
+		}
+	}
+
 	@NoArgsConstructor
 	@AllArgsConstructor
 	public static final class PipelineStateRecord {
@@ -282,5 +341,14 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 		public @Nullable PipelineState state;
 		public @Nullable List<String> aliases;
 		public long expiresAt;
+	}
+
+	private record ReadResult(
+			@Nullable String stateId,
+			@NotNull Optional<PipelineState> state
+	) {
+		private static @NotNull ReadResult empty() {
+			return new ReadResult(null, Optional.empty());
+		}
 	}
 }

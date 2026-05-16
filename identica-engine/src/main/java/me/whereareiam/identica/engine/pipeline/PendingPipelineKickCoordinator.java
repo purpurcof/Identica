@@ -85,9 +85,8 @@ public class PendingPipelineKickCoordinator implements EventListener {
 			return;
 		}
 
-		for (PipelineType candidate : PipelineType.values()) {
+		for (PipelineType candidate : PipelineType.values())
 			cancelByKey(jobKey(candidate, reference));
-		}
 	}
 
 	private void scheduleKick(
@@ -145,7 +144,8 @@ public class PendingPipelineKickCoordinator implements EventListener {
 	private @NotNull JobKey jobKey(@NotNull PipelineType type, @NotNull PipelineStateReference reference) {
 		String correlation = "pending:" + type.name() +
 				"|c=" + reference.getConnectionUniqueId() +
-				"|i=" + reference.getAccountUniqueId();
+				"|i=" + reference.getAccountUniqueId() +
+				"|k=" + reference.getConnectionKey();
 
 		return JobKey.of(ORIGIN, PURPOSE, correlation);
 	}

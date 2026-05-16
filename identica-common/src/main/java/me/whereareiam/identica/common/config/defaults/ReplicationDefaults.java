@@ -30,6 +30,11 @@ public class ReplicationDefaults implements MergeDefaultsProvider<Replication> {
 		cache.setInstructions("identica:handshake-instructions");
 		cache.setAttempts("identica:provider-attempts");
 		cache.setSentinels("identica:sentinels");
+		Replication.Delivery delivery = new Replication.Delivery();
+		delivery.setRequests("identica:delivery:requests");
+		delivery.setConnectionIndex("identica:delivery:index:connection");
+		delivery.setAccountIndex("identica:delivery:index:account");
+		cache.setDelivery(delivery);
 
 		Replication.Sessions sessions = new Replication.Sessions();
 		sessions.setUser("identica:sessions:user");

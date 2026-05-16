@@ -5,16 +5,13 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.ConnectionCoordinator;
 import me.whereareiam.identica.common.adapter.ConnectionDecisionApplier;
-import me.whereareiam.identica.engine.pipeline.prompt.PendingPromptResendCoordinator;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
-import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.platform.bungeecord.actor.BungeeCordCommandPlayer;
 import me.whereareiam.identica.platform.bungeecord.util.BaseComponentMapper;
@@ -23,7 +20,6 @@ import net.kyori.adventure.text.Component;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ServerSwitchEvent;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -34,11 +30,9 @@ import java.util.UUID;
 public class BungeeCordResumeDecisionAdapter {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
 	private final @NotNull IdentityService identityService;
-	private final @NotNull CompletionPendingStore completionPendingStore;
 	private final @NotNull PrepareStateStore prepareStateStore;
 	private final @NotNull ConnectionDecisionApplier decisionApplier;
 	private final @NotNull BungeeAudiences audiences;
-	private final @NotNull PendingPromptResendCoordinator initialStepPromptCoordinator;
 
 	public void resume(@NotNull ServerSwitchEvent event) {
 		ProxiedPlayer player = event.getPlayer();
@@ -86,7 +80,7 @@ public class BungeeCordResumeDecisionAdapter {
 				provider != null ? provider.getProviderSubject() : null
 		);
 
-		UUID accountUniqueId = resolveAttachedAccountUniqueId(player.getUniqueId(), identity.getAccountUniqueId());
+		UUID accountUniqueId = identity.getAccountUniqueId();
 		BungeeCordCommandPlayer liveIdentity = new BungeeCordCommandPlayer(
 				player.getUniqueId(),
 				accountUniqueId,
@@ -98,8 +92,13 @@ public class BungeeCordResumeDecisionAdapter {
 		if (decision == null || decision.getStatus() == ConnectionDecision.Status.NO_PENDING)
 			return;
 
-		boolean deferred = initialStepPromptCoordinator.deferInitialStepPrompt(player.getUniqueId(), decision);
-		if (!deferred) decisionApplier.apply(decision, liveIdentity, resumeTarget(player));
+		decisionApplier.applyOrQueueWait(
+				decision,
+				liveIdentity,
+				resumeTarget(player),
+				player.getUniqueId(),
+				accountUniqueId
+		);
 
 		ConnectionDecision.Status status = decision.getStatus();
 		if (status == ConnectionDecision.Status.DENY || status == ConnectionDecision.Status.REQUIRE_RECONNECT)
@@ -107,15 +106,6 @@ public class BungeeCordResumeDecisionAdapter {
 
 		if (status == ConnectionDecision.Status.ALLOW || status == ConnectionDecision.Status.WAIT)
 			identityService.attach(player.getUniqueId(), accountUniqueId, liveIdentity);
-	}
-
-	private @Nullable UUID resolveAttachedAccountUniqueId(
-			@NotNull UUID connectionUniqueId,
-			@Nullable UUID fallbackAccountUniqueId
-	) {
-		return completionPendingStore.peek(connectionUniqueId)
-				.map(CompletionPendingState::getAccountUniqueId)
-				.orElse(fallbackAccountUniqueId);
 	}
 
 	private PrepareDecision resolvePrepared(@NotNull ProxiedPlayer player, @NotNull ConnectionIdentity identity) {

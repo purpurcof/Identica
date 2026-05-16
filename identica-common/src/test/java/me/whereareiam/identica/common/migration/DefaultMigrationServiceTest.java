@@ -22,6 +22,7 @@ import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
@@ -59,6 +60,8 @@ class DefaultMigrationServiceTest {
 	private SessionService sessionService;
 	@Mock
 	private IdentityService identityService;
+	@Mock
+	private DeliveryService deliveryService;
 
 	@DisplayName("Denies migration when the requested username is still occupied")
 	@Test
@@ -96,6 +99,7 @@ class DefaultMigrationServiceTest {
 				pipelineStateStore,
 				sessionService,
 				identityService,
+				deliveryService,
 				Settings::new,
 				() -> commands,
 				() -> messages
@@ -127,9 +131,10 @@ class DefaultMigrationServiceTest {
 				pipelineStateStore,
 				sessionService,
 				identityService,
+				deliveryService,
 				Settings::new,
 				this::commands,
-				Messages::new
+				this::messages
 		);
 
 		UUID connectionUniqueId = UUID.randomUUID();
@@ -183,9 +188,10 @@ class DefaultMigrationServiceTest {
 				pipelineStateStore,
 				sessionService,
 				identityService,
+				deliveryService,
 				Settings::new,
 				this::commands,
-				Messages::new
+				this::messages
 		);
 
 		PendingMigration pendingMigration = service.findPendingMigration(connectionUniqueId).orElse(null);
@@ -223,6 +229,7 @@ class DefaultMigrationServiceTest {
 				pipelineStateStore,
 				sessionService,
 				identityService,
+				deliveryService,
 				() -> settings,
 				this::commands,
 				Messages::new
@@ -249,6 +256,52 @@ class DefaultMigrationServiceTest {
 		verify(providerLinkPersistenceService, never()).setPrimaryExclusive(any(UUID.class), any(String.class));
 	}
 
+	@DisplayName("Queues a next-join notice when a started migration is cancelled")
+	@Test
+	void cancelPendingMigrationQueuesNextJoinNotice() {
+		UUID connectionUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
+
+		PipelineState pipelineState = PipelineState.initial();
+		pipelineState.setPipelineType(PipelineType.MIGRATION);
+		pipelineState.setScenario(MigrationContext.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
+				.targetProviderId("premium")
+				.build());
+		pipelineState.putItem(new MigrationPendingState(
+				"premium",
+				1234L,
+				MigrationInitiator.USER,
+				connectionUniqueId
+		), 1_000L);
+
+		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.of(pipelineState));
+
+		DefaultMigrationService service = new DefaultMigrationService(
+				providerManager,
+				providerLinkPersistenceService,
+				accountPersistenceService,
+				pipelineStateStore,
+				sessionService,
+				identityService,
+				deliveryService,
+				Settings::new,
+				this::commands,
+				this::messages
+		);
+
+		MigrationResult result = service.cancel(me.whereareiam.identica.model.migration.operation.MigrationCancel.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.scope(me.whereareiam.identica.type.migration.MigrationCancelScope.PENDING)
+				.build());
+
+		assertEquals(MigrationResultStatus.CANCELLED, result.getStatus());
+		verify(deliveryService).queue(argThat(request ->
+                accountUniqueId.equals(request.getTarget().getAccountUniqueId()) && request.getPayload().getChatMessage() != null
+		));
+	}
+
 	private Commands commands() {
 		Commands commands = new Commands();
 		Commands.Behavior behavior = new Commands.Behavior();
@@ -260,5 +313,15 @@ class DefaultMigrationServiceTest {
 		behavior.setSessions(new Commands.Behavior.Sessions());
 		commands.setBehavior(behavior);
 		return commands;
+	}
+
+	private Messages messages() {
+		Messages messages = new Messages();
+		Messages.Connection connection = new Messages.Connection();
+		Messages.Connection.Migration migration = new Messages.Connection.Migration();
+		migration.setCancelled(List.of("cancelled"));
+		connection.setMigration(migration);
+		messages.setConnection(connection);
+		return messages;
 	}
 }

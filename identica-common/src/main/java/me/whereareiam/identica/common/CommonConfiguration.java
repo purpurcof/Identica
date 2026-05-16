@@ -34,6 +34,9 @@ import me.whereareiam.identica.common.identity.session.recognition.policy.Untrus
 import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.listener.SessionClosedDisconnectListener;
 import me.whereareiam.identica.common.listener.SessionReplacedListener;
+import me.whereareiam.identica.common.messaging.DefaultDeliveryService;
+import me.whereareiam.identica.common.messaging.DefaultDeliveryStore;
+import me.whereareiam.identica.common.messaging.DeliveryLifecycle;
 import me.whereareiam.identica.common.migration.DefaultMigrationService;
 import me.whereareiam.identica.common.prepare.DefaultPrepareStateStore;
 import me.whereareiam.identica.common.provider.*;
@@ -86,6 +89,8 @@ import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.routing.RoutingIntentStore;
 import me.whereareiam.identica.sentinel.SentinelDefinition;
 import me.whereareiam.identica.sentinel.SentinelService;
+import me.whereareiam.identica.service.DeliveryService;
+import me.whereareiam.identica.service.DeliveryStore;
 import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.identica.verification.VerificationMethod;
@@ -136,6 +141,8 @@ public class CommonConfiguration extends AbstractModule {
 		bind(ProviderAttemptStore.class).to(DefaultProviderAttemptStore.class).asEagerSingleton();
 		bind(PrepareStateStore.class).to(DefaultPrepareStateStore.class).asEagerSingleton();
 		bind(CompletionPendingStore.class).to(DefaultCompletionPendingStore.class).asEagerSingleton();
+		bind(DeliveryStore.class).to(DefaultDeliveryStore.class).asEagerSingleton();
+		bind(DeliveryService.class).to(DefaultDeliveryService.class).asEagerSingleton();
 		bind(VerificationEnrollmentStore.class).asEagerSingleton();
 		bind(VerificationChallengeStore.class).asEagerSingleton();
 		bind(VerificationStateCodec.class).asEagerSingleton();
@@ -157,6 +164,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(AccountService.class).to(DefaultAccountService.class).asEagerSingleton();
 		bind(RegistrationAccountService.class).to(DefaultRegistrationAccountService.class).asEagerSingleton();
 		bind(MigrationService.class).to(DefaultMigrationService.class).asEagerSingleton();
+		bind(DeliveryLifecycle.class).asEagerSingleton();
 		bind(VerificationService.class).to(DefaultVerificationService.class).asEagerSingleton();
 		bind(IdentityService.class).to(DefaultIdentityService.class).asEagerSingleton();
 		bind(VerificationRegistry.class).to(DefaultVerificationRegistry.class).asEagerSingleton();

@@ -58,14 +58,9 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		recognition.setUntrustedIps(untrustedIps);
 		sessions.setRecognition(recognition);
 
-		Settings.InitialPrompt initialPrompt = new Settings.InitialPrompt();
-		initialPrompt.setResendUntilInteraction(false);
-		initialPrompt.setResendInterval(Duration.ofMillis(1500));
-
 		Settings.Connection connection = new Settings.Connection();
 		connection.setRouting(routing);
 		connection.setSessions(sessions);
-		connection.setInitialPrompt(initialPrompt);
 		connection.setHandshakeInstructionTtl(Duration.ofMinutes(10));
 		connection.setAttemptTtl(Duration.ofMinutes(10));
 		connection.setReservationTtl(Duration.ofMinutes(15));

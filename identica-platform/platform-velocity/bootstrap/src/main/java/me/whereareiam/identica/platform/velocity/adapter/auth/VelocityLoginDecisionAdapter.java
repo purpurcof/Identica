@@ -12,15 +12,12 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
-import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.util.UUID;
@@ -29,7 +26,6 @@ import java.util.UUID;
 public class VelocityLoginDecisionAdapter {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
 	private final @NotNull IdentityService identityService;
-	private final @NotNull CompletionPendingStore completionPendingStore;
 	private final @NotNull PrepareStateStore prepareStateStore;
 	private final @NotNull ConnectionDecisionApplier decisionApplier;
 
@@ -37,13 +33,11 @@ public class VelocityLoginDecisionAdapter {
 	public VelocityLoginDecisionAdapter(
 			@NotNull ConnectionCoordinator connectionCoordinator,
 			@NotNull IdentityService identityService,
-			@NotNull CompletionPendingStore completionPendingStore,
 			@NotNull PrepareStateStore prepareStateStore,
 			@NotNull ConnectionDecisionApplier decisionApplier
 	) {
 		this.connectionCoordinator = connectionCoordinator;
 		this.identityService = identityService;
-		this.completionPendingStore = completionPendingStore;
 		this.prepareStateStore = prepareStateStore;
 		this.decisionApplier = decisionApplier;
 	}
@@ -106,7 +100,7 @@ public class VelocityLoginDecisionAdapter {
 		), loginTarget(event));
 		ConnectionDecision.Status status = decision != null ? decision.getStatus() : null;
 		if (status == ConnectionDecision.Status.ALLOW || status == ConnectionDecision.Status.WAIT) {
-			UUID accountUniqueId = resolveAttachedAccountUniqueId(player.getUniqueId(), identity.getAccountUniqueId());
+			UUID accountUniqueId = identity.getAccountUniqueId();
 			identityService.attach(
 					player.getUniqueId(),
 					accountUniqueId,
@@ -119,15 +113,6 @@ public class VelocityLoginDecisionAdapter {
 					)
 			);
 		}
-	}
-
-	private @Nullable UUID resolveAttachedAccountUniqueId(
-			@NotNull UUID connectionUniqueId,
-			@Nullable UUID fallbackAccountUniqueId
-	) {
-		return completionPendingStore.peek(connectionUniqueId)
-				.map(CompletionPendingState::getAccountUniqueId)
-				.orElse(fallbackAccountUniqueId);
 	}
 
 	private String resolveIp(@NotNull Player player) {

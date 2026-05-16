@@ -65,7 +65,6 @@ public class Settings extends ConfigDocument {
 		private @NotNull UniqueIdMode uniqueIdMode;
 		private @NotNull Routing routing = new Routing();
 		private @NotNull Sessions sessions = new Sessions();
-		private @NotNull InitialPrompt initialPrompt = new InitialPrompt();
 		private @NotNull Scenarios scenarios = new Scenarios();
 		private @NotNull Sentinels sentinels = new Sentinels();
 
@@ -109,22 +108,6 @@ public class Settings extends ConfigDocument {
 		}
 
 	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class InitialPrompt {
-		private boolean resendUntilInteraction;
-		private @NotNull Duration resendInterval;
-
-		public long resendIntervalMillis() {
-			if (resendInterval.isZero() || resendInterval.isNegative())
-				throw new IllegalStateException("settings.connection.initialPrompt.resendInterval must be positive");
-
-			return resendInterval.toMillis();
-		}
-	}
-
 	@Getter
 	@Setter
 	@ToString

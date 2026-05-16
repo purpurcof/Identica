@@ -45,6 +45,7 @@ public class Replication extends ConfigDocument {
 	public static class Cache {
 		private @NotNull String reservations;
 		private @NotNull String instructions;
+		private @NotNull Delivery delivery;
 		private @NotNull Sessions sessions;
 		/**
 		 * Cache namespace for pipeline state.
@@ -58,6 +59,15 @@ public class Replication extends ConfigDocument {
 		 * Cache namespace for sentinels.
 		 */
 		private @NotNull String sentinels;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Delivery {
+		private @NotNull String requests;
+		private @NotNull String connectionIndex;
+		private @NotNull String accountIndex;
 	}
 
 	/**

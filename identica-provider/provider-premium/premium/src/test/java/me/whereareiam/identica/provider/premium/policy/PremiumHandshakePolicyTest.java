@@ -134,6 +134,24 @@ class PremiumHandshakePolicyTest {
 		verify(profileLookup, never()).hasPremiumProfile(username);
 	}
 
+	@DisplayName("Does not requeue premium handshake when a verify attempt already exists")
+	@Test
+	void existingVerifyAttemptSkipsManualPremiumRequeue() {
+		String username = "PlayerOne";
+		when(attemptStore.hasAttempt("premium", "verify", username, "127.0.0.1")).thenReturn(true);
+
+		HandshakeDecision decision = policy.evaluate(request(username, ProviderContext.of(
+				"premium",
+				null,
+				username,
+				ProviderOrigin.MANUAL
+		))).toCompletableFuture().join();
+
+		assertEquals(HandshakeDecision.Status.ALLOW, decision.getStatus());
+		verify(handshakeStore, never()).putInstruction(any());
+		verify(profileLookup, never()).hasPremiumProfile(username);
+	}
+
 	private HandshakeRequest request(String username) {
 		return request(username, null);
 	}

@@ -64,6 +64,15 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 		if (username == null || username.isBlank())
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 
+		if (attemptStore.hasAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip)) {
+			Logger.debug(
+					"Premium handshake allowed existing verify attempt username=%s ip=%s",
+					username,
+					ip
+			);
+			return CompletableFuture.completedFuture(HandshakeDecision.allow());
+		}
+
 		ProviderContext provider = request.getProvider();
 		if (provider != null && PremiumConstants.PROVIDER_ID.equalsIgnoreCase(provider.getProviderId())) {
 			Logger.debug(
@@ -73,15 +82,6 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 					provider.getProviderSubject()
 			);
 			requestForceOnline(username, ip);
-			return CompletableFuture.completedFuture(HandshakeDecision.allow());
-		}
-
-		if (attemptStore.hasAttempt(PremiumConstants.PROVIDER_ID, PremiumConstants.ATTEMPT_SCOPE_VERIFY, username, ip)) {
-			Logger.debug(
-					"Premium handshake allowed existing verify attempt username=%s ip=%s",
-					username,
-					ip
-			);
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 

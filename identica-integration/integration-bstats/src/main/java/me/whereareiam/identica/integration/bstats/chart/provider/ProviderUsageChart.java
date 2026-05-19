@@ -13,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -71,7 +70,7 @@ public final class ProviderUsageChart implements Chart {
 	}
 
 	private @NotNull String normalize(@NotNull String providerId) {
-		return providerId.trim().toLowerCase(Locale.ROOT);
+		return providerId.trim();
 	}
 
 	private int toChartValue(long count) {

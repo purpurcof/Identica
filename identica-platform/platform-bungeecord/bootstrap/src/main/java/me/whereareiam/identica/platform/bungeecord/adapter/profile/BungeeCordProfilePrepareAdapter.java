@@ -13,6 +13,7 @@ import net.md_5.bungee.api.event.LoginEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.UUID;
@@ -48,6 +49,27 @@ public class BungeeCordProfilePrepareAdapter {
 		return new ProfileRewriteProcessor.Target() {
 			@Override
 			public void apply(@NotNull ProfileRewriteProcessor.Rewrite rewrite) {
+				PendingConnection connection = event.getConnection();
+				UUID currentUniqueId = connection.getUniqueId();
+				UUID rewrittenUniqueId = rewrite.uniqueId();
+				if (rewrittenUniqueId != null) {
+					if (applyUniqueIdRewrite(connection, rewrittenUniqueId)) {
+						Logger.debug(
+								"Bungee profile rewrite applied username=%s from=%s to=%s",
+								connection.getName(),
+								currentUniqueId,
+								rewrittenUniqueId
+						);
+						return;
+					}
+
+					Logger.warn(
+							"Bungee profile rewrite could not update pending connection username=%s from=%s to=%s",
+							connection.getName(),
+							currentUniqueId,
+							rewrittenUniqueId
+					);
+				}
 			}
 
 			@Override
@@ -76,5 +98,22 @@ public class BungeeCordProfilePrepareAdapter {
 			return inetSocketAddress.getAddress().getHostAddress();
 
 		return inetSocketAddress.getHostString();
+	}
+
+	static boolean applyUniqueIdRewrite(@NotNull Object connection, @NotNull UUID uniqueId) {
+		try {
+			Class<?> type = connection.getClass();
+			Field uniqueIdField = type.getDeclaredField("uniqueId");
+			Field rewriteIdField = type.getDeclaredField("rewriteId");
+
+			uniqueIdField.setAccessible(true);
+			rewriteIdField.setAccessible(true);
+
+			uniqueIdField.set(connection, uniqueId);
+			rewriteIdField.set(connection, uniqueId);
+			return true;
+		} catch (NoSuchFieldException | IllegalAccessException ignored) {
+			return false;
+		}
 	}
 }

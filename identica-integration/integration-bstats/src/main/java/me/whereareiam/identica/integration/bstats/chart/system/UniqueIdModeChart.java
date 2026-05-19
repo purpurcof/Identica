@@ -5,12 +5,9 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.integration.bstats.chart.type.Chart;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.type.identity.UniqueIdMode;
 import org.bstats.charts.CustomChart;
 import org.bstats.charts.SimplePie;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Locale;
 
 @Singleton
 public final class UniqueIdModeChart implements Chart {
@@ -27,8 +24,6 @@ public final class UniqueIdModeChart implements Chart {
 	}
 
 	private @NotNull String value() {
-		Settings settings = settingsProvider.get();
-		UniqueIdMode mode = settings.getConnection().getUniqueIdMode();
-		return mode.name().toLowerCase(Locale.ROOT);
+		return settingsProvider.get().getConnection().getUniqueIdMode().name();
 	}
 }

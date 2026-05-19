@@ -16,6 +16,7 @@ import me.whereareiam.identica.model.delivery.DeliveryDispatchContext;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
 import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.type.messaging.DeliveryCheckpoint;
+import me.whereareiam.identica.type.messaging.DeliverySource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -66,7 +67,15 @@ public class DeliveryLifecycle implements EventListener {
 	@IdenticEvent
 	public void onPipelineStateCleared(@NotNull PipelineStateClearedEvent event) {
 		UUID connectionUniqueId = event.getReference().getConnectionUniqueId();
-		if (connectionUniqueId != null) deliveryService.invalidateByConnection(connectionUniqueId, "pipeline-state-cleared");
+		if (connectionUniqueId == null) return;
+
+		// Completion deliveries are queued just before successful pipelines clear their state.
+		for (DeliveryRequest request : deliveryService.pendingForConnection(connectionUniqueId)) {
+			if (request.getSource() != DeliverySource.INITIAL_PROMPT)
+				continue;
+
+			deliveryService.acknowledge(request.getId(), "pipeline-state-cleared");
+		}
 	}
 
 	private void dispatch(

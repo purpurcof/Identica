@@ -9,8 +9,6 @@ import org.bstats.charts.CustomChart;
 import org.bstats.charts.SimplePie;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Locale;
-
 @Singleton
 public final class PersistenceTypeChart implements Chart {
 	private final Provider<Persistence> persistenceProvider;
@@ -26,6 +24,6 @@ public final class PersistenceTypeChart implements Chart {
 	}
 
 	private @NotNull String value() {
-		return persistenceProvider.get().getType().name().toLowerCase(Locale.ROOT);
+		return persistenceProvider.get().getType().name();
 	}
 }

@@ -24,6 +24,6 @@ public final class ReplicationTypeChart implements Chart {
 	}
 
 	private @NotNull String value() {
-		return replicationProvider.get().isEnabled() ? "redis" : "disabled";
+		return replicationProvider.get().isEnabled() ? "REDIS" : "DISABLED";
 	}
 }

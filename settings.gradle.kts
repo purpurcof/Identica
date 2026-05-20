@@ -51,6 +51,9 @@ project(":integration-bstats").projectDir = file("identica-integration/integrati
 include(":identica-platform")
 project(":identica-platform").projectDir = file("identica-platform")
 
+include(":identica-platform:bundle")
+project(":identica-platform:bundle").projectDir = file("identica-platform/bundle")
+
 include(":platform-velocity")
 project(":platform-velocity").projectDir = file("identica-platform/platform-velocity")
 

@@ -6,41 +6,32 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.commandant.Commandant;
 import me.whereareiam.commandant.CommandantKeys;
+import me.whereareiam.commandant.CommandantSyntaxFormatter;
 import me.whereareiam.commandant.ExceptionHandlerRegistrar;
 import me.whereareiam.commandant.model.message.ExceptionMessages;
-import me.whereareiam.commandant.CommandantSyntaxFormatter;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.adapter.command.annotation.IdenticaAnnotationParser;
-import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
-import me.whereareiam.identica.adapter.command.suggestion.ProviderIdSuggestions;
-import me.whereareiam.identica.adapter.command.suggestion.VerificationMethodSuggestions;
 import me.whereareiam.identica.adapter.command.definition.CommandDefinitionAdapter;
-import me.whereareiam.identica.adapter.command.executor.HelpCommand;
-import me.whereareiam.identica.adapter.command.executor.EnrollCommand;
-import me.whereareiam.identica.adapter.command.executor.MainCommand;
-import me.whereareiam.identica.adapter.command.executor.MigrationCommand;
-import me.whereareiam.identica.adapter.command.executor.admin.ReloadCommand;
-import me.whereareiam.identica.adapter.command.executor.AvailabilityCommand;
-import me.whereareiam.identica.adapter.command.executor.admin.SessionsCommand;
-import me.whereareiam.identica.adapter.command.executor.admin.AdminRootCommand;
-import me.whereareiam.identica.adapter.command.executor.admin.ClearCommand;
-import me.whereareiam.identica.adapter.command.executor.admin.DeleteCommand;
-import me.whereareiam.identica.adapter.command.executor.admin.ReservationCommand;
-import me.whereareiam.identica.adapter.command.executor.admin.VerificationResetCommand;
-import me.whereareiam.identica.adapter.command.executor.verification.VerificationEnrollmentCommand;
+import me.whereareiam.identica.adapter.command.executor.*;
+import me.whereareiam.identica.adapter.command.executor.admin.*;
 import me.whereareiam.identica.adapter.command.executor.verification.VerificationConfirmCommand;
+import me.whereareiam.identica.adapter.command.executor.verification.VerificationEnrollmentCommand;
 import me.whereareiam.identica.adapter.command.executor.verification.VerificationSelectionCommand;
 import me.whereareiam.identica.adapter.command.parser.PasswordParser;
 import me.whereareiam.identica.adapter.command.serializer.ScopedSerializerEngine;
-import me.whereareiam.identica.model.CommandDefinition;
+import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
+import me.whereareiam.identica.adapter.command.suggestion.ProviderIdSuggestions;
+import me.whereareiam.identica.adapter.command.suggestion.VerificationMethodSuggestions;
 import me.whereareiam.identica.command.CommandService;
-import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.CommandManager;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -200,37 +191,18 @@ public class DefaultCommandService implements CommandService {
 			@NotNull CommandManager<Actor> commandManager
 	) {
 		CommandDefinitionAdapter adapter = new CommandDefinitionAdapter();
-		String rootCommand = resolveRootCommand();
+		List<String> rootAliases = resolveRootAliases(lookupDefinition("main"));
 
 		for (Command<Actor> command : parsed) {
 			String defId = command.commandMeta().optional(CommandantKeys.DEFINITION_ID).orElse(null);
 			CommandDefinition definition = defId != null ? lookupDefinition(defId) : null;
-			CommandDefinition effectiveDefinition = definition;
-
-			if (definition != null && isSubcommand(definition) && definition.getAliases() != null) {
-				effectiveDefinition = definition.toBuilder()
-						.aliases(prefixAliases(definition.getAliases(), rootCommand))
-						.build();
-			}
+			boolean sharedRootCommand = definition != null
+					&& ("main".equals(defId) || isSubcommand(definition));
 
 			Commandant.process(command, commandManager)
-					.withDefinition(effectiveDefinition, adapter)
+					.withDefinition(definition, adapter, sharedRootCommand ? rootAliases : List.of())
 					.register();
 		}
-	}
-
-	private @NotNull String resolveRootCommand() {
-		CommandDefinition main = lookupDefinition("main");
-		if (main == null || main.getAliases() == null || main.getAliases().isEmpty())
-			return "";
-
-		for (String alias : main.getAliases()) {
-			if (alias == null) continue;
-			String trimmed = alias.trim();
-			if (!trimmed.isEmpty()) return trimmed;
-		}
-
-		return "";
 	}
 
 	private boolean isSubcommand(@NotNull CommandDefinition definition) {
@@ -238,38 +210,18 @@ public class DefaultCommandService implements CommandService {
 		return usage != null && usage.contains("{command}");
 	}
 
-	private List<String> prefixAliases(@NotNull List<String> aliases, @NotNull String rootCommand) {
-		if (rootCommand.isBlank()) return aliases;
-		LinkedHashSet<String> prefixed = new LinkedHashSet<>();
-		for (String alias : aliases) {
+	private @NotNull List<String> resolveRootAliases(@Nullable CommandDefinition definition) {
+		if (definition == null || definition.getAliases() == null || definition.getAliases().isEmpty())
+			return List.of();
+
+		LinkedHashSet<String> resolved = new LinkedHashSet<>();
+		for (String alias : definition.getAliases()) {
 			if (alias == null) continue;
 			String trimmed = alias.trim();
-			if (trimmed.isEmpty()) continue;
-
-			if (isAlreadyPrefixed(trimmed, rootCommand)) {
-				prefixed.add(trimmed);
-				continue;
-			}
-
-			String rootTrimmed = rootCommand.trim();
-			if (rootTrimmed.isEmpty()) {
-				prefixed.add(trimmed);
-				continue;
-			}
-			prefixed.add(rootTrimmed + " " + trimmed);
+			if (!trimmed.isEmpty()) resolved.add(trimmed);
 		}
 
-		return List.copyOf(prefixed);
-	}
-
-	private boolean isAlreadyPrefixed(@NotNull String alias, @NotNull String rootCommand) {
-		String lowerAlias = alias.toLowerCase();
-
-		String trimmedRoot = rootCommand.trim();
-		if (trimmedRoot.isEmpty()) return false;
-
-		String lowerRoot = trimmedRoot.toLowerCase();
-		return lowerAlias.equals(lowerRoot) || lowerAlias.startsWith(lowerRoot + " ");
+		return List.copyOf(resolved);
 	}
 
 	private CommandDefinition lookupDefinition(@NotNull String key) {

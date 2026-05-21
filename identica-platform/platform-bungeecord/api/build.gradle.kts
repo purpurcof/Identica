@@ -1,10 +1,5 @@
 plugins {
-    id("identica.java-common")
-}
-
-java {
-    withSourcesJar()
-    withJavadocJar()
+    id("api")
 }
 
 group = "me.whereareiam.identica.platform.bungeecord"
@@ -14,23 +9,16 @@ dependencies {
     compileOnly(libs.bungeecord)
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            artifactId = "api"
-            pom {
-                name.set("Identica BungeeCord API")
-                description.set("BungeeCord-specific API for Identica")
-            }
-        }
-    }
-}
+toolkitPublish {
+    artifactId.set("api")
 
-tasks.withType<Javadoc>().configureEach {
-    (options as StandardJavadocDocletOptions).apply {
-        addStringOption("Xdoclint:none", "-quiet")
-        title = "Identica BungeeCord API"
-        windowTitle = "Identica BungeeCord API"
+    pom {
+        description.set("BungeeCord-specific API for Identica")
+        name.set("Identica BungeeCord API")
+    }
+
+    javadoc {
+        title.set("Identica BungeeCord API")
+        windowTitle.set("Identica BungeeCord API")
     }
 }

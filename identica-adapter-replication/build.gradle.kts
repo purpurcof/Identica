@@ -1,7 +1,5 @@
-import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
-
 plugins {
-    id("identica.java-common")
+    id("common")
     alias(libs.plugins.attache)
 }
 
@@ -11,8 +9,4 @@ dependencies {
     testImplementation(libs.jedis)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.testcontainers.redis)
-}
-
-extensions.configure<AttacheExtension>("attache") {
-    transitive.set(true)
 }

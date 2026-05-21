@@ -1,7 +1,7 @@
 import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
 
 plugins {
-    id("identica.java-common")
+    id("common")
     alias(libs.plugins.attache)
 }
 
@@ -23,10 +23,6 @@ dependencies {
 }
 
 extensions.configure<AttacheExtension>("attache") {
-    transitive.set(true)
-    repository("https://maven.whereareiam.me/release")
-    repository("https://maven.whereareiam.me/development")
-
     library(libs.dialectica) {
         relocate("me{}whereareiam{}dialectica", "me.whereareiam.identica.library.dialectica")
         relocate("org{}jdbi", "me{}whereareiam{}identica{}library{}jdbi")

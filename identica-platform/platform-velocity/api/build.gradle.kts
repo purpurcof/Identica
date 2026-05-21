@@ -1,10 +1,5 @@
 plugins {
-    id("identica.java-common")
-}
-
-java {
-    withSourcesJar()
-    withJavadocJar()
+    id("api")
 }
 
 group = "me.whereareiam.identica.platform.velocity"
@@ -14,23 +9,16 @@ dependencies {
     compileOnly(libs.velocity)
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            artifactId = "api"
-            pom {
-                name.set("Identica Velocity API")
-                description.set("Velocity-specific API for Identica")
-            }
-        }
-    }
-}
+toolkitPublish {
+    artifactId.set("api")
 
-tasks.withType<Javadoc>().configureEach {
-    (options as StandardJavadocDocletOptions).apply {
-        addStringOption("Xdoclint:none", "-quiet")
-        title = "Identica Velocity API"
-        windowTitle = "Identica Velocity API"
+    pom {
+        description.set("Velocity-specific API for Identica")
+        name.set("Identica Velocity API")
+    }
+
+    javadoc {
+        title.set("Identica Velocity API")
+        windowTitle.set("Identica Velocity API")
     }
 }

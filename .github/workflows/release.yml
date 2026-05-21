@@ -85,7 +85,6 @@ jobs:
           PUBLISH_USER: ${{ secrets.PUBLISH_USER }}
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
           VERSION: ${{ needs.prepare.outputs.version }}
-          PUBLISH_REALM: release
         with:
           gradle-command: ./gradlew --no-daemon test build pluginJars publish
 

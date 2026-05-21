@@ -1,7 +1,5 @@
-import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
-
 plugins {
-    id("identica.platform")
+    id("platform")
     alias(libs.plugins.attache)
 }
 
@@ -22,10 +20,6 @@ dependencies {
 
     attache(libs.adventure.platform.bungeecord)
     attache(libs.cloud.bungee)
-}
-
-extensions.configure<AttacheExtension>("attache") {
-    transitive.set(true)
 }
 
 tasks.processResources {

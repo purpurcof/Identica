@@ -1,9 +1,17 @@
+import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
+
 plugins {
+    alias(libs.plugins.attache)
+    alias(libs.plugins.toolkit.versioning)
     alias(libs.plugins.spawner)
-    id("identica.dev-scenarios")
+    id("dev-scenarios")
 }
 
-version = providers.environmentVariable("VERSION").orElse("dev").get()
+extensions.configure<AttacheExtension>("attache") {
+    transitive.set(true)
+    repository("https://maven.whereareiam.me/release")
+    repository("https://maven.whereareiam.me/development")
+}
 
 defaultTasks("pluginJars")
 

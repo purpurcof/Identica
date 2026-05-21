@@ -1,7 +1,5 @@
-import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
-
 plugins {
-    id("identica.platform")
+    id("platform")
     alias(libs.plugins.attache)
 }
 
@@ -22,8 +20,4 @@ dependencies {
     annotationProcessor(libs.velocity)
 
     attache(libs.cloud.velocity)
-}
-
-extensions.configure<AttacheExtension>("attache") {
-    transitive.set(true)
 }

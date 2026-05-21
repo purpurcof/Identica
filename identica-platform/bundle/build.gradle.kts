@@ -1,3 +1,3 @@
 plugins {
-    id("identica.bundle")
+    id("bundle")
 }

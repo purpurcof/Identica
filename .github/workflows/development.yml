@@ -57,7 +57,6 @@ jobs:
           PUBLISH_USER: ${{ secrets.PUBLISH_USER }}
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
           VERSION: ${{ needs.prepare.outputs.version }}
-          PUBLISH_REALM: development
         with:
           gradle-command: ./gradlew --no-daemon test pluginJars publish
           ignore-test-failures: 'true'

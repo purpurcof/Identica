@@ -73,7 +73,7 @@ public class ManagementCommand {
 		sendMessage(sender, messages.getRegistered());
 	}
 
-	@Definition("admin-set-credential")
+	@Definition("admin-set-password")
 	@Command("identica credential setpassword <username> <password>")
 	public void setPassword(
 			@NotNull Actor sender,

@@ -7,7 +7,9 @@ import com.google.inject.Singleton;
 import me.whereareiam.commandant.Commandant;
 import me.whereareiam.commandant.CommandantKeys;
 import me.whereareiam.commandant.CommandantSyntaxFormatter;
-import me.whereareiam.commandant.ExceptionHandlerRegistrar;
+import me.whereareiam.commandant.exception.ExceptionHandlerRegistrar;
+import me.whereareiam.commandant.exception.format.CloudPermissionFormatters;
+import me.whereareiam.commandant.exception.format.ExceptionFormatting;
 import me.whereareiam.commandant.model.message.ExceptionMessages;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.adapter.command.annotation.IdenticaAnnotationParser;
@@ -30,6 +32,7 @@ import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.serializer.SerializerEngine;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.CommandManager;
+import org.incendo.cloud.permission.Permission;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -236,6 +239,14 @@ public class DefaultCommandService implements CommandService {
 		ExceptionMessages exceptionMessages = messagesProvider.get().getCommands().getExceptions();
 
 		SerializerEngine scopedSerializer = new ScopedSerializerEngine(serializer, Serializer.SCOPE);
-		ExceptionHandlerRegistrar.register(commandManager, exceptionMessages, scopedSerializer, Actor::getAudience);
+		ExceptionHandlerRegistrar.register(
+				commandManager,
+				exceptionMessages,
+				scopedSerializer,
+				Actor::getAudience,
+				ExceptionFormatting.builder()
+						.format(Permission.class, CloudPermissionFormatters.minimal())
+						.build()
+		);
 	}
 }

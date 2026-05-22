@@ -547,10 +547,9 @@ Enable recognition only if you understand that tradeoff and accept the risk for 
 
 - Takes: `true` or `false`
 - Current default: `true`
-- Affects: whether automatic reconnect recognition is suppressed for configured client IPs and CIDR ranges
+- Affects: whether recognition-based authentication bypass is allowed for configured client IPs and CIDR ranges
 
-This guard only affects automatic provider recognition.
-It does not block explicit provider usage through entrypoint-selected or manually selected providers.
+This guard controls recognition paths that can skip provider authentication, including reconnect recognition and provider-scoped handshake or session recognition.
 
 Use this when reconnect recognition is generally acceptable, but there are client networks you do not trust for automatic recognition decisions.
 The generated defaults target the common “proxy forwarded a loopback/private proxy IP instead of the real client IP” failure mode.
@@ -561,7 +560,7 @@ The generated defaults target the common “proxy forwarded a loopback/private p
 
 - Takes: a list of exact IP literals or IPv4/IPv6 CIDR ranges
 - Current default: `["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]`
-- Affects: which client IPs suppress automatic reconnect recognition
+- Affects: which client IPs disable recognition-based authentication bypass
 
 The generated defaults cover loopback and RFC1918 private ranges, which are often a sign that Identica is behind a proxy that is forwarding the wrong source IP.
 

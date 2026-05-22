@@ -3,7 +3,6 @@ package me.whereareiam.identica.common.conflict.guard;
 import me.whereareiam.identica.common.config.defaults.messages.MessagesDefaults;
 import me.whereareiam.identica.common.provider.DefaultProviderOperations;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.conflict.ConflictContext;
@@ -39,8 +38,6 @@ class UsernameEntrypointConflictGuardTest {
 	private MigrationJourneyRegistry migrationJourneyRegistry;
 	@Mock
 	private EventManager eventManager;
-	@Mock
-	private UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
 
 	@DisplayName("Denies the conflict when the entrypoint was auto-detected and remains ambiguous")
 	@Test
@@ -127,8 +124,7 @@ class UsernameEntrypointConflictGuardTest {
 				registrationJourneyRegistry,
 				migrationJourneyRegistry,
 				() -> providers,
-				eventManager,
-				untrustedIpRecognitionPolicy
+				eventManager
 		);
 	}
 }

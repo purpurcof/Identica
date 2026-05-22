@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
+import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.session.SessionRecognitionSnapshot;
@@ -25,6 +26,7 @@ public class DefaultSessionRecognitionService implements SessionRecognitionServi
 	private final Provider<Settings> settingsProvider;
 	private final Provider<Providers> providersProvider;
 	private final SessionRecognitionStore sessionRecognitionStore;
+	private final UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
 
 	@Override
 	public boolean matches(
@@ -36,6 +38,8 @@ public class DefaultSessionRecognitionService implements SessionRecognitionServi
 	) {
 		if (isBlank(providerId) || isBlank(providerSubject) || !isRecognitionEnabled(providerId))
 			return false;
+		if (untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(providerId, ip, null).isBlocked())
+			return false;
 
 		Optional<SessionRecognitionSnapshot> storedOptional = sessionRecognitionStore.find(providerId.trim(), providerSubject.trim());
 		if (storedOptional.isEmpty()) return false;
@@ -45,6 +49,7 @@ public class DefaultSessionRecognitionService implements SessionRecognitionServi
 			if (!matchesSignal(signal, stored, providerUsername, ip, origin))
 				return false;
 		}
+
 		return true;
 	}
 

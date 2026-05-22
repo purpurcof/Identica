@@ -1,3 +1,3 @@
 plugins {
-    id("identica.java-common")
+    id("common")
 }

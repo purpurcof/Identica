@@ -1,7 +1,5 @@
-import org.gradle.api.artifacts.VersionCatalogsExtension
-
 plugins {
-    id("identica.java-common")
+    id("api")
     alias(libs.plugins.buildconfig)
 }
 
@@ -25,28 +23,16 @@ buildConfig {
     }
 }
 
-java {
-    withSourcesJar()
-    withJavadocJar()
-}
+toolkitPublish {
+    artifactId.set("api")
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            artifactId = "api"
-            pom {
-                name.set("Identica API")
-                description.set("Public API for Identica - Modular authorization plugin")
-            }
-        }
+    pom {
+        description.set("Public API for Identica - Modular authorization plugin")
+        name.set("Identica API")
     }
-}
 
-tasks.withType<Javadoc> {
-    (options as StandardJavadocDocletOptions).apply {
-        addStringOption("Xdoclint:none", "-quiet")
-        title = "Identica API"
-        windowTitle = "Identica API"
+    javadoc {
+        title.set("Identica API")
+        windowTitle.set("Identica API")
     }
 }

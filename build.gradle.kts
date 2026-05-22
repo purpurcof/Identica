@@ -1,9 +1,25 @@
+import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
+import me.whereareiam.toolkit.versioning.extension.ToolkitVersioningExtension
+
 plugins {
+    alias(libs.plugins.attache)
+    alias(libs.plugins.toolkit.versioning)
     alias(libs.plugins.spawner)
-    id("identica.dev-scenarios")
+    id("dev-scenarios")
 }
 
-version = providers.environmentVariable("VERSION").orElse("dev").get()
+allprojects {
+    version = rootProject.extensions
+        .getByType(ToolkitVersioningExtension::class.java)
+        .resolvedVersion()
+        .get()
+}
+
+extensions.configure<AttacheExtension>("attache") {
+    transitive.set(true)
+    repository("https://maven.whereareiam.me/release")
+    repository("https://maven.whereareiam.me/development")
+}
 
 defaultTasks("pluginJars")
 
@@ -14,6 +30,7 @@ tasks.register("pluginJars") {
     dependsOn(
         ":platform-bungeecord-bootstrap:shadowJar",
         ":platform-velocity-bootstrap:shadowJar",
+        ":identica-platform:bundle:shadowJar",
         ":provider-credential-runtime:shadowJar",
         ":provider-premium-runtime:shadowJar"
     )

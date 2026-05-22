@@ -1,29 +1,25 @@
-import me.whereareiam.attache.plugin.gradle.extension.AttacheExtension
-import org.gradle.jvm.tasks.Jar
-
 plugins {
-    id("identica.platform-runtime")
+    id("platform")
     alias(libs.plugins.attache)
 }
 
-tasks.named<Jar>("shadowJar").configure {
-    archiveClassifier.set("BUNGEECORD")
+platform {
+    name.set("BUNGEECORD")
+    descriptors.add("bungee.yml")
 }
 
 dependencies {
-    implementation(projects.platformBungeecordApi)
-    implementation(libs.bundles.bStats.bungeecord)
-    compileOnly(libs.bungeecord)
     testImplementation(libs.bungeecord)
     testImplementation(libs.cloud.bungee)
 
+    implementation(projects.platformBungeecordApi)
+    implementation(libs.bundles.bStats.bungeecord)
     implementation(libs.attache.bungeecord)
+
+    compileOnly(libs.bungeecord)
+
     attache(libs.adventure.platform.bungeecord)
     attache(libs.cloud.bungee)
-}
-
-extensions.configure<AttacheExtension>("attache") {
-    transitive.set(true)
 }
 
 tasks.processResources {

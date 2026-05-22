@@ -2,8 +2,6 @@ package me.whereareiam.identica.common.provider;
 
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionDecision;
-import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
@@ -25,7 +23,6 @@ import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.pipeline.journey.step.StepContextRequirement;
-import me.whereareiam.identica.type.provider.ProviderOrigin;
 import me.whereareiam.identica.type.provider.ProviderState;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
@@ -56,8 +53,6 @@ class DefaultProviderOperationsTest {
 	private MigrationJourneyRegistry migrationJourneyRegistry;
 	@Mock
 	private EventManager eventManager;
-	@Mock
-	private UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
 
 	@DisplayName("Matches entrypoints by host name regardless of case")
 	@Test
@@ -137,71 +132,16 @@ class DefaultProviderOperationsTest {
 		assertEquals("Alpha Provider", operations.displayProviderName("alpha"));
 	}
 
-	@DisplayName("Suppresses automatic provider eligibility when untrusted IP recognition blocks it")
+	@DisplayName("Keeps automatic provider eligibility on untrusted IPs")
 	@Test
-	void suppressesAutomaticEligibilityOnUntrustedIp() {
+	void keepsAutomaticEligibilityOnUntrustedIp() {
 		Providers providers = new Providers();
 		providers.setProviders(List.of(entry("alpha", 10, List.of("play.example.com"))));
 
-		InternalProvider provider = enabledProvider("alpha");
+		InternalProvider provider = enabledProvider();
 		when(authenticationJourneyRegistry.resolvePlan(any(), any(), any(), any())).thenReturn(providerPlan());
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(
-				org.mockito.ArgumentMatchers.eq("alpha"),
-				org.mockito.ArgumentMatchers.eq("127.0.0.1"),
-				org.mockito.ArgumentMatchers.isNull()
-		)).thenReturn(blockedDecision());
 
-		assertFalse(operations(providers).isEligible(autoContext(), provider, PipelineType.AUTHENTICATION, JourneyMode.INTERACTIVE));
-	}
-
-	@DisplayName("Keeps explicit provider selection eligible on untrusted IP")
-	@Test
-	void keepsExplicitSelectionEligibleOnUntrustedIp() {
-		Providers providers = new Providers();
-		providers.setProviders(List.of(entry("alpha", 10, List.of("play.example.com"))));
-
-		InternalProvider provider = enabledProvider("alpha");
-		when(authenticationJourneyRegistry.resolvePlan(any(), any(), any(), any())).thenReturn(providerPlan());
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(
-				org.mockito.ArgumentMatchers.eq("alpha"),
-				org.mockito.ArgumentMatchers.eq("127.0.0.1"),
-				any()
-		)).thenReturn(allowedDecision());
-
-		assertTrue(operations(providers).isEligible(
-				context(ProviderContext.of("alpha", null, "PlayerOne", ProviderOrigin.MANUAL)),
-				provider,
-				PipelineType.AUTHENTICATION,
-				JourneyMode.INTERACTIVE
-		));
-	}
-
-	@DisplayName("Restores automatic recognition only for providers with the override")
-	@Test
-	void providerOverrideRestoresRecognitionOnlyForMatchingProvider() {
-		Providers providers = new Providers();
-		Providers.ProviderEntry alpha = entry("alpha", 10, List.of("alpha.example.com"));
-		alpha.getOverrides().setAllowRecognitionOnUntrustedIp(true);
-		Providers.ProviderEntry beta = entry("beta", 10, List.of("beta.example.com"));
-		providers.setProviders(List.of(alpha, beta));
-
-		InternalProvider alphaProvider = enabledProvider("alpha");
-		InternalProvider betaProvider = enabledProvider("beta");
-		when(authenticationJourneyRegistry.resolvePlan(any(), any(), any(), any())).thenReturn(providerPlan());
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(
-				org.mockito.ArgumentMatchers.eq("alpha"),
-				org.mockito.ArgumentMatchers.eq("127.0.0.1"),
-				org.mockito.ArgumentMatchers.isNull()
-		)).thenReturn(allowedDecision());
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(
-				org.mockito.ArgumentMatchers.eq("beta"),
-				org.mockito.ArgumentMatchers.eq("127.0.0.1"),
-				org.mockito.ArgumentMatchers.isNull()
-		)).thenReturn(blockedDecision());
-
-		ProviderOperations operations = operations(providers);
-		assertTrue(operations.isEligible(autoContext(), alphaProvider, PipelineType.AUTHENTICATION, JourneyMode.INTERACTIVE));
-		assertFalse(operations.isEligible(autoContext(), betaProvider, PipelineType.AUTHENTICATION, JourneyMode.INTERACTIVE));
+		assertTrue(operations(providers).isEligible(autoContext(), provider, PipelineType.AUTHENTICATION, JourneyMode.INTERACTIVE));
 	}
 
 	private ProviderOperations operations(Providers providers) {
@@ -211,8 +151,7 @@ class DefaultProviderOperationsTest {
 				registrationJourneyRegistry,
 				migrationJourneyRegistry,
 				() -> providers,
-				eventManager,
-				untrustedIpRecognitionPolicy
+				eventManager
 		);
 	}
 
@@ -224,9 +163,9 @@ class DefaultProviderOperationsTest {
 		return entry;
 	}
 
-	private InternalProvider enabledProvider(String id) {
+	private InternalProvider enabledProvider() {
 		ProviderDescriptor descriptor = new ProviderDescriptor();
-		descriptor.setId(id);
+		descriptor.setId("alpha");
 		return InternalProvider.builder()
 				.descriptor(descriptor)
 				.priority(10)
@@ -234,25 +173,13 @@ class DefaultProviderOperationsTest {
 				.build();
 	}
 
-	private UntrustedIpRecognitionDecision allowedDecision() {
-		return new UntrustedIpRecognitionDecision(
-				UntrustedIpRecognitionDecision.Outcome.ALLOWED_IP_NOT_MATCHED
-		);
-	}
-
-	private UntrustedIpRecognitionDecision blockedDecision() {
-		return new UntrustedIpRecognitionDecision(
-				UntrustedIpRecognitionDecision.Outcome.BLOCKED_UNTRUSTED_IP
-		);
-	}
-
 	private ScenarioContext autoContext() {
-		return context(null);
+		return context();
 	}
 
-	private ScenarioContext context(ProviderContext provider) {
+	private ScenarioContext context() {
 		return new ScenarioContext() {
-			private ProviderContext currentProvider = provider;
+			private ProviderContext currentProvider = null;
 
 			@Override
 			public @NotNull ConnectionIdentity getIdentity() {

@@ -80,13 +80,12 @@ If this is absent, Identica uses `settings.connection.sessions.concurrencyPolicy
 
 - Takes: `true` or `false`
 - Current default: `false`
-- Affects: whether this provider may still use automatic reconnect recognition from IPs blocked by `settings.connection.sessions.recognition.untrustedIps`
+- Affects: whether this provider may use recognition-based authentication bypass from IPs blocked by `settings.connection.sessions.recognition.untrustedIps`
 
 Leave this `false` for the normal safety posture.
-Set it to `true` only when a specific provider should remain auto-recognizable even from client IPs you otherwise distrust for reconnect recognition.
+Set it to `true` only when a specific provider may skip authentication from client IPs that are blocked for recognition by default.
 
-This override restores automatic recognition only for that provider.
-It does not affect explicit manual or entrypoint-driven provider usage because those flows are not suppressed by the untrusted-IP guard.
+This override applies only to that provider.
 
 #### overrides.recognition.enabled
 

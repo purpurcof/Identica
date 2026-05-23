@@ -13,12 +13,12 @@ class ProvidersDefaultsTest {
 	void providerRecognitionOverridesDefaultToDisabled() {
 		Providers providers = new ProvidersDefaults().supply(new Providers());
 
-		assertFalse(provider(providers, "premium").getOverrides().isAllowRecognitionOnUntrustedIp());
 		assertTrue(provider(providers, "premium").getOverrides().getRecognition().getSignals().isEmpty());
 		assertNull(provider(providers, "premium").getOverrides().getRecognition().getEnabled());
-		assertFalse(provider(providers, "credential").getOverrides().isAllowRecognitionOnUntrustedIp());
+		assertFalse(provider(providers, "premium").getOverrides().getRecognition().getEligibility().isAllowOnUntrustedIp());
 		assertTrue(provider(providers, "credential").getOverrides().getRecognition().getSignals().isEmpty());
 		assertNull(provider(providers, "credential").getOverrides().getRecognition().getEnabled());
+		assertFalse(provider(providers, "credential").getOverrides().getRecognition().getEligibility().isAllowOnUntrustedIp());
 	}
 
 	private Providers.ProviderEntry provider(Providers providers, String id) {

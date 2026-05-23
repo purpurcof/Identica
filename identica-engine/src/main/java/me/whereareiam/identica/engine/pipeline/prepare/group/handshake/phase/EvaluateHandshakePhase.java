@@ -7,8 +7,7 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
-import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionDecision;
-import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
+import me.whereareiam.identica.identity.session.recognition.eligibility.RecognitionEligibilityService;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
@@ -17,7 +16,12 @@ import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityContext;
+import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityDecision;
 import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.type.provider.ProviderOrigin;
+import me.whereareiam.identica.type.session.recognition.RecognitionAttemptKind;
+import me.whereareiam.identica.type.session.recognition.RecognitionTrigger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,7 +32,7 @@ import java.util.concurrent.CompletionStage;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class EvaluateHandshakePhase implements PipelinePhase<PrepareGroupState> {
 	private final HandshakeStore handshakeStore;
-	private final UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
+	private final RecognitionEligibilityService recognitionEligibilityService;
 
 	@Override
 	public @NotNull String id() {
@@ -73,7 +77,8 @@ public class EvaluateHandshakePhase implements PipelinePhase<PrepareGroupState> 
 		HandshakeDecision decision = HandshakeDecision.allow();
 		String clientIp = state.getRequest().getIdentity().getIp();
 		for (HandshakePolicy policy : handshakeStore.policies()) {
-			if (!shouldEvaluate(policy, context.getProvider(), clientIp)) continue;
+			if (!shouldEvaluate(policy, context.getProvider(), clientIp, state.getRequest().getIdentity().getOrigin()))
+				continue;
 			decision = merge(decision, evaluatePolicy(policy, request));
 		}
 
@@ -85,27 +90,45 @@ public class EvaluateHandshakePhase implements PipelinePhase<PrepareGroupState> 
 	private boolean shouldEvaluate(
 			@NotNull HandshakePolicy policy,
 			@Nullable ProviderContext provider,
-			@Nullable String clientIp
+			@Nullable String clientIp,
+			@Nullable me.whereareiam.identica.identity.actor.ConnectionIdentity.Origin origin
 	) {
 		if (!(policy instanceof ProviderScopedHandshakePolicy scoped)) return true;
 		if (provider == null || provider.getProviderId() == null || provider.getProviderId().isBlank()) return true;
-		UntrustedIpRecognitionDecision decision = untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(
-				scoped.providerId(),
-				clientIp,
-				provider
-		);
-		if (decision.isBlocked()) {
+		if (!scoped.providerId().equalsIgnoreCase(provider.getProviderId()))
+			return false;
+
+		RecognitionEligibilityDecision decision = recognitionEligibilityService.evaluate(RecognitionEligibilityContext.builder()
+				.providerId(scoped.providerId())
+				.providerUsername(provider.getProviderUsername())
+				.clientIp(clientIp)
+				.selectedProvider(provider)
+				.origin(origin)
+				.attemptKind(RecognitionAttemptKind.PROVIDER_HANDSHAKE_RECOGNITION)
+				.trigger(resolveTrigger(provider))
+				.build());
+
+		if (!decision.isAllowed()) {
 			Logger.debug(
-					"Skipping provider-scoped handshake recognition provider=%s username=%s ip=%s outcome=%s",
+					"Skipping provider-scoped handshake recognition provider=%s username=%s ip=%s rule=%s reason=%s",
 					scoped.providerId(),
 					provider.getProviderUsername(),
 					clientIp,
-					decision.getOutcome()
+					decision.getRuleId(),
+					decision.getReason()
 			);
 			return false;
 		}
 
-		return scoped.providerId().equalsIgnoreCase(provider.getProviderId());
+		return true;
+	}
+
+	private @NotNull RecognitionTrigger resolveTrigger(@NotNull ProviderContext provider) {
+		ProviderOrigin source = provider.getSource();
+		if (source == ProviderOrigin.ENTRYPOINT || source == ProviderOrigin.MANUAL)
+			return RecognitionTrigger.EXPLICIT_PROVIDER_SELECTION;
+
+		return RecognitionTrigger.AUTOMATIC;
 	}
 
 	private @NotNull HandshakeDecision evaluatePolicy(

@@ -9,8 +9,8 @@ import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.configura.annotation.Merge;
 import me.whereareiam.configura.merge.strategy.type.StructuralObject;
-import me.whereareiam.identica.type.session.RecognitionSignal;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
+import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -97,10 +97,6 @@ public class Providers extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Overrides {
-		/**
-		 * Restores automatic reconnect recognition for this provider even when the client IP is configured as untrusted.
-		 */
-		private boolean allowRecognitionOnUntrustedIp;
 		private @Nullable SessionConcurrencyPolicy sessionConcurrencyPolicy;
 		private @NotNull Recognition recognition = new Recognition();
 
@@ -110,6 +106,14 @@ public class Providers extends ConfigDocument {
 		public static class Recognition {
 			private @Nullable Boolean enabled;
 			private @NotNull List<RecognitionSignal> signals = new ArrayList<>();
+			private @NotNull Eligibility eligibility = new Eligibility();
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Eligibility {
+				private boolean allowOnUntrustedIp;
+			}
 		}
 	}
 

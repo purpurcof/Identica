@@ -31,8 +31,7 @@ import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.handshake.policy.ProviderScopedHandshakePolicy;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionDecision;
-import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
+import me.whereareiam.identica.identity.session.recognition.eligibility.RecognitionEligibilityService;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
 import me.whereareiam.identica.model.config.Messages;
@@ -48,6 +47,7 @@ import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
+import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityDecision;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderOperations;
@@ -71,7 +71,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -94,7 +95,7 @@ class PreparePipelineTest {
 	@Mock
 	private PipelineStateStore pipelineStateStore;
 	@Mock
-	private UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
+	private RecognitionEligibilityService recognitionEligibilityService;
 	@Mock
 	private DeliveryService deliveryService;
 
@@ -248,8 +249,6 @@ class PreparePipelineTest {
 		), 1_000L);
 
 		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
-				.thenReturn(allowedDecision());
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
 				.thenReturn(Optional.of(pendingMigrationState));
@@ -293,7 +292,7 @@ class PreparePipelineTest {
 		), 1_000L);
 
 		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+		when(recognitionEligibilityService.evaluate(any()))
 				.thenReturn(blockedDecision());
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
@@ -338,7 +337,7 @@ class PreparePipelineTest {
 		), 1_000L);
 
 		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+		when(recognitionEligibilityService.evaluate(any()))
 				.thenReturn(blockedDecision());
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
@@ -383,7 +382,7 @@ class PreparePipelineTest {
 		), 1_000L);
 
 		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+		when(recognitionEligibilityService.evaluate(any()))
 				.thenReturn(allowedDecision());
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
@@ -428,7 +427,7 @@ class PreparePipelineTest {
 		), 1_000L);
 
 		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+		when(recognitionEligibilityService.evaluate(any()))
 				.thenReturn(allowedDecision());
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy));
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
@@ -474,7 +473,7 @@ class PreparePipelineTest {
 
 		CountingScopedHandshakePolicy premiumPolicy = new CountingScopedHandshakePolicy("premium");
 		CountingHandshakePolicy globalPolicy = new CountingHandshakePolicy();
-		when(untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(eq("premium"), eq("127.0.0.1"), any()))
+		when(recognitionEligibilityService.evaluate(any()))
 				.thenReturn(blockedDecision());
 		when(handshakeStore.policies()).thenReturn(java.util.Set.of(premiumPolicy, globalPolicy));
 		when(pipelineStateStore.find(argThat((PipelineStateReference reference) -> connectionKey.equals(reference.getConnectionKey()))))
@@ -749,7 +748,7 @@ class PreparePipelineTest {
 				new RestorePrepareStatePhase(prepareStateStore),
 				new ResolveEntrypointPhase(providerOperations, contextResolver),
 				new ResolvePendingMigrationContextPhase(pipelineStateStore),
-				new EvaluateHandshakePhase(handshakeStore, untrustedIpRecognitionPolicy),
+				new EvaluateHandshakePhase(handshakeStore, recognitionEligibilityService),
 				new FinalizeHandshakePhase(eventManager, Messages::new),
 				new ResolveProfilePhase(providerOperations, contextResolver),
 				new ResolvePendingMigrationAccountPhase(
@@ -783,16 +782,20 @@ class PreparePipelineTest {
 		return identity;
 	}
 
-	private UntrustedIpRecognitionDecision allowedDecision() {
-		return new UntrustedIpRecognitionDecision(
-				UntrustedIpRecognitionDecision.Outcome.ALLOWED_IP_NOT_MATCHED
-		);
+	private RecognitionEligibilityDecision allowedDecision() {
+		return RecognitionEligibilityDecision.builder()
+				.allowed(true)
+				.reason("allowed")
+				.ruleId("test-allow")
+				.build();
 	}
 
-	private UntrustedIpRecognitionDecision blockedDecision() {
-		return new UntrustedIpRecognitionDecision(
-				UntrustedIpRecognitionDecision.Outcome.BLOCKED_UNTRUSTED_IP
-		);
+	private RecognitionEligibilityDecision blockedDecision() {
+		return RecognitionEligibilityDecision.builder()
+				.allowed(false)
+				.reason("blocked")
+				.ruleId("test-block")
+				.build();
 	}
 
 	private static final class TestPrepareStateStore implements PrepareStateStore {

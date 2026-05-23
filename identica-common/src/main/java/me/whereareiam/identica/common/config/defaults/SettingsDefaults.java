@@ -12,8 +12,8 @@ import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
-import me.whereareiam.identica.type.session.RecognitionSignal;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
+import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -46,7 +46,8 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 				RecognitionSignal.IP,
 				RecognitionSignal.VIRTUAL_HOST
 		));
-		Settings.Sessions.Recognition.UntrustedIps untrustedIps = new Settings.Sessions.Recognition.UntrustedIps();
+		Settings.Sessions.Recognition.Eligibility.UntrustedIps untrustedIps =
+				new Settings.Sessions.Recognition.Eligibility.UntrustedIps();
 		untrustedIps.setEnabled(true);
 		untrustedIps.setEntries(List.of(
 				"127.0.0.1",
@@ -55,7 +56,9 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 				"172.16.0.0/12",
 				"192.168.0.0/16"
 		));
-		recognition.setUntrustedIps(untrustedIps);
+		Settings.Sessions.Recognition.Eligibility eligibility = new Settings.Sessions.Recognition.Eligibility();
+		eligibility.setUntrustedIps(untrustedIps);
+		recognition.setEligibility(eligibility);
 		sessions.setRecognition(recognition);
 
 		Settings.Connection connection = new Settings.Connection();

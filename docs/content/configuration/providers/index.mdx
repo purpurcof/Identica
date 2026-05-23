@@ -22,13 +22,14 @@ providers:
     enabled: true
     priority: 100
     overrides:
-      allowRecognitionOnUntrustedIp: false
       sessionConcurrencyPolicy: "REJECT_NEW"
       recognition:
         enabled: true
         signals:
           - "USERNAME"
           - "VIRTUAL_HOST"
+        eligibility:
+          allowOnUntrustedIp: false
 ```
   </Tab>
   <Tab value="JSON">
@@ -41,11 +42,13 @@ providers:
       "enabled": true,
       "priority": 100,
       "overrides": {
-        "allowRecognitionOnUntrustedIp": false,
         "sessionConcurrencyPolicy": "REJECT_NEW",
         "recognition": {
           "enabled": true,
-          "signals": ["USERNAME", "VIRTUAL_HOST"]
+          "signals": ["USERNAME", "VIRTUAL_HOST"],
+          "eligibility": {
+            "allowOnUntrustedIp": false
+          }
         }
       }
     }
@@ -74,19 +77,6 @@ Configura keeps the object structure without filling every possible child field.
 
 If this is absent, Identica uses `settings.connection.sessions.concurrencyPolicy`.
 
-#### overrides.allowRecognitionOnUntrustedIp
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether this provider may use recognition-based authentication bypass from IPs blocked by `settings.connection.sessions.recognition.untrustedIps`
-
-Leave this `false` for the normal safety posture.
-Set it to `true` only when a specific provider may skip authentication from client IPs that are blocked for recognition by default.
-
-This override applies only to that provider.
-
 #### overrides.recognition.enabled
 
 <Badge type="warning">Warning</Badge>
@@ -107,6 +97,17 @@ Use it when one provider should allow reconnect recognition while another should
 - Affects: the signal set used when this provider evaluates reconnect recognition
 
 When this field is absent or empty, the provider inherits `settings.connection.sessions.recognition.defaultSignals`.
+
+#### overrides.recognition.eligibility.allowOnUntrustedIp
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: whether this provider stays recognition-eligible from client IPs blocked by `settings.connection.sessions.recognition.eligibility.untrustedIps`
+
+Leave this `false` for the normal safety posture.
+Set it to `true` only when this specific provider should remain recognition-eligible on client IPs that are otherwise blocked.
 
 Recognition is intentionally disabled by default because signal matching can be unsafe in shared-network environments.
 IP-based matching in particular can be exploited behind NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, hosting proxies, or other setups where several different players appear to come from the same address.

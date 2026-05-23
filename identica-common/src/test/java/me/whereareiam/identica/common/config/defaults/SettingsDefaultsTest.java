@@ -7,7 +7,7 @@ import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.type.PlatformType;
 import me.whereareiam.identica.type.event.EventPriority;
-import me.whereareiam.identica.type.session.RecognitionSignal;
+import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,6 +35,7 @@ class SettingsDefaultsTest {
 				java.util.List.of(RecognitionSignal.USERNAME, RecognitionSignal.IP, RecognitionSignal.VIRTUAL_HOST),
 				settings.getConnection().getSessions().getRecognition().getDefaultSignals()
 		);
+		assertTrue(settings.getConnection().getSessions().getRecognition().getEligibility().getUntrustedIps().isEnabled());
 		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getActiveTtl());
 		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getRecognition().getValidity());
 	}

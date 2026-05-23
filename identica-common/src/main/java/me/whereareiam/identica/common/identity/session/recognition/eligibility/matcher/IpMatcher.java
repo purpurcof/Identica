@@ -1,9 +1,9 @@
-package me.whereareiam.identica.common.identity.session.recognition.policy.matcher;
+package me.whereareiam.identica.common.identity.session.recognition.eligibility.matcher;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.net.InetAddress;
 
-public interface UntrustedIpMatcher {
+public interface IpMatcher {
 	boolean matches(@NotNull InetAddress address);
 }

@@ -7,11 +7,14 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
-import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
+import me.whereareiam.identica.identity.session.recognition.eligibility.RecognitionEligibilityService;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.session.SessionRecognitionSnapshot;
-import me.whereareiam.identica.type.session.RecognitionSignal;
+import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityContext;
+import me.whereareiam.identica.type.session.recognition.RecognitionAttemptKind;
+import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
+import me.whereareiam.identica.type.session.recognition.RecognitionTrigger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,7 +29,7 @@ public class DefaultSessionRecognitionService implements SessionRecognitionServi
 	private final Provider<Settings> settingsProvider;
 	private final Provider<Providers> providersProvider;
 	private final SessionRecognitionStore sessionRecognitionStore;
-	private final UntrustedIpRecognitionPolicy untrustedIpRecognitionPolicy;
+	private final RecognitionEligibilityService recognitionEligibilityService;
 
 	@Override
 	public boolean matches(
@@ -38,7 +41,14 @@ public class DefaultSessionRecognitionService implements SessionRecognitionServi
 	) {
 		if (isBlank(providerId) || isBlank(providerSubject) || !isRecognitionEnabled(providerId))
 			return false;
-		if (untrustedIpRecognitionPolicy.evaluateAutomaticRecognition(providerId, ip, null).isBlocked())
+		if (!recognitionEligibilityService.evaluate(RecognitionEligibilityContext.builder()
+				.providerId(providerId)
+				.providerUsername(providerUsername)
+				.clientIp(ip)
+				.origin(origin)
+				.attemptKind(RecognitionAttemptKind.SESSION_RECOGNITION)
+				.trigger(RecognitionTrigger.AUTOMATIC)
+				.build()).isAllowed())
 			return false;
 
 		Optional<SessionRecognitionSnapshot> storedOptional = sessionRecognitionStore.find(providerId.trim(), providerSubject.trim());

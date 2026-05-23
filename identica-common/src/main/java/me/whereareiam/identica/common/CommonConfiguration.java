@@ -30,7 +30,11 @@ import me.whereareiam.identica.common.identity.account.DefaultRegistrationAccoun
 import me.whereareiam.identica.common.identity.session.DefaultSessionService;
 import me.whereareiam.identica.common.identity.session.recognition.DefaultSessionRecognitionService;
 import me.whereareiam.identica.common.identity.session.recognition.DefaultSessionRecognitionStore;
-import me.whereareiam.identica.common.identity.session.recognition.policy.UntrustedIpRecognitionGuard;
+import me.whereareiam.identica.common.identity.session.recognition.eligibility.DefaultRecognitionEligibilityRegistry;
+import me.whereareiam.identica.common.identity.session.recognition.eligibility.DefaultRecognitionEligibilityService;
+import me.whereareiam.identica.common.identity.session.recognition.eligibility.rule.ExplicitSelectionRecognitionEligibilityRule;
+import me.whereareiam.identica.common.identity.session.recognition.eligibility.rule.RecognitionEnabledEligibilityRule;
+import me.whereareiam.identica.common.identity.session.recognition.eligibility.rule.UntrustedIpRecognitionEligibilityRule;
 import me.whereareiam.identica.common.listener.DefaultDynamicListenerRegistry;
 import me.whereareiam.identica.common.listener.SessionClosedDisconnectListener;
 import me.whereareiam.identica.common.listener.SessionReplacedListener;
@@ -70,7 +74,8 @@ import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
-import me.whereareiam.identica.identity.session.recognition.policy.UntrustedIpRecognitionPolicy;
+import me.whereareiam.identica.identity.session.recognition.eligibility.RecognitionEligibilityRegistry;
+import me.whereareiam.identica.identity.session.recognition.eligibility.RecognitionEligibilityService;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.logging.BannerContributor;
 import me.whereareiam.identica.model.config.*;
@@ -176,6 +181,8 @@ public class CommonConfiguration extends AbstractModule {
 		bind(SessionService.class).to(DefaultSessionService.class).asEagerSingleton();
 		bind(SessionRecognitionStore.class).to(DefaultSessionRecognitionStore.class).asEagerSingleton();
 		bind(SessionRecognitionService.class).to(DefaultSessionRecognitionService.class).asEagerSingleton();
+		bind(RecognitionEligibilityRegistry.class).to(DefaultRecognitionEligibilityRegistry.class).asEagerSingleton();
+		bind(RecognitionEligibilityService.class).to(DefaultRecognitionEligibilityService.class).asEagerSingleton();
 
 		// Platform adaptation helpers
 		bind(ConnectionDecisionApplier.class).asEagerSingleton();
@@ -207,7 +214,6 @@ public class CommonConfiguration extends AbstractModule {
 		// Provider system
 		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
 		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
-		bind(UntrustedIpRecognitionPolicy.class).to(UntrustedIpRecognitionGuard.class).asEagerSingleton();
 		bind(ProviderOperations.class).to(DefaultProviderOperations.class).asEagerSingleton();
 
 		// Core services
@@ -225,6 +231,18 @@ public class CommonConfiguration extends AbstractModule {
 	@Inject
 	void initializeEventUtil(EventManager eventManager) {
 		EventUtil.initialize(eventManager);
+	}
+
+	@Inject
+	void initializeRecognitionEligibilityRules(
+			RecognitionEligibilityRegistry registry,
+			RecognitionEnabledEligibilityRule recognitionEnabledEligibilityRule,
+			ExplicitSelectionRecognitionEligibilityRule explicitSelectionRecognitionEligibilityRule,
+			UntrustedIpRecognitionEligibilityRule untrustedIpRecognitionEligibilityRule
+	) {
+		registry.register(recognitionEnabledEligibilityRule);
+		registry.register(explicitSelectionRecognitionEligibilityRule);
+		registry.register(untrustedIpRecognitionEligibilityRule);
 	}
 
 	@Inject

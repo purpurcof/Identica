@@ -29,6 +29,9 @@ public class CommandDefinition {
 	@Builder.Default
 	private boolean hide = false;
 
+	@Builder.Default
+	private boolean allowedDuringAuth = false;
+
 	@Getter
 	@ToString
 	@NoArgsConstructor

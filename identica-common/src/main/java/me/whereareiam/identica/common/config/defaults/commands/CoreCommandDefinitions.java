@@ -17,6 +17,7 @@ public class CoreCommandDefinitions implements CommandDefinitions {
 				.usage("{alias}")
 				.cooldown(globalCooldown())
 				.hide(true)
+				.allowedDuringAuth(true)
 				.build());
 
 		registry.register("help", CommandDefinition.builder()
@@ -37,6 +38,7 @@ public class CoreCommandDefinitions implements CommandDefinitions {
 				.usage("{command} {alias} <eligibility>")
 				.arguments(Map.of("eligibility", "Provider id"))
 				.hide(true)
+				.allowedDuringAuth(true)
 				.build());
 
 		registry.register("availability-username", CommandDefinition.builder()

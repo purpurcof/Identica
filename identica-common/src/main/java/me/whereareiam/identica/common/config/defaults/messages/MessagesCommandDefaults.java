@@ -12,6 +12,7 @@ import java.util.List;
 public class MessagesCommandDefaults {
 	public Messages.Commands supply(Messages.Commands commands) {
 		commands.setCurrentSessionRequired("{prefix}<white>You must have an <red>active session</red> to use this command.</white>");
+		commands.setCommandBlockedDuringAuth("{prefix}<white>You must <red>authenticate</red> before using this command.</white>");
 		applyExceptions(commands);
 		applyPagination(commands);
 		applyHelp(commands);

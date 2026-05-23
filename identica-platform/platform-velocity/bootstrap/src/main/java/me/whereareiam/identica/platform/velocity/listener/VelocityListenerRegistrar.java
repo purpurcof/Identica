@@ -6,6 +6,8 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.velocitypowered.api.event.AwaitingEventExecutor;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.event.command.PlayerAvailableCommandsEvent;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
@@ -18,7 +20,10 @@ import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.type.event.EventPriority;
 import me.whereareiam.identica.platform.velocity.VelocityIdentica;
+import me.whereareiam.identica.platform.velocity.listener.command.CommandBlockerListener;
+import me.whereareiam.identica.platform.velocity.listener.command.TabCompleteFilterListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.DisconnectListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.GameProfileRequestListener;
 import me.whereareiam.identica.platform.velocity.listener.connection.LoginListener;
@@ -61,6 +66,14 @@ public class VelocityListenerRegistrar extends CommonListenerRegistrar {
 		registerListener(PlayerChooseInitialServerEvent.class, injector.getInstance(PlayerChooseInitialServerListener.class));
 		registerListener(ServerPreConnectEvent.class, injector.getInstance(ServerPreConnectListener.class));
 		registerListener(DisconnectEvent.class, injector.getInstance(DisconnectListener.class));
+
+		CommandBlockerListener commandBlocker = injector.getInstance(CommandBlockerListener.class);
+		eventManager.register(plugin, CommandExecuteEvent.class, VelocityUtil.of(EventPriority.HIGHEST), commandBlocker::onEvent);
+		Logger.debug("Registered CommandBlockerListener with HIGHEST priority");
+
+		TabCompleteFilterListener tabCompleteFilter = injector.getInstance(TabCompleteFilterListener.class);
+		eventManager.register(plugin, PlayerAvailableCommandsEvent.class, VelocityUtil.of(EventPriority.HIGHEST), tabCompleteFilter::onEvent);
+		Logger.debug("Registered TabCompleteFilterListener with HIGHEST priority");
 	}
 
 	@Override

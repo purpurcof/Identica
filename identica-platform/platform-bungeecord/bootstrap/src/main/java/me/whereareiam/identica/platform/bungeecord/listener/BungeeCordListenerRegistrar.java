@@ -8,7 +8,10 @@ import me.whereareiam.identica.common.CommonListenerRegistrar;
 import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.type.event.EventPriority;
 import me.whereareiam.identica.platform.bungeecord.BungeeCordIdentica;
+import me.whereareiam.identica.platform.bungeecord.listener.command.CommandBlockerListener;
+import me.whereareiam.identica.platform.bungeecord.listener.command.TabCompleteFilterListener;
 import me.whereareiam.identica.platform.bungeecord.listener.connection.LoginListener;
 import me.whereareiam.identica.platform.bungeecord.listener.connection.PlayerDisconnectListener;
 import me.whereareiam.identica.platform.bungeecord.listener.connection.PostLoginListener;
@@ -49,6 +52,8 @@ public class BungeeCordListenerRegistrar extends CommonListenerRegistrar {
 		registerListener(ServerSwitchEvent.class, injector.getInstance(ServerSwitchListener.class));
 		registerListener(ServerConnectEvent.class, injector.getInstance(ServerConnectListener.class));
 		registerListener(PlayerDisconnectEvent.class, injector.getInstance(PlayerDisconnectListener.class));
+		dynamicListenerRegistrar.register(ChatEvent.class, injector.getInstance(CommandBlockerListener.class), EventPriority.HIGHEST);
+		dynamicListenerRegistrar.register(TabCompleteEvent.class, injector.getInstance(TabCompleteFilterListener.class), EventPriority.HIGHEST);
 	}
 
 	@Override

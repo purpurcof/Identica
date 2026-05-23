@@ -18,6 +18,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				.permission("")
 				.description("Register a credential account")
 				.usage("{alias} <password>")
+				.allowedDuringAuth(true)
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
 						.duration(2)
@@ -34,6 +35,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				.permission("")
 				.description("Confirm credential registration")
 				.usage("{alias} <password>")
+				.allowedDuringAuth(true)
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
 						.duration(2)
@@ -50,6 +52,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				.permission("")
 				.description("Login to a credential account")
 				.usage("{alias} <password>")
+				.allowedDuringAuth(true)
 				.cooldown(CommandDefinition.Cooldown.builder()
 						.enabled(true)
 						.duration(2)
@@ -87,6 +90,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 						.group("global")
 						.build()
 				)
+				.allowedDuringAuth(true)
 				.build();
 
 		CommandDefinition credentialConfirm = CommandDefinition.builder()
@@ -97,6 +101,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				.usage("{alias} [input]")
 				.arguments(Map.of("input", "Code"))
 				.hide(true)
+				.allowedDuringAuth(true)
 				.build();
 
 		CommandDefinition credentialCancel = CommandDefinition.builder()
@@ -106,6 +111,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 				.description("Cancel credential migration")
 				.usage("{alias}")
 				.hide(true)
+				.allowedDuringAuth(true)
 				.build();
 
 		CommandDefinition adminForceRegister = CommandDefinition.builder()

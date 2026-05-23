@@ -10,6 +10,8 @@ import me.whereareiam.configura.Config;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
+import me.whereareiam.identica.command.CommandFilterService;
+import me.whereareiam.identica.common.command.DefaultCommandFilterService;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.common.adapter.ConnectionDecisionApplier;
 import me.whereareiam.identica.common.adapter.HandshakeDecisionProcessor;
@@ -215,6 +217,9 @@ public class CommonConfiguration extends AbstractModule {
 		bind(SerializerEngine.class).toProvider(SerializerEngineProvider.class);
 		Multibinder.newSetBinder(binder(), BannerContributor.class);
 		bind(Identica.class).asEagerSingleton();
+
+		// Command filtering during auth
+		bind(CommandFilterService.class).to(DefaultCommandFilterService.class).asEagerSingleton();
 	}
 
 	@Inject

@@ -55,6 +55,7 @@ public class Messages extends ConfigDocument {
 	@ToString
 	public static class Commands {
 		private @NotNull String currentSessionRequired;
+		private @NotNull String commandBlockedDuringAuth;
 		private @NotNull ExceptionMessages exceptions;
 		private @NotNull PaginationMessages pagination;
 		private @NotNull HelpMessages help;

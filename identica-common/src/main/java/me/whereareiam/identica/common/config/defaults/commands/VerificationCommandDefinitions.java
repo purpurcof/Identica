@@ -13,9 +13,12 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 				"verification",
 				base("2fa", "Verification methods", "{alias}").toBuilder()
 				.hide(true)
+				.allowedDuringAuth(true)
 				.build()
 		);
-		registry.register("verification-status", base("2fa status", "Show verification status", "{alias}"));
+		registry.register("verification-status", base("2fa status", "Show verification status", "{alias}").toBuilder()
+				.allowedDuringAuth(true)
+				.build());
 		registry.register(
 				"verification-enroll",
 				withArguments(
@@ -23,7 +26,9 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 						"Start verification method enrollment",
 						"{alias} <method>",
 						Map.of("method", "Method id")
-				)
+				).toBuilder()
+				.allowedDuringAuth(true)
+				.build()
 		);
 		registry.register(
 				"verification-confirm",
@@ -34,6 +39,7 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 						Map.of("input", "Verification code")
 				).toBuilder()
 				.hide(true)
+				.allowedDuringAuth(true)
 				.build()
 		);
 		registry.register(
@@ -45,6 +51,7 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 						Map.of("input", "Code or saved")
 				).toBuilder()
 				.hide(true)
+				.allowedDuringAuth(true)
 				.build()
 		);
 		registry.register(
@@ -54,7 +61,9 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 						"Select a verification method for a provider",
 						"{alias} <provider> <method>",
 						Map.of("provider", "Provider id", "method", "Method id")
-				)
+				).toBuilder()
+				.allowedDuringAuth(true)
+				.build()
 		);
 		registry.register(
 				"verification-disable",
@@ -63,12 +72,15 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 						"Disable an enrolled verification method",
 						"{alias} <method>",
 						Map.of("method", "Method id")
-				)
+				).toBuilder()
+				.allowedDuringAuth(true)
+				.build()
 		);
 		registry.register(
 				"verification-enroll-cancel",
 				base("2fa enroll cancel", "Cancel pending verification enrollment", "{alias}").toBuilder()
 				.hide(true)
+				.allowedDuringAuth(true)
 				.build()
 		);
 	}

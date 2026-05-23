@@ -63,6 +63,16 @@ public class DynamicListenerRegistrar {
 		});
 	}
 
+	public <T> void register(@NotNull Class<T> eventClass, @NotNull DynamicListener<T> listener, @NotNull EventPriority priority) {
+		if (shouldSkip(eventClass)) return;
+
+		Logger.debug("Registering listener for event " + eventClass.getName() + " with priority " + priority);
+		registrations.computeIfAbsent(new RegistrationKey(listener, eventClass), ignored -> {
+			registerReflective(eventClass, listener, BungeeCordEventPriority.of(priority));
+			return Boolean.TRUE;
+		});
+	}
+
 	private boolean shouldSkip(@NotNull Class<?> eventClass) {
 		var registration = settings
 				.get()
@@ -89,8 +99,11 @@ public class DynamicListenerRegistrar {
 	}
 
 	private <T> void registerReflective(@NotNull Class<T> eventClass, @NotNull DynamicListener<T> listener) {
+		registerReflective(eventClass, listener, BungeeCordEventPriority.of(determinePriority(eventClass)));
+	}
+
+	private <T> void registerReflective(@NotNull Class<T> eventClass, @NotNull DynamicListener<T> listener, byte priority) {
 		Method handler = resolveHandlerMethod(listener, eventClass);
-		byte priority = BungeeCordEventPriority.of(determinePriority(eventClass));
 
 		eventBusLock.lock();
 		try {

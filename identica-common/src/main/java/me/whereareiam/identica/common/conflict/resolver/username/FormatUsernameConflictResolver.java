@@ -12,7 +12,11 @@ import me.whereareiam.identica.provider.ProviderOperations;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,7 +24,8 @@ import java.util.regex.Pattern;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class FormatUsernameConflictResolver implements TypedConflictResolver<FormatUsernameConflictResolver.Config> {
-	private static final Pattern RANDOM_PATTERN = Pattern.compile("\\{random(?::(\\d+))?}");
+	private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([a-zA-Z][a-zA-Z0-9]*(?::[a-zA-Z0-9]+)*)}");
+	private static final Set<String> PROVIDER_NAME_PLACEHOLDERS = Set.of("incomingProvider", "existingProvider");
 	private final ProviderOperations providerOperations;
 
 	@Override
@@ -61,15 +66,13 @@ public class FormatUsernameConflictResolver implements TypedConflictResolver<For
 		String incomingProviderName = providerOperations.displayProviderName(incomingProvider);
 		String existingProviderName = providerOperations.displayProviderName(existingProvider);
 
-		String display = format
-				.replace("{username}", requested)
-				.replace("{requested}", requested)
-				.replace("{incomingProvider}", incomingProviderName == null ? "" : incomingProviderName)
-				.replace("{existingProvider}", existingProviderName == null ? "" : existingProviderName)
-				.replace("{incomingProviderId}", incomingProvider == null ? "" : incomingProvider)
-				.replace("{existingProviderId}", existingProvider == null ? "" : existingProvider);
-
-		display = replaceRandom(display);
+		String display = replacePlaceholders(format, replacements(
+				requested,
+				incomingProvider,
+				existingProvider,
+				incomingProviderName,
+				existingProviderName
+		));
 		if (formatConfig.isUppercase())
 			display = display.toUpperCase(Locale.ROOT);
 		if (formatConfig.isLowercase())
@@ -91,14 +94,34 @@ public class FormatUsernameConflictResolver implements TypedConflictResolver<For
 		};
 	}
 
-	private String replaceRandom(String input) {
+	private @NotNull Map<String, String> replacements(
+			@NotNull String requested,
+			@Nullable String incomingProvider,
+			@Nullable String existingProvider,
+			@Nullable String incomingProviderName,
+			@Nullable String existingProviderName
+	) {
+		Map<String, String> replacements = new LinkedHashMap<>();
+		replacements.put("username", requested);
+		replacements.put("requested", requested);
+		replacements.put("incomingProvider", incomingProviderName == null ? "" : incomingProviderName);
+		replacements.put("existingProvider", existingProviderName == null ? "" : existingProviderName);
+		replacements.put("incomingProviderId", incomingProvider == null ? "" : incomingProvider);
+		replacements.put("existingProviderId", existingProvider == null ? "" : existingProvider);
+
+		return replacements;
+	}
+
+	private String replacePlaceholders(@Nullable String input, @NotNull Map<String, String> replacements) {
 		if (input == null || input.isBlank()) return input;
 
-		Matcher matcher = RANDOM_PATTERN.matcher(input);
+		Matcher matcher = PLACEHOLDER_PATTERN.matcher(input);
 		StringBuilder buffer = new StringBuilder();
 		while (matcher.find()) {
-			int digits = parseDigits(matcher.group(1));
-			matcher.appendReplacement(buffer, randomDigits(digits));
+			String replacement = resolvePlaceholder(matcher.group(1), replacements);
+			if (replacement == null) continue;
+
+			matcher.appendReplacement(buffer, Matcher.quoteReplacement(replacement));
 		}
 
 		matcher.appendTail(buffer);
@@ -106,15 +129,58 @@ public class FormatUsernameConflictResolver implements TypedConflictResolver<For
 		return buffer.toString();
 	}
 
-	private int parseDigits(String raw) {
-		if (raw == null || raw.isBlank()) return 1;
-		try {
-			int parsed = Integer.parseInt(raw.trim());
+	private @Nullable String resolvePlaceholder(
+			@NotNull String token,
+			@NotNull Map<String, String> replacements
+	) {
+		String[] parts = token.split(":");
+		String name = parts[0];
+		if ("random".equals(name)) return randomDigits(resolveRandomDigits(parts));
+
+		String replacement = replacements.get(name);
+		if (replacement == null) return null;
+
+		if (!PROVIDER_NAME_PLACEHOLDERS.contains(name)) return replacement;
+
+		return truncate(replacement, parseMaxSymbolCount(parts));
+	}
+
+	private int resolveRandomDigits(@NotNull String[] parts) {
+		Integer digits = parseMaxSymbolCount(parts);
+		return digits == null ? 1 : digits;
+	}
+
+	private @Nullable Integer parseMaxSymbolCount(@NotNull String[] parts) {
+		for (String modifier : Arrays.copyOfRange(parts, 1, parts.length)) {
+			if (!isDigits(modifier)) continue;
+
+			int parsed = Integer.parseInt(modifier);
 			if (parsed < 1) return 1;
+
 			return Math.min(parsed, 10);
-		} catch (NumberFormatException ignored) {
-			return 1;
 		}
+
+		return null;
+	}
+
+	private boolean isDigits(@Nullable String value) {
+		if (value == null || value.isBlank()) return false;
+
+		for (int i = 0; i < value.length(); i++) {
+			if (!Character.isDigit(value.charAt(i))) return false;
+		}
+
+		return true;
+	}
+
+	private @NotNull String truncate(@NotNull String value, @Nullable Integer maxSymbolCount) {
+		if (maxSymbolCount == null || value.isEmpty()) return value;
+
+		int codePointCount = value.codePointCount(0, value.length());
+		if (codePointCount <= maxSymbolCount)
+			return value;
+
+		return value.substring(0, value.offsetByCodePoints(0, maxSymbolCount));
 	}
 
 	private String randomDigits(int digits) {

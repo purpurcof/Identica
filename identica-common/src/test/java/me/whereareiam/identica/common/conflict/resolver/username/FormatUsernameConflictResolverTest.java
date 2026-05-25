@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -57,6 +58,47 @@ class FormatUsernameConflictResolverTest {
 
 		ConflictResolution resolution = resolver.resolve(context, config);
 		assertEquals("Player [Premium] (premium->credential)", resolution.getOverrideValue());
+	}
+
+	@DisplayName("Cuts placeholder values when max symbol count is provided")
+	@Test
+	void truncatesProviderNamePlaceholdersWhenMaxSymbolCountProvided() {
+		ProviderOperations providerOperations = mock(ProviderOperations.class);
+		when(providerOperations.displayProviderName("premium")).thenReturn("PremiumPlus");
+		when(providerOperations.displayProviderName("credential")).thenReturn("Credential");
+
+		FormatUsernameConflictResolver resolver = new FormatUsernameConflictResolver(providerOperations);
+
+		ConflictContext context = ConflictContext.builder()
+				.key("username")
+				.candidate("PlayerOne")
+				.incomingLink(link("premium"))
+				.existingLink(link("credential"))
+				.build();
+
+		FormatUsernameConflictResolver.Config config = new FormatUsernameConflictResolver.Config();
+		config.getFormat().setPattern("{username}_{incomingProvider:7}_{incomingProviderId}");
+
+		ConflictResolution resolution = resolver.resolve(context, config);
+		assertEquals("PlayerOne_Premium_premium", resolution.getOverrideValue());
+	}
+
+	@DisplayName("Keeps random placeholder digit counts working")
+	@Test
+	void keepsRandomPlaceholderDigitCountsWorking() {
+		ProviderOperations providerOperations = mock(ProviderOperations.class);
+		FormatUsernameConflictResolver resolver = new FormatUsernameConflictResolver(providerOperations);
+
+		ConflictContext context = ConflictContext.builder()
+				.key("username")
+				.candidate("Player")
+				.build();
+
+		FormatUsernameConflictResolver.Config config = new FormatUsernameConflictResolver.Config();
+		config.getFormat().setPattern("{username}_{random:4}");
+
+		ConflictResolution resolution = resolver.resolve(context, config);
+		assertTrue(resolution.getOverrideValue().matches("Player_\\d{4}"));
 	}
 
 	private AccountProviderLink link(String providerId) {

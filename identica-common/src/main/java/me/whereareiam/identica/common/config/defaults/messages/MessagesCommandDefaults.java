@@ -155,8 +155,8 @@ public class MessagesCommandDefaults {
 		sessionList.setEmpty("{prefix}<white>No active sessions.</white>");
 		sessions.setListing(sessionList);
 
-		Messages.Commands.Admin.Sessions.Info sessionInfo = new Messages.Commands.Admin.Sessions.Info();
-		sessionInfo.setBody(List.of(
+		Messages.Commands.Admin.Sessions.Detail sessionStatus = new Messages.Commands.Admin.Sessions.Detail();
+		sessionStatus.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
 				" ",
@@ -177,8 +177,8 @@ public class MessagesCommandDefaults {
 				"   <white>Effective: <gray>{effective}</gray></white>",
 				" "
 		));
-		sessionInfo.setNotFound("{prefix}<white>No active session found for <gray>{target}</gray>.</white>");
-		sessions.setInfo(sessionInfo);
+		sessionStatus.setNotFound("{prefix}<white>No active session found for <gray>{target}</gray>.</white>");
+		sessions.setStatus(sessionStatus);
 
 		Messages.Commands.Admin.Sessions.Multiple sessionsMultiple = new Messages.Commands.Admin.Sessions.Multiple();
 		sessionsMultiple.setBody(List.of(
@@ -331,7 +331,50 @@ public class MessagesCommandDefaults {
 		reservation.setNotFound("{prefix}<white>No reservation found for <gray>{key}</gray>.</white>");
 		reservation.setInvalidKey("{prefix}<white>Invalid reservation key <gray>{key}</gray>.</white>");
 
+		Messages.Commands.Admin.ProviderRestriction providerRestriction = new Messages.Commands.Admin.ProviderRestriction();
+		providerRestriction.setEnabled("{prefix}<white>Enabled provider restriction for <gold>{providerName}</gold> <gray>({providerId})</gray> with <green>{allow}</green> allowed.</white>");
+		providerRestriction.setDisabled("{prefix}<white>Disabled provider restriction for <gold>{providerName}</gold> <gray>({providerId})</gray>.</white>");
+		providerRestriction.setEnableFailed("{prefix}<white>Could not enable provider restriction for <gray>{provider}</gray>.</white>");
+		providerRestriction.setProviderNotFound("{prefix}<white>Unknown provider <gray>{provider}</gray>.</white>");
+		Messages.Commands.Admin.ProviderRestriction.Status providerStatus =
+				new Messages.Commands.Admin.ProviderRestriction.Status();
+		providerStatus.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Provider restriction for <gold>{providerName}</gold> <gray>({providerId})</gray></white>",
+				" ",
+				"  <white>Runtime active:</white> <gray>{active}</gray>",
+				"  <white>Allow:</white> <gray>{allow}</gray>",
+				" "
+		));
+		providerStatus.setNotFound("{prefix}<white>Unknown provider <gray>{provider}</gray>.</white>");
+		Messages.Commands.Admin.ProviderRestriction.Status.Labels providerStatusLabels =
+				new Messages.Commands.Admin.ProviderRestriction.Status.Labels();
+		providerStatusLabels.setEnabled("<green>Enabled</green>");
+		providerStatusLabels.setDisabled("<red>Disabled</red>");
+		providerStatus.setLabels(providerStatusLabels);
+		Messages.Commands.Admin.ProviderRestriction.Status.Listing providerListing =
+				new Messages.Commands.Admin.ProviderRestriction.Status.Listing();
+		providerListing.setBody(List.of(
+				" ",
+				" <green><bold>Identica</bold>",
+				" ",
+				"  <white>Provider restriction status:</white>",
+				"{entries}",
+				" "
+		));
+		Messages.Commands.Admin.ProviderRestriction.Status.Listing.Entries providerEntries =
+				new Messages.Commands.Admin.ProviderRestriction.Status.Listing.Entries();
+		providerEntries.setPopulated("   <dark_gray>▪</dark_gray> <white>{providerName}:</white> {status}\n     <gray>[{allow}]</gray>");
+		providerEntries.setEmpty("   <dark_gray>▪</dark_gray> <white>{providerName}:</white> {status}");
+		providerListing.setEntries(providerEntries);
+		providerListing.setEmpty("{prefix}<white>No providers available.</white>");
+		providerStatus.setList(providerListing);
+		providerRestriction.setStatus(providerStatus);
+
 		admin.setDelete(delete);
+		admin.setProviderRestriction(providerRestriction);
 		admin.setReservation(reservation);
 		admin.setVerification(adminVerification());
 		commands.setAdmin(admin);

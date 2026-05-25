@@ -68,6 +68,7 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		connection.setAttemptTtl(Duration.ofMinutes(10));
 		connection.setReservationTtl(Duration.ofMinutes(15));
 		connection.setPrepareStateTtl(Duration.ofMinutes(10));
+		connection.setProviderJoinRestrictionTtl(Duration.ofDays(365));
 		connection.setUniqueIdMode(UniqueIdMode.RANDOM);
 		Settings.Scenarios scenarios = new Settings.Scenarios();
 		scenarios.setAuthentication(defaultAuthenticationScenario());
@@ -85,6 +86,7 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
 		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
+		scenario.setAllowProviderRestrictionResumeBypass(false);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
 		scenario.setJourneyMode(JourneyMode.SEAMLESS);
 		scenario.setJourneyPolicy(JourneyPolicy.PREFER);
@@ -96,6 +98,7 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
 		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
+		scenario.setAllowProviderRestrictionResumeBypass(false);
 		scenario.setPipelineConcurrencyPolicy(PipelineConcurrencyPolicy.DENY_NEW);
 		scenario.setAutoSelectSingleProvider(false);
 		scenario.setJourneyMode(JourneyMode.SEAMLESS);
@@ -108,6 +111,7 @@ public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
 		scenario.setPipelineTtl(Duration.ofMinutes(5));
 		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);
+		scenario.setAllowProviderRestrictionResumeBypass(false);
 		scenario.setJourneyMode(JourneyMode.INTERACTIVE);
 		scenario.setJourneyPolicy(JourneyPolicy.PREFER);
 		return scenario;

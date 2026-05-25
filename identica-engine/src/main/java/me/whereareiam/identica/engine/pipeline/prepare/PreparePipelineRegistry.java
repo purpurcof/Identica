@@ -2,7 +2,6 @@ package me.whereareiam.identica.engine.pipeline.prepare;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractPipelineGroupRegistry;
 import me.whereareiam.identica.engine.pipeline.prepare.group.context.ContextGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.context.phase.ResolveEntrypointPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.context.phase.ResolvePendingMigrationContextPhase;
@@ -14,13 +13,15 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.handshake.phase.Eva
 import me.whereareiam.identica.engine.pipeline.prepare.group.handshake.phase.FinalizeHandshakePhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.policy.PolicyGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyPreparePolicyPhase;
+import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyProviderJoinRestrictionPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.ProfileGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.LoadPrepareAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePendingMigrationAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePreparedAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolveProfilePhase;
-import me.whereareiam.identica.pipeline.PipelineRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractPipelineGroupRegistry;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
+import me.whereareiam.identica.pipeline.PipelineRegistry;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
@@ -41,6 +42,7 @@ public class PreparePipelineRegistry extends AbstractPipelineGroupRegistry imple
 			ResolvePendingMigrationAccountPhase resolvePendingMigrationAccountPhase,
 			ResolvePreparedAccountPhase resolvePreparedAccountPhase,
 			LoadPrepareAccountPhase loadPrepareAccountPhase,
+			ApplyProviderJoinRestrictionPhase applyProviderJoinRestrictionPhase,
 			ApplyPreparePolicyPhase applyPreparePolicyPhase,
 			StorePrepareDecisionPhase storePrepareDecisionPhase
 	) {
@@ -62,7 +64,8 @@ public class PreparePipelineRegistry extends AbstractPipelineGroupRegistry imple
 		registerPhase(profileGroup.id(), resolvePreparedAccountPhase, PhasePlacement.after(resolvePendingMigrationAccountPhase.id()));
 		registerPhase(profileGroup.id(), loadPrepareAccountPhase, PhasePlacement.last());
 
-		registerPhase(policyGroup.id(), applyPreparePolicyPhase, PhasePlacement.first());
+		registerPhase(policyGroup.id(), applyProviderJoinRestrictionPhase, PhasePlacement.first());
+		registerPhase(policyGroup.id(), applyPreparePolicyPhase, PhasePlacement.after(applyProviderJoinRestrictionPhase.id()));
 
 		registerPhase(finalizeGroup.id(), storePrepareDecisionPhase, PhasePlacement.first());
 	}

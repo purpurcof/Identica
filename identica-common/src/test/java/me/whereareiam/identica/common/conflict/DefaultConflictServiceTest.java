@@ -67,7 +67,7 @@ class DefaultConflictServiceTest {
 		Providers.ConflictRules rules = new Providers.ConflictRules();
 		rules.setDefaultRule(defaultRule(entry("allow")));
 
-		Providers.ConflictRule pairRule = new Providers.ConflictRule();
+		Providers.ConflictRules.ConflictRule pairRule = new Providers.ConflictRules.ConflictRule();
 		pairRule.setProviders(List.of("premium", "credential"));
 		pairRule.setResolvers(List.of(entry("pass")));
 		rules.setPairs(List.of(pairRule));
@@ -123,20 +123,23 @@ class DefaultConflictServiceTest {
 		assertTrue(allowCalled.get());
 	}
 
-	private Providers.ConflictRules rules(Providers.ConflictRule defaultRule) {
+	private Providers.ConflictRules rules(Providers.ConflictRules.ConflictRule defaultRule) {
 		Providers.ConflictRules rules = new Providers.ConflictRules();
 		rules.setDefaultRule(defaultRule);
 		return rules;
 	}
 
-	private Providers.ConflictRule defaultRule(Providers.ResolverEntry resolverEntry) {
-		Providers.ConflictRule rule = new Providers.ConflictRule();
+	private Providers.ConflictRules.ConflictRule defaultRule(
+			Providers.ConflictRules.ConflictRule.ResolverEntry resolverEntry
+	) {
+		Providers.ConflictRules.ConflictRule rule = new Providers.ConflictRules.ConflictRule();
 		rule.setResolvers(List.of(resolverEntry));
 		return rule;
 	}
 
-	private Providers.ResolverEntry entry(String id) {
-		Providers.ResolverEntry entry = new Providers.ResolverEntry();
+	private Providers.ConflictRules.ConflictRule.ResolverEntry entry(String id) {
+		Providers.ConflictRules.ConflictRule.ResolverEntry entry =
+				new Providers.ConflictRules.ConflictRule.ResolverEntry();
 		entry.setId(id);
 		return entry;
 	}

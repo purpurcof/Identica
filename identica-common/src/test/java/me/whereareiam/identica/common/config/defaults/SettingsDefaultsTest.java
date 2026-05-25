@@ -38,6 +38,7 @@ class SettingsDefaultsTest {
 		assertTrue(settings.getConnection().getSessions().getRecognition().getEligibility().getUntrustedIps().isEnabled());
 		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getActiveTtl());
 		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getRecognition().getValidity());
+		assertEquals(java.time.Duration.ofDays(365), settings.getConnection().getProviderJoinRestrictionTtl());
 	}
 
 	@DisplayName("Listener defaults match the active platform listener set")

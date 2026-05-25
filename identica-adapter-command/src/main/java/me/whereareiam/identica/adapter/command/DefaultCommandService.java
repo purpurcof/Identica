@@ -87,6 +87,7 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(AdminRootCommand.class),
 				injector.getInstance(ClearCommand.class),
 				injector.getInstance(DeleteCommand.class),
+				injector.getInstance(ProviderRestrictionCommand.class),
 				injector.getInstance(ReservationCommand.class),
 				injector.getInstance(SessionsCommand.class),
 				injector.getInstance(EnrollCommand.class),

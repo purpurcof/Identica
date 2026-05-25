@@ -23,7 +23,7 @@ public class VerificationPolicyResolver {
 			if (entry == null) continue;
 			if (!providerId.equalsIgnoreCase(entry.getId())) continue;
 
-			Providers.Verification verification = entry.getVerification();
+			Providers.ProviderEntry.Verification verification = entry.getVerification();
 			return new ResolvedProviderPolicy(
 					verification.isEnabled(),
 					verification.isRequired(),
@@ -60,8 +60,8 @@ public class VerificationPolicyResolver {
 		for (Providers.ProviderEntry entry : providers.getProviders()) {
 			if (entry == null || !providerId.equalsIgnoreCase(entry.getId())) continue;
 
-			Providers.Verification verification = entry.getVerification();
-			for (Providers.Verification.MethodEntry method : verification.getMethods()) {
+			Providers.ProviderEntry.Verification verification = entry.getVerification();
+			for (Providers.ProviderEntry.Verification.MethodEntry method : verification.getMethods()) {
 				if (method == null || !methodId.equalsIgnoreCase(method.getId())) continue;
 
 				boolean required = method.getRequired() != null ? method.getRequired() : verification.isRequired();

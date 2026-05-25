@@ -87,7 +87,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 			@NotNull String indexKey
 	) {
 		List<String> requestKeys = index.get(indexKey).join()
-				.map(DeliveryRequestKeyIndex::getValues)
+				.map(DeliveryRequestKeyIndex::values)
 				.orElse(List.of());
 		if (requestKeys.isEmpty()) return List.of();
 
@@ -102,7 +102,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 		}
 
 		if (retained.size() != requestKeys.size())
-			index.put(indexKey, DeliveryRequestKeyIndex.builder().values(retained).build(), ttlMs()).join();
+			index.put(indexKey, new DeliveryRequestKeyIndex(retained), ttlMs()).join();
 
 		return List.copyOf(resolved);
 	}
@@ -113,11 +113,11 @@ public class DefaultDeliveryStore implements DeliveryStore {
 			@NotNull String requestKey
 	) {
 		List<String> values = new ArrayList<>(index.get(indexKey).join()
-				.map(DeliveryRequestKeyIndex::getValues)
+				.map(DeliveryRequestKeyIndex::values)
 				.orElse(List.of()));
 		if (!values.contains(requestKey)) values.add(requestKey);
 
-		index.put(indexKey, DeliveryRequestKeyIndex.builder().values(values).build(), ttlMs()).join();
+		index.put(indexKey, new DeliveryRequestKeyIndex(values), ttlMs()).join();
 	}
 
 	private void removeIndex(
@@ -126,7 +126,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 			@NotNull String requestKey
 	) {
 		List<String> values = new ArrayList<>(index.get(indexKey).join()
-				.map(DeliveryRequestKeyIndex::getValues)
+				.map(DeliveryRequestKeyIndex::values)
 				.orElse(List.of()));
 
 		values.removeIf(requestKey::equals);
@@ -135,7 +135,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 			return;
 		}
 
-		index.put(indexKey, DeliveryRequestKeyIndex.builder().values(values).build(), ttlMs()).join();
+		index.put(indexKey, new DeliveryRequestKeyIndex(values), ttlMs()).join();
 	}
 
 	private @NotNull String key(@NotNull UUID uniqueId) {
@@ -144,5 +144,11 @@ public class DefaultDeliveryStore implements DeliveryStore {
 
 	private long ttlMs() {
 		return settingsProvider.get().getConnection().prepareStateTtlMillis();
+	}
+
+	private record DeliveryRequestKeyIndex(@NotNull List<String> values) {
+		private DeliveryRequestKeyIndex {
+			values = List.copyOf(values);
+		}
 	}
 }

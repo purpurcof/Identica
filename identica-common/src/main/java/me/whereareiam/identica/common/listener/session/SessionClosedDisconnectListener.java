@@ -1,4 +1,4 @@
-package me.whereareiam.identica.common.listener;
+package me.whereareiam.identica.common.listener.session;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

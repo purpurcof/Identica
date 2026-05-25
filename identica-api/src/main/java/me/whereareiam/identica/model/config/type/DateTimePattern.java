@@ -1,4 +1,4 @@
-package me.whereareiam.identica.model.config;
+package me.whereareiam.identica.model.config.type;
 
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +40,7 @@ public final class DateTimePattern {
 	 * @return formatter using the system default zone
 	 */
 	public @NotNull DateTimeFormatter formatter(@NotNull DateTimeFormatter fallback) {
-		if (pattern.isBlank())
-			return fallback.withZone(ZoneId.systemDefault());
+		if (pattern.isBlank()) return fallback.withZone(ZoneId.systemDefault());
 
 		DateTimeFormatter cached = formatter;
 		if (cached != null) return cached;

@@ -6,7 +6,7 @@ import me.whereareiam.identica.common.identity.session.recognition.eligibility.r
 import me.whereareiam.identica.common.identity.session.recognition.eligibility.rule.UntrustedIpRecognitionEligibilityRule;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.session.SessionRecognitionSnapshot;
 import me.whereareiam.identica.type.session.recognition.RecognitionSignal;

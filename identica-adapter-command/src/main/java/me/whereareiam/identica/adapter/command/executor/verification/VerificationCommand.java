@@ -10,7 +10,7 @@ import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.command.SessionBoundCommand;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
-import me.whereareiam.identica.model.config.DateTimePattern;
+import me.whereareiam.identica.model.config.type.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.selection.VerificationSelection;

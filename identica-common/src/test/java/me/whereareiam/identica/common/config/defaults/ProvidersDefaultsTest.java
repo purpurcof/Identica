@@ -1,6 +1,7 @@
 package me.whereareiam.identica.common.config.defaults;
 
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.common.config.defaults.provider.ProvidersDefaults;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

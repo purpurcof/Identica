@@ -1,10 +1,8 @@
-package me.whereareiam.identica.common.config.defaults;
+package me.whereareiam.identica.common.config.defaults.provider;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Singleton;
 import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 
@@ -14,18 +12,6 @@ import java.util.List;
 public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 	@Override
 	public Providers supply(Providers config) {
-		Providers.ConflictRules usernameRules = new Providers.ConflictRules();
-		Providers.ConflictRules.ConflictRule defaultRule = new Providers.ConflictRules.ConflictRule();
-		defaultRule.setResolvers(List.of(formatResolver("{username}*")));
-		usernameRules.setDefaultRule(defaultRule);
-
-		Providers.ConflictRules.ConflictRule premiumVsCredential = new Providers.ConflictRules.ConflictRule();
-		premiumVsCredential.setProviders(List.of("premium", "credential"));
-		premiumVsCredential.setResolvers(List.of(formatResolver("{username}_{incomingProvider}")));
-		usernameRules.setPairs(List.of(premiumVsCredential));
-
-		config.getConflicts().put("username", usernameRules);
-
 		Providers.ProviderEntry credential = new Providers.ProviderEntry();
 		credential.setId("credential");
 		credential.setDisplayName("CR");
@@ -50,21 +36,6 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 		config.setProviders(List.of(credential, premium));
 		return config;
 	}
-
-	private Providers.ConflictRules.ConflictRule.ResolverEntry formatResolver(String pattern) {
-		ObjectNode format = JsonNodeFactory.instance.objectNode();
-		format.put("pattern", pattern);
-
-		ObjectNode node = JsonNodeFactory.instance.objectNode();
-		node.set("format", format);
-		node.put("target", "joiner");
-		Providers.ConflictRules.ConflictRule.ResolverEntry entry =
-				new Providers.ConflictRules.ConflictRule.ResolverEntry();
-		entry.setId("format_display");
-		entry.setParameters(node);
-		return entry;
-	}
-
 	private Providers.ProviderEntry.Verification credentialVerification() {
 		Providers.ProviderEntry.Verification verification = new Providers.ProviderEntry.Verification();
 		verification.setEnabled(true);

@@ -82,6 +82,8 @@ import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.logging.BannerContributor;
 import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
+import me.whereareiam.identica.model.config.provider.Conflicts;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.provider.*;
@@ -125,6 +127,7 @@ public class CommonConfiguration extends AbstractModule {
 		bind(Settings.class).toProvider(SettingsProvider.class);
 		bind(Messages.class).toProvider(MessagesProvider.class);
 		bind(Commands.class).toProvider(CommandsProvider.class);
+		bind(Conflicts.class).toProvider(ConflictsProvider.class);
 		bind(Providers.class).toProvider(ProvidersProvider.class);
 		bind(Verification.class).toProvider(VerificationProvider.class);
 		bind(Persistence.class).toProvider(PersistenceProvider.class);

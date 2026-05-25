@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.identity.session.recognition.eligibility.RecognitionEligibilityRule;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityContext;
 import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityRuleDecision;

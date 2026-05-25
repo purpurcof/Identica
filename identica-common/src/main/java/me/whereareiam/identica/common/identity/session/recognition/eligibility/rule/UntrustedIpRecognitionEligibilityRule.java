@@ -8,7 +8,7 @@ import me.whereareiam.identica.common.identity.session.recognition.eligibility.m
 import me.whereareiam.identica.common.identity.session.recognition.eligibility.matcher.type.CidrMatcher;
 import me.whereareiam.identica.common.identity.session.recognition.eligibility.matcher.type.ExactIpMatcher;
 import me.whereareiam.identica.identity.session.recognition.eligibility.RecognitionEligibilityRule;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityContext;
 import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityRuleDecision;

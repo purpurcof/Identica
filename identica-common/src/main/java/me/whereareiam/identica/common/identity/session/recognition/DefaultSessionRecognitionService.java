@@ -8,7 +8,7 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
 import me.whereareiam.identica.identity.session.recognition.eligibility.RecognitionEligibilityService;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.session.SessionRecognitionSnapshot;
 import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityContext;

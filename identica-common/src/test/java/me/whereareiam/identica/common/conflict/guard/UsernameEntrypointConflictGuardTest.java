@@ -4,7 +4,7 @@ import me.whereareiam.identica.common.config.defaults.messages.MessagesDefaults;
 import me.whereareiam.identica.common.provider.DefaultProviderOperations;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;

@@ -1,8 +1,5 @@
-package me.whereareiam.identica.model.config;
+package me.whereareiam.identica.model.config.provider;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -17,9 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Provider configuration settings.
@@ -28,43 +23,7 @@ import java.util.Map;
 @Setter
 @ToString
 public class Providers extends ConfigDocument {
-	private @NotNull Map<String, ConflictRules> conflicts = new HashMap<>();
 	private @NotNull List<ProviderEntry> providers = new ArrayList<>();
-
-	/**
-	 * Conflict rules for a single conflict key.
-	 */
-	@Getter
-	@Setter
-	@ToString
-	public static class ConflictRules {
-		@JsonProperty("default")
-		private @NotNull ConflictRule defaultRule;
-		private @NotNull List<ConflictRule> pairs = new ArrayList<>();
-
-		/**
-		 * Conflict rule for provider pairs or default scope.
-		 */
-		@Getter
-		@Setter
-		@ToString
-		public static class ConflictRule {
-			private @NotNull List<String> providers = new ArrayList<>();
-			private boolean force;
-			private @NotNull List<ResolverEntry> resolvers = new ArrayList<>();
-
-			/**
-			 * Resolver entry for conflict rules.
-			 */
-			@Getter
-			@Setter
-			@ToString
-			public static class ResolverEntry {
-				private @NotNull String id;
-				private @NotNull JsonNode parameters = JsonNodeFactory.instance.objectNode();
-			}
-		}
-	}
 
 	/**
 	 * Provider definition entry.

@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.config.serializer;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
-import me.whereareiam.identica.model.config.DateTimePattern;
+import me.whereareiam.identica.model.config.type.DateTimePattern;
 
 import java.io.IOException;
 

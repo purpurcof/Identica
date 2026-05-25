@@ -6,7 +6,7 @@ import me.whereareiam.identica.common.conflict.resolver.defaults.KickBothConflic
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickJoinerConflictResolver;
 import me.whereareiam.identica.conflict.ConflictGuard;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Conflicts;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
@@ -26,8 +26,8 @@ class DefaultConflictServiceTest {
 	@DisplayName("Conflict guards run before resolvers and can short-circuit resolution")
 	@Test
 	void guardRunsBeforeResolver() {
-		Providers providers = new Providers();
-		providers.getConflicts().put("username", rules(defaultRule(entry("test"))));
+		Conflicts conflicts = new Conflicts();
+		conflicts.getRules().put("username", rules(defaultRule(entry("test"))));
 
 		AtomicBoolean resolverCalled = new AtomicBoolean(false);
 		ConflictResolver resolver = new ConflictResolver() {
@@ -46,7 +46,7 @@ class DefaultConflictServiceTest {
 		ConflictGuard guard = context -> ConflictResolution.deny("guarded");
 
 		DefaultConflictService service = new DefaultConflictService(
-				() -> providers,
+				() -> conflicts,
 				Set.of(guard),
 				new KickJoinerConflictResolver(),
 				new KickActiveConflictResolver(),
@@ -63,16 +63,16 @@ class DefaultConflictServiceTest {
 	@DisplayName("Falls back to the default rule after pair-specific resolvers pass")
 	@Test
 	void fallsBackToDefaultRuleWhenPairResolversPass() {
-		Providers providers = new Providers();
-		Providers.ConflictRules rules = new Providers.ConflictRules();
+		Conflicts conflicts = new Conflicts();
+		Conflicts.ConflictRules rules = new Conflicts.ConflictRules();
 		rules.setDefaultRule(defaultRule(entry("allow")));
 
-		Providers.ConflictRules.ConflictRule pairRule = new Providers.ConflictRules.ConflictRule();
+		Conflicts.ConflictRules.ConflictRule pairRule = new Conflicts.ConflictRules.ConflictRule();
 		pairRule.setProviders(List.of("premium", "credential"));
 		pairRule.setResolvers(List.of(entry("pass")));
 		rules.setPairs(List.of(pairRule));
 
-		providers.getConflicts().put("username", rules);
+		conflicts.getRules().put("username", rules);
 
 		AtomicBoolean passCalled = new AtomicBoolean(false);
 		AtomicBoolean allowCalled = new AtomicBoolean(false);
@@ -102,7 +102,7 @@ class DefaultConflictServiceTest {
 		};
 
 		DefaultConflictService service = new DefaultConflictService(
-				() -> providers,
+				() -> conflicts,
 				Set.of(),
 				new KickJoinerConflictResolver(),
 				new KickActiveConflictResolver(),
@@ -123,23 +123,23 @@ class DefaultConflictServiceTest {
 		assertTrue(allowCalled.get());
 	}
 
-	private Providers.ConflictRules rules(Providers.ConflictRules.ConflictRule defaultRule) {
-		Providers.ConflictRules rules = new Providers.ConflictRules();
+	private Conflicts.ConflictRules rules(Conflicts.ConflictRules.ConflictRule defaultRule) {
+		Conflicts.ConflictRules rules = new Conflicts.ConflictRules();
 		rules.setDefaultRule(defaultRule);
 		return rules;
 	}
 
-	private Providers.ConflictRules.ConflictRule defaultRule(
-			Providers.ConflictRules.ConflictRule.ResolverEntry resolverEntry
+	private Conflicts.ConflictRules.ConflictRule defaultRule(
+			Conflicts.ConflictRules.ConflictRule.ResolverEntry resolverEntry
 	) {
-		Providers.ConflictRules.ConflictRule rule = new Providers.ConflictRules.ConflictRule();
+		Conflicts.ConflictRules.ConflictRule rule = new Conflicts.ConflictRules.ConflictRule();
 		rule.setResolvers(List.of(resolverEntry));
 		return rule;
 	}
 
-	private Providers.ConflictRules.ConflictRule.ResolverEntry entry(String id) {
-		Providers.ConflictRules.ConflictRule.ResolverEntry entry =
-				new Providers.ConflictRules.ConflictRule.ResolverEntry();
+	private Conflicts.ConflictRules.ConflictRule.ResolverEntry entry(String id) {
+		Conflicts.ConflictRules.ConflictRule.ResolverEntry entry =
+				new Conflicts.ConflictRules.ConflictRule.ResolverEntry();
 		entry.setId(id);
 		return entry;
 	}

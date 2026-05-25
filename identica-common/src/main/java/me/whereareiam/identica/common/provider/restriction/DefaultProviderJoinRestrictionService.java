@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionDecision;
 import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionStatus;
 import me.whereareiam.identica.provider.restriction.ProviderJoinRestrictionService;

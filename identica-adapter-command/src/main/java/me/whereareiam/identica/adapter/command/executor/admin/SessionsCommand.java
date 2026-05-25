@@ -16,7 +16,7 @@ import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.config.Commands;
-import me.whereareiam.identica.model.config.DateTimePattern;
+import me.whereareiam.identica.model.config.type.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.util.UniqueIdUtil;

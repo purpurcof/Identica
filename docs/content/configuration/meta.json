@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "commands",
+    "conflicts",
     "messages",
     "persistence",
     "providers",

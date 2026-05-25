@@ -10,9 +10,9 @@ import me.whereareiam.identica.common.util.UniqueIdResolutionSupport;
 import me.whereareiam.identica.conflict.ConflictGuard;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
-import me.whereareiam.identica.model.config.Providers;
-import me.whereareiam.identica.model.config.Providers.ConflictRules.ConflictRule;
-import me.whereareiam.identica.model.config.Providers.ConflictRules.ConflictRule.ResolverEntry;
+import me.whereareiam.identica.model.config.provider.Conflicts;
+import me.whereareiam.identica.model.config.provider.Conflicts.ConflictRules.ConflictRule;
+import me.whereareiam.identica.model.config.provider.Conflicts.ConflictRules.ConflictRule.ResolverEntry;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickActiveConflictResolver;
 import me.whereareiam.identica.common.conflict.resolver.defaults.KickBothConflictResolver;
@@ -31,20 +31,20 @@ import java.util.Set;
 
 @Singleton
 public class DefaultConflictService implements ConflictService {
-	private final Provider<Providers> providersConfig;
+	private final Provider<Conflicts> conflictsConfig;
 	private final Set<ConflictGuard> globalGuards;
 	private final Map<String, ConflictResolver> resolvers = new ConcurrentHashMap<>();
 	private final Map<String, ConflictType> types = new ConcurrentHashMap<>();
 
 	@Inject
 	public DefaultConflictService(
-			Provider<Providers> providersConfig,
+			Provider<Conflicts> conflictsConfig,
 			Set<ConflictGuard> globalGuards,
 			KickJoinerConflictResolver kickJoinerResolver,
 			KickActiveConflictResolver kickActiveResolver,
 			KickBothConflictResolver kickBothResolver
 	) {
-		this.providersConfig = providersConfig;
+		this.conflictsConfig = conflictsConfig;
 		this.globalGuards = globalGuards;
 
 		register(kickJoinerResolver);
@@ -105,7 +105,7 @@ public class DefaultConflictService implements ConflictService {
 
 	@Override
 	public @Nullable ConflictResolution resolve(@NotNull ConflictContext context) {
-		Providers.ConflictRules rules = resolveRules(context);
+		Conflicts.ConflictRules rules = resolveRules(context);
 		if (rules == null) return null;
 
 		ConflictType type = getType(context.getKey());
@@ -128,15 +128,15 @@ public class DefaultConflictService implements ConflictService {
 		return resolution;
 	}
 
-	private @Nullable Providers.ConflictRules resolveRules(ConflictContext context) {
-		Map<String, Providers.ConflictRules> conflicts = providersConfig.get().getConflicts();
-		if (conflicts.isEmpty()) return null;
+	private @Nullable Conflicts.ConflictRules resolveRules(ConflictContext context) {
+		Map<String, Conflicts.ConflictRules> rules = conflictsConfig.get().getRules();
+		if (rules.isEmpty()) return null;
 
-		return conflicts.get(context.getKey());
+		return rules.get(context.getKey());
 	}
 
 	private @Nullable ConflictRule resolvePairRule(
-			@NotNull Providers.ConflictRules rules,
+			@NotNull Conflicts.ConflictRules rules,
 			@NotNull ConflictContext context
 	) {
 		List<ConflictRule> pairs = rules.getPairs();

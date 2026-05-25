@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.config.deserializer;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
-import me.whereareiam.identica.model.config.DateTimePattern;
+import me.whereareiam.identica.model.config.type.DateTimePattern;
 
 import java.io.IOException;
 

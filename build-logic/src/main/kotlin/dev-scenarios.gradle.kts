@@ -50,8 +50,8 @@ scenarios.registerScenario("normal-bungeecord") { scenario ->
         bungeecord.addServer("lobby", "127.0.0.1:25566")
         bungeecord.setTryServers("lobby")
         bungeecord.addInstall("plugins", bundleShadowJar.flatMap { it.archiveFile })
-        bungeecord.addInstall("plugins/identica/providers", credentialShadowJar.flatMap { it.archiveFile })
-        bungeecord.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
+        bungeecord.addInstall("plugins/Identica/providers", credentialShadowJar.flatMap { it.archiveFile })
+        bungeecord.addInstall("plugins/Identica/providers", premiumShadowJar.flatMap { it.archiveFile })
     }
 
     scenario.addPaper("lobby") { paper ->
@@ -121,8 +121,8 @@ scenarios.registerScenario("extended-bungeecord") { scenario ->
         bungeecord.addServer("lobby", "127.0.0.1:25569")
         bungeecord.setTryServers("lobby")
         bungeecord.addInstall("plugins", bundleShadowJar.flatMap { it.archiveFile })
-        bungeecord.addInstall("plugins/identica/providers", credentialShadowJar.flatMap { it.archiveFile })
-        bungeecord.addInstall("plugins/identica/providers", premiumShadowJar.flatMap { it.archiveFile })
+        bungeecord.addInstall("plugins/Identica/providers", credentialShadowJar.flatMap { it.archiveFile })
+        bungeecord.addInstall("plugins/Identica/providers", premiumShadowJar.flatMap { it.archiveFile })
     }
 
     scenario.addPaper("auth") { paper ->

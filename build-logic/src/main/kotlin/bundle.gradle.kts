@@ -4,7 +4,7 @@ import me.whereareiam.identica.buildlogic.bundle.bundlePlatformId
 import me.whereareiam.identica.buildlogic.bundle.platformCollection
 
 plugins {
-    id("shadow-runtime")
+    id("runtime")
 }
 
 val platformCollection = platformCollection()

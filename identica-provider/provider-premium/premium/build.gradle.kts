@@ -1,7 +1,7 @@
 import org.gradle.jvm.tasks.Jar
 
 plugins {
-    id("shadow-runtime")
+    id("runtime")
 }
 
 dependencies {

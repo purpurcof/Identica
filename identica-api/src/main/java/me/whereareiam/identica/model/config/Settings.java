@@ -60,6 +60,10 @@ public class Settings extends ConfigDocument {
 		 */
 		private @NotNull Duration prepareStateTtl;
 		/**
+		 * Time-to-live for provider join restriction runtime toggles.
+		 */
+		private @NotNull Duration providerJoinRestrictionTtl;
+		/**
 		 * Strategy used to assign UUIDs to newly discovered accounts.
 		 */
 		private @NotNull UniqueIdMode uniqueIdMode;
@@ -107,7 +111,21 @@ public class Settings extends ConfigDocument {
 			return prepareStateTtl.toMillis();
 		}
 
+		/**
+		 * Returns provider join restriction TTL in milliseconds with validation.
+		 *
+		 * @return provider join restriction TTL in milliseconds
+		 */
+		public long providerJoinRestrictionTtlMillis() {
+			if (providerJoinRestrictionTtl.isZero() || providerJoinRestrictionTtl.isNegative()) {
+				throw new IllegalStateException("settings.connection.providerJoinRestrictionTtl must be positive");
+			}
+
+			return providerJoinRestrictionTtl.toMillis();
+		}
+
 	}
+
 	@Getter
 	@Setter
 	@ToString
@@ -291,6 +309,10 @@ public class Settings extends ConfigDocument {
 		 * Whether resume requests are allowed for this scenario.
 		 */
 		private boolean allowResume;
+		/**
+		 * Whether resumed auth/registration flows may bypass active provider restrictions.
+		 */
+		private boolean allowProviderRestrictionResumeBypass;
 		/**
 		 * Preferred journey mode for this scenario.
 		 */

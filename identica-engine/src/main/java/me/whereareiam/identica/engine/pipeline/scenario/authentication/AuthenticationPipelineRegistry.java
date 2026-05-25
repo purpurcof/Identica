@@ -3,10 +3,7 @@ package me.whereareiam.identica.engine.pipeline.scenario.authentication;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.IdentityGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.LoadIdentityProfilePhase;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.RefreshProviderProfilePhase;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.ResolveIdentityPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.UsernameReplicationPhase;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.*;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.PolicyGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.phase.AccountReviewPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.phase.PersistUsernameChangePhase;
@@ -15,15 +12,11 @@ import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.ses
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.session.phase.OpenSessionPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractPipelineGroupRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.finalize.FinalizeGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.preparation.PreparationGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.ApplyRulesPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.BuildExecutionPlanPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.ExecutePlanPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.LoadContextPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.ResolveJourneyModePhase;
-import me.whereareiam.identica.pipeline.PipelineRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.*;
+import me.whereareiam.identica.engine.pipeline.scenario.shared.group.preparation.PreparationGroup;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
+import me.whereareiam.identica.pipeline.PipelineRegistry;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
@@ -43,6 +36,7 @@ public class AuthenticationPipelineRegistry extends AbstractPipelineGroupRegistr
 			ExecutePlanPhase executePlanPhase,
 			ResolveIdentityPhase resolveIdentityPhase,
 			LoadIdentityProfilePhase loadIdentityProfilePhase,
+			EnforceProviderJoinRestrictionPhase enforceProviderJoinRestrictionPhase,
 			RefreshProviderProfilePhase refreshProviderProfilePhase,
 			UsernameReplicationPhase usernameReplicationPhase,
 			AccountReviewPhase accountReviewPhase,
@@ -65,7 +59,8 @@ public class AuthenticationPipelineRegistry extends AbstractPipelineGroupRegistr
 
 		registerPhase(identityGroup.id(), resolveIdentityPhase, PhasePlacement.first());
 		registerPhase(identityGroup.id(), loadIdentityProfilePhase, PhasePlacement.after(resolveIdentityPhase.id()));
-		registerPhase(identityGroup.id(), refreshProviderProfilePhase, PhasePlacement.after(loadIdentityProfilePhase.id()));
+		registerPhase(identityGroup.id(), enforceProviderJoinRestrictionPhase, PhasePlacement.after(loadIdentityProfilePhase.id()));
+		registerPhase(identityGroup.id(), refreshProviderProfilePhase, PhasePlacement.after(enforceProviderJoinRestrictionPhase.id()));
 		registerPhase(identityGroup.id(), usernameReplicationPhase, PhasePlacement.last());
 
 		registerPhase(policyGroup.id(), accountReviewPhase, PhasePlacement.first());

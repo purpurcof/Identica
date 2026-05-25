@@ -204,6 +204,7 @@ public class Messages extends ConfigDocument {
 		public static class Admin {
 			private @NotNull Clear clear;
 			private @NotNull Delete delete;
+			private @NotNull ProviderRestriction providerRestriction;
 			private @NotNull Reservation reservation;
 			private @NotNull Sessions sessions;
 			private @NotNull Verification verification;
@@ -345,6 +346,79 @@ public class Messages extends ConfigDocument {
 			@Getter
 			@Setter
 			@ToString
+			public static class ProviderRestriction {
+				private @NotNull String enabled;
+				private @NotNull String disabled;
+				private @NotNull String enableFailed;
+				private @NotNull String providerNotFound;
+				private @NotNull Status status;
+
+				@Getter
+				@Setter
+				@ToString
+				public static class Status {
+					/**
+					 * Detailed provider restriction info.
+					 * Placeholders:
+					 * - {providerId}
+					 * - {providerName}
+					 * - {active}
+					 * - {allow}
+					 */
+					private @NotNull List<String> body;
+					private @NotNull String notFound;
+					@JsonProperty("list")
+					private @NotNull Listing list;
+					private @NotNull Labels labels;
+
+					@Getter
+					@Setter
+					@ToString
+					public static class Labels {
+						private @NotNull String enabled;
+						private @NotNull String disabled;
+					}
+
+					@Getter
+					@Setter
+					@ToString
+					public static class Listing {
+						/**
+						 * Lines shown before listing provider restriction statuses.
+						 * Placeholders:
+						 * - {entries}
+						 */
+						private @NotNull List<String> body;
+						private @NotNull Entries entries;
+						private @NotNull String empty;
+
+						@Getter
+						@Setter
+						@ToString
+						public static class Entries {
+							/**
+							 * Entry format for a single provider restriction status with populated allow entries.
+							 * Placeholders:
+							 * - {providerName}
+							 * - {status}
+							 * - {allow}
+							 */
+							private @NotNull String populated;
+							/**
+							 * Entry format for a single provider restriction status with empty allow entries.
+							 * Placeholders:
+							 * - {providerName}
+							 * - {status}
+							 */
+							private @NotNull String empty;
+						}
+					}
+				}
+			}
+
+			@Getter
+			@Setter
+			@ToString
 			public static class Reservation {
 				private @NotNull String set;
 				private @NotNull String info;
@@ -363,7 +437,7 @@ public class Messages extends ConfigDocument {
 				private @NotNull String unknown;
 				@JsonProperty("list")
 				private @NotNull Listing listing;
-				private @NotNull Info info;
+				private @NotNull Detail status;
 				private @NotNull End end;
 				private @NotNull Multiple multiple;
 
@@ -398,7 +472,7 @@ public class Messages extends ConfigDocument {
 				@Getter
 				@Setter
 				@ToString
-				public static class Info {
+				public static class Detail {
 					/**
 					 * Detailed session info lines.
 					 * Placeholders:
@@ -660,6 +734,7 @@ public class Messages extends ConfigDocument {
 		private @NotNull List<String> resumeSentineled;
 		private @NotNull Journey journey;
 		private @NotNull Prepare prepare;
+		private @NotNull ProviderRestriction providerRestriction;
 		private @NotNull Authentication authentication;
 		private @NotNull Registration registration;
 		private @NotNull Migration migration;
@@ -669,6 +744,10 @@ public class Messages extends ConfigDocument {
 		@ToString
 		public static class Prepare {
 			private @NotNull List<String> handshakeDenied;
+			/**
+			 * Message shown when prepare can deny immediately due to an active provider restriction.
+			 */
+			private @NotNull List<String> providerRestricted;
 			private @NotNull Errors errors;
 
 			@Getter
@@ -677,6 +756,20 @@ public class Messages extends ConfigDocument {
 			public static class Errors {
 				private @NotNull List<String> preparePolicyMissing;
 			}
+		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class ProviderRestriction {
+			/**
+			 * Shared message sent when an active provider restriction denies a join.
+			 * Placeholders:
+			 * - {providerId}
+			 * - {providerName}
+			 * - {allow}
+			 */
+			private @NotNull List<String> denied;
 		}
 
 		@Getter

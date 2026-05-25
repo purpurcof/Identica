@@ -18,6 +18,7 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.handshake.phase.Eva
 import me.whereareiam.identica.engine.pipeline.prepare.group.handshake.phase.FinalizeHandshakePhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.policy.PolicyGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyPreparePolicyPhase;
+import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyProviderJoinRestrictionPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.ProfileGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.LoadPrepareAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePendingMigrationAccountPhase;
@@ -46,10 +47,12 @@ import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionDecision;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
 import me.whereareiam.identica.model.session.recognition.eligibility.RecognitionEligibilityDecision;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.provider.restriction.ProviderJoinRestrictionService;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
 import me.whereareiam.identica.service.DeliveryService;
@@ -59,6 +62,7 @@ import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -98,6 +102,21 @@ class PreparePipelineTest {
 	private RecognitionEligibilityService recognitionEligibilityService;
 	@Mock
 	private DeliveryService deliveryService;
+	@Mock
+	private ProviderJoinRestrictionService providerJoinRestrictionService;
+
+	@BeforeEach
+	void setUpProviderRestrictionService() {
+		ProviderJoinRestrictionDecision allowed = ProviderJoinRestrictionDecision.builder()
+				.allowed(true)
+				.configured(false)
+				.active(false)
+				.allow(java.util.Set.of())
+				.matchedConditions(java.util.Set.of())
+				.build();
+		lenient().when(providerJoinRestrictionService.evaluate(anyString())).thenReturn(allowed);
+		lenient().when(providerJoinRestrictionService.evaluate(anyString(), any(), any(), any(), any())).thenReturn(allowed);
+	}
 
 	@DisplayName("Profile preparation builds a transient account and applies the event decision")
 	@Test
@@ -769,6 +788,11 @@ class PreparePipelineTest {
 						accountPersistenceService,
 						providerLinkPersistenceService,
 						providerProfilePersistenceService
+				),
+				new ApplyProviderJoinRestrictionPhase(
+						providerJoinRestrictionService,
+						providerOperations,
+						Messages::new
 				),
 				new ApplyPreparePolicyPhase(eventManager, Messages::new),
 				new StorePrepareDecisionPhase(prepareStateStore)

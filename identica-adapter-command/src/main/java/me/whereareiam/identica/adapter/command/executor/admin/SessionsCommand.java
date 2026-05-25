@@ -93,19 +93,19 @@ public class SessionsCommand {
 	@Command("identica admin session info <target>")
 	public void info(@NotNull Actor sender, @Argument("target") String target) {
 		Messages.Commands.Admin.Sessions messages = messagesProvider.get().getCommands().getAdmin().getSessions();
-		Messages.Commands.Admin.Sessions.Info infoMessages = messages.getInfo();
+		Messages.Commands.Admin.Sessions.Detail statusMessages = messages.getStatus();
 		String unknown = messages.getUnknown();
-		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica admin session info", infoMessages.getNotFound());
+		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica admin session info", statusMessages.getNotFound());
 		if (resolved == null) return;
 
 		Optional<Session> session = sessionService.findByUniqueId(resolved.uniqueId()).join();
 		if (session.isEmpty()) {
-			sendMessage(sender, infoMessages.getNotFound(), Map.of("target", target));
+			sendMessage(sender, statusMessages.getNotFound(), Map.of("target", target));
 			return;
 		}
 
 		Map<String, String> placeholders = buildInfoPlaceholders(session.get(), unknown);
-		String info = formatLines(infoMessages.getBody(), placeholders, placeholderFormat());
+		String info = formatLines(statusMessages.getBody(), placeholders, placeholderFormat());
 		sendMessage(sender, info, Map.of());
 	}
 

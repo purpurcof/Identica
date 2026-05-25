@@ -45,6 +45,8 @@ import me.whereareiam.identica.common.migration.DefaultMigrationService;
 import me.whereareiam.identica.common.prepare.DefaultPrepareStateStore;
 import me.whereareiam.identica.common.provider.*;
 import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
+import me.whereareiam.identica.common.provider.restriction.DefaultProviderJoinRestrictionService;
+import me.whereareiam.identica.common.provider.restriction.ProviderJoinRestrictionToggleStore;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
 import me.whereareiam.identica.common.replication.DefaultReplicationAdapter;
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
@@ -82,10 +84,8 @@ import me.whereareiam.identica.model.config.*;
 import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
-import me.whereareiam.identica.provider.ProviderAttemptStore;
-import me.whereareiam.identica.provider.ProviderDescriptorReader;
-import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.provider.ProviderOperations;
+import me.whereareiam.identica.provider.*;
+import me.whereareiam.identica.provider.restriction.ProviderJoinRestrictionService;
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.replication.event.ReplicatedEventRegistry;
@@ -214,6 +214,8 @@ public class CommonConfiguration extends AbstractModule {
 		// Provider system
 		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
 		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
+		bind(ProviderJoinRestrictionToggleStore.class).asEagerSingleton();
+		bind(ProviderJoinRestrictionService.class).to(DefaultProviderJoinRestrictionService.class).asEagerSingleton();
 		bind(ProviderOperations.class).to(DefaultProviderOperations.class).asEagerSingleton();
 
 		// Core services

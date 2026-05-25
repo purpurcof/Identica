@@ -157,6 +157,36 @@ connection:
   </Tab>
 </Tabs>
 
+#### providerJoinRestrictionTtl
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"365d"`
+- Affects: how long provider join restriction runtime toggles stay active in the replicated toggle store
+
+This TTL is used when join restrictions are enabled at runtime.
+Longer values make administrative toggles persist for longer without needing to be reapplied.
+Shorter values let temporary restrictions expire automatically sooner.
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+connection:
+  providerJoinRestrictionTtl: "30d"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "connection": {
+    "providerJoinRestrictionTtl": "30d"
+  }
+}
+```
+  </Tab>
+</Tabs>
+
 #### uniqueIdMode
 
 <Badge type="error">Danger</Badge>
@@ -678,6 +708,17 @@ This prevents multiple near-simultaneous advance attempts from racing the same p
 If this is `false`, waiting or reconnect-required authentication state is cleared instead of saved.
 That means players cannot resume the authentication flow later.
 
+#### allowProviderRestrictionResumeBypass
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: whether resumed authentication flows may continue while a provider join restriction is active
+
+If this is `true`, a player who is resuming an already-pending authentication flow may continue even when the provider they are using is currently restricted.
+This does not allow new authentication attempts through the restriction. It only affects resumed flows.
+
 #### journeyMode
 
 <Badge type="warning">Advanced</Badge>
@@ -756,6 +797,17 @@ Configure them under `connection.scenarios.registration`.
 - Takes: `true` or `false`
 - Current default: `true`
 - Affects: whether pending registration state is stored and can be resumed later
+
+#### allowProviderRestrictionResumeBypass
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: whether resumed registration flows may continue while a provider join restriction is active
+
+If this is `true`, a player who is resuming an already-pending registration flow may continue even when the provider they are using is currently restricted.
+This does not allow new registration attempts through the restriction. It only affects resumed flows.
 
 #### journeyMode
 

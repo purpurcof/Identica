@@ -113,3 +113,30 @@ Recognition is intentionally disabled by default because signal matching can be 
 IP-based matching in particular can be exploited behind NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, hosting proxies, or other setups where several different players appear to come from the same address.
 
 Enable recognition only if you understand that tradeoff and accept the risk for your environment.
+
+#### joinRestriction.enabled
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: whether this provider exposes a runtime-toggleable join restriction policy
+
+When this is `false`, `/identica admin provider restriction enable <provider>` will fail for that provider.
+When this is `true`, the configured `mode` can be activated at runtime by command.
+
+#### joinRestriction.allow
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a list containing `"RECOGNIZED"` and/or `"LINKED"`
+- Current default: absent unless explicitly configured
+- Affects: what the runtime provider restriction does when it is active
+
+Available conditions:
+
+- `RECOGNIZED`: only reconnect-recognized players may continue through this provider
+- `LINKED`: already-linked players may continue through this provider
+
+When the list contains both values, players may continue when either condition matches.
+When the list is empty, all new joins through the provider are denied.

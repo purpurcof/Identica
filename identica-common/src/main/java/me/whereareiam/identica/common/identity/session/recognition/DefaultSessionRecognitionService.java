@@ -88,10 +88,12 @@ public class DefaultSessionRecognitionService implements SessionRecognitionServi
 
 	private boolean isRecognitionEnabled(@NotNull String providerId) {
 		Providers.ProviderEntry provider = findProvider(providerId);
-		Providers.Overrides.Recognition overrides = provider != null ? provider.getOverrides().getRecognition() : null;
+		Providers.ProviderEntry.Overrides.Recognition overrides = provider != null
+				? provider.getOverrides().getRecognition()
+				: null;
+
 		Boolean override = overrides != null ? overrides.getEnabled() : null;
-		if (override != null)
-			return override;
+		if (override != null) return override;
 
 		return settingsProvider.get().getConnection().getSessions().getRecognition().isEnabled();
 	}

@@ -541,26 +541,26 @@ That includes NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, reverse proxies, 
 
 Enable recognition only if you understand that tradeoff and accept the risk for your environment.
 
-#### recognition.untrustedIps.enabled
+#### recognition.eligibility.untrustedIps.enabled
 
 <Badge type="warning">Warning</Badge>
 
 - Takes: `true` or `false`
 - Current default: `true`
-- Affects: whether recognition-based authentication bypass is allowed for configured client IPs and CIDR ranges
+- Affects: whether recognition remains eligible for configured client IPs and CIDR ranges
 
-This guard controls recognition paths that can skip provider authentication, including reconnect recognition and provider-scoped handshake or session recognition.
+This rule controls whether recognition may run at all, including reconnect recognition and provider-scoped handshake recognition.
 
 Use this when reconnect recognition is generally acceptable, but there are client networks you do not trust for automatic recognition decisions.
 The generated defaults target the common “proxy forwarded a loopback/private proxy IP instead of the real client IP” failure mode.
 
-#### recognition.untrustedIps.entries
+#### recognition.eligibility.untrustedIps.entries
 
 <Badge type="warning">Warning</Badge>
 
 - Takes: a list of exact IP literals or IPv4/IPv6 CIDR ranges
 - Current default: `["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]`
-- Affects: which client IPs disable recognition-based authentication bypass
+- Affects: which client IPs make recognition ineligible
 
 The generated defaults cover loopback and RFC1918 private ranges, which are often a sign that Identica is behind a proxy that is forwarding the wrong source IP.
 
@@ -605,14 +605,15 @@ connection:
         - "USERNAME"
         - "IP"
         - "VIRTUAL_HOST"
-      untrustedIps:
-        enabled: true
-        entries:
-          - "127.0.0.1"
-          - "::1"
-          - "10.0.0.0/8"
-          - "172.16.0.0/12"
-          - "192.168.0.0/16"
+      eligibility:
+        untrustedIps:
+          enabled: true
+          entries:
+            - "127.0.0.1"
+            - "::1"
+            - "10.0.0.0/8"
+            - "172.16.0.0/12"
+            - "192.168.0.0/16"
 ```
   </Tab>
   <Tab value="JSON">
@@ -626,9 +627,11 @@ connection:
         "enabled": false,
         "validity": "12h",
         "defaultSignals": ["USERNAME", "IP", "VIRTUAL_HOST"],
-        "untrustedIps": {
-          "enabled": true,
-          "entries": ["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+        "eligibility": {
+          "untrustedIps": {
+            "enabled": true,
+            "entries": ["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+          }
         }
       }
     }

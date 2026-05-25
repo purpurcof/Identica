@@ -1,12 +1,15 @@
 package me.whereareiam.identica.common.identity.session.recognition;
 
-import me.whereareiam.identica.common.identity.session.recognition.policy.UntrustedIpRecognitionGuard;
+import me.whereareiam.identica.common.identity.session.recognition.eligibility.DefaultRecognitionEligibilityRegistry;
+import me.whereareiam.identica.common.identity.session.recognition.eligibility.DefaultRecognitionEligibilityService;
+import me.whereareiam.identica.common.identity.session.recognition.eligibility.rule.RecognitionEnabledEligibilityRule;
+import me.whereareiam.identica.common.identity.session.recognition.eligibility.rule.UntrustedIpRecognitionEligibilityRule;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionStore;
 import me.whereareiam.identica.model.config.Providers;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.session.SessionRecognitionSnapshot;
-import me.whereareiam.identica.type.session.RecognitionSignal;
+import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -71,11 +74,15 @@ class DefaultSessionRecognitionServiceTest {
 			Providers providers,
 			SessionRecognitionStore store
 	) {
+		DefaultRecognitionEligibilityRegistry registry = new DefaultRecognitionEligibilityRegistry();
+		registry.register(new RecognitionEnabledEligibilityRule(() -> settings, () -> providers));
+		registry.register(new UntrustedIpRecognitionEligibilityRule(() -> settings, () -> providers));
+
 		return new DefaultSessionRecognitionService(
 				() -> settings,
 				() -> providers,
 				store,
-				new UntrustedIpRecognitionGuard(() -> settings, () -> providers)
+				new DefaultRecognitionEligibilityService(registry)
 		);
 	}
 
@@ -89,15 +96,19 @@ class DefaultSessionRecognitionServiceTest {
 			List<RecognitionSignal> signals,
 			List<String> untrustedIps
 	) {
-		Settings.Sessions.Recognition.UntrustedIps untrusted = new Settings.Sessions.Recognition.UntrustedIps();
+		Settings.Sessions.Recognition.Eligibility.UntrustedIps untrusted =
+				new Settings.Sessions.Recognition.Eligibility.UntrustedIps();
 		untrusted.setEnabled(true);
 		untrusted.setEntries(untrustedIps);
+
+		Settings.Sessions.Recognition.Eligibility eligibility = new Settings.Sessions.Recognition.Eligibility();
+		eligibility.setUntrustedIps(untrusted);
 
 		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
 		recognition.setEnabled(true);
 		recognition.setValidity(Duration.ofHours(12));
 		recognition.setDefaultSignals(signals);
-		recognition.setUntrustedIps(untrusted);
+		recognition.setEligibility(eligibility);
 
 		Settings.Sessions sessions = new Settings.Sessions();
 		sessions.setRecognition(recognition);
@@ -113,7 +124,7 @@ class DefaultSessionRecognitionServiceTest {
 	private Providers providers(boolean allowRecognitionOnUntrustedIp) {
 		Providers.ProviderEntry provider = new Providers.ProviderEntry();
 		provider.setId("credential");
-		provider.getOverrides().setAllowRecognitionOnUntrustedIp(allowRecognitionOnUntrustedIp);
+		provider.getOverrides().getRecognition().getEligibility().setAllowOnUntrustedIp(allowRecognitionOnUntrustedIp);
 
 		Providers providers = new Providers();
 		providers.setProviders(List.of(provider));

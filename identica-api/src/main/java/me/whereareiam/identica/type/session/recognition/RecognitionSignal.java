@@ -1,4 +1,4 @@
-package me.whereareiam.identica.type.session;
+package me.whereareiam.identica.type.session.recognition;
 
 /**
  * Signals that may be matched before a reconnecting player is recognized.

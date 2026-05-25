@@ -14,8 +14,8 @@ import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
-import me.whereareiam.identica.type.session.RecognitionSignal;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
+import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -226,9 +226,9 @@ public class Settings extends ConfigDocument {
 			 */
 			private @NotNull List<RecognitionSignal> defaultSignals = new ArrayList<>();
 			/**
-			 * Guard configuration that suppresses automatic reconnect recognition from configured client IP ranges.
+			 * Eligibility rules for whether recognition may be attempted.
 			 */
-			private @NotNull UntrustedIps untrustedIps = new UntrustedIps();
+			private @NotNull Eligibility eligibility = new Eligibility();
 
 			public long validityMillis() {
 				if (validity.isZero() || validity.isNegative())
@@ -238,20 +238,30 @@ public class Settings extends ConfigDocument {
 			}
 
 			/**
-			 * Guard configuration for automatic reconnect recognition coming from untrusted client IPs.
+			 * Eligibility rules for automatic reconnect recognition.
 			 */
 			@Getter
 			@Setter
 			@ToString
-			public static class UntrustedIps {
+			public static class Eligibility {
+				private @NotNull UntrustedIps untrustedIps = new UntrustedIps();
+
 				/**
-				 * Enables the untrusted-IP suppression guard.
+				 * Untrusted-IP rules for whether automatic recognition may run.
 				 */
-				private boolean enabled;
-				/**
-				 * Exact IPs or CIDR ranges that should suppress automatic reconnect recognition.
-				 */
-				private @NotNull List<String> entries = new ArrayList<>();
+				@Getter
+				@Setter
+				@ToString
+				public static class UntrustedIps {
+					/**
+					 * Enables the untrusted-IP eligibility rule.
+					 */
+					private boolean enabled;
+					/**
+					 * Exact IPs or CIDR ranges that suppress recognition eligibility.
+					 */
+					private @NotNull List<String> entries = new ArrayList<>();
+				}
 			}
 		}
 	}

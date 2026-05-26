@@ -9,7 +9,7 @@ import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
 import me.whereareiam.identica.provider.premium.platform.bungeecord.listener.connection.PremiumLoginListener;
 import me.whereareiam.identica.provider.premium.platform.bungeecord.listener.connection.PremiumPostLoginListener;
-import me.whereareiam.identica.type.PlatformType;
+import me.whereareiam.identica.type.platform.PlatformType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

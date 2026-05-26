@@ -1,7 +1,7 @@
 package me.whereareiam.identica.provider;
 
 import com.google.inject.Module;
-import me.whereareiam.identica.type.PlatformType;
+import me.whereareiam.identica.type.platform.PlatformType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

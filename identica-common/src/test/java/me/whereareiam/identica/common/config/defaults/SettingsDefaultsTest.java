@@ -5,7 +5,7 @@ import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.common.config.IdenticaModule;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.type.PlatformType;
+import me.whereareiam.identica.type.platform.PlatformType;
 import me.whereareiam.identica.type.event.EventPriority;
 import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 import org.junit.jupiter.api.DisplayName;

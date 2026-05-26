@@ -4,9 +4,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import me.whereareiam.identica.common.adapter.HandshakeDecisionProcessor;
-import me.whereareiam.identica.handshake.HandshakeApplierRegistry;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
+import me.whereareiam.identica.platform.adapter.PlatformHandshakeApplierRegistry;
+import me.whereareiam.identica.platform.adapter.PlatformHandshakeDecisionAdapter;
 import me.whereareiam.identica.platform.velocity.api.handshake.VelocityHandshakeContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,14 +17,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Singleton
-public class VelocityHandshakeDecisionAdapter {
+public class VelocityHandshakeDecisionAdapter implements PlatformHandshakeDecisionAdapter<PreLoginEvent> {
 	private final @NotNull HandshakeDecisionProcessor processor;
-	private final @NotNull HandshakeApplierRegistry<VelocityHandshakeContext> applierRegistry;
+	private final @NotNull PlatformHandshakeApplierRegistry<VelocityHandshakeContext> applierRegistry;
 
 	@Inject
 	public VelocityHandshakeDecisionAdapter(
 			@NotNull HandshakeDecisionProcessor processor,
-			@NotNull HandshakeApplierRegistry<VelocityHandshakeContext> applierRegistry
+			@NotNull PlatformHandshakeApplierRegistry<VelocityHandshakeContext> applierRegistry
 	) {
 		this.processor = processor;
 		this.applierRegistry = applierRegistry;

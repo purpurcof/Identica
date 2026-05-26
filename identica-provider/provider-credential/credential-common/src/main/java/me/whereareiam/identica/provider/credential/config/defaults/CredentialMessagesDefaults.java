@@ -24,7 +24,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"   <gray>6-32 characters, at least 1 uppercase, 1 lowercase,</gray>",
 				"   <gray>1 number, and 1 special character.</gray>",
 				" ", 
-				"  <white>Use <yellow>/pass</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/pass</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		registration.setConfirmPrompt(List.of(
@@ -34,7 +34,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>To finish your password account registration,</white>",
 				"  <white>repeat the same password you entered before.</white>",
 				" ",
-				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Registration.Status registrationStatus = new CredentialMessages.Scenario.Registration.Status();
@@ -53,7 +53,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>Welcome back to our server.</white>",
 				"  <white>Please log in to proceed.</white>",
 				" ",
-				"  <white>Use <yellow>/login</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/login</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Authentication.Status authenticationStatus = new CredentialMessages.Scenario.Authentication.Status();
@@ -100,7 +100,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>To migrate this account to the <gold>credential provider</gold>,</white>",
 				"  <white>first verify your current password.</white>",
 				" ",
-				"  <white>Use <yellow>/login</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/login</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Migration.Verification.Status migrationVerificationStatus = new CredentialMessages.Scenario.Migration.Verification.Status();
@@ -121,7 +121,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"   <gray>6-32 characters, at least 1 uppercase, 1 lowercase,</gray>",
 				"   <gray>1 number, and 1 special character.</gray>",
 				" ",
-				"  <white>Use <yellow>/pass</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/pass</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		migrationSetup.setConfirmPrompt(List.of(
@@ -131,7 +131,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>Repeat the same password to finish your</white>",
 				"  <white>migration to the credential provider.</white>",
 				" ",
-				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Migration.Setup.Status migrationSetupStatus = new CredentialMessages.Scenario.Migration.Setup.Status();

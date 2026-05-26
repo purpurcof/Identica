@@ -6,12 +6,12 @@ import com.velocitypowered.api.event.AwaitingEventExecutor;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.connection.PreLoginEvent;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityHandshakeDecisionAdapter;
+import me.whereareiam.identica.platform.adapter.PlatformHandshakeDecisionAdapter;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class PreLoginListener implements AwaitingEventExecutor<PreLoginEvent> {
-	private final VelocityHandshakeDecisionAdapter handshakeDecisionAdapter;
+	private final PlatformHandshakeDecisionAdapter<PreLoginEvent> handshakeDecisionAdapter;
 
 	@Override
 	public EventTask executeAsync(PreLoginEvent event) {

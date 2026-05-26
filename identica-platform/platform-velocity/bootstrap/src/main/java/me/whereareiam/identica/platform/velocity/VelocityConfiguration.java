@@ -1,13 +1,19 @@
 package me.whereareiam.identica.platform.velocity;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.velocitypowered.api.event.EventManager;
+import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.event.connection.PreLoginEvent;
+import com.velocitypowered.api.event.player.GameProfileRequestEvent;
+import com.velocitypowered.api.event.player.ServerPostConnectEvent;
 import com.velocitypowered.api.plugin.PluginContainer;
 import com.velocitypowered.api.proxy.ProxyServer;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.common.platform.PlatformAdapterBindings;
 import me.whereareiam.identica.handshake.HandshakeApplierRegistry;
 import me.whereareiam.identica.integration.bstats.BStatsBootstrap;
 import me.whereareiam.identica.integration.bstats.TelemetryRegistrar;
@@ -21,8 +27,19 @@ import me.whereareiam.identica.integration.bstats.chart.type.Chart;
 import me.whereareiam.identica.integration.bstats.chart.verification.VerificationMethodsChart;
 import me.whereareiam.identica.listener.ListenerRegistrar;
 import me.whereareiam.identica.logging.LoggingHelper;
-import me.whereareiam.identica.platform.velocity.adapter.VelocityHandshakeApplierRegistry;
+import me.whereareiam.identica.type.platform.PlatformAdapterRole;
+import me.whereareiam.identica.platform.adapter.PlatformHandshakeApplierContributor;
+import me.whereareiam.identica.platform.adapter.PlatformHandshakeApplierRegistry;
+import me.whereareiam.identica.platform.adapter.PlatformHandshakeDecisionAdapter;
+import me.whereareiam.identica.platform.adapter.PlatformLoginDecisionAdapter;
+import me.whereareiam.identica.platform.adapter.PlatformProfileAdapter;
+import me.whereareiam.identica.platform.adapter.PlatformResumeDecisionAdapter;
+import me.whereareiam.identica.platform.velocity.adapter.VelocityPlatformHandshakeApplierRegistry;
+import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityHandshakeDecisionAdapter;
+import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityLoginDecisionAdapter;
+import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityResumeDecisionAdapter;
 import me.whereareiam.identica.platform.velocity.api.handshake.VelocityHandshakeContext;
+import me.whereareiam.identica.platform.velocity.adapter.profile.VelocityProfileRewriteAdapter;
 import me.whereareiam.identica.platform.velocity.delivery.VelocityDeliveryCoordinator;
 import me.whereareiam.identica.platform.velocity.listener.VelocityListenerRegistrar;
 import me.whereareiam.identica.platform.velocity.listener.routing.VelocityRoutingIntentListener;
@@ -54,12 +71,9 @@ public class VelocityConfiguration extends AbstractModule {
 		bind(Logger.class).toInstance(logger);
 		bind(LoggingHelper.class).to(VelocityLoggingHelper.class);
 		bind(ListenerRegistrar.class).to(VelocityListenerRegistrar.class);
-		bind(PlatformDeliveryAdapter.class).to(VelocityDeliveryCoordinator.class).asEagerSingleton();
-		bind(VelocityRoutingIntentListener.class).asEagerSingleton();
-		bind(new TypeLiteral<HandshakeApplierRegistry<VelocityHandshakeContext>>() {})
-				.to(VelocityHandshakeApplierRegistry.class)
-				.asEagerSingleton();
+		configurePlatformAdapters();
 
+		bind(VelocityRoutingIntentListener.class).asEagerSingleton();
 		bind(CommandSourceMapper.class).asEagerSingleton();
 		OptionalBinder.newOptionalBinder(binder(), Scheduler.class)
 				.setBinding()
@@ -69,6 +83,36 @@ public class VelocityConfiguration extends AbstractModule {
 		bind(new TypeLiteral<CommandManager<Actor>>() {}).toProvider(VelocityCommandManagerProvider.class);
 
 		configureBStats();
+	}
+
+	private void configurePlatformAdapters() {
+		bind(new TypeLiteral<PlatformHandshakeDecisionAdapter<PreLoginEvent>>() {})
+				.to(VelocityHandshakeDecisionAdapter.class);
+		bind(new TypeLiteral<PlatformLoginDecisionAdapter<LoginEvent>>() {})
+				.to(VelocityLoginDecisionAdapter.class);
+		bind(new TypeLiteral<PlatformResumeDecisionAdapter<ServerPostConnectEvent>>() {})
+				.to(VelocityResumeDecisionAdapter.class);
+		bind(new TypeLiteral<PlatformProfileAdapter<GameProfileRequestEvent>>() {})
+				.to(VelocityProfileRewriteAdapter.class);
+		bind(PlatformDeliveryAdapter.class).to(VelocityDeliveryCoordinator.class);
+		bind(new TypeLiteral<PlatformHandshakeApplierRegistry<VelocityHandshakeContext>>() {})
+				.to(VelocityPlatformHandshakeApplierRegistry.class)
+				.in(Singleton.class);
+		bind(new TypeLiteral<HandshakeApplierRegistry<VelocityHandshakeContext>>() {})
+				.to(VelocityPlatformHandshakeApplierRegistry.class)
+				.in(Singleton.class);
+		Multibinder.newSetBinder(
+				binder(),
+				new TypeLiteral<PlatformHandshakeApplierContributor<VelocityHandshakeContext>>() {}
+		);
+
+		var adapters = PlatformAdapterBindings.configure(binder(), "Velocity");
+		adapters.addBinding(PlatformAdapterRole.HANDSHAKE_APPLIER_REGISTRY).to(VelocityPlatformHandshakeApplierRegistry.class);
+		adapters.addBinding(PlatformAdapterRole.HANDSHAKE_DECISION).to(VelocityHandshakeDecisionAdapter.class);
+		adapters.addBinding(PlatformAdapterRole.LOGIN_DECISION).to(VelocityLoginDecisionAdapter.class);
+		adapters.addBinding(PlatformAdapterRole.RESUME_DECISION).to(VelocityResumeDecisionAdapter.class);
+		adapters.addBinding(PlatformAdapterRole.PROFILE).to(VelocityProfileRewriteAdapter.class);
+		adapters.addBinding(PlatformAdapterRole.DELIVERY).to(VelocityDeliveryCoordinator.class);
 	}
 
 	private void configureBStats() {

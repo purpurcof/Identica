@@ -7,6 +7,7 @@ import com.velocitypowered.api.util.GameProfile;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.common.adapter.ProfileRewriteProcessor;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.platform.adapter.PlatformProfileAdapter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,7 +15,7 @@ import java.net.InetSocketAddress;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class VelocityProfileRewriteAdapter {
+public class VelocityProfileRewriteAdapter implements PlatformProfileAdapter<GameProfileRequestEvent> {
 	private final @NotNull ProfileRewriteProcessor processor;
 
 	public void rewrite(@NotNull GameProfileRequestEvent event) {
@@ -67,5 +68,10 @@ public class VelocityProfileRewriteAdapter {
 			return event.getConnection().getRemoteAddress().getAddress().getHostAddress();
 
 		return event.getConnection().getRemoteAddress().getHostString();
+	}
+
+	@Override
+	public void apply(@NotNull GameProfileRequestEvent event) {
+		rewrite(event);
 	}
 }

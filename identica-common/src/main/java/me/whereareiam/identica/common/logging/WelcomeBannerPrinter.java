@@ -9,7 +9,7 @@ import me.whereareiam.identica.logging.BannerContributor;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.model.config.Commands;
-import me.whereareiam.identica.type.PlatformType;
+import me.whereareiam.identica.type.platform.PlatformType;
 import me.whereareiam.identica.type.PluginType;
 
 import java.util.ArrayList;

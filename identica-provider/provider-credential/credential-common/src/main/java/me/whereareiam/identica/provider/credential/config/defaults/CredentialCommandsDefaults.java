@@ -24,7 +24,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 						.group("global")
 						.build()
 				)
-				.arguments(Map.of("password", "Credential"))
+				.arguments(Map.of("password", "Password"))
 				.hide(true)
 				.build();
 
@@ -56,7 +56,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 						.group("global")
 						.build()
 				)
-				.arguments(Map.of("password", "Credential"))
+				.arguments(Map.of("password", "Password"))
 				.hide(true)
 				.build();
 
@@ -120,7 +120,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 						.group("global")
 						.build()
 				)
-				.arguments(Map.of("username", "Username", "password", "Credential"))
+				.arguments(Map.of("username", "Username", "password", "Password"))
 				.build();
 
 		CommandDefinition adminSetPassword = CommandDefinition.builder()
@@ -135,7 +135,7 @@ public class CredentialCommandsDefaults implements MergeDefaultsProvider<Credent
 						.group("global")
 						.build()
 				)
-				.arguments(Map.of("username", "Username", "password", "Credential"))
+				.arguments(Map.of("username", "Username", "password", "Password"))
 				.build();
 
 		commands.getCommands().put("pass", register);

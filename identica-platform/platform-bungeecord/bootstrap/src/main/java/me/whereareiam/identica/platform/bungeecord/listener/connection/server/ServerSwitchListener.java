@@ -5,14 +5,14 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.listener.DynamicListener;
-import me.whereareiam.identica.platform.bungeecord.adapter.auth.BungeeCordResumeDecisionAdapter;
+import me.whereareiam.identica.platform.adapter.PlatformResumeDecisionAdapter;
 import me.whereareiam.identica.service.PlatformDeliveryAdapter;
 import net.md_5.bungee.api.event.ServerSwitchEvent;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class ServerSwitchListener implements DynamicListener<ServerSwitchEvent> {
-	private final BungeeCordResumeDecisionAdapter resumeDecisionAdapter;
+	private final PlatformResumeDecisionAdapter<ServerSwitchEvent> resumeDecisionAdapter;
 	private final IdentityService identityService;
 	private final PlatformDeliveryAdapter deliveryAdapter;
 

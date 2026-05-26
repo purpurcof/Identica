@@ -5,12 +5,12 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListener;
-import me.whereareiam.identica.platform.velocity.adapter.auth.VelocityLoginDecisionAdapter;
+import me.whereareiam.identica.platform.adapter.PlatformLoginDecisionAdapter;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class LoginListener implements DynamicListener<LoginEvent> {
-	private final VelocityLoginDecisionAdapter loginDecisionAdapter;
+	private final PlatformLoginDecisionAdapter<LoginEvent> loginDecisionAdapter;
 
 	@Override
 	public void onEvent(LoginEvent event) {

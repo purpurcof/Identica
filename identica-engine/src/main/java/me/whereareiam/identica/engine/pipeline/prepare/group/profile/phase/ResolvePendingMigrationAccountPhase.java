@@ -178,14 +178,12 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 						.providerUsername(requestedUsername)
 						.build());
 
-		boolean created = storedLink.isEmpty() || storedAccount == null;
 		pipelineState.putItem(new PrepareAccountCandidateItem(
 				accountUniqueId,
 				null,
 				account,
 				link,
-				profile,
-				created
+				profile
 		), 0L);
 		Logger.debug(
 				"Prepare reusing pending migration account provider=%s identica=%s key=%s",

@@ -23,6 +23,4 @@ public class PrepareAccountCandidateItem implements PipelineStateItem {
 	private @Nullable Account account;
 	private @Nullable AccountProviderLink link;
 	private @Nullable AccountProviderProfile profile;
-
-	private boolean created;
 }

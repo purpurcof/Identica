@@ -2,7 +2,7 @@ package me.whereareiam.identica.engine.pipeline.scenario.registration.group.sess
 
 import lombok.Getter;
 import lombok.Setter;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.AbstractGroupState;
+import me.whereareiam.identica.engine.pipeline.scenario.base.AbstractGroupState;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import org.jetbrains.annotations.Nullable;

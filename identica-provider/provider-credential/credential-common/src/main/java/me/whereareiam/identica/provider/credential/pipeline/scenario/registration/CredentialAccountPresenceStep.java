@@ -12,20 +12,17 @@ import me.whereareiam.identica.provider.credential.account.CredentialAccountServ
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.provider.credential.cryptography.CryptographyService;
 import me.whereareiam.identica.provider.credential.event.authentication.AuthenticationAttemptDecision;
-import me.whereareiam.identica.provider.credential.event.authentication.AuthenticationAttemptFailedEvent;
-import me.whereareiam.identica.provider.credential.event.authentication.AuthenticationAttemptSucceededEvent;
 import me.whereareiam.identica.provider.credential.model.CredentialAccount;
-import me.whereareiam.identica.provider.credential.model.authentication.AuthenticationAttemptContext;
-import me.whereareiam.identica.provider.credential.pipeline.CredentialAuthenticationAttempt;
+import me.whereareiam.identica.provider.credential.pipeline.scenario.base.AbstractCredentialAttemptStep;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
-public class CredentialAccountPresenceStep extends AbstractCredentialRegistrationStep {
+public class CredentialAccountPresenceStep extends AbstractCredentialAttemptStep {
+	private final Provider<CredentialMessages> messagesProvider;
 	private final CredentialAccountService credentialService;
 	private final CryptographyService cryptographyService;
-	private final EventManager eventManager;
 
 	@Inject
 	public CredentialAccountPresenceStep(
@@ -36,10 +33,10 @@ public class CredentialAccountPresenceStep extends AbstractCredentialRegistratio
 			PipelineStateStore pipelineStateStore,
 			EventManager eventManager
 	) {
-		super("password-credential-presence", messagesProvider, coreSettingsProvider, pipelineStateStore);
+		super("password-credential-presence", coreSettingsProvider, pipelineStateStore, eventManager);
+		this.messagesProvider = messagesProvider;
 		this.credentialService = credentialService;
 		this.cryptographyService = cryptographyService;
-		this.eventManager = eventManager;
 	}
 
 	@Override
@@ -60,22 +57,19 @@ public class CredentialAccountPresenceStep extends AbstractCredentialRegistratio
 	}
 
 	private StepResult handleExisting(
-			ScenarioContext context,
-			CredentialAccount credential,
+			@NotNull ScenarioContext context,
+			@NotNull CredentialAccount credential,
 			long ttlMs
 	) {
 		CredentialMessages messages = messagesProvider.get();
-
-		CredentialAuthenticationAttempt input = consumeAuthenticationAttempt(context, ttlMs);
-		if (input == null) {
-			String message = joinAlreadyRegistered(messages);
-			return StepResult.waiting(message);
-		}
+		var input = consumeAuthenticationAttempt(context, ttlMs);
+		if (input == null)
+			return StepResult.waiting(joinAlreadyRegistered(messages));
 
 		if (!cryptographyService.verify(credential, input.getPassword())) {
 			AuthenticationAttemptDecision decision = recordBruteForceDecision(credential, context);
-			if (decision.isDeny()) return StepResult.denied(decision.getDenyMessage());
-
+			if (decision.isDeny())
+				return StepResult.denied(decision.getDenyMessage());
 			return invalidWithWarning(messages, decision.getWarningMessage());
 		}
 
@@ -83,55 +77,21 @@ public class CredentialAccountPresenceStep extends AbstractCredentialRegistratio
 		return StepResult.complete(context);
 	}
 
-	private @NotNull AuthenticationAttemptDecision recordBruteForceDecision(
-			@NotNull CredentialAccount credential,
-			@NotNull ScenarioContext context
-	) {
-		AuthenticationAttemptFailedEvent event = new AuthenticationAttemptFailedEvent(
-				attemptContext(credential, context),
-				null
-		);
-		eventManager.call(event);
-		AuthenticationAttemptDecision decision = event.getDecision();
-		return decision != null
-				? decision
-				: AuthenticationAttemptDecision.allow();
-	}
-
-	private void clearBruteForce(
-			@NotNull CredentialAccount credential,
-			@NotNull ScenarioContext context
-	) {
-		eventManager.call(new AuthenticationAttemptSucceededEvent(attemptContext(credential, context)));
-	}
-
-	private @NotNull AuthenticationAttemptContext attemptContext(
-			@NotNull CredentialAccount credential,
-			@NotNull ScenarioContext context
-	) {
-		return new AuthenticationAttemptContext(
-				credential,
-				context.getConnectionUniqueId(),
-				context.getAccountUniqueId(),
-				context.getUsername(),
-				context.getIp()
-		);
-	}
-
-	private String joinAlreadyRegistered(CredentialMessages messages) {
+	private @NotNull String joinAlreadyRegistered(@NotNull CredentialMessages messages) {
 		String registered = messages.getScenario().getRegistration().getStatus().getAlreadyRegistered();
 		String prompt = joinLines(messages.getScenario().getAuthentication().getPrompt());
 		if (registered == null || registered.isBlank())
 			return prompt;
-
 		return registered + "\n" + prompt;
 	}
 
-	private StepResult invalidWithWarning(CredentialMessages messages, String warning) {
+	private @NotNull StepResult invalidWithWarning(
+			@NotNull CredentialMessages messages,
+			String warning
+	) {
 		String invalid = messages.getScenario().getAuthentication().getStatus().getInvalid();
 		if (warning == null || warning.isBlank()) return StepResult.waiting(invalid);
 		if (invalid == null || invalid.isBlank()) return StepResult.waiting(warning);
-
 		return StepResult.waiting(invalid + "\n" + warning);
 	}
 }

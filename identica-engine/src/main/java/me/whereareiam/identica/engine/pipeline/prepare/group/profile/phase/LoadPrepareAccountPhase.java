@@ -132,8 +132,7 @@ public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState>
 				null,
 				account,
 				link,
-				profile,
-				created
+				profile
 		), 0L);
 		if (created) {
 			Logger.debug("Prepare using transient account username=%s provider=%s",

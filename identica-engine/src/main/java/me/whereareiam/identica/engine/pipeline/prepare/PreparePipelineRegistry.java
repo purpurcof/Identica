@@ -19,7 +19,7 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.LoadP
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePendingMigrationAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePreparedAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolveProfilePhase;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractPipelineGroupRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.registry.AbstractPipelineGroupRegistry;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import org.jetbrains.annotations.NotNull;

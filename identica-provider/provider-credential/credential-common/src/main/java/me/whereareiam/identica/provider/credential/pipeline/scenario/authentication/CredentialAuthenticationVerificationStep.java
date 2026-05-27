@@ -12,7 +12,7 @@ import me.whereareiam.identica.model.verification.VerificationResolutionResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.provider.credential.CredentialConstants;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
-import me.whereareiam.identica.provider.credential.pipeline.scenario.AbstractCredentialStep;
+import me.whereareiam.identica.provider.credential.pipeline.scenario.base.AbstractCredentialStep;
 import me.whereareiam.identica.type.verification.VerificationResolutionStatus;
 import me.whereareiam.identica.verification.VerificationService;
 import org.jetbrains.annotations.NotNull;

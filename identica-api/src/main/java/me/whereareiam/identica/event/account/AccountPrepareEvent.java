@@ -46,6 +46,4 @@ public class AccountPrepareEvent implements Event, SynchronousEvent {
 	private final @NotNull AccountProviderLink link;
 	private final @NotNull AccountProviderProfile profile;
 	private @Nullable AccountDecision decision;
-
-	private final boolean created;
 }

@@ -5,15 +5,8 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import me.whereareiam.identica.event.EventListener;
-import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.account.AccountLifecycleEvent;
-import me.whereareiam.identica.event.base.IdenticEvent;
-import me.whereareiam.identica.event.connection.ConnectionPendingClearedEvent;
 import me.whereareiam.identica.event.pipeline.state.PipelineStateClearedEvent;
 import me.whereareiam.identica.event.pipeline.state.PipelineStateSavedEvent;
-import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
@@ -24,7 +17,6 @@ import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.replication.cache.ReplicatedCache;
 import me.whereareiam.identica.replication.codec.SnapshotCodec;
-import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.identica.util.UniqueIdUtil;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +28,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Singleton
-public class DefaultPipelineStateStore implements PipelineStateStore, EventListener {
+public class DefaultPipelineStateStore implements PipelineStateStore {
 	private static final String KEY_CONNECTION_ID_PREFIX = "c:";
 	private static final String KEY_IDENTITY_ID_PREFIX = "i:";
 	private static final String KEY_CONNECTION_KEY_PREFIX = "k:";
@@ -45,27 +37,18 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 
 	private final ReplicatedCache<PipelineStateRecord> stateCache;
 	private final ReplicatedCache<String> aliasCache;
-	private final IdentityService identityService;
-	private final EventManager eventManager;
 
 	@Inject
 	public DefaultPipelineStateStore(
 			@NotNull ReplicationSystem replicationSystem,
-			@NotNull Provider<Replication> replicationProvider,
-			@NotNull IdentityService identityService,
-			@NotNull EventManager eventManager
+			@NotNull Provider<Replication> replicationProvider
 	) {
-		this.identityService = identityService;
-		this.eventManager = eventManager;
-		
 		String namespace = resolveNamespace(replicationProvider);
 		ReplicationType<PipelineStateRecord, PipelineStateRecord> stateType = ReplicationType.identity(PipelineStateRecord.class);
 		ReplicationType<String, String> aliasType = ReplicationType.identity(String.class)
 				.withCodec(SnapshotCodec.string());
 		this.stateCache = replicationSystem.cache(namespace + STATE_NAMESPACE_SUFFIX).replicated(stateType);
 		this.aliasCache = replicationSystem.cache(namespace + ALIAS_NAMESPACE_SUFFIX).replicated(aliasType);
-
-		eventManager.register(this);
 	}
 
 	@Override
@@ -110,19 +93,6 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 	public void clear(@NotNull PipelineStateReference reference) {
 		ReadResult resolved = read(reference, true);
 		resolved.state().ifPresent(state -> EventUtil.callEvent(new PipelineStateClearedEvent(reference, state)));
-	}
-
-	@IdenticEvent(EventOrder.LOW)
-	public void onAccountLifecycle(@NotNull AccountLifecycleEvent event) {
-		UUID connectionUniqueId = resolveConnectionUniqueId(event);
-		if (connectionUniqueId == null) return;
-
-		PipelineStateReference reference = PipelineStateReference.builder()
-				.connectionUniqueId(connectionUniqueId)
-				.build();
-
-		boolean removed = consume(reference).isPresent();
-		eventManager.call(new ConnectionPendingClearedEvent(connectionUniqueId, removed));
 	}
 
 	private @NotNull ReadResult read(
@@ -203,18 +173,6 @@ public class DefaultPipelineStateStore implements PipelineStateStore, EventListe
 		}
 
 		return primary;
-	}
-
-	private @Nullable UUID resolveConnectionUniqueId(@NotNull AccountLifecycleEvent event) {
-		UUID connectionUniqueId = event.getIdentity().getAccountUniqueId();
-		if (connectionUniqueId != null) return connectionUniqueId;
-
-		String username = event.getIdentity().getUsername();
-		if (username.isBlank()) return null;
-
-		return identityService.find(username)
-				.map(Identity::getUniqueId)
-				.orElse(null);
 	}
 
 	private @NotNull Optional<PipelineStateRecord> findRecord(@NotNull String alias, long now) {

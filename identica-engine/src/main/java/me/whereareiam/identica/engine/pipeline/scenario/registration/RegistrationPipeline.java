@@ -9,6 +9,9 @@ import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityMetaItem;
 import me.whereareiam.identica.event.pipeline.scenario.registration.RegistrationContextBuiltEvent;
+import me.whereareiam.identica.type.ScenarioResolution;
+import me.whereareiam.identica.event.scenario.registration.RegistrationRequiredEvent;
+import me.whereareiam.identica.event.scenario.registration.RegistrationResolvedEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
@@ -22,6 +25,7 @@ import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +46,14 @@ public class RegistrationPipeline extends AbstractScenarioPipeline {
 			PipelineExecutor executor,
 			ProviderLinkPersistenceService providerLinkPersistenceService
 	) {
-		super(registry, messagesProvider, settingsProvider, pipelineStateStore, PipelineType.REGISTRATION, executor);
+		super(
+				registry,
+				messagesProvider,
+				settingsProvider,
+				pipelineStateStore,
+				PipelineType.REGISTRATION,
+				executor
+		);
 		this.providerLinkPersistenceService = providerLinkPersistenceService;
 	}
 
@@ -113,6 +124,18 @@ public class RegistrationPipeline extends AbstractScenarioPipeline {
 
 		identity.setResumed(resumed);
 		pipelineState.putItem(identity, 0L);
+	}
+
+	@Override
+	protected void emitRequired(@NotNull ScenarioContext context, long expiresAt, @Nullable JourneyMode journeyMode) {
+		if (!(context instanceof RegistrationContext registrationContext)) return;
+		EventUtil.callEvent(new RegistrationRequiredEvent(registrationContext, false, expiresAt, journeyMode));
+	}
+
+	@Override
+	protected void emitResolved(@NotNull ScenarioContext context, @NotNull ScenarioResolution resolution, boolean sessionOpened) {
+		if (!(context instanceof RegistrationContext registrationContext)) return;
+		EventUtil.callEvent(new RegistrationResolvedEvent(registrationContext, resolution, sessionOpened));
 	}
 
 	@Override

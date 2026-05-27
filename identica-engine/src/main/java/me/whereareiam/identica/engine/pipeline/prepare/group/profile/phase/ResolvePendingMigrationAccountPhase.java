@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
+import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;
+import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.delivery.DeliveryPayload;
@@ -31,6 +33,7 @@ import me.whereareiam.identica.type.messaging.DeliveryCheckpoint;
 import me.whereareiam.identica.type.messaging.DeliverySemantics;
 import me.whereareiam.identica.type.messaging.DeliverySource;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -130,6 +133,12 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 						.updatedAt(System.currentTimeMillis())
 						.build());
 			}
+
+			UUID resolvedConnectionUniqueId = migration.getConnectionUniqueId();
+			if (resolvedConnectionUniqueId != null) {
+				EventUtil.callEvent(new MigrationResolvedEvent(migration, ScenarioResolution.CANCELLED, false));
+			}
+
 			pipelineStateStore.clear(PipelineStateReference.builder()
 					.connectionKey(connectionKey)
 					.build());

@@ -3,6 +3,10 @@ package me.whereareiam.identica.common.migration;
 import me.whereareiam.identica.common.config.defaults.SettingsDefaults;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.type.ScenarioResolution;
+import me.whereareiam.identica.event.scenario.migration.MigrationRequiredEvent;
+import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -43,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,11 +67,13 @@ class DefaultMigrationServiceTest {
 	private IdentityService identityService;
 	@Mock
 	private DeliveryService deliveryService;
+	@Mock
+	private EventManager eventManager;
 
 	@DisplayName("Denies migration when the requested username is still occupied")
 	@Test
 	void deniesMigrationWhenUsernameNotFree() {
-		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());
+		doReturn(Optional.empty()).when(pipelineStateStore).find(any(PipelineStateReference.class));
 
 		Account existing = Account.builder()
 				.uniqueId(UUID.randomUUID())
@@ -100,6 +107,7 @@ class DefaultMigrationServiceTest {
 				sessionService,
 				identityService,
 				deliveryService,
+				eventManager,
 				Settings::new,
 				() -> commands,
 				() -> messages
@@ -120,7 +128,7 @@ class DefaultMigrationServiceTest {
 	@DisplayName("Stores account and connection identifiers in separate pending-migration fields")
 	@Test
 	void requestStoresAccountAndConnectionIdsInTheirOwnFields() {
-		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());
+		doReturn(Optional.empty()).when(pipelineStateStore).find(any(PipelineStateReference.class));
 		when(providerLinkPersistenceService.findByUniqueIdAndProviderId(any(UUID.class), any(String.class)))
 				.thenReturn(Optional.empty());
 
@@ -132,6 +140,7 @@ class DefaultMigrationServiceTest {
 				sessionService,
 				identityService,
 				deliveryService,
+				eventManager,
 				Settings::new,
 				this::commands,
 				this::messages
@@ -179,7 +188,7 @@ class DefaultMigrationServiceTest {
 				initiatorUniqueId
 		), Duration.ofMinutes(5).toMillis());
 
-		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.of(pipelineState));
+		doReturn(Optional.of(pipelineState)).when(pipelineStateStore).find(any(PipelineStateReference.class));
 
 		DefaultMigrationService service = new DefaultMigrationService(
 				providerManager,
@@ -189,6 +198,7 @@ class DefaultMigrationServiceTest {
 				sessionService,
 				identityService,
 				deliveryService,
+				eventManager,
 				Settings::new,
 				this::commands,
 				this::messages
@@ -209,7 +219,7 @@ class DefaultMigrationServiceTest {
 	@DisplayName("Starts migration even when the target provider is already linked")
 	@Test
 	void confirmStoresPendingMigrationEvenWhenTargetProviderAlreadyLinked() {
-		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());
+		doReturn(Optional.empty()).when(pipelineStateStore).find(any(PipelineStateReference.class));
 		when(accountPersistenceService.findByUsername("PlayerOne")).thenReturn(List.of());
 		when(providerLinkPersistenceService.findByUniqueIdAndProviderId(any(UUID.class), any(String.class)))
 				.thenReturn(Optional.of(AccountProviderLink.builder()
@@ -230,6 +240,7 @@ class DefaultMigrationServiceTest {
 				sessionService,
 				identityService,
 				deliveryService,
+				eventManager,
 				() -> settings,
 				this::commands,
 				Messages::new
@@ -254,6 +265,11 @@ class DefaultMigrationServiceTest {
 		assertEquals(MigrationResultStatus.STARTED, confirmed.getStatus());
 		verify(pipelineStateStore).save(any(PipelineStateReference.class), any(PipelineState.class), anyLong());
 		verify(providerLinkPersistenceService, never()).setPrimaryExclusive(any(UUID.class), any(String.class));
+		verify(eventManager).call(argThat(event ->
+				event instanceof MigrationRequiredEvent requiredEvent
+						&& connectionUniqueId.equals(requiredEvent.getConnectionUniqueId())
+						&& accountUniqueId.equals(requiredEvent.getAccountUniqueId())
+		));
 	}
 
 	@DisplayName("Queues a next-join notice when a started migration is cancelled")
@@ -276,7 +292,7 @@ class DefaultMigrationServiceTest {
 				connectionUniqueId
 		), 1_000L);
 
-		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.of(pipelineState));
+		doReturn(Optional.of(pipelineState)).when(pipelineStateStore).find(any(PipelineStateReference.class));
 
 		DefaultMigrationService service = new DefaultMigrationService(
 				providerManager,
@@ -286,6 +302,7 @@ class DefaultMigrationServiceTest {
 				sessionService,
 				identityService,
 				deliveryService,
+				eventManager,
 				Settings::new,
 				this::commands,
 				this::messages
@@ -299,6 +316,13 @@ class DefaultMigrationServiceTest {
 		assertEquals(MigrationResultStatus.CANCELLED, result.getStatus());
 		verify(deliveryService).queue(argThat(request ->
                 accountUniqueId.equals(request.getTarget().getAccountUniqueId()) && request.getPayload().getChatMessage() != null
+		));
+		verify(eventManager).call(argThat(event ->
+				event instanceof MigrationResolvedEvent resolvedEvent
+						&& connectionUniqueId.equals(resolvedEvent.getConnectionUniqueId())
+						&& accountUniqueId.equals(resolvedEvent.getAccountUniqueId())
+						&& resolvedEvent.getReason() == ScenarioResolution.CANCELLED
+						&& !resolvedEvent.isSessionOpened()
 		));
 	}
 

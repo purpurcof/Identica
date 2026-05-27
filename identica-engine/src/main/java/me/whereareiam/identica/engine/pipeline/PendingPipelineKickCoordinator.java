@@ -8,21 +8,26 @@ import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
-import me.whereareiam.identica.event.pipeline.state.PipelineStateClearedEvent;
-import me.whereareiam.identica.event.pipeline.state.PipelineStateSavedEvent;
+import me.whereareiam.identica.event.scenario.ScenarioRequiredEvent;
+import me.whereareiam.identica.type.ScenarioResolution;
+import me.whereareiam.identica.event.scenario.ScenarioResolvedEvent;
+import me.whereareiam.identica.event.scenario.authentication.AuthenticationResolvedEvent;
+import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;
+import me.whereareiam.identica.event.scenario.registration.RegistrationResolvedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.delivery.DeliveryPayload;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
 import me.whereareiam.identica.model.delivery.DeliveryTarget;
-import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.migration.MigrationContext;
+import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.model.scheduler.DelayedRunnableTask;
 import me.whereareiam.identica.model.scheduler.JobKey;
 import me.whereareiam.identica.model.scheduler.Origin;
 import me.whereareiam.identica.model.scheduler.Purpose;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.service.Scheduler;
 import me.whereareiam.identica.type.messaging.DeliveryCheckpoint;
@@ -43,6 +48,7 @@ public class PendingPipelineKickCoordinator implements EventListener {
 	private final Provider<Messages> messagesProvider;
 	private final IdentityService identityService;
 	private final DeliveryService deliveryService;
+	private final EventManager eventManager;
 	private final Scheduler scheduler;
 
 	@Inject
@@ -56,6 +62,7 @@ public class PendingPipelineKickCoordinator implements EventListener {
 		this.messagesProvider = messagesProvider;
 		this.identityService = identityService;
 		this.deliveryService = deliveryService;
+		this.eventManager = eventManager;
 		this.scheduler = scheduler;
 		eventManager.register(this);
 	}
@@ -66,76 +73,53 @@ public class PendingPipelineKickCoordinator implements EventListener {
 	}
 
 	@IdenticEvent
-	public void onPipelineStateSaved(@NotNull PipelineStateSavedEvent event) {
-		PipelineState state = event.getState();
-		if (!isPending(state)) {
-			cancel(event.getReference(), state.getPipelineType());
-			return;
-		}
-
-		PipelineType type = state.getPipelineType();
+	public void onScenarioRequired(@NotNull ScenarioRequiredEvent event) {
+		PipelineType type = resolvePipelineType(event.getContext());
 		if (type == null) return;
 
-		PipelineStateReference reference = event.getReference();
 		long delayMs = Math.max(0L, event.getExpiresAt() - System.currentTimeMillis());
-		JobKey key = jobKey(type, reference);
-		scheduleKick(key, delayMs, reference, type);
+		scheduleKick(jobKey(type, event), delayMs, type, event.getContext());
 	}
 
 	@IdenticEvent
-	public void onPipelineStateCleared(@NotNull PipelineStateClearedEvent event) {
-		PipelineState state = event.getState();
-		PipelineType type = state != null ? state.getPipelineType() : null;
-		cancel(event.getReference(), type);
-	}
+	public void onScenarioResolved(@NotNull ScenarioResolvedEvent event) {
+		PipelineType type = resolvePipelineType(event.getContext());
+		if (type == null) return;
 
-	private void cancel(@NotNull PipelineStateReference reference, @Nullable PipelineType type) {
-		if (type != null) {
-			cancelByKey(jobKey(type, reference));
-			return;
-		}
-
-		for (PipelineType candidate : PipelineType.values())
-			cancelByKey(jobKey(candidate, reference));
+		scheduler.cancel(jobKey(type, event));
 	}
 
 	private void scheduleKick(
 			@NotNull JobKey key,
 			long delayMs,
-			@NotNull PipelineStateReference reference,
-			@NotNull PipelineType type
+			@NotNull PipelineType type,
+			@NotNull ScenarioContext context
 	) {
 		DelayedRunnableTask task = DelayedRunnableTask.builder()
 				.key(key)
 				.delay(delayMs)
-				.runnable(() -> disconnectExpired(reference, type))
+				.runnable(() -> disconnectExpired(type, context))
 				.build();
 
 		scheduler.schedule(task);
 	}
 
-	private void cancelByKey(@NotNull JobKey key) {
-		scheduler.cancel(key);
-	}
+	private void disconnectExpired(@NotNull PipelineType type, @NotNull ScenarioContext context) {
+		emitResolved(context);
 
-	private void disconnectExpired(@NotNull PipelineStateReference reference, @NotNull PipelineType type) {
-		Identity identity = resolveIdentity(reference);
+		Identity identity = resolveIdentity(context);
+		queueCancelledNotice(type, context, identity);
 		if (identity == null) return;
-		queueCancelledNotice(reference, type, identity);
 
 		String message = resolveExpiredMessage(type);
 		identity.disconnect(Serializer.serialize(identity, message));
 	}
 
-	private void queueCancelledNotice(
-			@NotNull PipelineStateReference reference,
-			@NotNull PipelineType type,
-			@NotNull Identity identity
-	) {
+	private void queueCancelledNotice(@NotNull PipelineType type, @NotNull ScenarioContext context, @Nullable Identity identity) {
 		if (type != PipelineType.MIGRATION) return;
 
-		UUID accountUniqueId = reference.getAccountUniqueId();
-		if (accountUniqueId == null) accountUniqueId = identity.getAccountUniqueId();
+		UUID accountUniqueId = context.getAccountUniqueId();
+		if (accountUniqueId == null && identity != null) accountUniqueId = identity.getAccountUniqueId();
 		if (accountUniqueId == null) return;
 
 		deliveryService.queue(DeliveryRequest.builder()
@@ -154,12 +138,12 @@ public class PendingPipelineKickCoordinator implements EventListener {
 				.build());
 	}
 
-	private @Nullable Identity resolveIdentity(@NotNull PipelineStateReference reference) {
-		UUID connectionUniqueId = reference.getConnectionUniqueId();
+	private @Nullable Identity resolveIdentity(@NotNull ScenarioContext context) {
+		UUID connectionUniqueId = context.getConnectionUniqueId();
 		if (connectionUniqueId != null)
 			return identityService.findByConnectionUniqueId(connectionUniqueId).orElse(null);
 
-		UUID accountUniqueId = reference.getAccountUniqueId();
+		UUID accountUniqueId = context.getAccountUniqueId();
 		return accountUniqueId != null ? identityService.findByAccountUniqueId(accountUniqueId).orElse(null) : null;
 	}
 
@@ -181,16 +165,51 @@ public class PendingPipelineKickCoordinator implements EventListener {
 		return connection.getAuthentication();
 	}
 
-	private @NotNull JobKey jobKey(@NotNull PipelineType type, @NotNull PipelineStateReference reference) {
+	private @Nullable PipelineType resolvePipelineType(@NotNull ScenarioContext context) {
+        return switch (context) {
+            case AuthContext ignored -> PipelineType.AUTHENTICATION;
+            case RegistrationContext ignored -> PipelineType.REGISTRATION;
+            case MigrationContext ignored -> PipelineType.MIGRATION;
+            default -> null;
+        };
+
+    }
+
+	private @NotNull JobKey jobKey(@NotNull PipelineType type, @NotNull ScenarioRequiredEvent event) {
 		String correlation = "pending:" + type.name() +
-				"|c=" + reference.getConnectionUniqueId() +
-				"|i=" + reference.getAccountUniqueId() +
-				"|k=" + reference.getConnectionKey();
+				"|c=" + event.getConnectionUniqueId() +
+				"|i=" + event.getAccountUniqueId();
 
 		return JobKey.of(ORIGIN, PURPOSE, correlation);
 	}
 
-	private boolean isPending(@NotNull PipelineState state) {
-		return state.item(JourneyStateItem.class).isPresent();
+	private @NotNull JobKey jobKey(@NotNull PipelineType type, @NotNull ScenarioResolvedEvent event) {
+		String correlation = "pending:" + type.name() +
+				"|c=" + event.getConnectionUniqueId() +
+				"|i=" + event.getAccountUniqueId();
+
+		return JobKey.of(ORIGIN, PURPOSE, correlation);
+	}
+
+	private void emitResolved(@NotNull ScenarioContext context) {
+		switch (context) {
+			case AuthContext authContext -> eventManager.call(new AuthenticationResolvedEvent(
+					authContext,
+					ScenarioResolution.EXPIRED,
+					false
+			));
+			case RegistrationContext registrationContext -> eventManager.call(new RegistrationResolvedEvent(
+					registrationContext,
+					ScenarioResolution.EXPIRED,
+					false
+			));
+			case MigrationContext migrationContext -> eventManager.call(new MigrationResolvedEvent(
+					migrationContext,
+					ScenarioResolution.EXPIRED,
+					false
+			));
+			default -> {
+			}
+		}
 	}
 }

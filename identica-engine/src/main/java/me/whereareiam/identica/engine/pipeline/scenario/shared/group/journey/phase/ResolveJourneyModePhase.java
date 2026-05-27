@@ -4,18 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
-import me.whereareiam.identica.event.pipeline.scenario.authentication.AuthenticationScenarioStartedEvent;
-import me.whereareiam.identica.event.pipeline.scenario.registration.RegistrationScenarioStartedEvent;
-import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
@@ -26,7 +21,6 @@ import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
-import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
@@ -73,43 +67,7 @@ public class ResolveJourneyModePhase implements PipelinePhase<JourneyState> {
 
 		JourneyMode journeyMode = resolveJourneyMode(context, pipelineType, state.getPending());
 		state.setJourneyMode(journeyMode);
-		fireScenarioStarted(context, journeyMode, pipelineType, pipelineState);
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
-	}
-
-	private void fireScenarioStarted(
-			@NotNull ScenarioContext context,
-			@NotNull JourneyMode journeyMode,
-			@NotNull PipelineType pipelineType,
-			@NotNull PipelineState pipelineState
-	) {
-		boolean resumed = resolveResumed(pipelineType, pipelineState);
-		if (context instanceof AuthContext authContext) {
-			EventUtil.callEvent(new AuthenticationScenarioStartedEvent(authContext, journeyMode, resumed));
-		}
-
-		if (context instanceof RegistrationContext registrationContext) {
-			EventUtil.callEvent(new RegistrationScenarioStartedEvent(registrationContext, journeyMode, resumed));
-		}
-	}
-
-	private boolean resolveResumed(
-			@NotNull PipelineType pipelineType,
-			@NotNull PipelineState pipelineState
-	) {
-		if (pipelineType == PipelineType.AUTHENTICATION) {
-			IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
-			return identity != null && identity.isResumed();
-		}
-		if (pipelineType == PipelineType.REGISTRATION) {
-			IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
-			return identity != null && identity.isResumed();
-		}
-		if (pipelineType == PipelineType.MIGRATION) {
-			IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
-			return identity != null && identity.isResumed();
-		}
-		return false;
 	}
 
 	private @NotNull JourneyMode resolveJourneyMode(

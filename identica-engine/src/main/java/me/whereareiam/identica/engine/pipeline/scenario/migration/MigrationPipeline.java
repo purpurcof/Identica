@@ -7,6 +7,9 @@ import com.google.inject.name.Named;
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityMetaItem;
+import me.whereareiam.identica.type.ScenarioResolution;
+import me.whereareiam.identica.event.scenario.migration.MigrationRequiredEvent;
+import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
@@ -20,6 +23,8 @@ import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
+import me.whereareiam.identica.util.EventUtil;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +41,14 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 			PipelineStateStore pipelineStateStore,
 			PipelineExecutor executor
 	) {
-		super(registry, messagesProvider, settingsProvider, pipelineStateStore, PipelineType.MIGRATION, executor);
+		super(
+				registry,
+				messagesProvider,
+				settingsProvider,
+				pipelineStateStore,
+				PipelineType.MIGRATION,
+				executor
+		);
 	}
 
 	@Override
@@ -116,5 +128,17 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 
 		identity.setResumed(resumed);
 		pipelineState.putItem(identity, 0L);
+	}
+
+	@Override
+	protected void emitRequired(@NotNull ScenarioContext context, long expiresAt, @Nullable JourneyMode journeyMode) {
+		if (!(context instanceof MigrationContext migrationContext)) return;
+		EventUtil.callEvent(new MigrationRequiredEvent(migrationContext, false, expiresAt, journeyMode));
+	}
+
+	@Override
+	protected void emitResolved(@NotNull ScenarioContext context, @NotNull ScenarioResolution resolution, boolean sessionOpened) {
+		if (!(context instanceof MigrationContext migrationContext)) return;
+		EventUtil.callEvent(new MigrationResolvedEvent(migrationContext, resolution, sessionOpened));
 	}
 }

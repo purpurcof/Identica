@@ -7,6 +7,10 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.type.ScenarioResolution;
+import me.whereareiam.identica.event.scenario.migration.MigrationRequiredEvent;
+import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -66,6 +70,7 @@ public class DefaultMigrationService implements MigrationService {
 	private final SessionService sessionService;
 	private final IdentityService identityService;
 	private final DeliveryService deliveryService;
+	private final EventManager eventManager;
 	private final Provider<Settings> settingsProvider;
 	private final Provider<Commands> commandsProvider;
 	private final Provider<Messages> messagesProvider;
@@ -234,6 +239,11 @@ public class DefaultMigrationService implements MigrationService {
 			PipelineState stored = pipelineStateStore.find(reference).orElse(null);
 			if (stored != null && stored.item(MigrationPendingState.class).isPresent()) {
 				queueCancelledNotice(resolvePendingAccountUniqueId(stored), stored);
+				MigrationContext context = (MigrationContext) stored.getScenario(PipelineType.MIGRATION);
+				UUID resolvedConnectionUniqueId = context != null ? context.getConnectionUniqueId() : null;
+				if (context != null && resolvedConnectionUniqueId != null) {
+					eventManager.call(new MigrationResolvedEvent(context, ScenarioResolution.CANCELLED, false));
+				}
 				pipelineStateStore.clear(reference);
 				removed = true;
 			}
@@ -276,6 +286,10 @@ public class DefaultMigrationService implements MigrationService {
 
 		PipelineStateReference reference = PipelineStateReference.from(context);
 		pipelineStateStore.save(reference, pipelineState, ttlMs);
+		UUID connectionUniqueId = context.getConnectionUniqueId();
+		if (connectionUniqueId != null) {
+			eventManager.call(new MigrationRequiredEvent(context, false, System.currentTimeMillis() + ttlMs, journeyMode));
+		}
 		Logger.debug(
 				"Stored migration pending connection=%s identica=%s target=%s username=%s ip=%s journeyMode=%s",
 				pendingMigration.connectionUniqueId(),

@@ -8,7 +8,7 @@ import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.Re
 import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.ResolveCompletionSessionPhase;
 import me.whereareiam.identica.engine.pipeline.completion.group.step.CompletionStepGroup;
 import me.whereareiam.identica.engine.pipeline.completion.group.step.phase.ExecuteCompletionStepsPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractPipelineGroupRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.registry.AbstractPipelineGroupRegistry;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import org.jetbrains.annotations.NotNull;

@@ -2,7 +2,7 @@ package me.whereareiam.identica.engine.pipeline.scenario.migration.group.identit
 
 import lombok.Getter;
 import lombok.Setter;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.AbstractGroupState;
+import me.whereareiam.identica.engine.pipeline.scenario.base.AbstractGroupState;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;

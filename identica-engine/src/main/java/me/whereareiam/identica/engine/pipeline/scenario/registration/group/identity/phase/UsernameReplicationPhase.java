@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityMetaItem;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityState;
+import me.whereareiam.identica.engine.pipeline.scenario.base.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
@@ -103,31 +103,22 @@ public class UsernameReplicationPhase implements PipelinePhase<IdentityState> {
 		return String.join("\n", lines);
 	}
 
-	private boolean applyReplication(
+	private void applyReplication(
 			@NotNull Account account,
 			@NotNull AccountProviderLink link,
 			@NotNull AccountProviderProfile profile
 	) {
 		String providerUsername = profile.getProviderUsername();
-		if (providerUsername.isBlank())
-			return false;
-
-		if (account.getSource() == UsernameSource.MANUAL)
-			return false;
-
-		if (!link.isPrimaryLink())
-			return false;
-
-		if (!isProviderAuthoritative(link.getProviderId()))
-			return false;
+		if (providerUsername.isBlank()) return;
+		if (account.getSource() == UsernameSource.MANUAL) return;
+		if (!link.isPrimaryLink()) return;
+		if (!isProviderAuthoritative(link.getProviderId())) return;
 
 		String candidate = providerUsername.trim();
-		if (candidate.equals(account.getUsername()))
-			return false;
+		if (candidate.equals(account.getUsername())) return;
 
 		account.setUsername(candidate);
 		account.setSource(UsernameSource.PROVIDER);
-		return true;
 	}
 
 	private boolean isProviderAuthoritative(@Nullable String providerId) {

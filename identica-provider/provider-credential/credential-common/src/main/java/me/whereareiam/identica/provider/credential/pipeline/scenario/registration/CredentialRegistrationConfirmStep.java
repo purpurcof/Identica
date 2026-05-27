@@ -4,25 +4,15 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
-import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.credential.account.CredentialAccountService;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.provider.credential.cryptography.CryptographyService;
-import me.whereareiam.identica.provider.credential.model.CredentialAccount;
-import me.whereareiam.identica.provider.credential.pipeline.CredentialRegisterStateItem;
-import me.whereareiam.identica.provider.credential.pipeline.CredentialRegistrationAttempt;
-import me.whereareiam.identica.provider.credential.type.PasswordChangeReason;
+import me.whereareiam.identica.provider.credential.pipeline.scenario.base.AbstractCredentialConfirmStep;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.CompletableFuture;
-
 @Singleton
-public class CredentialRegistrationConfirmStep extends AbstractCredentialRegistrationStep {
-	private final CredentialAccountService credentialService;
-	private final CryptographyService cryptographyService;
-
+public class CredentialRegistrationConfirmStep extends AbstractCredentialConfirmStep {
 	@Inject
 	public CredentialRegistrationConfirmStep(
 			Provider<CredentialMessages> messagesProvider,
@@ -31,9 +21,14 @@ public class CredentialRegistrationConfirmStep extends AbstractCredentialRegistr
 			PipelineStateStore pipelineStateStore,
 			CryptographyService cryptographyService
 	) {
-		super("password-registration-confirm", messagesProvider, coreSettingsProvider, pipelineStateStore);
-		this.credentialService = credentialService;
-		this.cryptographyService = cryptographyService;
+		super(
+				"password-registration-confirm",
+				messagesProvider,
+				coreSettingsProvider,
+				credentialService,
+				pipelineStateStore,
+				cryptographyService
+		);
 	}
 
 	@Override
@@ -42,62 +37,22 @@ public class CredentialRegistrationConfirmStep extends AbstractCredentialRegistr
 	}
 
 	@Override
-	public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
-		String providerSubject = requireProviderSubject(context);
-
-		CredentialMessages messages = messagesProvider.get();
-		CredentialRegisterStateItem pending = getRegisterState(context);
-		if (pending == null) return CompletableFuture.completedFuture(StepResult.waiting(joinRegisterPrompt(messages)));
-
-		long ttlMs = registrationTtlMs();
-		CredentialRegistrationAttempt input = consumeRegistrationAttempt(context, ttlMs);
-		if (input == null) return CompletableFuture.completedFuture(StepResult.waiting(joinConfirmPrompt(messages)));
-
-		if (!input.isConfirm()) {
-			clearRegisterState(context, ttlMs);
-			return CompletableFuture.completedFuture(StepResult.waiting(joinRegisterReset(messages)));
-		}
-
-		if (!matchesPending(input, pending)) {
-			clearRegisterState(context, ttlMs);
-			return CompletableFuture.completedFuture(StepResult.waiting(joinRegisterReset(messages)));
-		}
-
-		CredentialAccount credential = credentialService.register(
-				providerSubject,
-				pending.getPasswordHash(),
-				pending.getHashingMethod(),
-				PasswordChangeReason.REGISTER
-		).orElse(null);
-		clearRegisterState(context, ttlMs);
-		if (credential == null) return CompletableFuture.completedFuture(StepResult.failed(""));
-
-		return CompletableFuture.completedFuture(StepResult.complete(context));
+	protected long ttlMs() {
+		return registrationTtlMs();
 	}
 
-	private boolean matchesPending(CredentialRegistrationAttempt input, CredentialRegisterStateItem pending) {
-		if (input == null || pending == null) return false;
-		return cryptographyService.verify(
-				input.getPassword(),
-				pending.getPasswordHash(),
-				pending.getHashingMethod()
-		);
-	}
-
-	private String joinRegisterPrompt(CredentialMessages messages) {
+	@Override
+	protected @NotNull String registerPrompt(@NotNull CredentialMessages messages) {
 		return joinLines(messages.getScenario().getRegistration().getPrompt());
 	}
 
-	private String joinConfirmPrompt(CredentialMessages messages) {
+	@Override
+	protected @NotNull String confirmPrompt(@NotNull CredentialMessages messages) {
 		return joinLines(messages.getScenario().getRegistration().getConfirmPrompt());
 	}
 
-	private String joinRegisterReset(CredentialMessages messages) {
-		String mismatch = messages.getScenario().getRegistration().getStatus().getMismatch();
-		String prompt = joinRegisterPrompt(messages);
-		if (mismatch == null || mismatch.isBlank()) return prompt;
-
-		return mismatch + "\n" + prompt;
+	@Override
+	protected @NotNull String mismatchMessage(@NotNull CredentialMessages messages) {
+		return messages.getScenario().getRegistration().getStatus().getMismatch();
 	}
-
 }

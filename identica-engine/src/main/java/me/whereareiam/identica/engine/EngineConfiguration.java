@@ -18,7 +18,7 @@ import me.whereareiam.identica.engine.pipeline.scenario.migration.DefaultMigrati
 import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.DefaultRegistrationStageRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipelineRegistry;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.rule.DefaultJourneyRuleRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.base.journey.rule.DefaultJourneyRuleRegistry;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;

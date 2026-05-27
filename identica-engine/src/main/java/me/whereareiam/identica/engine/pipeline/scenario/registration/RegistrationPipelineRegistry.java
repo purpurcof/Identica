@@ -10,11 +10,11 @@ import me.whereareiam.identica.engine.pipeline.scenario.registration.group.polic
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.SessionGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.phase.BuildSessionPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.phase.OpenSessionPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.AbstractPipelineGroupRegistry;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.finalize.FinalizeGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.*;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.preparation.PreparationGroup;
+import me.whereareiam.identica.engine.pipeline.scenario.base.finalize.FinalizeGroup;
+import me.whereareiam.identica.engine.pipeline.scenario.base.journey.JourneyGroup;
+import me.whereareiam.identica.engine.pipeline.scenario.base.journey.phase.*;
+import me.whereareiam.identica.engine.pipeline.scenario.base.preparation.PreparationGroup;
+import me.whereareiam.identica.engine.pipeline.scenario.registry.AbstractPipelineGroupRegistry;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import org.jetbrains.annotations.NotNull;

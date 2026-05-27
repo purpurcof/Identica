@@ -121,14 +121,12 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 				.providerUsername(requestedUsername)
 				.build());
 
-		boolean created = storedLink.isEmpty() || storedAccount == null;
 		pipelineState.putItem(new PrepareAccountCandidateItem(
 				accountUniqueId,
 				null,
 				account,
 				link,
-				profile,
-				created
+				profile
 		), 0L);
 
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));

@@ -80,8 +80,7 @@ public class ApplyPreparePolicyPhase implements PipelinePhase<PrepareGroupState>
 				account,
 				link,
 				profile,
-				null,
-				candidate.isCreated()
+				null
 		);
 		eventManager.call(event);
 

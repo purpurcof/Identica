@@ -7,6 +7,7 @@ import me.whereareiam.identica.common.adapter.ProfileRewriteProcessor;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
+import me.whereareiam.identica.platform.adapter.PlatformProfileAdapter;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.PendingConnection;
 import net.md_5.bungee.api.event.LoginEvent;
@@ -20,7 +21,7 @@ import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class BungeeCordProfilePrepareAdapter {
+public class BungeeCordProfilePrepareAdapter implements PlatformProfileAdapter<LoginEvent> {
 	private final @NotNull ProfileRewriteProcessor processor;
 
 	public void prepare(@NotNull LoginEvent event) {
@@ -41,6 +42,11 @@ public class BungeeCordProfilePrepareAdapter {
 				)
 				.toCompletableFuture()
 				.join();
+	}
+
+	@Override
+	public void apply(@NotNull LoginEvent event) {
+		prepare(event);
 	}
 
 	private @NotNull ProfileRewriteProcessor.Target target(

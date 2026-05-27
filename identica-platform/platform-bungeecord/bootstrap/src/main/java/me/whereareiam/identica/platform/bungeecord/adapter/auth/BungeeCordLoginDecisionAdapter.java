@@ -13,6 +13,7 @@ import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import me.whereareiam.identica.platform.adapter.PlatformLoginDecisionAdapter;
 import me.whereareiam.identica.platform.bungeecord.actor.BungeeCordCommandPlayer;
 import me.whereareiam.identica.platform.bungeecord.util.BaseComponentMapper;
 import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
@@ -27,7 +28,7 @@ import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class BungeeCordLoginDecisionAdapter {
+public class BungeeCordLoginDecisionAdapter implements PlatformLoginDecisionAdapter<PostLoginEvent> {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
 	private final @NotNull IdentityService identityService;
 	private final @NotNull PrepareStateStore prepareStateStore;

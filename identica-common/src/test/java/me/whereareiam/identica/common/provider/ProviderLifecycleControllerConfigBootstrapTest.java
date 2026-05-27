@@ -3,6 +3,8 @@ package me.whereareiam.identica.common.provider;
 import com.google.inject.*;
 import com.google.inject.Module;
 import com.google.inject.name.Named;
+import lombok.Getter;
+import lombok.Setter;
 import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
@@ -29,9 +31,11 @@ import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.provider.ProviderPlatformBinding;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
 import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.type.provider.ProviderState;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -44,6 +48,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -68,6 +73,22 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 	@Test
 	void providerConfigsAreNotCreatedUntilProviderLoadRuns(@TempDir Path tempDir) {
 		assertFalse(Files.exists(tempDir.resolve("providers").resolve("Disabled Provider").resolve("settings.yml")));
+	}
+
+	@DisplayName("Enabling and disabling a provider registers platform bindings")
+	@Test
+	void enablingAndDisablingAProviderRegistersPlatformBindings(@TempDir Path tempDir) {
+		ProbePlatformBinding.reset();
+		Injector injector = Guice.createInjector(new ProviderLifecycleTestModule(tempDir));
+		ProviderLifecycleController controller = injector.getInstance(ProviderLifecycleController.class);
+		InternalProvider provider = discoveredProvider("test-provider", "Test Provider");
+
+		controller.loadProvider(provider);
+		controller.enableProvider(provider);
+		assertEquals(1, ProbePlatformBinding.registerCount());
+
+		controller.disableProvider(provider);
+		assertEquals(1, ProbePlatformBinding.unregisterCount());
 	}
 
 	private static InternalProvider discoveredProvider(String id, String name) {
@@ -206,7 +227,7 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 
 	public static class TestProvider extends IdenticaProvider {
 		@Override
-		public List<Module> modules() {
+		public @NotNull List<Module> modules() {
 			return List.of(new TestProviderModule());
 		}
 	}
@@ -217,6 +238,37 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 			bind(TestSettingsProvider.class).asEagerSingleton();
 			bind(TestMessagesProvider.class).asEagerSingleton();
 			bind(TestCommandsProvider.class).asEagerSingleton();
+			com.google.inject.multibindings.Multibinder.newSetBinder(binder(), ProviderPlatformBinding.class)
+					.addBinding()
+					.to(ProbePlatformBinding.class);
+		}
+	}
+
+	private static final class ProbePlatformBinding implements ProviderPlatformBinding {
+		private static final AtomicInteger REGISTER_COUNT = new AtomicInteger();
+		private static final AtomicInteger UNREGISTER_COUNT = new AtomicInteger();
+
+		@Override
+		public void register() {
+			REGISTER_COUNT.incrementAndGet();
+		}
+
+		@Override
+		public void unregister() {
+			UNREGISTER_COUNT.incrementAndGet();
+		}
+
+		private static void reset() {
+			REGISTER_COUNT.set(0);
+			UNREGISTER_COUNT.set(0);
+		}
+
+		private static int registerCount() {
+			return REGISTER_COUNT.get();
+		}
+
+		private static int unregisterCount() {
+			return UNREGISTER_COUNT.get();
 		}
 	}
 
@@ -244,17 +296,11 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 		}
 	}
 
-	public static class TestDocument {
+	@Setter
+    @Getter
+    public static class TestDocument {
 		private String value;
-
-		public String getValue() {
-			return value;
-		}
-
-		public void setValue(String value) {
-			this.value = value;
-		}
-	}
+    }
 
 	@Singleton
 	public static class TestDefaults implements MergeDefaultsProvider<TestDocument> {
@@ -267,38 +313,38 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 
 	private static final class NoopConflictService implements ConflictService {
 		@Override
-		public void register(ConflictResolver resolver) {
+		public void register(@NotNull ConflictResolver resolver) {
 		}
 
 		@Override
-		public void unregister(ConflictResolver resolver) {
+		public void unregister(@NotNull ConflictResolver resolver) {
 		}
 
 		@Override
-		public ConflictResolver getResolver(String id) {
+		public ConflictResolver getResolver(@NotNull String id) {
 			return null;
 		}
 
 		@Override
-		public void register(ConflictType type) {
+		public void register(@NotNull ConflictType type) {
 		}
 
 		@Override
-		public void unregister(ConflictType type) {
+		public void unregister(@NotNull ConflictType type) {
 		}
 
 		@Override
-		public ConflictType getType(String key) {
+		public ConflictType getType(@NotNull String key) {
 			return null;
 		}
 
 		@Override
-		public Set<ConflictType> getTypes() {
+		public @NotNull Set<ConflictType> getTypes() {
 			return Set.of();
 		}
 
 		@Override
-		public ConflictResolution resolve(ConflictContext context) {
+		public ConflictResolution resolve(@NotNull ConflictContext context) {
 			return null;
 		}
 	}
@@ -323,29 +369,29 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 
 	private static final class NoopHandshakeStore implements HandshakeStore {
 		@Override
-		public void registerPolicy(HandshakePolicy policy) {
+		public void registerPolicy(@NotNull HandshakePolicy policy) {
 		}
 
 		@Override
-		public void unregisterPolicy(HandshakePolicy policy) {
+		public void unregisterPolicy(@NotNull HandshakePolicy policy) {
 		}
 
 		@Override
-		public Set<HandshakePolicy> policies() {
+		public @NotNull Set<HandshakePolicy> policies() {
 			return Set.of();
 		}
 
 		@Override
-		public void putInstruction(HandshakeInstruction instruction) {
+		public void putInstruction(@NotNull HandshakeInstruction instruction) {
 		}
 
 		@Override
-		public Optional<HandshakeInstruction> consumeInstruction(String username, String ip) {
+		public @NotNull Optional<HandshakeInstruction> consumeInstruction(@NotNull String username, @NotNull String ip) {
 			return Optional.empty();
 		}
 
 		@Override
-		public void invalidateInstruction(String username, String ip) {
+		public void invalidateInstruction(@NotNull String username, @NotNull String ip) {
 		}
 	}
 }

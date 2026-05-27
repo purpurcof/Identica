@@ -5,7 +5,7 @@ import me.whereareiam.identica.provider.resolver.ProviderResolver;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.type.PlatformType;
+import me.whereareiam.identica.type.platform.PlatformType;
 
 import java.util.List;
 

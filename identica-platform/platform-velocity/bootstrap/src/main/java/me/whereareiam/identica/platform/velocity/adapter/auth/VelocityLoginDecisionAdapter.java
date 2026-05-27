@@ -15,6 +15,7 @@ import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import me.whereareiam.identica.platform.adapter.PlatformLoginDecisionAdapter;
 import me.whereareiam.identica.platform.velocity.actor.VelocityCommandPlayer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +24,7 @@ import java.net.InetSocketAddress;
 import java.util.UUID;
 
 @Singleton
-public class VelocityLoginDecisionAdapter {
+public class VelocityLoginDecisionAdapter implements PlatformLoginDecisionAdapter<LoginEvent> {
 	private final @NotNull ConnectionCoordinator connectionCoordinator;
 	private final @NotNull IdentityService identityService;
 	private final @NotNull PrepareStateStore prepareStateStore;

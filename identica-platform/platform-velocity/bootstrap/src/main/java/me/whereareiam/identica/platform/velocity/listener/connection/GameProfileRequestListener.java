@@ -5,15 +5,15 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListener;
-import me.whereareiam.identica.platform.velocity.adapter.profile.VelocityProfileRewriteAdapter;
+import me.whereareiam.identica.platform.adapter.PlatformProfileAdapter;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class GameProfileRequestListener implements DynamicListener<GameProfileRequestEvent> {
-	private final VelocityProfileRewriteAdapter profileRewriteAdapter;
+	private final PlatformProfileAdapter<GameProfileRequestEvent> profileRewriteAdapter;
 
 	@Override
 	public void onEvent(GameProfileRequestEvent event) {
-		profileRewriteAdapter.rewrite(event);
+		profileRewriteAdapter.apply(event);
 	}
 }

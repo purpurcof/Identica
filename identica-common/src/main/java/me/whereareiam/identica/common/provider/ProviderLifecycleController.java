@@ -27,6 +27,7 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.provider.ProviderPlatformBinding;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
@@ -48,6 +49,7 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<ProfileSubjectResolver>> PROFILE_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderMigrationPrecheck>> MIGRATION_PRECHECKS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<SchemaContributor>> SCHEMA_CONTRIBUTORS = new TypeLiteral<>() {};
+	private static final TypeLiteral<Set<ProviderPlatformBinding>> PLATFORM_BINDINGS = new TypeLiteral<>() {};
 
 	private final ProviderWorkingPathResolver workingPathResolver;
 	private final ProviderClassLoaderFactory classLoaderFactory;
@@ -62,6 +64,7 @@ public class ProviderLifecycleController {
 	private final HandshakeStore handshakeStore;
 
 	private final ConcurrentHashMap<InternalProvider, Set<HandshakePolicy>> providerHandshakePolicies = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<InternalProvider, Set<ProviderPlatformBinding>> providerPlatformBindings = new ConcurrentHashMap<>();
 
 	public void loadProvider(InternalProvider internal) {
 		if (internal == null || internal.getState() != ProviderState.DISCOVERED) return;
@@ -229,6 +232,7 @@ public class ProviderLifecycleController {
 	private void storeBindings(InternalProvider internal, Injector injector) {
 		if (internal == null || injector == null) return;
 		providerHandshakePolicies.put(internal, copySet(resolveSet(injector, HANDSHAKE_POLICIES)));
+		providerPlatformBindings.put(internal, copySet(resolveSet(injector, PLATFORM_BINDINGS)));
 		internal.setEligibilityResolvers(copySet(resolveSet(injector, ELIGIBILITY_RESOLVERS)));
 		internal.setProfileSubjectResolvers(copySet(resolveSet(injector, PROFILE_RESOLVERS)));
 		internal.setMigrationPrechecks(copySet(resolveSet(injector, MIGRATION_PRECHECKS)));
@@ -240,6 +244,11 @@ public class ProviderLifecycleController {
 		if (policies != null)
 			for (HandshakePolicy policy : policies)
 				handshakeStore.registerPolicy(policy);
+
+		Set<ProviderPlatformBinding> platformBindings = providerPlatformBindings.get(internal);
+		if (platformBindings != null)
+			for (ProviderPlatformBinding binding : platformBindings)
+				binding.register();
 	}
 
 	private void applySchemaContributors(Injector injector) {
@@ -249,6 +258,12 @@ public class ProviderLifecycleController {
 
 	private void unregisterProviderBindings(InternalProvider internal) {
 		if (internal == null) return;
+
+		Set<ProviderPlatformBinding> platformBindings = providerPlatformBindings.remove(internal);
+		if (platformBindings != null)
+			for (ProviderPlatformBinding binding : platformBindings)
+				binding.unregister();
+
 		Set<HandshakePolicy> policies = providerHandshakePolicies.remove(internal);
 		if (policies != null)
 			for (HandshakePolicy policy : policies)

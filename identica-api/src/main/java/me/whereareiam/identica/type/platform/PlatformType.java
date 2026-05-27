@@ -1,4 +1,4 @@
-package me.whereareiam.identica.type;
+package me.whereareiam.identica.type.platform;
 
 /**
  * Enumeration representing different Minecraft server platform types.

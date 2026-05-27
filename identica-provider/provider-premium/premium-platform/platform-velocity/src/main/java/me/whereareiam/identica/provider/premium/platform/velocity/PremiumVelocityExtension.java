@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.listener.DynamicListenerRegistry;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
 import me.whereareiam.identica.provider.premium.platform.velocity.listener.connection.PremiumGameProfileRequestListener;
-import me.whereareiam.identica.type.PlatformType;
+import me.whereareiam.identica.type.platform.PlatformType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

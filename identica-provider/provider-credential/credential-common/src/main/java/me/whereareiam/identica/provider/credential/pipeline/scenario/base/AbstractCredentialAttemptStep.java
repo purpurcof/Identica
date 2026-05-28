@@ -2,7 +2,7 @@ package me.whereareiam.identica.provider.credential.pipeline.scenario.base;
 
 import com.google.inject.Provider;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.credential.event.authentication.AuthenticationAttemptDecision;
@@ -17,7 +17,7 @@ public abstract class AbstractCredentialAttemptStep extends AbstractCredentialSt
 
 	protected AbstractCredentialAttemptStep(
 			@NotNull String name,
-			@NotNull Provider<Settings> coreSettingsProvider,
+			@NotNull Provider<Engine> coreSettingsProvider,
 			@NotNull PipelineStateStore pipelineStateStore,
 			@NotNull EventManager eventManager
 	) {

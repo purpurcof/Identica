@@ -6,12 +6,18 @@ import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 
+import java.time.Duration;
 import java.util.List;
 
 @Singleton
 public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 	@Override
 	public Providers supply(Providers config) {
+		Providers.Behavior behavior = new Providers.Behavior();
+		behavior.setAttemptTtl(Duration.ofMinutes(10));
+		behavior.setJoinRestrictionToggleTtl(Duration.ofDays(365));
+		config.setBehavior(behavior);
+
 		Providers.ProviderEntry credential = new Providers.ProviderEntry();
 		credential.setId("credential");
 		credential.setDisplayName("CR");

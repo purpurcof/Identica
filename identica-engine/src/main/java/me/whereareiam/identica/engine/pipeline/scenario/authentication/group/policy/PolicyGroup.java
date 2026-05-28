@@ -52,7 +52,7 @@ public class PolicyGroup implements PipelineGroup<PolicyState> {
 
 	private @NotNull String policyGroupMissingResultMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getAuthentication()
 				.getErrors()
 				.getPolicy().getGroupMissingResult());

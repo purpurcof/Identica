@@ -171,18 +171,18 @@ class PendingPipelineKickCoordinatorTest {
 
 	private Messages messages() {
 		Messages messages = new Messages();
-		Messages.Connection connection = new Messages.Connection();
-		Messages.Connection.Authentication authentication = new Messages.Connection.Authentication();
+		Messages.Scenarios connection = new Messages.Scenarios();
+		Messages.Scenarios.Authentication authentication = new Messages.Scenarios.Authentication();
 		authentication.setPipelineExpired(List.of("expired"));
-		Messages.Connection.Registration registration = new Messages.Connection.Registration();
+		Messages.Scenarios.Registration registration = new Messages.Scenarios.Registration();
 		registration.setPipelineExpired(List.of("expired"));
-		Messages.Connection.Migration migration = new Messages.Connection.Migration();
+		Messages.Scenarios.Migration migration = new Messages.Scenarios.Migration();
 		migration.setPipelineExpired(List.of("expired"));
 		migration.setCancelled(List.of("cancelled"));
 		connection.setAuthentication(authentication);
 		connection.setRegistration(registration);
 		connection.setMigration(migration);
-		messages.setConnection(connection);
+		messages.setScenarios(connection);
 		return messages;
 	}
 

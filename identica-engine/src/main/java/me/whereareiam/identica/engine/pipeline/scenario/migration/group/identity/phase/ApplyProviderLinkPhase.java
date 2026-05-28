@@ -88,12 +88,12 @@ public class ApplyProviderLinkPhase implements PipelinePhase<IdentityState> {
 	}
 
 	private @NotNull String migrationFailedMessage() {
-		return String.join("\n", messagesProvider.get().getConnection().getMigration().getMigrationFailed());
+		return String.join("\n", messagesProvider.get().getScenarios().getMigration().getMigrationFailed());
 	}
 
 	private @NotNull String providerLinkMissingMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getMigration()
 				.getErrors()
 				.getIdentity().getProvider().getLinkMissing());

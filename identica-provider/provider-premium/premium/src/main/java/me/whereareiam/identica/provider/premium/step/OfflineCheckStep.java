@@ -7,7 +7,7 @@ import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -33,9 +33,9 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 			PremiumProfileStore profileStore,
 			ProviderAttemptStore attemptStore,
 			HandshakeStore handshakeStore,
-			Provider<Settings> settingsProvider
+			Provider<Engine> engineProvider
 	) {
-		super("offline-check", messagesProvider, pipelineStateStore, profileStore, handshakeStore, settingsProvider);
+		super("offline-check", messagesProvider, pipelineStateStore, profileStore, handshakeStore, engineProvider);
 		this.attemptStore = attemptStore;
 	}
 

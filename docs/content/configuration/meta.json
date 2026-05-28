@@ -2,13 +2,15 @@
   "title": "Configuration",
   "pages": [
     "index",
+    "settings",
+    "providers",
+    "engine",
+    "routing",
     "commands",
     "conflicts",
     "messages",
     "persistence",
-    "providers",
     "replication",
-    "settings",
     "verification"
   ]
 }

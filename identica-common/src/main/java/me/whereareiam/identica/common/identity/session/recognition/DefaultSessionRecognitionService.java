@@ -95,7 +95,7 @@ public class DefaultSessionRecognitionService implements SessionRecognitionServi
 		Boolean override = overrides != null ? overrides.getEnabled() : null;
 		if (override != null) return override;
 
-		return settingsProvider.get().getConnection().getSessions().getRecognition().isEnabled();
+		return settingsProvider.get().getSessions().getRecognition().isEnabled();
 	}
 
 	private @NotNull Set<RecognitionSignal> effectiveSignals(@NotNull String providerId) {
@@ -111,7 +111,6 @@ public class DefaultSessionRecognitionService implements SessionRecognitionServi
 		}
 
 		List<RecognitionSignal> defaults = settingsProvider.get()
-				.getConnection()
 				.getSessions()
 				.getRecognition()
 				.getDefaultSignals();

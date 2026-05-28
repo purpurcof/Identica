@@ -50,7 +50,7 @@ public class BuildSessionPhase extends AbstractBuildSessionPhase<RegistrationCon
 
 	@Override
 	protected @NotNull String sessionBuildMissingMessage(@NotNull Messages messages) {
-		return joinMessage(messages.getConnection()
+		return joinMessage(messages.getScenarios()
 				.getRegistration()
 				.getErrors()
 				.getSession().getBuildMissing());

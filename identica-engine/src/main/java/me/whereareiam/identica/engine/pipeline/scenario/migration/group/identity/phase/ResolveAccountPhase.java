@@ -80,7 +80,7 @@ public class ResolveAccountPhase implements PipelinePhase<IdentityState> {
 
 	private @NotNull String accountMissingMessage() {
 		return joinMessage(messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getMigration()
 				.getErrors()
 				.getIdentity().getAccountMissing());

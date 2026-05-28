@@ -95,7 +95,7 @@ public class BuildSessionPhase implements PipelinePhase<SessionState> {
 	}
 
 	private @NotNull String sessionBuildFailedMessage() {
-		return String.join("\n", messagesProvider.get().getConnection().getAuthentication().getSessionBuildFailed());
+		return String.join("\n", messagesProvider.get().getScenarios().getAuthentication().getSessionBuildFailed());
 	}
 
 	private @Nullable String resolveCurrentUsername(@NotNull IdentityMetaItem identity) {

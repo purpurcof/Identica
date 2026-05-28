@@ -38,7 +38,7 @@ public class OpenSessionPhase extends AbstractOpenSessionPhase<MigrationContext,
 
 	@Override
 	protected @NotNull String failedMessage(@NotNull Messages messages) {
-		return joinMessage(messages.getConnection().getMigration().getMigrationFailed());
+		return joinMessage(messages.getScenarios().getMigration().getMigrationFailed());
 	}
 
 	@Override

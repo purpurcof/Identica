@@ -36,7 +36,7 @@ public class SessionReplacedListener implements EventListener {
 		identityService.findByAccountUniqueId(event.getExistingSession().getUniqueId())
 				.ifPresent(identity -> identity.disconnect(Serializer.serialize(identity, String.join("\n",
 						messagesProvider.get()
-								.getConnection()
+								.getEngine()
 								.getConcurrentLoginKick()
 				))));
 	}

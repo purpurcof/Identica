@@ -1,0 +1,28 @@
+behavior:
+  bridgeTtl: "10m"
+  handshakeInstructionTtl: "10m"
+scenarios:
+  authentication:
+    pipelineTtl: "5m"
+    advanceLockTtl: "5s"
+    allowResume: true
+    allowProviderRestrictionResumeBypass: false
+    journeyMode: "INTERACTIVE"
+    journeyPolicy: "PREFER"
+    pipelineConcurrencyPolicy: "DENY_NEW"
+  registration:
+    pipelineTtl: "5m"
+    advanceLockTtl: "5s"
+    allowResume: true
+    allowProviderRestrictionResumeBypass: false
+    journeyMode: "INTERACTIVE"
+    journeyPolicy: "PREFER"
+    pipelineConcurrencyPolicy: "DENY_NEW"
+    autoSelectSingleProvider: false
+  migration:
+    pipelineTtl: "5m"
+    advanceLockTtl: "5s"
+    allowResume: true
+    allowProviderRestrictionResumeBypass: false
+    journeyMode: "INTERACTIVE"
+    journeyPolicy: "PREFER"

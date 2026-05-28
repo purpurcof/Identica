@@ -25,20 +25,16 @@ class SettingsDefaultsTest {
 	void generatedRoutingScenariosAreEmptyByDefault() {
 		Settings settings = new SettingsDefaults().supply(new Settings());
 
-		assertNotNull(settings.getConnection());
-		assertNotNull(settings.getConnection().getRouting());
-		assertNotNull(settings.getConnection().getScenarios());
-		assertNotNull(settings.getConnection().getSessions().getRecognition());
-		assertNotNull(settings.getConnection().getRouting().getScenarios());
-		assertTrue(settings.getConnection().getRouting().getScenarios().isEmpty());
+		assertNotNull(settings.getIdentity());
+		assertNotNull(settings.getSessions().getRecognition());
 		assertEquals(
 				java.util.List.of(RecognitionSignal.USERNAME, RecognitionSignal.IP, RecognitionSignal.VIRTUAL_HOST),
-				settings.getConnection().getSessions().getRecognition().getDefaultSignals()
+				settings.getSessions().getRecognition().getDefaultSignals()
 		);
-		assertTrue(settings.getConnection().getSessions().getRecognition().getEligibility().getUntrustedIps().isEnabled());
-		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getActiveTtl());
-		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getRecognition().getValidity());
-		assertEquals(java.time.Duration.ofDays(365), settings.getConnection().getProviderJoinRestrictionTtl());
+		assertTrue(settings.getSessions().getRecognition().getEligibility().getUntrustedIps().isEnabled());
+		assertEquals(java.time.Duration.ofHours(12), settings.getSessions().getActiveTtl());
+		assertEquals(java.time.Duration.ofHours(12), settings.getSessions().getRecognition().getValidity());
+		assertEquals(java.time.Duration.ofMinutes(15), settings.getIdentity().getReservationTtl());
 	}
 
 	@DisplayName("Listener defaults match the active platform listener set")
@@ -59,9 +55,9 @@ class SettingsDefaultsTest {
 		assertEquals(EventPriority.HIGH, bungeeCordEvents.get("net.md_5.bungee.api.event.ServerConnectedEvent").getPriority());
 	}
 
-	@DisplayName("Generated settings file writes an empty scenarios map")
+	@DisplayName("Generated settings file writes the split settings shape")
 	@Test
-	void generatedSettingsFileWritesEmptyScenariosMap(@TempDir Path tempDir) throws Exception {
+	void generatedSettingsFileWritesExpectedShape(@TempDir Path tempDir) throws Exception {
 		Path settingsPath = tempDir.resolve("settings.yml");
 		Config config = Config.builder()
 				.format(Format.YAML)
@@ -71,11 +67,10 @@ class SettingsDefaultsTest {
 
 		Settings settings = config.update(settingsPath, Settings.class);
 
-		assertTrue(settings.getConnection().getRouting().getScenarios().isEmpty());
+		assertNotNull(settings.getIdentity());
 		String generated = Files.readString(settingsPath);
-		assertTrue(generated.contains("scenarios: {}"));
-		assertFalse(generated.contains("authentication:\n        step:"));
-		assertFalse(generated.contains("registration:\n        step:"));
-		assertFalse(generated.contains("migration:\n        step:"));
+		assertTrue(generated.contains("identity:"));
+		assertTrue(generated.contains("sessions:"));
+		assertFalse(generated.contains("connection:"));
 	}
 }

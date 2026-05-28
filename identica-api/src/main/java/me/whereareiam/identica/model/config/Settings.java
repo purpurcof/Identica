@@ -5,23 +5,16 @@ import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
 import me.whereareiam.configura.annotation.Merge;
-import me.whereareiam.configura.merge.strategy.type.DeclaredKeysOnlyMap;
 import me.whereareiam.configura.merge.strategy.type.DefaultKeysOnlyMap;
 import me.whereareiam.identica.model.Event;
-import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
 import me.whereareiam.identica.type.identity.UniqueIdMode;
-import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
-import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
-import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,173 +29,44 @@ public class Settings extends ConfigDocument {
 	 * Verbosity level for logging.
 	 */
 	private int level;
-	private @NotNull Connection connection;
-	private @NotNull Listeners listeners;
+	private @NotNull Identity identity = new Identity();
+	private @NotNull Sessions sessions = new Sessions();
+	private @NotNull Sentinels sentinels = new Sentinels();
+	private @NotNull Listeners listeners = new Listeners();
 
+	/**
+	 * Identity configuration settings.
+	 */
 	@Getter
 	@Setter
 	@ToString
-	public static class Connection {
-		/**
-		 * Time-to-live for handshake instructions.
-		 */
-		private @NotNull Duration handshakeInstructionTtl;
-		/**
-		 * Time-to-live for provider attempt markers.
-		 */
-		private @NotNull Duration attemptTtl;
-		/**
-		 * Time-to-live for reserved account identities.
-		 */
-		private @NotNull Duration reservationTtl;
-		/**
-		 * Time-to-live for transient prepare-state bridge entries.
-		 */
-		private @NotNull Duration prepareStateTtl;
-		/**
-		 * Time-to-live for provider join restriction runtime toggles.
-		 */
-		private @NotNull Duration providerJoinRestrictionTtl;
+	public static class Identity {
 		/**
 		 * Strategy used to assign UUIDs to newly discovered accounts.
 		 */
 		private @NotNull UniqueIdMode uniqueIdMode;
-		private @NotNull Routing routing = new Routing();
-		private @NotNull Sessions sessions = new Sessions();
-		private @NotNull Scenarios scenarios = new Scenarios();
-		private @NotNull Sentinels sentinels = new Sentinels();
+		/**
+		 * Time-to-live for reserved account identities.
+		 */
+		private @NotNull Duration reservationTtl;
 
 		/**
-		 * Returns handshake instruction TTL in milliseconds with validation.
+		 * Returns reservation TTL in milliseconds with validation.
 		 *
-		 * @return handshake instruction TTL in milliseconds
+		 * @return reservation TTL in milliseconds
 		 */
-		public long handshakeInstructionTtlMillis() {
-			if (handshakeInstructionTtl.isZero() || handshakeInstructionTtl.isNegative()) {
-				throw new IllegalStateException("settings.connection.handshakeInstructionTtl must be positive");
+		public long reservationTtlMillis() {
+			if (reservationTtl.isZero() || reservationTtl.isNegative()) {
+				throw new IllegalStateException("settings.identity.reservationTtl must be positive");
 			}
 
-			return handshakeInstructionTtl.toMillis();
-		}
-
-		/**
-		 * Returns provider attempt TTL in milliseconds with validation.
-		 *
-		 * @return provider attempt TTL in milliseconds
-		 */
-		public long attemptTtlMillis() {
-			if (attemptTtl.isZero() || attemptTtl.isNegative()) {
-				throw new IllegalStateException("settings.connection.attemptTtl must be positive");
-			}
-
-			return attemptTtl.toMillis();
-		}
-
-		/**
-		 * Returns prepare-state TTL in milliseconds with validation.
-		 *
-		 * @return prepare-state TTL in milliseconds
-		 */
-		public long prepareStateTtlMillis() {
-			if (prepareStateTtl.isZero() || prepareStateTtl.isNegative()) {
-				throw new IllegalStateException("settings.connection.prepareStateTtl must be positive");
-			}
-
-			return prepareStateTtl.toMillis();
-		}
-
-		/**
-		 * Returns provider join restriction TTL in milliseconds with validation.
-		 *
-		 * @return provider join restriction TTL in milliseconds
-		 */
-		public long providerJoinRestrictionTtlMillis() {
-			if (providerJoinRestrictionTtl.isZero() || providerJoinRestrictionTtl.isNegative()) {
-				throw new IllegalStateException("settings.connection.providerJoinRestrictionTtl must be positive");
-			}
-
-			return providerJoinRestrictionTtl.toMillis();
-		}
-
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class Sentinels {
-		/**
-		 * Rate limit applied when clients spam pipeline resume/advance requests.
-		 */
-		private @NotNull SentinelPolicy resumeSpam;
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class Routing {
-		private @NotNull Defaults defaults = new Defaults();
-		/**
-		 * Scenario-specific routing targets keyed by scenario id.
-		 * Supported ids: authentication, registration, migration.
-		 */
-		@Merge(DeclaredKeysOnlyMap.class)
-		private @NotNull Map<String, Targets> scenarios = new HashMap<>();
-
-		@Getter
-		@Setter
-		@ToString
-		public static class Defaults {
-			private @NotNull Target step = Target.step();
-			private @NotNull Target complete = Target.complete();
-		}
-
-		@Getter
-		@Setter
-		@ToString
-		public static class Target {
-			private @NotNull String target = "";
-			private @Nullable RoutingAttemptPolicy attempts;
-
-			public static @NotNull Target step() {
-				Target target = new Target();
-				target.setAttempts(RoutingAttemptPolicy.defaultStep());
-				return target;
-			}
-
-			public static @NotNull Target complete() {
-				Target target = new Target();
-				target.setAttempts(RoutingAttemptPolicy.defaultCompletion());
-				return target;
-			}
-		}
-
-		/**
-		 * Routing targets by phase.
-		 */
-		@Getter
-		@Setter
-		@ToString
-		public static class Targets {
-			private @NotNull Target step = new Target();
-			/**
-			 * Routing target used when a scenario journeyMode fully completes.
-			 */
-			private @NotNull Target complete = new Target();
-			private @NotNull Overrides overrides = new Overrides();
-
-			/**
-			 * Routing overrides.
-			 */
-			@Getter
-			@Setter
-			@ToString
-			public static class Overrides {
-				private @NotNull Map<String, Target> stages = new HashMap<>();
-				private @NotNull Map<String, Target> steps = new HashMap<>();
-			}
+			return reservationTtl.toMillis();
 		}
 	}
 
+	/**
+	 * Session behavior settings.
+	 */
 	@Getter
 	@Setter
 	@ToString
@@ -220,13 +84,22 @@ public class Settings extends ConfigDocument {
 		 */
 		private @NotNull Recognition recognition = new Recognition();
 
+		/**
+		 * Returns active session TTL in milliseconds with validation.
+		 *
+		 * @return active session TTL in milliseconds
+		 */
 		public long activeTtlMillis() {
-			if (activeTtl.isZero() || activeTtl.isNegative())
-				throw new IllegalStateException("settings.connection.sessions.activeTtl must be positive");
+			if (activeTtl.isZero() || activeTtl.isNegative()) {
+				throw new IllegalStateException("settings.sessions.activeTtl must be positive");
+			}
 
 			return activeTtl.toMillis();
 		}
 
+		/**
+		 * Recognition behavior settings.
+		 */
 		@Getter
 		@Setter
 		@ToString
@@ -248,9 +121,15 @@ public class Settings extends ConfigDocument {
 			 */
 			private @NotNull Eligibility eligibility = new Eligibility();
 
+			/**
+			 * Returns recognition validity in milliseconds with validation.
+			 *
+			 * @return recognition validity in milliseconds
+			 */
 			public long validityMillis() {
-				if (validity.isZero() || validity.isNegative())
-					throw new IllegalStateException("settings.connection.sessions.recognition.validity must be positive");
+				if (validity.isZero() || validity.isNegative()) {
+					throw new IllegalStateException("settings.sessions.recognition.validity must be positive");
+				}
 
 				return validity.toMillis();
 			}
@@ -284,98 +163,22 @@ public class Settings extends ConfigDocument {
 		}
 	}
 
+	/**
+	 * Sentinel behavior settings.
+	 */
 	@Getter
 	@Setter
 	@ToString
-	public static class Scenarios {
-		private @NotNull AuthenticationScenario authentication = new AuthenticationScenario();
-		private @NotNull RegistrationScenario registration = new RegistrationScenario();
-		private @NotNull MigrationScenario migration = new MigrationScenario();
+	public static class Sentinels {
+		/**
+		 * Rate limit applied when clients spam pipeline resume/advance requests.
+		 */
+		private @NotNull SentinelPolicy resumeSpam;
 	}
 
-	@Getter
-	@Setter
-	@ToString
-	public static class Scenario {
-		/**
-		 * Time-to-live for pending pipeline state.
-		 */
-		private @NotNull Duration pipelineTtl;
-		/**
-		 * Time-to-live for advance locks.
-		 */
-		private @NotNull Duration advanceLockTtl;
-		/**
-		 * Whether resume requests are allowed for this scenario.
-		 */
-		private boolean allowResume;
-		/**
-		 * Whether resumed auth/registration flows may bypass active provider restrictions.
-		 */
-		private boolean allowProviderRestrictionResumeBypass;
-		/**
-		 * Preferred journey mode for this scenario.
-		 */
-		private @NotNull JourneyMode journeyMode;
-		/**
-		 * Policy for applying the preferred journey mode.
-		 */
-		private @NotNull JourneyPolicy journeyPolicy;
-
-		/**
-		 * Returns pipeline TTL in milliseconds with validation.
-		 *
-		 * @return pipeline TTL in milliseconds
-		 */
-		public long pipelineTtlMillis() {
-			if (pipelineTtl.isZero() || pipelineTtl.isNegative()) {
-				throw new IllegalStateException("settings.connection.pipelineTtl must be positive");
-			}
-
-			return pipelineTtl.toMillis();
-		}
-
-		/**
-		 * Returns advance lock TTL in milliseconds with validation.
-		 *
-		 * @return advance lock TTL in milliseconds
-		 */
-		public long advanceLockTtlMillis() {
-			if (advanceLockTtl.isZero() || advanceLockTtl.isNegative()) {
-				throw new IllegalStateException("settings.connection.advanceLockTtl must be positive");
-			}
-
-			return advanceLockTtl.toMillis();
-		}
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class AuthenticationScenario extends Scenario {
-		private @NotNull PipelineConcurrencyPolicy pipelineConcurrencyPolicy;
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class RegistrationScenario extends Scenario {
-		/**
-		 * Policy for concurrent in-flight pipelines for the same identity.
-		 */
-		private @NotNull PipelineConcurrencyPolicy pipelineConcurrencyPolicy;
-		/**
-		 * Whether interactive registration should auto-select the only available provider.
-		 */
-		private boolean autoSelectSingleProvider;
-	}
-
-	@Getter
-	@Setter
-	@ToString
-	public static class MigrationScenario extends Scenario {
-	}
-
+	/**
+	 * Listener registration settings.
+	 */
 	@Getter
 	@Setter
 	@ToString

@@ -3,7 +3,7 @@ package me.whereareiam.identica.provider.credential.pipeline.scenario.migration;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.credential.account.CredentialAccountService;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
@@ -16,7 +16,7 @@ public class CredentialMigrationConfirmStep extends AbstractCredentialConfirmSte
 	@Inject
 	public CredentialMigrationConfirmStep(
 			Provider<CredentialMessages> messagesProvider,
-			Provider<Settings> coreSettingsProvider,
+			Provider<Engine> coreSettingsProvider,
 			CredentialAccountService credentialService,
 			PipelineStateStore pipelineStateStore,
 			CryptographyService cryptographyService

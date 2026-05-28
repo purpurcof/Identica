@@ -17,10 +17,8 @@ import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.time.Duration;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -293,7 +291,7 @@ class DefaultProviderJoinRestrictionServiceTest {
 	}
 
 	private static final class TestToggleStore extends ProviderJoinRestrictionToggleStore {
-		private final java.util.Set<String> active = new java.util.HashSet<>();
+		private final Set<String> active = new HashSet<>();
 
 		private TestToggleStore() {
 			super(
@@ -305,10 +303,10 @@ class DefaultProviderJoinRestrictionServiceTest {
 						return replication;
 					},
 					() -> {
-						Settings settings = new Settings();
-						Settings.Connection connection = new Settings.Connection();
-						connection.setProviderJoinRestrictionTtl(java.time.Duration.ofDays(365));
-						settings.setConnection(connection);
+						Providers settings = new Providers();
+						Providers.Behavior behavior = new Providers.Behavior();
+						behavior.setJoinRestrictionToggleTtl(Duration.ofDays(365));
+						settings.setBehavior(behavior);
 						return settings;
 					}
 			);
@@ -316,17 +314,17 @@ class DefaultProviderJoinRestrictionServiceTest {
 
 		@Override
 		public boolean isActive(String providerId) {
-			return active.contains(providerId.trim().toLowerCase(java.util.Locale.ROOT));
+			return active.contains(providerId.trim().toLowerCase(Locale.ROOT));
 		}
 
 		@Override
 		public void enable(String providerId) {
-			active.add(providerId.trim().toLowerCase(java.util.Locale.ROOT));
+			active.add(providerId.trim().toLowerCase(Locale.ROOT));
 		}
 
 		@Override
 		public void disable(String providerId) {
-			active.remove(providerId.trim().toLowerCase(java.util.Locale.ROOT));
+			active.remove(providerId.trim().toLowerCase(Locale.ROOT));
 		}
 	}
 }

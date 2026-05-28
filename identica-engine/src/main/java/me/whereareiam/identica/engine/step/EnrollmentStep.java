@@ -7,8 +7,8 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.pipeline.scenario.registration.EnrollmentOptionsEvent;
 import me.whereareiam.identica.model.auth.EnrollmentEntry;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderContext;
@@ -30,20 +30,20 @@ import java.util.concurrent.CompletableFuture;
 @Singleton
 public class EnrollmentStep extends InteractiveStep {
 	private final ProviderOperations providerOperations;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 	private final Provider<Messages> messagesProvider;
 	private final EventManager eventManager;
 
 	@Inject
 	public EnrollmentStep(
 			ProviderOperations providerOperations,
-			Provider<Settings> settingsProvider,
+			Provider<Engine> engineProvider,
 			Provider<Messages> messagesProvider,
 			EventManager eventManager
 	) {
 		super("enrollment");
 		this.providerOperations = providerOperations;
-		this.settingsProvider = settingsProvider;
+		this.engineProvider = engineProvider;
 		this.messagesProvider = messagesProvider;
 		this.eventManager = eventManager;
 	}
@@ -55,8 +55,8 @@ public class EnrollmentStep extends InteractiveStep {
 				PipelineType.REGISTRATION,
 				JourneyMode.INTERACTIVE
 		);
-		Messages.Connection.Journey.Step.Enrollment enrollment = messagesProvider.get()
-				.getConnection()
+		Messages.Engine.Journey.Step.Enrollment enrollment = messagesProvider.get()
+				.getEngine()
 				.getJourney()
 				.getStep()
 				.getEnrollment();
@@ -82,8 +82,7 @@ public class EnrollmentStep extends InteractiveStep {
 	}
 
 	private boolean shouldAutoSelectSingleProvider() {
-		return settingsProvider.get()
-				.getConnection()
+		return engineProvider.get()
 				.getScenarios().getRegistration()
 				.isAutoSelectSingleProvider();
 	}
@@ -108,7 +107,7 @@ public class EnrollmentStep extends InteractiveStep {
 	}
 
 	private List<EnrollmentEntry> buildEntries(
-			Messages.Connection.Journey.Step.Enrollment enrollment,
+			Messages.Engine.Journey.Step.Enrollment enrollment,
 			List<InternalProvider> providers
 	) {
 		List<EnrollmentEntry> entries = new ArrayList<>();
@@ -136,7 +135,7 @@ public class EnrollmentStep extends InteractiveStep {
 	}
 
 	private List<String> resolveDescription(
-			Messages.Connection.Journey.Step.Enrollment enrollment,
+			Messages.Engine.Journey.Step.Enrollment enrollment,
 			String providerId
 	) {
 		Map<String, String> descriptions = enrollment.getDescriptions();
@@ -159,7 +158,7 @@ public class EnrollmentStep extends InteractiveStep {
 	}
 
 	private String buildMessage(
-			Messages.Connection.Journey.Step.Enrollment enrollment,
+			Messages.Engine.Journey.Step.Enrollment enrollment,
 			List<EnrollmentEntry> entries
 	) {
 		SerializerOptions.PlaceholderFormat format = Serializer.getEngine().getPlaceholderFormat();
@@ -189,7 +188,7 @@ public class EnrollmentStep extends InteractiveStep {
 	}
 
 	private List<String> renderEntries(
-			Messages.Connection.Journey.Step.Enrollment.EntryFormat entryFormat,
+			Messages.Engine.Journey.Step.Enrollment.EntryFormat entryFormat,
 			List<EnrollmentEntry> entries,
 			SerializerOptions.PlaceholderFormat format
 	) {

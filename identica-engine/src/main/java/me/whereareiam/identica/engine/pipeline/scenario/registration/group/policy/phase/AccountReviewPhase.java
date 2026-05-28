@@ -49,12 +49,12 @@ public class AccountReviewPhase extends AbstractAccountReviewPhase<RegistrationC
 
 	@Override
 	protected @NotNull String failedMessage(@NotNull Messages messages) {
-		return joinMessage(messages.getConnection().getRegistration().getRegistrationFailed());
+		return joinMessage(messages.getScenarios().getRegistration().getRegistrationFailed());
 	}
 
 	@Override
 	protected @NotNull String accountReviewMissingMessage(@NotNull Messages messages) {
-		return joinMessage(messages.getConnection()
+		return joinMessage(messages.getScenarios()
 				.getRegistration()
 				.getErrors()
 				.getPolicy().getAccountReviewMissing());

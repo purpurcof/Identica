@@ -41,7 +41,7 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 				() -> rule(settings(true, List.of("not-an-ip")), providers(false)).evaluate(context("203.0.113.10"))
 		);
 
-		assertTrue(exception.getMessage().contains("settings.connection.sessions.recognition.eligibility.untrustedIps.entries[0]"));
+		assertTrue(exception.getMessage().contains("settings.sessions.recognition.eligibility.untrustedIps.entries[0]"));
 	}
 
 	private UntrustedIpRecognitionEligibilityRule rule(Settings settings, Providers providers) {
@@ -72,11 +72,8 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 		Settings.Sessions sessions = new Settings.Sessions();
 		sessions.setRecognition(recognition);
 
-		Settings.Connection connection = new Settings.Connection();
-		connection.setSessions(sessions);
-
 		Settings settings = new Settings();
-		settings.setConnection(connection);
+		settings.setSessions(sessions);
 		return settings;
 	}
 

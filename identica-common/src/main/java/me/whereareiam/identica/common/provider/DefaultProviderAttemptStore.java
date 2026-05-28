@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.model.provider.ProviderAttemptSnapshot;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.replication.cache.ReplicatedCache;
@@ -20,16 +20,16 @@ import java.util.Optional;
 public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 	private static final String KEY_PREFIX = "attempt:";
 
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Providers> providersProvider;
 	private final ReplicatedCache<ProviderAttemptSnapshot> cache;
 
 	@Inject
 	public DefaultProviderAttemptStore(
 			@NotNull ReplicationSystem replicationSystem,
 			@NotNull Provider<Replication> replicationProvider,
-			@NotNull Provider<Settings> settingsProvider
+			@NotNull Provider<Providers> providersProvider
 	) {
-		this.settingsProvider = settingsProvider;
+		this.providersProvider = providersProvider;
 		ReplicationType<ProviderAttemptSnapshot, ProviderAttemptSnapshot> type =
 				ReplicationType.identity(ProviderAttemptSnapshot.class);
 		this.cache = replicationSystem.cache(resolveNamespace(replicationProvider)).replicated(type);
@@ -59,7 +59,7 @@ public class DefaultProviderAttemptStore implements ProviderAttemptStore {
 		String key = resolveKey(providerId, scope, username, ip);
 		if (key == null) return;
 
-		long ttlMs = settingsProvider.get().getConnection().attemptTtlMillis();
+		long ttlMs = providersProvider.get().getBehavior().attemptTtlMillis();
 		if (ttlMs <= 0) return;
 
 		cache.put(key, new ProviderAttemptSnapshot(System.currentTimeMillis()), ttlMs).join();

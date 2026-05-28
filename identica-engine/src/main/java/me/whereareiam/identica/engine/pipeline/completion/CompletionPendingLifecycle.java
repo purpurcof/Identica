@@ -11,7 +11,7 @@ import me.whereareiam.identica.event.routing.completion.CompletionRoutingReached
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Routing;
 import me.whereareiam.identica.model.delivery.DeliveryDispatchContext;
 import me.whereareiam.identica.model.delivery.DeliveryPayload;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
@@ -35,7 +35,7 @@ public class CompletionPendingLifecycle implements EventListener {
 	private final CompletionPipeline completionPipeline;
 	private final IdentityService identityService;
 	private final PlatformDeliveryAdapter platformDeliveryAdapter;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Routing> routingProvider;
 
 	@Inject
 	public CompletionPendingLifecycle(
@@ -43,14 +43,14 @@ public class CompletionPendingLifecycle implements EventListener {
 			@NotNull CompletionPipeline completionPipeline,
 			@NotNull IdentityService identityService,
 			@NotNull PlatformDeliveryAdapter platformDeliveryAdapter,
-			@NotNull Provider<Settings> settingsProvider,
+			@NotNull Provider<Routing> routingProvider,
 			@NotNull EventManager eventManager
 	) {
 		this.deliveryService = deliveryService;
 		this.completionPipeline = completionPipeline;
 		this.identityService = identityService;
 		this.platformDeliveryAdapter = platformDeliveryAdapter;
-		this.settingsProvider = settingsProvider;
+		this.routingProvider = routingProvider;
 		eventManager.register(this);
 	}
 
@@ -116,22 +116,22 @@ public class CompletionPendingLifecycle implements EventListener {
 	}
 
 	private String resolveCompletionTarget(@NotNull PipelineType pipelineType) {
-		Settings.Routing routing = settingsProvider.get().getConnection().getRouting();
-		Settings.Routing.Target target = routing.getDefaults().getComplete();
-		Settings.Routing.Targets scenarioTargets = resolveScenarioTargets(routing, pipelineType);
-		Settings.Routing.Target scenarioTarget = scenarioTargets != null ? scenarioTargets.getComplete() : null;
+		Routing routing = routingProvider.get();
+		Routing.Target target = routing.getDefaults().getComplete();
+		Routing.Targets scenarioTargets = resolveScenarioTargets(routing, pipelineType);
+		Routing.Target scenarioTarget = scenarioTargets != null ? scenarioTargets.getComplete() : null;
 		if (scenarioTarget != null && !isBlank(scenarioTarget.getTarget()))
 			return scenarioTarget.getTarget();
 
 		return target.getTarget();
 	}
 
-	private Settings.Routing.Targets resolveScenarioTargets(
-			@NotNull Settings.Routing routing,
+	private Routing.Targets resolveScenarioTargets(
+			@NotNull Routing routing,
 			@NotNull PipelineType pipelineType
 	) {
 		String scenarioId = pipelineType.name().toLowerCase(Locale.ROOT);
-		for (Map.Entry<String, Settings.Routing.Targets> entry : routing.getScenarios().entrySet()) {
+		for (Map.Entry<String, Routing.Targets> entry : routing.getScenarios().entrySet()) {
 			if (entry.getKey() == null || entry.getValue() == null) continue;
 			if (entry.getKey().equalsIgnoreCase(scenarioId))
 				return entry.getValue();

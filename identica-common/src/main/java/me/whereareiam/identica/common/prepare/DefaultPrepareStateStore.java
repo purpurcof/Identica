@@ -3,9 +3,10 @@ package me.whereareiam.identica.common.prepare;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
+import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.replication.ReplicationSystem;
 import me.whereareiam.identica.replication.cache.LocalCache;
 import org.jetbrains.annotations.NotNull;
@@ -23,17 +24,17 @@ public class DefaultPrepareStateStore implements PrepareStateStore {
 	private final LocalCache<PrepareDecision> byConnectionKey;
 	private final LocalCache<PrepareDecision> byUniqueId;
 	private final LocalCache<String> keysByUniqueId;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 
 	@Inject
 	public DefaultPrepareStateStore(
 			@NotNull ReplicationSystem replicationSystem,
-			@NotNull Provider<Settings> settingsProvider
+			@NotNull Provider<Engine> engineProvider
 	) {
 		this.byConnectionKey = replicationSystem.cache(CONNECTION_NAMESPACE).local();
 		this.byUniqueId = replicationSystem.cache(UNIQUE_ID_NAMESPACE).local();
 		this.keysByUniqueId = replicationSystem.cache(UNIQUE_ID_INDEX_NAMESPACE).local();
-		this.settingsProvider = settingsProvider;
+		this.engineProvider = engineProvider;
 	}
 
 	@Override
@@ -76,6 +77,6 @@ public class DefaultPrepareStateStore implements PrepareStateStore {
 	}
 
 	private long ttlMs() {
-		return settingsProvider.get().getConnection().prepareStateTtlMillis();
+		return engineProvider.get().getBehavior().bridgeTtlMillis();
 	}
 }

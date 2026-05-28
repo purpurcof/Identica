@@ -8,7 +8,7 @@ import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckContext;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckResult;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
@@ -25,7 +25,7 @@ import java.util.List;
 public class PremiumMigrationPrecheck implements ProviderMigrationPrecheck {
 	private final HandshakeStore handshakeStore;
 	private final ProviderAttemptStore attemptStore;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 	private final Provider<PremiumMessages> messagesProvider;
 
 	@Override
@@ -42,7 +42,7 @@ public class PremiumMigrationPrecheck implements ProviderMigrationPrecheck {
 		String username = context.getUsername();
 		String ip = context.getIp();
 		if (username == null || username.isBlank() || ip == null || ip.isBlank()) return;
-		long ttlMs = settingsProvider.get().getConnection().handshakeInstructionTtlMillis();
+		long ttlMs = engineProvider.get().getBehavior().handshakeInstructionTtlMillis();
 		if (ttlMs <= 0) return;
 
 		HandshakeInstruction instruction = HandshakeInstruction.create(

@@ -10,8 +10,8 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.AdvanceMarkerItem;
 import me.whereareiam.identica.model.pipeline.GroupOutcome;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
@@ -40,7 +40,7 @@ public abstract class AbstractScenarioPipeline {
 
 	private final PipelineRegistry registry;
 	private final Provider<Messages> messagesProvider;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 	private final PipelineStateStore pipelineStateStore;
 	private final PipelineType pipelineType;
 	private final PipelineExecutor executor;
@@ -212,7 +212,7 @@ public abstract class AbstractScenarioPipeline {
 
 		PipelineStatus status = result.getStatus();
 		if (status == PipelineStatus.WAITING || status == PipelineStatus.REQUIRE_RECONNECT) {
-			Settings.Scenario scenario = resolveScenario(pipelineType);
+			Engine.Scenario scenario = resolveScenario(pipelineType);
 			if (!scenario.isAllowResume()) {
 				pipelineStateStore.clear(reference);
 				return;
@@ -320,7 +320,7 @@ public abstract class AbstractScenarioPipeline {
 			@NotNull ResumeRequest resumeRequest
 	) {
 		PipelineStateReference resumeReference = PipelineStateReference.from(resumeRequest);
-		Settings.Scenario scenario = resolveScenario(pipelineType);
+		Engine.Scenario scenario = resolveScenario(pipelineType);
 		if (!scenario.isAllowResume()) {
 			pipelineStateStore.clear(resumeReference);
 			return resumeUnavailable(request);
@@ -419,34 +419,28 @@ public abstract class AbstractScenarioPipeline {
 		return null;
 	}
 
-	protected @NotNull Messages.Connection.Scenario resolveScenarioMessages(@NotNull PipelineType type) {
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (type == PipelineType.REGISTRATION)
-			return connection.getRegistration();
-		if (type == PipelineType.MIGRATION)
-			return connection.getMigration();
-		return connection.getAuthentication();
+	protected @NotNull Messages.Scenarios.Scenario resolveScenarioMessages(@NotNull PipelineType type) {
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (type == PipelineType.REGISTRATION) return scenarios.getRegistration();
+		if (type == PipelineType.MIGRATION) return scenarios.getMigration();
+
+		return scenarios.getAuthentication();
 	}
 
 	protected @NotNull List<String> resolveFailureMessage(@NotNull PipelineType type) {
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (type == PipelineType.REGISTRATION) {
-			return connection.getRegistration().getRegistrationFailed();
-		}
-		if (type == PipelineType.MIGRATION) {
-			return connection.getMigration().getMigrationFailed();
-		}
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (type == PipelineType.REGISTRATION) return scenarios.getRegistration().getRegistrationFailed();
+		if (type == PipelineType.MIGRATION) return scenarios.getMigration().getMigrationFailed();
 
-		return connection.getAuthentication().getAuthenticationFailed();
+		return scenarios.getAuthentication().getAuthenticationFailed();
 	}
 
-	protected @NotNull Settings.Scenario resolveScenario(@NotNull PipelineType type) {
-		Settings.Connection connection = settingsProvider.get().getConnection();
-		if (type == PipelineType.REGISTRATION)
-			return connection.getScenarios().getRegistration();
-		if (type == PipelineType.MIGRATION)
-			return connection.getScenarios().getMigration();
-		return connection.getScenarios().getAuthentication();
+	protected @NotNull Engine.Scenario resolveScenario(@NotNull PipelineType type) {
+		Engine.Scenarios scenarios = engineProvider.get().getScenarios();
+		if (type == PipelineType.REGISTRATION) return scenarios.getRegistration();
+		if (type == PipelineType.MIGRATION) return scenarios.getMigration();
+
+		return scenarios.getAuthentication();
 	}
 
 	protected @NotNull String joinMessage(@NotNull List<String> lines) {

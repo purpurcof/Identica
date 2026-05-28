@@ -1,0 +1,10 @@
+behavior:
+  attemptTtl: "10m"
+  joinRestrictionToggleTtl: "365d"
+providers:
+  - id: "premium"
+    enabled: true
+    priority: 100
+  - id: "credential"
+    enabled: true
+    priority: 50

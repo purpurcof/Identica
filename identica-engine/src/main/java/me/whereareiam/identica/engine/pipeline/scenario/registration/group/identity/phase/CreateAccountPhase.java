@@ -98,12 +98,12 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 	}
 
 	private @NotNull String accountAlreadyExistsMessage() {
-		return String.join("\n", messagesProvider.get().getConnection().getRegistration().getAccountAlreadyExists());
+		return String.join("\n", messagesProvider.get().getScenarios().getRegistration().getAccountAlreadyExists());
 	}
 
 	private @NotNull String accountCreationMissingMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getRegistration()
 				.getErrors()
 				.getPolicy().getAccountCreationMissing());

@@ -15,12 +15,13 @@ class MessagesDefaultsTest {
 	void providerRestrictionMessagesAreGeneratedByDefaults() {
 		Messages messages = new MessagesDefaults().supply(new Messages());
 
-		assertNotNull(messages.getConnection());
-		assertNotNull(messages.getConnection().getPrepare());
-		assertNotNull(messages.getConnection().getPrepare().getProviderRestricted());
-		assertTrue(messages.getConnection().getPrepare().getProviderRestricted().stream().anyMatch(line -> line.contains("{providerName}")));
-		assertNotNull(messages.getConnection().getProviderRestriction());
-		assertNotNull(messages.getConnection().getProviderRestriction().getDenied());
-		assertTrue(messages.getConnection().getProviderRestriction().getDenied().stream().anyMatch(line -> line.contains("{allow}")));
+		assertNotNull(messages.getEngine());
+		assertNotNull(messages.getEngine().getPrepare());
+		assertNotNull(messages.getEngine().getPrepare().getProviderRestricted());
+		assertTrue(messages.getEngine().getPrepare().getProviderRestricted().stream().anyMatch(line -> line.contains("{providerName}")));
+		assertNotNull(messages.getProviders());
+		assertNotNull(messages.getProviders().getProviderRestriction());
+		assertNotNull(messages.getProviders().getProviderRestriction().getDenied());
+		assertTrue(messages.getProviders().getProviderRestriction().getDenied().stream().anyMatch(line -> line.contains("{allow}")));
 	}
 }

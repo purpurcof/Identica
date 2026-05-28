@@ -67,7 +67,7 @@ public class DefaultSessionService implements SessionService, EventListener {
 		this.scheduler = scheduler;
 
 		Replication.Sessions sessions = resolveSessions(replicationProvider);
-		long defaultTtlMs = settingsProvider.get().getConnection().getSessions().activeTtlMillis();
+		long defaultTtlMs = settingsProvider.get().getSessions().activeTtlMillis();
 		ReplicationType<Session, Session> type = ReplicationType.identity(Session.class);
 		this.sessionCacheTtlMs = defaultTtlMs;
 		this.userCache = replicationSystem.cache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user"))
@@ -288,7 +288,7 @@ public class DefaultSessionService implements SessionService, EventListener {
 				: null;
 		return override != null
 				? override
-				: settingsProvider.get().getConnection().getSessions().getConcurrencyPolicy();
+				: settingsProvider.get().getSessions().getConcurrencyPolicy();
 	}
 
 	private @Nullable Providers.ProviderEntry findProvider(@Nullable String rawId) {

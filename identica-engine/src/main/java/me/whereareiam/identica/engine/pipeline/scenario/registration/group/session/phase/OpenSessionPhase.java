@@ -36,7 +36,7 @@ public class OpenSessionPhase extends AbstractOpenSessionPhase<RegistrationConte
 
 	@Override
 	protected @NotNull String failedMessage(@NotNull Messages messages) {
-		return joinMessage(messages.getConnection().getRegistration().getRegistrationFailed());
+		return joinMessage(messages.getScenarios().getRegistration().getRegistrationFailed());
 	}
 
 	@Override

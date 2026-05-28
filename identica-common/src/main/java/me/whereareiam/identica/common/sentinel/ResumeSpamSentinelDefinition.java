@@ -43,7 +43,7 @@ public class ResumeSpamSentinelDefinition implements SentinelDefinition {
 
 	@Override
 	public SentinelPolicy policy(SentinelContext ctx) {
-		SentinelPolicy policy = settingsProvider.get().getConnection().getSentinels().getResumeSpam();
+		SentinelPolicy policy = settingsProvider.get().getSentinels().getResumeSpam();
 
 		if (policy.getLockout() == null) {
 			policy.setLockout(new SentinelPolicy.Lockout());
@@ -56,7 +56,7 @@ public class ResumeSpamSentinelDefinition implements SentinelDefinition {
 
 	private String buildMessage(long remainingSeconds) {
 		Messages messages = messagesProvider.get();
-		List<String> lines = messages.getConnection().getResumeSentineled();
+		List<String> lines = messages.getEngine().getResumeSentineled();
 
 		String seconds = String.valueOf(Math.max(0L, remainingSeconds));
 		StringBuilder builder = new StringBuilder();

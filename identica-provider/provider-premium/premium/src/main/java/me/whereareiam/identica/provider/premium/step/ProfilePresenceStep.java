@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -23,9 +23,9 @@ public class ProfilePresenceStep extends AbstractProfileVerificationStep {
 			PipelineStateStore pipelineStateStore,
 			PremiumProfileStore profileStore,
 			HandshakeStore handshakeStore,
-			Provider<Settings> settingsProvider
+			Provider<Engine> engineProvider
 	) {
-		super("profile-presence", messagesProvider, pipelineStateStore, profileStore, handshakeStore, settingsProvider);
+		super("profile-presence", messagesProvider, pipelineStateStore, profileStore, handshakeStore, engineProvider);
 	}
 
 	@Override

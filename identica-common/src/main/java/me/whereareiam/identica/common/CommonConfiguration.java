@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.configura.Config;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.common.config.ConfigBindings;
 import me.whereareiam.identica.common.config.IdenticaModule;
-import me.whereareiam.identica.common.config.ConfigBindingsConfiguration;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
 import me.whereareiam.identica.common.connection.ConnectionStateConfiguration;
 import me.whereareiam.identica.common.conflict.ConflictConfiguration;
@@ -47,7 +47,7 @@ public class CommonConfiguration extends AbstractModule {
 				.to(FileSystemConfigurationTypeResolver.class)
 				.asEagerSingleton();
 
-		install(new ConfigBindingsConfiguration());
+		install(new ConfigBindings());
 		install(new RegistryConfiguration());
 		install(new ConnectionStateConfiguration());
 		install(new PipelineStateConfiguration());

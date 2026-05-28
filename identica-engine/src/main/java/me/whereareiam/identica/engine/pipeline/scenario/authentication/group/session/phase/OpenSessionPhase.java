@@ -113,7 +113,7 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 	}
 
 	private @NotNull String authenticationFailedMessage() {
-		return joinMessage(messagesProvider.get().getConnection().getAuthentication().getAuthenticationFailed());
+		return joinMessage(messagesProvider.get().getScenarios().getAuthentication().getAuthenticationFailed());
 	}
 
 	private @NotNull String joinMessage(@NotNull List<String> lines) {

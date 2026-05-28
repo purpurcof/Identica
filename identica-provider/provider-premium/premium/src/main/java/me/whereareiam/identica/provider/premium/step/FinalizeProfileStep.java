@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.registration.RegistrationContext;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
@@ -26,9 +26,9 @@ public class FinalizeProfileStep extends AbstractProfileVerificationStep {
 			PipelineStateStore pipelineStateStore,
 			PremiumProfileStore profileStore,
 			HandshakeStore handshakeStore,
-			Provider<Settings> settingsProvider
+			Provider<Engine> engineProvider
 	) {
-		super("finalize-profile", messagesProvider, pipelineStateStore, profileStore, handshakeStore, settingsProvider);
+		super("finalize-profile", messagesProvider, pipelineStateStore, profileStore, handshakeStore, engineProvider);
 	}
 
 	@Override

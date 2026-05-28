@@ -6,7 +6,7 @@ import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
 import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem.AuthenticationOutcome;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
@@ -281,19 +281,17 @@ class ExecutePlanPhaseTest {
 		assertTrue(pipelineState.item(JourneyStateItem.class).isPresent());
 	}
 
-	private Settings settings() {
-		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
-		Settings.Scenarios scenarios = new Settings.Scenarios();
+	private Engine settings() {
+		Engine settings = new Engine();
+		Engine.Scenarios scenarios = new Engine.Scenarios();
 		configureScenario(scenarios.getAuthentication());
 		configureScenario(scenarios.getRegistration());
 		configureScenario(scenarios.getMigration());
-		connection.setScenarios(scenarios);
-		settings.setConnection(connection);
+		settings.setScenarios(scenarios);
 		return settings;
 	}
 
-	private void configureScenario(@NotNull Settings.Scenario scenario) {
+	private void configureScenario(@NotNull Engine.Scenario scenario) {
 		scenario.setPipelineTtl(Duration.ofSeconds(60));
 		scenario.setAdvanceLockTtl(Duration.ofSeconds(5));
 		scenario.setAllowResume(true);

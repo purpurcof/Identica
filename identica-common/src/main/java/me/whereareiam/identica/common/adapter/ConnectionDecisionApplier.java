@@ -65,7 +65,7 @@ public class ConnectionDecisionApplier {
 
 	private @NotNull String resolveAuthMessage(@Nullable String message) {
 		if (message != null && !message.isBlank()) return message;
-		return String.join("\n", messagesProvider.get().getConnection().getAuthentication().getAuthenticationFailed());
+		return String.join("\n", messagesProvider.get().getScenarios().getAuthentication().getAuthenticationFailed());
 	}
 
 	public interface Target {

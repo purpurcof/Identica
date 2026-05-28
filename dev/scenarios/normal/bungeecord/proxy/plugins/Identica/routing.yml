@@ -1,0 +1,18 @@
+defaults:
+  step:
+    target: "lobby"
+    attempts:
+      mode: "UNTIL_REACHED"
+      maxAttempts: 1
+      retryDelay: "1s"
+      consumeOnReached: false
+      consumeOnExhausted: true
+  complete:
+    target: "lobby"
+    attempts:
+      mode: "UNTIL_REACHED"
+      maxAttempts: 1
+      retryDelay: "1s"
+      consumeOnReached: true
+      consumeOnExhausted: true
+scenarios: {}

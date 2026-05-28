@@ -104,7 +104,7 @@ public class ApplyProviderJoinRestrictionPhase implements PipelinePhase<PrepareG
 			@NotNull String providerId,
 			@NotNull Set<ProviderJoinRestrictionCondition> allow
 	) {
-		return render(messagesProvider.get().getConnection().getProviderRestriction().getDenied(), providerId, allow);
+		return render(messagesProvider.get().getProviders().getProviderRestriction().getDenied(), providerId, allow);
 	}
 
 	private @NotNull String render(

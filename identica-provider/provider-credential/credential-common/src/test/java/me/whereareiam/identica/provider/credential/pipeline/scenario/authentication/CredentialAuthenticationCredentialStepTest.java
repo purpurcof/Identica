@@ -3,7 +3,7 @@ package me.whereareiam.identica.provider.credential.pipeline.scenario.authentica
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -61,7 +61,7 @@ class CredentialAuthenticationCredentialStepTest {
 				.provider(me.whereareiam.identica.model.provider.ProviderContext.of("credential", "subject", "whereareiam", null))
 				.build();
 		PipelineState state = PipelineState.initial();
-		state.putItem(new CredentialAuthenticationAttempt("credential"), settings().getConnection().getScenarios().getAuthentication().pipelineTtlMillis());
+		state.putItem(new CredentialAuthenticationAttempt("credential"), settings().getScenarios().getAuthentication().pipelineTtlMillis());
 		CredentialAccount account = CredentialAccount.builder()
 				.providerId("credential")
 				.providerSubject("subject")
@@ -83,14 +83,14 @@ class CredentialAuthenticationCredentialStepTest {
 		return new CredentialMessagesDefaults().supply(new CredentialMessages());
 	}
 
-	private Settings settings() {
-		Settings.Connection connection = new Settings.Connection();
-		Settings.AuthenticationScenario authentication = new Settings.AuthenticationScenario();
+	private Engine settings() {
+		Engine.Scenarios connection = new Engine.Scenarios();
+		Engine.Authentication authentication = new Engine.Authentication();
 		authentication.setPipelineTtl(Duration.ofMinutes(5));
-		connection.getScenarios().setAuthentication(authentication);
+		connection.setAuthentication(authentication);
 
-		Settings settings = new Settings();
-		settings.setConnection(connection);
+		Engine settings = new Engine();
+		settings.setScenarios(connection);
 		return settings;
 	}
 }

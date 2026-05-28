@@ -74,7 +74,7 @@ public class FinalizeHandshakePhase implements PipelinePhase<PrepareGroupState> 
 			String message = resolved.getMessage();
 			if (message == null || message.isBlank()) {
 				resolved = HandshakeDecision.deny(String.join("\n", messagesProvider.get()
-							.getConnection()
+							.getEngine()
 							.getPrepare()
 							.getHandshakeDenied()));
 			}

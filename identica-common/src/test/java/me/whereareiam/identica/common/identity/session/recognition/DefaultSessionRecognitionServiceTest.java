@@ -113,11 +113,8 @@ class DefaultSessionRecognitionServiceTest {
 		Settings.Sessions sessions = new Settings.Sessions();
 		sessions.setRecognition(recognition);
 
-		Settings.Connection connection = new Settings.Connection();
-		connection.setSessions(sessions);
-
 		Settings settings = new Settings();
-		settings.setConnection(connection);
+		settings.setSessions(sessions);
 		return settings;
 	}
 

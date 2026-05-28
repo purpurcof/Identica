@@ -13,6 +13,7 @@ import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,51 @@ import java.util.List;
 @Setter
 @ToString
 public class Providers extends ConfigDocument {
+	private @NotNull Behavior behavior = new Behavior();
 	private @NotNull List<ProviderEntry> providers = new ArrayList<>();
+
+	/**
+	 * Shared provider runtime behavior settings.
+	 */
+	@Getter
+	@Setter
+	@ToString
+	public static class Behavior {
+		/**
+		 * Time-to-live for provider attempt markers.
+		 */
+		private @NotNull Duration attemptTtl;
+		/**
+		 * Time-to-live for provider join restriction runtime toggles.
+		 */
+		private @NotNull Duration joinRestrictionToggleTtl;
+
+		/**
+		 * Returns attempt TTL in milliseconds with validation.
+		 *
+		 * @return attempt TTL in milliseconds
+		 */
+		public long attemptTtlMillis() {
+			if (attemptTtl.isZero() || attemptTtl.isNegative()) {
+				throw new IllegalStateException("providers.behavior.attemptTtl must be positive");
+			}
+
+			return attemptTtl.toMillis();
+		}
+
+		/**
+		 * Returns join restriction toggle TTL in milliseconds with validation.
+		 *
+		 * @return join restriction toggle TTL in milliseconds
+		 */
+		public long joinRestrictionToggleTtlMillis() {
+			if (joinRestrictionToggleTtl.isZero() || joinRestrictionToggleTtl.isNegative()) {
+				throw new IllegalStateException("providers.behavior.joinRestrictionToggleTtl must be positive");
+			}
+
+			return joinRestrictionToggleTtl.toMillis();
+		}
+	}
 
 	/**
 	 * Provider definition entry.

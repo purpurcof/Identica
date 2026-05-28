@@ -9,7 +9,7 @@ import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Routing;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
 import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.routing.RoutingEndpoint;
@@ -47,12 +47,11 @@ class CompletionPendingLifecycleTest {
 		IdentityService identityService = mock(IdentityService.class);
 		PlatformDeliveryAdapter platformDeliveryAdapter = mock(PlatformDeliveryAdapter.class);
 		EventManager eventManager = mock(EventManager.class);
-		Settings settings = new Settings();
-		settings.setConnection(new Settings.Connection());
-		settings.getConnection().getRouting().getDefaults().getComplete().setTarget("limbo");
-		Settings.Routing.Targets migrationTargets = new Settings.Routing.Targets();
+		Routing settings = new Routing();
+		settings.getDefaults().getComplete().setTarget("limbo");
+		Routing.Targets migrationTargets = new Routing.Targets();
 		migrationTargets.getComplete().setTarget("migration-limbo");
-		settings.getConnection().getRouting().getScenarios().put("migration", migrationTargets);
+		settings.getScenarios().put("migration", migrationTargets);
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				deliveryService,
 				completionPipeline,
@@ -93,9 +92,8 @@ class CompletionPendingLifecycleTest {
 		IdentityService identityService = mock(IdentityService.class);
 		PlatformDeliveryAdapter platformDeliveryAdapter = mock(PlatformDeliveryAdapter.class);
 		EventManager eventManager = mock(EventManager.class);
-		Settings settings = new Settings();
-		settings.setConnection(new Settings.Connection());
-		settings.getConnection().getRouting().getDefaults().getComplete().setTarget("survival");
+		Routing settings = new Routing();
+		settings.getDefaults().getComplete().setTarget("survival");
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				deliveryService,
 				completionPipeline,
@@ -134,8 +132,7 @@ class CompletionPendingLifecycleTest {
 		IdentityService identityService = mock(IdentityService.class);
 		PlatformDeliveryAdapter platformDeliveryAdapter = mock(PlatformDeliveryAdapter.class);
 		EventManager eventManager = mock(EventManager.class);
-		Settings settings = new Settings();
-		settings.setConnection(new Settings.Connection());
+		Routing settings = new Routing();
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				deliveryService,
 				completionPipeline,
@@ -178,8 +175,7 @@ class CompletionPendingLifecycleTest {
 		IdentityService identityService = mock(IdentityService.class);
 		PlatformDeliveryAdapter platformDeliveryAdapter = mock(PlatformDeliveryAdapter.class);
 		EventManager eventManager = mock(EventManager.class);
-		Settings settings = new Settings();
-		settings.setConnection(new Settings.Connection());
+		Routing settings = new Routing();
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				deliveryService,
 				completionPipeline,

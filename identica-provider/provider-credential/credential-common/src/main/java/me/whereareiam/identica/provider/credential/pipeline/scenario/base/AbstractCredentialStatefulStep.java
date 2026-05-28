@@ -1,7 +1,7 @@
 package me.whereareiam.identica.provider.credential.pipeline.scenario.base;
 
 import com.google.inject.Provider;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.ScenarioContext;
@@ -15,12 +15,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public abstract class AbstractCredentialStatefulStep extends AbstractCredentialStep {
-	protected final Provider<Settings> coreSettingsProvider;
+	protected final Provider<Engine> coreSettingsProvider;
 	protected final PipelineStateStore pipelineStateStore;
 
 	protected AbstractCredentialStatefulStep(
 			@NotNull String name,
-			@NotNull Provider<Settings> coreSettingsProvider,
+			@NotNull Provider<Engine> coreSettingsProvider,
 			@NotNull PipelineStateStore pipelineStateStore
 	) {
 		super(name);
@@ -29,21 +29,21 @@ public abstract class AbstractCredentialStatefulStep extends AbstractCredentialS
 	}
 
 	protected final long authenticationTtlMs() {
-		Settings settings = coreSettingsProvider.get();
+		Engine settings = coreSettingsProvider.get();
 		if (settings == null) return 0L;
-		return settings.getConnection().getScenarios().getAuthentication().pipelineTtlMillis();
+		return settings.getScenarios().getAuthentication().pipelineTtlMillis();
 	}
 
 	protected final long registrationTtlMs() {
-		Settings settings = coreSettingsProvider.get();
+		Engine settings = coreSettingsProvider.get();
 		if (settings == null) return 0L;
-		return settings.getConnection().getScenarios().getRegistration().pipelineTtlMillis();
+		return settings.getScenarios().getRegistration().pipelineTtlMillis();
 	}
 
 	protected final long migrationTtlMs() {
-		Settings settings = coreSettingsProvider.get();
+		Engine settings = coreSettingsProvider.get();
 		if (settings == null) return 0L;
-		return settings.getConnection().getScenarios().getMigration().pipelineTtlMillis();
+		return settings.getScenarios().getMigration().pipelineTtlMillis();
 	}
 
 	protected final @NotNull PipelineStateReference reference(@NotNull ScenarioContext context) {

@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.scenario.base.journey.JourneyState;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
@@ -36,7 +36,7 @@ public class ResolveJourneyModePhase implements PipelinePhase<JourneyState> {
 	private final AuthenticationJourneyRegistry authenticationJourneyRegistry;
 	private final RegistrationJourneyRegistry registrationJourneyRegistry;
 	private final MigrationJourneyRegistry migrationJourneyRegistry;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 
 	@Override
 	public @NotNull String id() {
@@ -78,7 +78,7 @@ public class ResolveJourneyModePhase implements PipelinePhase<JourneyState> {
 		if (pending != null && pending.getJourneyMode() != null)
 			return pending.getJourneyMode();
 
-		Settings.Scenario scenario = scenario(pipelineType);
+		Engine.Scenario scenario = scenario(pipelineType);
 		JourneyMode preferred = scenario.getJourneyMode();
 		if (isViable(context, pipelineType, preferred)) return preferred;
 
@@ -140,13 +140,13 @@ public class ResolveJourneyModePhase implements PipelinePhase<JourneyState> {
 		return authenticationJourneyRegistry;
 	}
 
-	private @NotNull Settings.Scenario scenario(@NotNull PipelineType pipelineType) {
-		Settings.Connection connection = settingsProvider.get().getConnection();
+	private @NotNull Engine.Scenario scenario(@NotNull PipelineType pipelineType) {
+		Engine.Scenarios scenarios = engineProvider.get().getScenarios();
 		return pipelineType == PipelineType.REGISTRATION
-				? connection.getScenarios().getRegistration()
+				? scenarios.getRegistration()
 				: pipelineType == PipelineType.MIGRATION
-						? connection.getScenarios().getMigration()
-						: connection.getScenarios().getAuthentication();
+						? scenarios.getMigration()
+						: scenarios.getAuthentication();
 	}
 
 	private @NotNull String providerId(InternalProvider provider) {

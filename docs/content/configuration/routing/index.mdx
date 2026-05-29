@@ -1,0 +1,224 @@
+ ---
+title: Routing
+description: Field-by-field explanation of Identica's routing configuration area.
+---
+
+The routing configuration decides where players should be sent while a scenario is waiting and where they should land after it completes.
+
+## defaults
+
+`defaults` provides the fallback targets used when no scenario-specific override applies.
+
+### step
+
+- Takes: a target name and an attempt policy
+- Current default target: `"auth"`
+- Affects: the fallback route used when a step finishes in a waiting state and no scenario-specific override applies
+
+If this target is blank and no scenario target resolves, Identica clears the current routing intent with a `NO_TARGET` reason instead of routing the player.
+
+### complete
+
+- Takes: a target name and an attempt policy
+- Current default target: `"survival"`
+- Affects: the fallback route used when a scenario completes and no scenario-specific completion target applies
+
+This is usually the place to send players back into the normal network after authentication, registration, or migration is done.
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+defaults:
+  step:
+    target: "auth"
+  complete:
+    target: "survival"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "defaults": {
+    "step": {
+      "target": "auth"
+    },
+    "complete": {
+      "target": "survival"
+    }
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+## scenarios
+
+- Takes: a map keyed by scenario id
+- Supported scenario ids: `authentication`, `registration`, `migration`
+- Affects: per-scenario step and completion targets
+
+Generated routing config leaves this map empty.
+Add scenario entries only when a scenario should route differently from `defaults`.
+Scenario ids are matched case-insensitively by the routing planner.
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+scenarios:
+  authentication:
+    step:
+      target: "auth"
+    complete:
+      target: "survival"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "scenarios": {
+    "authentication": {
+      "step": {
+        "target": "auth"
+      },
+      "complete": {
+        "target": "survival"
+      }
+    }
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+### overrides.stages
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a map keyed by stage id
+- Affects: route selection for matching stages inside a scenario
+
+Use this when one stage should route somewhere different from the scenario-wide `step` target.
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+scenarios:
+  registration:
+    overrides:
+      stages:
+        provider:
+          target: "register-fallback"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "scenarios": {
+    "registration": {
+      "overrides": {
+        "stages": {
+          "provider": {
+            "target": "register-fallback"
+          }
+        }
+      }
+    }
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+### overrides.steps
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a map keyed by step name
+- Affects: route selection for a specific waiting step
+
+Step overrides win over stage overrides when both match.
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+scenarios:
+  authentication:
+    overrides:
+      steps:
+        enrollment:
+          target: "manual-choice"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "scenarios": {
+    "authentication": {
+      "overrides": {
+        "steps": {
+          "enrollment": {
+            "target": "manual-choice"
+          }
+        }
+      }
+    }
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+## attempts
+
+Each `step` or `complete` target can define an `attempts` policy.
+
+### mode
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `"NONE"`, `"RETRY_ONCE"`, `"RETRY_LIMITED"`, or `"UNTIL_REACHED"`
+- Affects: how many routing attempts are allowed for one routing intent
+
+Behavior in current source:
+
+- `NONE`: allow one attempt total
+- `RETRY_ONCE`: allow the initial attempt plus one retry
+- `RETRY_LIMITED`: allow attempts until `maxAttempts` is reached
+- `UNTIL_REACHED`: never exhaust by attempt count
+
+### maxAttempts
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer
+- Affects: the limit used by `RETRY_LIMITED`
+
+For `NONE`, `RETRY_ONCE`, and `UNTIL_REACHED`, this value is effectively ignored by the current `allowsAttempt` logic.
+
+### retryDelay
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a duration
+- Current defaults: `0s` in the runtime defaults, but generated examples may choose a non-zero value
+- Affects: how long Identica waits before retrying a routed intent
+
+### consumeOnReached
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Affects: whether the routing intent is removed immediately after the target server is reached
+
+If `true`, the intent is cleared as soon as the player is confirmed on the target server.
+If `false`, the reached intent remains stored until something else replaces or clears it.
+
+### consumeOnExhausted
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Affects: whether the routing intent is removed when retries are exhausted
+
+If `true`, an exhausted route is cleared immediately.
+If `false`, the exhausted intent stays in the store with status `EXHAUSTED`.

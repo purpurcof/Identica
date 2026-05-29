@@ -32,162 +32,11 @@ level: 3
 
 Use `2` for normal operation and `3` or `4` when you are actively debugging routing, pipeline, or provider behavior.
 
-## Connection
+## identity
 
-`connection` groups the settings that affect account resolution, pending pipeline state, routing, sessions, and scenario flow.
+`identity` controls account UUID assignment and reservation timing.
 
-### Shared timing and identity
-
-#### handshakeInstructionTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"10m"`
-- Affects: how long premium-provider handshake instructions stay valid
-
-This TTL is read by premium handshake and verification code.
-If it is too short, a player can time out while being redirected through the premium flow.
-If it is too long, stale handshake instructions remain valid longer than necessary.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  handshakeInstructionTtl: "5m"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "handshakeInstructionTtl": "5m"
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### attemptTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"10m"`
-- Affects: how long provider-attempt markers stay in the replicated attempt store
-
-Identica uses this when it marks that a provider attempt already happened for a provider, scope, username, and IP combination.
-Longer values make repeated attempts stay blocked longer.
-Shorter values let retries happen sooner.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  attemptTtl: "2m"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "attemptTtl": "2m"
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### reservationTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"15m"`
-- Affects: how long reserved account identities and username reservations are kept
-
-This matters during registration and account clearing.
-If the value is too short, a pending registration can lose its reserved identity.
-If it is too long, abandoned reservations stay around longer.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  reservationTtl: "20m"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "reservationTtl": "20m"
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### prepareStateTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"10m"`
-- Affects: temporary prepare-state and completion-pending bridge entries
-
-This TTL is used by the prepare-state store and completion pending store.
-It should be long enough to survive the handoff between connection preparation and the later scenario/completion stages.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  prepareStateTtl: "10m"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "prepareStateTtl": "10m"
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### providerJoinRestrictionTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"365d"`
-- Affects: how long provider join restriction runtime toggles stay active in the replicated toggle store
-
-This TTL is used when join restrictions are enabled at runtime.
-Longer values make administrative toggles persist for longer without needing to be reapplied.
-Shorter values let temporary restrictions expire automatically sooner.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  providerJoinRestrictionTtl: "30d"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "providerJoinRestrictionTtl": "30d"
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### uniqueIdMode
+### uniqueIdMode
 
 <Badge type="error">Danger</Badge>
 
@@ -220,9 +69,6 @@ connection:
     1. use the provider subject if it is already a valid UUID
     2. otherwise use the observed UUID from the platform profile request if it looks like a real premium UUID
     3. otherwise fail to resolve a UUID in this mode
-
-    Example: if a premium provider exposes the player's Mojang UUID as its subject, that UUID is used directly.
-    If the subject is not usable as a UUID but the platform still exposes a premium UUID in the observed profile, Identica uses that instead.
   </Tab>
 </Tabs>
 
@@ -241,281 +87,39 @@ connection:
 `OFFLINE` mainly exists for compatibility scenarios.
 `PREMIUM` is the strictest mode and mostly exists for setups that explicitly need premium/provider UUID continuity.
 
-### Connection Routing
+### reservationTtl
 
-Routing settings decide where players should be sent while a scenario is waiting and where they should land after it completes.
+<Badge type="warning">Advanced</Badge>
 
-#### step
+- Takes: a positive duration
+- Current default: `"15m"`
+- Affects: how long reserved account identities and username reservations are kept
 
-- Takes: a target name and an attempt policy
-- Affects: the fallback route used when a step finishes in a waiting state and no scenario-specific override applies
+This matters during registration and account clearing.
+If the value is too short, a pending registration can lose its reserved identity.
+If it is too long, abandoned reservations stay around longer.
 
 <Tabs items={["YAML", "JSON"]}>
   <Tab value="YAML">
 ```yaml
-connection:
-  routing:
-    defaults:
-      step:
-        target: "auth"
+identity:
+  reservationTtl: "20m"
 ```
   </Tab>
   <Tab value="JSON">
 ```json
 {
-  "connection": {
-    "routing": {
-      "defaults": {
-        "step": {
-          "target": "auth"
-        }
-      }
-    }
+  "identity": {
+    "reservationTtl": "20m"
   }
 }
 ```
   </Tab>
 </Tabs>
 
-If this target is blank and no scenario target resolves, Identica clears the current routing intent with a `NO_TARGET` reason instead of routing the player.
+## sessions
 
-#### complete
-
-- Takes: a target name and an attempt policy
-- Affects: the fallback route used when a scenario completes and no scenario-specific completion target applies
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  routing:
-    defaults:
-      complete:
-        target: "lobby"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "routing": {
-      "defaults": {
-        "complete": {
-          "target": "lobby"
-        }
-      }
-    }
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-This is usually the place to send players back into the normal network after authentication, registration, or migration is done.
-
-#### scenarios
-
-- Takes: a map keyed by scenario id
-- Supported scenario ids: `authentication`, `registration`, `migration`
-- Affects: per-scenario step and completion targets
-
-Generated settings leave this map empty.
-Add scenario entries only when a scenario should route differently from `routing.defaults`.
-Scenario ids are matched case-insensitively by the routing planner.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  routing:
-    scenarios:
-      authentication:
-        step:
-          target: "auth"
-        complete:
-          target: "survival"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "routing": {
-      "scenarios": {
-        "authentication": {
-          "step": {
-            "target": "auth"
-          },
-          "complete": {
-            "target": "survival"
-          }
-        }
-      }
-    }
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-These user-added scenario entries override `routing.defaults` for the matching pipeline.
-
-#### stages
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a map keyed by stage id
-- Affects: route selection for matching stages inside a scenario
-
-Use this when one stage should route somewhere different from the scenario-wide `step` target.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  routing:
-    scenarios:
-      registration:
-        overrides:
-          stages:
-            provider:
-              target: "register-fallback"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "routing": {
-      "scenarios": {
-        "registration": {
-          "overrides": {
-            "stages": {
-              "provider": {
-                "target": "register-fallback"
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### steps
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a map keyed by step name
-- Affects: route selection for a specific waiting step
-
-Step overrides win over stage overrides when both match.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  routing:
-    scenarios:
-      authentication:
-        overrides:
-          steps:
-            enrollment:
-              target: "manual-choice"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "routing": {
-      "scenarios": {
-        "authentication": {
-          "overrides": {
-            "steps": {
-              "enrollment": {
-                "target": "manual-choice"
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### mode
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `"NONE"`, `"RETRY_ONCE"`, `"RETRY_LIMITED"`, or `"UNTIL_REACHED"`
-- Affects: how many routing attempts are allowed for one routing intent
-
-Behavior in current source:
-
-- `NONE`: allow one attempt total
-- `RETRY_ONCE`: allow the initial attempt plus one retry
-- `RETRY_LIMITED`: allow attempts until `maxAttempts` is reached
-- `UNTIL_REACHED`: never exhaust by attempt count
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-attempts:
-  mode: "RETRY_LIMITED"
-  maxAttempts: 3
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "attempts": {
-    "mode": "RETRY_LIMITED",
-    "maxAttempts": 3
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### maxAttempts
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: an integer
-- Affects: the limit used by `RETRY_LIMITED`
-
-For `NONE`, `RETRY_ONCE`, and `UNTIL_REACHED`, this value is effectively ignored by the current `allowsAttempt` logic.
-
-#### consumeOnReached
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `true` or `false`
-- Affects: whether the routing intent is removed immediately after the target server is reached
-
-If `true`, the intent is cleared as soon as the player is confirmed on the target server.
-If `false`, the reached intent remains stored until something else replaces or clears it.
-
-#### consumeOnExhausted
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `true` or `false`
-- Affects: whether the routing intent is removed when retries are exhausted
-
-If `true`, an exhausted route is cleared immediately.
-If `false`, the exhausted intent stays in the store with status `EXHAUSTED`.
-
-### Connection Sessions
-
-`connection.sessions` controls live-session behavior and optional reconnect recognition.
+`sessions` controls live-session behavior and optional reconnect recognition.
 
 - live session behavior for currently connected players
 - optional reconnect recognition for known players
@@ -523,7 +127,7 @@ If `false`, the exhausted intent stays in the store with status `EXHAUSTED`.
 A session exists while a player is online.
 Recognition is a separate optional shortcut that can let a reconnecting player skip full provider authentication when the configured signals match a previously saved recognition state that is still valid.
 
-#### concurrencyPolicy
+### concurrencyPolicy
 
 <Badge type="warning">Warning</Badge>
 
@@ -538,9 +142,9 @@ The policies behave like this:
 - `REJECT_NEW`: keep the existing session and reject the new one
 
 This is the default policy used when a session opens after authentication, registration, or migration.
-If one provider needs different behavior, set `overrides.sessionConcurrencyPolicy` for that provider in `providers.yml`.
+If one provider needs different behavior, set `providers.session.concurrencyPolicy` for that provider in the providers config.
 
-#### activeTtl
+### activeTtl
 
 <Badge type="warning">Advanced</Badge>
 
@@ -552,10 +156,7 @@ Identica closes the logical session immediately on disconnect.
 This is not an offline remember-me duration.
 It only controls the backing cache survival time for active sessions.
 
-Use a value comfortably longer than transient replication delays and scheduler jitter.
-If it is too small, an online player can temporarily disappear from replicated session lookups before the next keepalive refresh rewrites the cache entry.
-
-#### recognition.enabled
+### recognition.enabled
 
 <Badge type="warning">Warning</Badge>
 
@@ -571,7 +172,26 @@ That includes NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, reverse proxies, 
 
 Enable recognition only if you understand that tradeoff and accept the risk for your environment.
 
-#### recognition.eligibility.untrustedIps.enabled
+### recognition.validity
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"12h"`
+- Affects: how long a previously authenticated player can still be recognized on reconnect
+
+This duration belongs to recognition, not to the live-session lifetime.
+Once it expires, the player simply goes through normal provider authentication on the next reconnect.
+
+### recognition.defaultSignals
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: a list containing any of `"USERNAME"`, `"IP"`, `"VIRTUAL_HOST"`
+- Current default: `["USERNAME", "IP", "VIRTUAL_HOST"]`
+- Affects: the signal set inherited by providers that do not override their own recognition signals
+
+### recognition.eligibility.untrustedIps.enabled
 
 <Badge type="warning">Warning</Badge>
 
@@ -584,7 +204,7 @@ This rule controls whether recognition may run at all, including reconnect recog
 Use this when reconnect recognition is generally acceptable, but there are client networks you do not trust for automatic recognition decisions.
 The generated defaults target the common “proxy forwarded a loopback/private proxy IP instead of the real client IP” failure mode.
 
-#### recognition.eligibility.untrustedIps.entries
+### recognition.eligibility.untrustedIps.entries
 
 <Badge type="warning">Warning</Badge>
 
@@ -602,66 +222,44 @@ Entries must be one of:
 
 Malformed entries fail loudly during config use with a settings-path error that points to the bad list index.
 
-#### recognition.validity
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"12h"`
-- Affects: how long a previously authenticated player can still be recognized on reconnect
-
-This duration belongs to recognition, not to the live-session lifetime.
-Once it expires, the player simply goes through normal provider authentication on the next reconnect.
-
-#### recognition.defaultSignals
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: a list containing any of `"USERNAME"`, `"IP"`, `"VIRTUAL_HOST"`
-- Current default: `["USERNAME", "IP", "VIRTUAL_HOST"]`
-- Affects: the signal set inherited by providers that do not override their own recognition signals
-
 <Tabs items={["YAML", "JSON"]}>
   <Tab value="YAML">
 ```yaml
-connection:
-  sessions:
-    concurrencyPolicy: "REPLACE_EXISTING"
-    activeTtl: "12h"
-    recognition:
-      enabled: false
-      validity: "12h"
-      defaultSignals:
-        - "USERNAME"
-        - "IP"
-        - "VIRTUAL_HOST"
-      eligibility:
-        untrustedIps:
-          enabled: true
-          entries:
-            - "127.0.0.1"
-            - "::1"
-            - "10.0.0.0/8"
-            - "172.16.0.0/12"
-            - "192.168.0.0/16"
+sessions:
+  concurrencyPolicy: "REPLACE_EXISTING"
+  activeTtl: "12h"
+  recognition:
+    enabled: false
+    validity: "12h"
+    defaultSignals:
+      - "USERNAME"
+      - "IP"
+      - "VIRTUAL_HOST"
+    eligibility:
+      untrustedIps:
+        enabled: true
+        entries:
+          - "127.0.0.1"
+          - "::1"
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"
+          - "192.168.0.0/16"
 ```
   </Tab>
   <Tab value="JSON">
 ```json
 {
-  "connection": {
-    "sessions": {
-      "concurrencyPolicy": "REPLACE_EXISTING",
-      "activeTtl": "12h",
-      "recognition": {
-        "enabled": false,
-        "validity": "12h",
-        "defaultSignals": ["USERNAME", "IP", "VIRTUAL_HOST"],
-        "eligibility": {
-          "untrustedIps": {
-            "enabled": true,
-            "entries": ["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-          }
+  "sessions": {
+    "concurrencyPolicy": "REPLACE_EXISTING",
+    "activeTtl": "12h",
+    "recognition": {
+      "enabled": false,
+      "validity": "12h",
+      "defaultSignals": ["USERNAME", "IP", "VIRTUAL_HOST"],
+      "eligibility": {
+        "untrustedIps": {
+          "enabled": true,
+          "entries": ["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
         }
       }
     }
@@ -671,298 +269,11 @@ connection:
   </Tab>
 </Tabs>
 
-### Connection Scenarios Authentication
-
-These settings affect the authentication pipeline.
-Configure them under `connection.scenarios.authentication`.
-
-#### pipelineTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"5m"`
-- Affects: how long a waiting or reconnect-required authentication pipeline can be resumed
-
-When an authentication flow is pending, this TTL becomes the expiry time for its saved pipeline state.
-If the pipeline expires first, the pending pipeline kick coordinator disconnects the player with the configured expired message.
-
-#### advanceLockTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"5s"`
-- Affects: how long an advance/resume lock is held to stop double-submits
-
-This prevents multiple near-simultaneous advance attempts from racing the same pending pipeline state.
-
-#### allowResume
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: `true` or `false`
-- Current default: `true`
-- Affects: whether waiting authentication state is saved and whether resume requests are accepted
-
-If this is `false`, waiting or reconnect-required authentication state is cleared instead of saved.
-That means players cannot resume the authentication flow later.
-
-#### allowProviderRestrictionResumeBypass
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether resumed authentication flows may continue while a provider join restriction is active
-
-If this is `true`, a player who is resuming an already-pending authentication flow may continue even when the provider they are using is currently restricted.
-This does not allow new authentication attempts through the restriction. It only affects resumed flows.
-
-#### journeyMode
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `"SEAMLESS"` or `"INTERACTIVE"`
-- Current default: `"SEAMLESS"`
-- Affects: the preferred authentication journey style
-
-<Tabs items={["SEAMLESS", "INTERACTIVE"]}>
-  <Tab value="SEAMLESS">
-    `SEAMLESS` means the authentication flow is expected to continue without player interaction.
-
-    Use case: a provider can identify the player automatically and continue the flow without asking them to choose a provider, type a credential, or confirm a verification step manually.
-
-    This is best when your authentication path is intentionally automatic and you already know the provider order and available steps produce the behavior you want.
-
-    Concrete example: with the premium provider enabled, a player who joins from an offline account while using a premium username may hit the higher-priority `premium` provider first.
-    In `SEAMLESS`, the premium handshake precheck can queue a force-online path before the player ever sees an enrollment or choice step.
-    From the player's perspective, that can look like an invalid-session-style kick on the first join, which may make them think the server is premium-only.
-  </Tab>
-  <Tab value="INTERACTIVE">
-    `INTERACTIVE` means the authentication flow may prompt the player, wait for input, or otherwise require explicit interaction.
-
-    Use case: the player may need to enter a credential, choose between providers, confirm a verification code, or respond to another prompt before authentication can continue.
-
-    For most setups, `INTERACTIVE` is the easier and safer choice because the player can clearly see what Identica expects from them.
-
-    In practice, the premium handshake precheck is skipped when the preferred authentication journey mode is `INTERACTIVE`.
-    That reduces the chance of the player being pushed into a silent premium-first path before they understand what the server expects.
-  </Tab>
-</Tabs>
-
-Identica first tries this preferred mode, then may fall back depending on `journeyPolicy`.
-
-#### journeyPolicy
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `"PREFER"` or `"STRICT"`
-- Current default: `"PREFER"`
-- Affects: whether Identica may fall back to another journey mode when the preferred one is not viable
-
-Behavior in current source:
-
-- `PREFER`: try the configured mode first, then try the other mode if needed
-- `STRICT`: use only the configured mode
-
-For most setups, `PREFER` is the better default.
-If you set `STRICT`, a flow that could have worked in the other mode may fail or end up with no useful steps instead of falling back.
-
-### Connection Scenarios Registration
-
-These settings affect the registration pipeline.
-Configure them under `connection.scenarios.registration`.
-
-#### pipelineTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"5m"`
-- Affects: how long a pending registration flow can be resumed
-
-#### advanceLockTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"5s"`
-- Affects: how long advance locking prevents duplicate registration submissions
-
-#### allowResume
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: `true` or `false`
-- Current default: `true`
-- Affects: whether pending registration state is stored and can be resumed later
-
-#### allowProviderRestrictionResumeBypass
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether resumed registration flows may continue while a provider join restriction is active
-
-If this is `true`, a player who is resuming an already-pending registration flow may continue even when the provider they are using is currently restricted.
-This does not allow new registration attempts through the restriction. It only affects resumed flows.
-
-#### journeyMode
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `"SEAMLESS"` or `"INTERACTIVE"`
-- Current default: `"SEAMLESS"`
-- Affects: the preferred registration journey style
-
-<Tabs items={["SEAMLESS", "INTERACTIVE"]}>
-  <Tab value="SEAMLESS">
-    `SEAMLESS` means the registration flow is expected to continue without player interaction.
-
-    Use case: registration can proceed automatically because the provider decision is already obvious and no manual enrollment choice or user prompt is needed.
-
-    This only works well when your registration flow is intentionally automatic and provider ordering will not confuse new players.
-
-    Concrete example: if `premium` has higher priority than another provider and the joining player uses a username that exists in Minecraft's premium profile system, `SEAMLESS` can try the premium path first.
-    If that player is actually joining from an offline account, the result can be an invalid-session-style kick on the first join before they ever understand that another provider path was available.
-  </Tab>
-  <Tab value="INTERACTIVE">
-    `INTERACTIVE` means the registration flow may prompt the player, wait for input, or otherwise require explicit interaction.
-
-    Use case: the player chooses a provider, enters a credential, confirms a prompt, or otherwise participates directly in the registration flow.
-
-    Registration is the place where this matters most because provider selection often benefits from explicit user choice.
-    For most setups, `INTERACTIVE` is the easier and safer choice.
-    In mixed offline and premium environments, it can also produce a better first impression because the player can enter the enrollment step and choose the provider directly instead of being kicked by a higher-priority provider before they understand what happened.
-
-    In code terms, the registration enrollment step is an interactive-only step.
-    That means `INTERACTIVE` is the mode that lets the player land on the enrollment choice and explicitly select a provider instead of immediately following the highest-priority automatic path.
-  </Tab>
-</Tabs>
-
-If you want less manual selection in that interactive flow, `autoSelectSingleProvider` can still reduce friction when only one provider is available.
-
-#### journeyPolicy
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `"PREFER"` or `"STRICT"`
-- Current default: `"PREFER"`
-- Affects: whether registration may switch away from the preferred journey mode when required
-
-For most setups, `PREFER` is the better default.
-Use `STRICT` only when you intentionally want registration to fail rather than fall back into the other interaction style.
-
-#### autoSelectSingleProvider
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: the interactive registration enrollment step when exactly one eligible provider is available
-
-If `true`, Identica auto-selects that single provider and completes the enrollment step immediately.
-If `false`, the player still receives the normal provider-selection prompt.
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  scenarios:
-    registration:
-      autoSelectSingleProvider: true
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "scenarios": {
-      "registration": {
-        "autoSelectSingleProvider": true
-      }
-    }
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-This only changes the single-provider case.
-It does not auto-pick between multiple eligible providers.
-
-### Connection Scenarios Migration
-
-These settings affect the migration pipeline.
-Configure them under `connection.scenarios.migration`.
-
-#### pipelineTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"5m"`
-- Affects: how long a pending migration flow can be resumed
-
-#### advanceLockTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"5s"`
-- Affects: how long advance locking prevents duplicate migration submissions
-
-#### allowResume
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: `true` or `false`
-- Current default: `true`
-- Affects: whether migration state is stored for resume/advance behavior
-
-#### journeyMode
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `"SEAMLESS"` or `"INTERACTIVE"`
-- Current default: `"INTERACTIVE"`
-- Affects: the preferred migration journey style
-
-<Tabs items={["SEAMLESS", "INTERACTIVE"]}>
-  <Tab value="SEAMLESS">
-    `SEAMLESS` means the migration flow is expected to continue without player interaction.
-
-    Use case: migration can continue automatically because the target provider, required checks, and confirmation behavior are already fully controlled by the environment or surrounding flow.
-
-    This is only a good fit when you intentionally want a silent migration experience and are comfortable with the lack of visible user confirmation.
-  </Tab>
-  <Tab value="INTERACTIVE">
-    `INTERACTIVE` means the migration flow may prompt the player, wait for input, or otherwise require explicit interaction.
-
-    Use case: the player confirms the migration, chooses a provider path, or responds to another prompt before the migration continues.
-
-    The current defaults prefer an interactive migration flow.
-    That is usually the safer option because migration often benefits from explicit confirmation, provider choice, or other visible user guidance rather than a silent automatic transition.
-  </Tab>
-</Tabs>
-
-#### journeyPolicy
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `"PREFER"` or `"STRICT"`
-- Current default: `"PREFER"`
-- Affects: whether migration may fall back to the other journey mode
-
-For most setups, `PREFER` is the better default.
-Use `STRICT` only when you intentionally want migration to stay in the selected interaction style even if another viable mode exists.
-
-### Connection Sentinels
+## Sentinels
 
 Sentinels are rate-limit style protections.
-The built-in settings page currently exposes `resumeSpam`.
 
-#### enabled
+### resumeSpam.enabled
 
 <Badge type="warning">Advanced</Badge>
 
@@ -972,7 +283,7 @@ The built-in settings page currently exposes `resumeSpam`.
 
 This sentinel watches process, resume, and advance attempts.
 
-#### maxAttempts
+### resumeSpam.maxAttempts
 
 <Badge type="warning">Advanced</Badge>
 
@@ -980,7 +291,7 @@ This sentinel watches process, resume, and advance attempts.
 - Current default: `10`
 - Affects: how many attempts are allowed before lockout logic applies
 
-#### enabled
+### resumeSpam.lockout.enabled
 
 <Badge type="warning">Advanced</Badge>
 
@@ -988,7 +299,7 @@ This sentinel watches process, resume, and advance attempts.
 - Current default: `true`
 - Affects: whether the sentinel can actively lock out attempts after the threshold is exceeded
 
-#### duration
+### resumeSpam.lockout.duration
 
 <Badge type="warning">Advanced</Badge>
 
@@ -996,40 +307,7 @@ This sentinel watches process, resume, and advance attempts.
 - Current default: `"30s"`
 - Affects: how long the lockout lasts
 
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-connection:
-  sentinels:
-    resumeSpam:
-      enabled: true
-      maxAttempts: 10
-      lockout:
-        enabled: true
-        duration: "30s"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "connection": {
-    "sentinels": {
-      "resumeSpam": {
-        "enabled": true,
-        "maxAttempts": 10,
-        "lockout": {
-          "enabled": true,
-          "duration": "30s"
-        }
-      }
-    }
-  }
-}
-```
-  </Tab>
-</Tabs>
-
-#### enabled
+### resumeSpam.warning.enabled
 
 <Badge type="warning">Advanced</Badge>
 
@@ -1037,7 +315,7 @@ connection:
 - Current default: `false`
 - Affects: whether pre-lockout warning logic can run
 
-#### thresholdPercentage
+### resumeSpam.warning.thresholdPercentage
 
 <Badge type="warning">Advanced</Badge>
 
@@ -1048,20 +326,52 @@ connection:
 The current code clamps this into the `0..100` range and computes the warning threshold from `maxAttempts`.
 For example, with `maxAttempts: 10` and `thresholdPercentage: 70`, warnings begin on attempt `8`.
 
-#### active
-
 If `active` appears in serialized configuration output, treat it as derived status rather than a normal operator-controlled setting.
-The sentinel policy computes it from `enabled`, `maxAttempts`, lockout configuration, and warning configuration.
-
-In other words, editing `active` is not the real way to turn the sentinel on or off.
 Edit the underlying fields instead.
 
-## Listeners
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+sentinels:
+  resumeSpam:
+    enabled: true
+    maxAttempts: 10
+    lockout:
+      enabled: true
+      duration: "30s"
+    warning:
+      enabled: true
+      thresholdPercentage: 70
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "sentinels": {
+    "resumeSpam": {
+      "enabled": true,
+      "maxAttempts": 10,
+      "lockout": {
+        "enabled": true,
+        "duration": "30s"
+      },
+      "warning": {
+        "enabled": true,
+        "thresholdPercentage": 70
+      }
+    }
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+## listeners
 
 Listener settings control whether selected platform listeners are registered and what priority they use.
 Platform-specific listener classes and registration details depend on the platform integration in use.
 
-### Listener Events
+### events
 
 <Badge type="warning">Advanced</Badge>
 

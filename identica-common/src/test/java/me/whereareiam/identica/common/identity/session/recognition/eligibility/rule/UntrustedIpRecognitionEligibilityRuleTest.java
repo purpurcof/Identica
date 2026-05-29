@@ -24,9 +24,9 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 		assertEquals(RecognitionEligibilityRuleDecision.Status.BLOCK, decision.getStatus());
 	}
 
-	@DisplayName("Provider override allows recognition on untrusted IPs")
+	@DisplayName("Provider recognition settings allow recognition on untrusted IPs")
 	@Test
-	void providerOverrideAllowsRecognitionOnUntrustedIps() {
+	void providerRecognitionSettingsAllowRecognitionOnUntrustedIps() {
 		RecognitionEligibilityRuleDecision decision = rule(settings(true, List.of("203.0.113.10")), providers(true))
 				.evaluate(context("203.0.113.10"));
 
@@ -80,7 +80,11 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 	private Providers providers(boolean allowOnUntrustedIp) {
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
 		premium.setId("premium");
-		premium.getOverrides().getRecognition().getEligibility().setAllowOnUntrustedIp(allowOnUntrustedIp);
+		Providers.ProviderEntry.Session.Recognition recognition = new Providers.ProviderEntry.Session.Recognition();
+		recognition.setAllowOnUntrustedIps(allowOnUntrustedIp);
+		Providers.ProviderEntry.Session session = new Providers.ProviderEntry.Session();
+		session.setRecognition(recognition);
+		premium.setSession(session);
 
 		Providers providers = new Providers();
 		providers.setProviders(List.of(premium));

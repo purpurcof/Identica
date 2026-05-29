@@ -28,9 +28,9 @@ class RecognitionEnabledEligibilityRuleTest {
 		assertEquals(RecognitionEligibilityRuleDecision.Status.BLOCK, decision.getStatus());
 	}
 
-	@DisplayName("Provider override restores recognition when enabled")
+	@DisplayName("Provider recognition settings restore recognition when enabled")
 	@Test
-	void providerOverrideRestoresRecognitionWhenEnabled() {
+	void providerRecognitionSettingsRestoreRecognitionWhenEnabled() {
 		Settings settings = settings(false);
 		Providers providers = providers(true);
 
@@ -64,7 +64,11 @@ class RecognitionEnabledEligibilityRuleTest {
 	private Providers providers(Boolean enabledOverride) {
 		Providers.ProviderEntry provider = new Providers.ProviderEntry();
 		provider.setId("premium");
-		provider.getOverrides().getRecognition().setEnabled(enabledOverride);
+		Providers.ProviderEntry.Session.Recognition recognition = new Providers.ProviderEntry.Session.Recognition();
+		recognition.setEnabled(enabledOverride);
+		Providers.ProviderEntry.Session session = new Providers.ProviderEntry.Session();
+		session.setRecognition(recognition);
+		provider.setSession(session);
 
 		Providers providers = new Providers();
 		providers.setProviders(List.of(provider));

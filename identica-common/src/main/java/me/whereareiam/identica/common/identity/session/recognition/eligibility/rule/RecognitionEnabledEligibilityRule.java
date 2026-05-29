@@ -47,11 +47,14 @@ public class RecognitionEnabledEligibilityRule implements RecognitionEligibility
 
 	private boolean isRecognitionEnabled(@NotNull String providerId) {
 		Providers.ProviderEntry provider = findProvider(providerId);
-		Providers.ProviderEntry.Overrides.Recognition overrides = provider != null
-				? provider.getOverrides().getRecognition()
+		Providers.ProviderEntry.Session session = provider != null
+				? provider.getSession()
+				: null;
+		Providers.ProviderEntry.Session.Recognition recognition = session != null
+				? session.getRecognition()
 				: null;
 
-		Boolean override = overrides != null ? overrides.getEnabled() : null;
+		Boolean override = recognition != null ? recognition.getEnabled() : null;
 		if (override != null) return override;
 
 		return settingsProvider.get().getSessions().getRecognition().isEnabled();

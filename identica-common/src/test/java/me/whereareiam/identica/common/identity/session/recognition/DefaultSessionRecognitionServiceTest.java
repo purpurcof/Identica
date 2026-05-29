@@ -36,9 +36,9 @@ class DefaultSessionRecognitionServiceTest {
 		assertFalse(service.matches("credential", "subject-1", "whereareiam", "127.0.0.1", null));
 	}
 
-	@DisplayName("Allows provider recognition on an untrusted IP when the provider override is enabled")
+	@DisplayName("Allows provider recognition on an untrusted IP when provider recognition allows it")
 	@Test
-	void allowsRecognitionOnUntrustedIpWhenProviderOverrideEnabled() {
+	void allowsRecognitionOnUntrustedIpWhenProviderRecognitionAllowsIt() {
 		Settings settings = settings(List.of(RecognitionSignal.USERNAME, RecognitionSignal.IP), List.of("127.0.0.1"));
 		Providers providers = providers(true);
 		SessionRecognitionStore store = store(snapshot("127.0.0.1", null, null));
@@ -121,7 +121,11 @@ class DefaultSessionRecognitionServiceTest {
 	private Providers providers(boolean allowRecognitionOnUntrustedIp) {
 		Providers.ProviderEntry provider = new Providers.ProviderEntry();
 		provider.setId("credential");
-		provider.getOverrides().getRecognition().getEligibility().setAllowOnUntrustedIp(allowRecognitionOnUntrustedIp);
+		Providers.ProviderEntry.Session.Recognition recognition = new Providers.ProviderEntry.Session.Recognition();
+		recognition.setAllowOnUntrustedIps(allowRecognitionOnUntrustedIp);
+		Providers.ProviderEntry.Session session = new Providers.ProviderEntry.Session();
+		session.setRecognition(recognition);
+		provider.setSession(session);
 
 		Providers providers = new Providers();
 		providers.setProviders(List.of(provider));

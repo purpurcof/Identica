@@ -283,9 +283,13 @@ public class DefaultSessionService implements SessionService, EventListener {
 
 	private SessionConcurrencyPolicy resolveConcurrencyPolicy(@Nullable String providerId) {
 		Providers.ProviderEntry provider = findProvider(providerId);
-		SessionConcurrencyPolicy override = provider != null
-				? provider.getOverrides().getSessionConcurrencyPolicy()
+		Providers.ProviderEntry.Session session = provider != null
+				? provider.getSession()
 				: null;
+		SessionConcurrencyPolicy override = session != null
+				? session.getConcurrencyPolicy()
+				: null;
+
 		return override != null
 				? override
 				: settingsProvider.get().getSessions().getConcurrencyPolicy();

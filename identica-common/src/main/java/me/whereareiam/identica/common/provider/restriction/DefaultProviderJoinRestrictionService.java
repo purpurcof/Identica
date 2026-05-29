@@ -40,7 +40,7 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 		if (provider == null) return missing(normalize(providerId));
 
 		Providers.ProviderEntry.JoinRestriction restriction = provider.getJoinRestriction();
-		if (!restriction.isEnabled() || restriction.getAllow() == null)
+		if (restriction == null || !restriction.isEnabled() || restriction.getAllow() == null)
 			return unconfigured(provider.getId());
 
 		toggleStore.enable(provider.getId());
@@ -150,7 +150,10 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 		Set<ProviderJoinRestrictionCondition> allow = allowSet(restriction);
 		return ProviderJoinRestrictionStatus.builder()
 				.providerId(provider.getId())
-				.active(restriction.isEnabled() && restriction.getAllow() != null && toggleStore.isActive(provider.getId()))
+				.active(restriction != null
+						&& restriction.isEnabled()
+						&& restriction.getAllow() != null
+						&& toggleStore.isActive(provider.getId()))
 				.allow(allow)
 				.build();
 	}

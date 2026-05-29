@@ -4,8 +4,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
-import me.whereareiam.configura.annotation.Merge;
-import me.whereareiam.configura.merge.strategy.type.StructuralObject;
+import me.whereareiam.configura.merge.annotation.Merge;
+import me.whereareiam.configura.merge.annotation.MergeList;
+import me.whereareiam.configura.merge.strategy.DeclaredObjectDefaults;
+import me.whereareiam.configura.type.merge.tree.list.ListMode;
+import me.whereareiam.configura.type.merge.tree.list.ListPresence;
+import me.whereareiam.configura.type.merge.tree.list.ListUnknownEntries;
 import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
@@ -25,6 +29,13 @@ import java.util.List;
 @ToString
 public class Providers extends ConfigDocument {
 	private @NotNull Behavior behavior = new Behavior();
+	@Merge
+	@MergeList(
+			mode = ListMode.KEYED,
+			key = "id",
+			presence = ListPresence.DECLARED_ONLY,
+			unknownEntries = ListUnknownEntries.ALLOW
+	)
 	private @NotNull List<ProviderEntry> providers = new ArrayList<>();
 
 	/**
@@ -82,46 +93,51 @@ public class Providers extends ConfigDocument {
 		 * Optional user-facing label for this provider.
 		 * Falls back to the provider descriptor name and then the raw id.
 		 */
-		private @NotNull String displayName = "";
+		private @Nullable String displayName;
 		private boolean enabled;
 		private int priority;
 		/**
-		 * Optional provider-specific overrides.
+		 * Provider-specific session settings.
 		 */
-		@Merge(StructuralObject.class)
-		private @NotNull Overrides overrides = new Overrides();
-		private @NotNull JoinRestriction joinRestriction = new JoinRestriction();
-		private @NotNull Verification verification = new Verification();
+		@Merge(DeclaredObjectDefaults.class)
+		private @Nullable Session session;
+		@Merge(DeclaredObjectDefaults.class)
+		private @Nullable JoinRestriction joinRestriction;
+		@Merge(DeclaredObjectDefaults.class)
+		private @Nullable Verification verification;
 		/**
 		 * Hostnames (optionally with port) that map to this provider.
 		 * Entries must use the format {@code host} or {@code host:port}.
 		 */
 		private @NotNull List<String> entrypoints = new ArrayList<>();
 
+		/**
+		 * Provider-specific session behavior settings.
+		 */
 		@Getter
 		@Setter
 		@ToString
-		public static class Overrides {
-			private @Nullable SessionConcurrencyPolicy sessionConcurrencyPolicy;
-			private @NotNull Recognition recognition = new Recognition();
+		public static class Session {
+			private @Nullable SessionConcurrencyPolicy concurrencyPolicy;
+			@Merge(DeclaredObjectDefaults.class)
+			private @Nullable Recognition recognition;
 
+			/**
+			 * Provider-specific reconnect recognition settings.
+			 */
 			@Getter
 			@Setter
 			@ToString
 			public static class Recognition {
 				private @Nullable Boolean enabled;
 				private @NotNull List<RecognitionSignal> signals = new ArrayList<>();
-				private @NotNull Eligibility eligibility = new Eligibility();
-
-				@Getter
-				@Setter
-				@ToString
-				public static class Eligibility {
-					private boolean allowOnUntrustedIp;
-				}
+				private boolean allowOnUntrustedIps;
 			}
 		}
 
+		/**
+		 * Runtime-toggleable provider join restriction settings.
+		 */
 		@Getter
 		@Setter
 		@ToString
@@ -130,6 +146,9 @@ public class Providers extends ConfigDocument {
 			private @Nullable List<ProviderJoinRestrictionCondition> allow;
 		}
 
+		/**
+		 * Shared verification settings for a provider.
+		 */
 		@Getter
 		@Setter
 		@ToString
@@ -137,8 +156,18 @@ public class Providers extends ConfigDocument {
 			private boolean enabled;
 			private boolean required;
 			private @Nullable UnavailableSelectionPolicy unavailableSelectionPolicy;
+			@Merge
+			@MergeList(
+					mode = ListMode.KEYED,
+					key = "id",
+					presence = ListPresence.DECLARED_ONLY,
+					unknownEntries = ListUnknownEntries.ALLOW
+			)
 			private @NotNull List<MethodEntry> methods = new ArrayList<>();
 
+			/**
+			 * Verification method entry for a provider.
+			 */
 			@Getter
 			@Setter
 			@ToString

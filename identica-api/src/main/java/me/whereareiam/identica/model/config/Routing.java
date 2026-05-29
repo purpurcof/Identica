@@ -4,8 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
-import me.whereareiam.configura.annotation.Merge;
-import me.whereareiam.configura.merge.strategy.type.DeclaredKeysOnlyMap;
+import me.whereareiam.configura.merge.annotation.Merge;
+import me.whereareiam.configura.merge.annotation.MergeMap;
+import me.whereareiam.configura.merge.strategy.DeepDefaults;
+import me.whereareiam.configura.type.merge.tree.map.MapPresence;
+import me.whereareiam.configura.type.merge.tree.map.MapUnknownEntries;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,7 +28,11 @@ public class Routing extends ConfigDocument {
 	 * Scenario-specific routing targets keyed by scenario id.
 	 * Supported ids: authentication, registration, migration.
 	 */
-	@Merge(DeclaredKeysOnlyMap.class)
+	@Merge
+	@MergeMap(
+			presence = MapPresence.DECLARED_ONLY,
+			unknownEntries = MapUnknownEntries.ALLOW
+	)
 	private @NotNull Map<String, Targets> scenarios = new HashMap<>();
 
 	/**

@@ -2,6 +2,7 @@ package me.whereareiam.identica.config;
 
 import com.google.inject.Provider;
 import me.whereareiam.configura.Config;
+import me.whereareiam.configura.Configura;
 import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
 import me.whereareiam.configura.migration.MigrationDefinition;
 import me.whereareiam.identica.Reloadable;
@@ -16,7 +17,7 @@ import java.util.function.Consumer;
 public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 	private final Path path;
 	private final Class<? extends T> type;
-	private final Config config;
+	private final ConfigurationSpec configuration;
 	private T value;
 
 	protected ConfigProvider(
@@ -24,11 +25,11 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 			String fileName,
 			Class<? extends T> type,
 			Registry<Reloadable> reloadables,
-			Config config
+			ConfigurationSpec configuration
 	) {
 		this.path = basePath.resolve(fileName);
 		this.type = type;
-		this.config = config;
+		this.configuration = configuration;
 		reloadables.register(this);
 	}
 
@@ -50,7 +51,7 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 	}
 
 	protected T load() {
-		return config.update(path, resolveType(path));
+		return configuration.update(path, resolveType(path));
 	}
 
 	protected Class<? extends T> resolveType(Path path) {
@@ -58,10 +59,10 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 	}
 
 	protected final <R> R read(Path path, Class<R> type) {
-		return config.read(path, type);
+		return configuration.read(path, type);
 	}
 
-	protected static Config configure(
+	protected static ConfigurationSpec configure(
 			Class<? extends MergeDefaultsProvider<?>> providerClass,
 			Class<?>... versionedTypes
 	) {
@@ -70,11 +71,11 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 			declarations[i] = versioned(versionedTypes[i]);
 		}
 
-		return configure(Config.defaults(), providerClass, declarations);
+		return configure(ConfigurationSpec.defaults(), providerClass, declarations);
 	}
 
-	protected static Config configure(
-			Config baseConfig,
+	protected static ConfigurationSpec configure(
+			ConfigurationSpec baseConfiguration,
 			Class<? extends MergeDefaultsProvider<?>> providerClass,
 			Class<?>... versionedTypes
 	) {
@@ -83,30 +84,22 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 			declarations[i] = versioned(versionedTypes[i]);
 		}
 
-		return configure(baseConfig, providerClass, declarations);
+		return configure(baseConfiguration, providerClass, declarations);
 	}
 
-	protected static Config configure(
+	protected static ConfigurationSpec configure(
 			Class<? extends MergeDefaultsProvider<?>> providerClass,
 			Versioned<?>... versionedTypes
 	) {
-		return configure(Config.defaults(), providerClass, versionedTypes);
+		return configure(ConfigurationSpec.defaults(), providerClass, versionedTypes);
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	protected static Config configure(
-			Config baseConfig,
+	protected static ConfigurationSpec configure(
+			ConfigurationSpec baseConfiguration,
 			Class<? extends MergeDefaultsProvider<?>> providerClass,
 			Versioned<?>... versionedTypes
 	) {
-		Config config = baseConfig.withDefaults((Class) providerClass);
-		if (versionedTypes == null) return config;
-
-		for (Versioned<?> versionedType : versionedTypes) {
-			config = registerVersioned(config, versionedType);
-		}
-
-		return config;
+		return baseConfiguration.with(providerClass, versionedTypes);
 	}
 
 	protected static <T> Versioned<T> versioned(Class<T> type) {
@@ -119,14 +112,55 @@ public abstract class ConfigProvider<T> implements Provider<T>, Reloadable {
 		return new Versioned<>(type, customizer);
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	private static Config registerVersioned(Config config, Versioned<?> versioned) {
-		if (versioned == null) return config;
-		Class<?> type = versioned.type();
-		if (type == null || config.isVersioned(type)) return config;
-		return config.withVersioned((Class) type, (Consumer) versioned.customizer());
+	protected record Versioned<T>(Class<T> type, Consumer<MigrationDefinition<T>> customizer) {
 	}
 
-	protected record Versioned<T>(Class<T> type, Consumer<MigrationDefinition<T>> customizer) {
+	protected static final class ConfigurationSpec {
+		private final Class<? extends MergeDefaultsProvider<?>> providerClass;
+		private final Versioned<?>[] versionedTypes;
+
+		private ConfigurationSpec(
+				Class<? extends MergeDefaultsProvider<?>> providerClass,
+				Versioned<?>[] versionedTypes
+		) {
+			this.providerClass = providerClass;
+			this.versionedTypes = versionedTypes != null ? versionedTypes.clone() : new Versioned<?>[0];
+		}
+
+		public static ConfigurationSpec defaults() {
+			return new ConfigurationSpec(null, new Versioned<?>[0]);
+		}
+
+		public ConfigurationSpec with(
+				Class<? extends MergeDefaultsProvider<?>> providerClass,
+				Versioned<?>... versionedTypes
+		) {
+			return new ConfigurationSpec(providerClass, versionedTypes);
+		}
+
+		public <T> T update(Path path, Class<T> type) {
+			return configured().update(path, type);
+		}
+
+		public <T> T read(Path path, Class<T> type) {
+			return configured().read(path, type);
+		}
+
+		@SuppressWarnings({"rawtypes", "unchecked"})
+		private Configura configured() {
+			var config = providerClass != null
+					? Config.configured().withDefaults((Class) providerClass)
+					: Config.configured();
+
+			for (Versioned<?> versionedType : versionedTypes) {
+				if (versionedType == null) continue;
+
+				Class<?> type = versionedType.type();
+				if (type == null || config.isVersioned(type)) continue;
+				config = config.withVersioned((Class) type, (Consumer) versionedType.customizer());
+			}
+
+			return config;
+		}
 	}
 }

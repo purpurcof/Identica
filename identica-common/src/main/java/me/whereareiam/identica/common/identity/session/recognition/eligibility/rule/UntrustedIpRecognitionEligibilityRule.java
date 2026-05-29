@@ -66,7 +66,12 @@ public class UntrustedIpRecognitionEligibilityRule implements RecognitionEligibi
 		for (Providers.ProviderEntry entry : providersProvider.get().getProviders()) {
 			if (entry == null) continue;
 			if (!entry.getId().equalsIgnoreCase(providerId)) continue;
-			return entry.getOverrides().getRecognition().getEligibility().isAllowOnUntrustedIp();
+			Providers.ProviderEntry.Session session = entry.getSession();
+			Providers.ProviderEntry.Session.Recognition recognition = session != null
+					? session.getRecognition()
+					: null;
+
+			return recognition != null && recognition.isAllowOnUntrustedIps();
 		}
 
 		return false;

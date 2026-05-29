@@ -1,51 +1,7 @@
 level: 3
-identity:
-  uniqueIdMode: "RANDOM"
-  reservationTtl: "15m"
 sessions:
-  concurrencyPolicy: "REPLACE_EXISTING"
-  activeTtl: "12h"
   recognition:
     enabled: true
-    validity: "12h"
-    defaultSignals:
-      - "USERNAME"
-      - "IP"
-      - "VIRTUAL_HOST"
     eligibility:
       untrustedIps:
         enabled: false
-        entries: []
-sentinels:
-  resumeSpam:
-    enabled: false
-    maxAttempts: 10
-    lockout:
-      enabled: true
-      duration: "30s"
-    warning:
-      enabled: false
-      thresholdPercentage: 0
-listeners:
-  events:
-    net.md_5.bungee.api.event.PlayerDisconnectEvent:
-      register: true
-      priority: "NORMAL"
-    net.md_5.bungee.api.event.ServerConnectEvent:
-      register: true
-      priority: "HIGH"
-    net.md_5.bungee.api.event.PlayerHandshakeEvent:
-      register: true
-      priority: "NORMAL"
-    net.md_5.bungee.api.event.LoginEvent:
-      register: true
-      priority: "NORMAL"
-    net.md_5.bungee.api.event.PostLoginEvent:
-      register: true
-      priority: "NORMAL"
-    net.md_5.bungee.api.event.ServerConnectedEvent:
-      register: true
-      priority: "HIGH"
-    net.md_5.bungee.api.event.ServerSwitchEvent:
-      register: true
-      priority: "NORMAL"

@@ -20,7 +20,7 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 
 		Providers.ProviderEntry credential = new Providers.ProviderEntry();
 		credential.setId("credential");
-		credential.setDisplayName("CR");
+		credential.setDisplayName("Credential");
 		credential.setEnabled(true);
 		credential.setPriority(50);
 		credential.setEntrypoints(List.of("credential.arcadeya.com"));
@@ -32,7 +32,7 @@ public class ProvidersDefaults implements MergeDefaultsProvider<Providers> {
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
 		premium.setId("premium");
-		premium.setDisplayName("PR");
+		premium.setDisplayName("Premium");
 		premium.setEnabled(true);
 		premium.setPriority(100);
 		premium.setEntrypoints(List.of("premium.arcadeya.com"));

@@ -4,8 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
-import me.whereareiam.configura.annotation.Merge;
-import me.whereareiam.configura.merge.strategy.type.DefaultKeysOnlyMap;
+import me.whereareiam.configura.merge.annotation.Merge;
+import me.whereareiam.configura.merge.annotation.MergeMap;
+import me.whereareiam.configura.merge.strategy.DeepDefaults;
+import me.whereareiam.configura.type.merge.tree.map.MapPresence;
+import me.whereareiam.configura.type.merge.tree.map.MapUnknownEntries;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
 import me.whereareiam.identica.type.identity.UniqueIdMode;
@@ -183,7 +186,11 @@ public class Settings extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Listeners {
-		@Merge(DefaultKeysOnlyMap.class)
+		@Merge
+		@MergeMap(
+				presence = MapPresence.DEFAULT_DOMAIN_ONLY,
+				unknownEntries = MapUnknownEntries.REJECT
+		)
 		private @NotNull Map<String, Event> events;
 	}
 }

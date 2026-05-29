@@ -1,6 +1,7 @@
 package me.whereareiam.identica.common.config.defaults;
 
 import me.whereareiam.configura.Config;
+import me.whereareiam.configura.Configura;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.common.config.IdenticaModule;
 import me.whereareiam.identica.model.Event;
@@ -59,13 +60,13 @@ class SettingsDefaultsTest {
 	@Test
 	void generatedSettingsFileWritesExpectedShape(@TempDir Path tempDir) throws Exception {
 		Path settingsPath = tempDir.resolve("settings.yml");
-		Config config = Config.builder()
+		Configura yaml = Config.builder()
 				.format(Format.YAML)
 				.module(new IdenticaModule())
 				.defaults(SettingsDefaults.class)
 				.build();
 
-		Settings settings = config.update(settingsPath, Settings.class);
+		Settings settings = yaml.update(settingsPath, Settings.class);
 
 		assertNotNull(settings.getIdentity());
 		String generated = Files.readString(settingsPath);

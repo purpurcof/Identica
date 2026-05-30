@@ -1,13 +1,13 @@
 package me.whereareiam.identica.provider.credential.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.provider.credential.config.CredentialSettings;
 
 import java.time.Duration;
 
 @Singleton
-public class CredentialSettingsDefaults implements MergeDefaultsProvider<CredentialSettings> {
+public class CredentialSettingsDefaults implements DefaultsProvider<CredentialSettings> {
 	@Override
 	public CredentialSettings supply(CredentialSettings config) {
 		CredentialSettings.Scenario.Registration registration = new CredentialSettings.Scenario.Registration();

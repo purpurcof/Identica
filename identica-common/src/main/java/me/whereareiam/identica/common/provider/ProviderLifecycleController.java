@@ -87,28 +87,29 @@ public class ProviderLifecycleController {
 			}
 
 			IdenticaProvider probeProvider = instanceFactory.instantiateProvider(providerClass);
-				if (probeProvider != null) {
-					probeProvider.setDescriptor(descriptor);
-					probeProvider.setWorkingPath(workingPath);
-				}
+			if (probeProvider != null) {
+				probeProvider.setDescriptor(descriptor);
+				probeProvider.setWorkingPath(workingPath);
+			}
 
-				Class<? extends ProviderPlatformExtension> platformExtensionClass = platformExtensionResolver.resolve(probeProvider);
-				ProviderPlatformExtension probePlatformExtension = platformExtensionClass != null
-						? instanceFactory.instantiatePlatformExtension(platformExtensionClass)
-						: null;
+			Class<? extends ProviderPlatformExtension> platformExtensionClass = platformExtensionResolver.resolve(probeProvider);
+			ProviderPlatformExtension probePlatformExtension = platformExtensionClass != null
+					? instanceFactory.instantiatePlatformExtension(platformExtensionClass)
+					: null;
 
-				dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
+			dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
 
-				Injector providerInjector = injectorFactory.create(
-						workingPath,
-						descriptor,
-						probeProvider,
-						probePlatformExtension
-				);
-				applySchemaContributors(providerInjector);
-				IdenticaProvider provider = instanceFactory.createInjectedProvider(
-						providerInjector,
-						providerClass,
+			Injector providerInjector = injectorFactory.create(
+					workingPath,
+					descriptor,
+					probeProvider,
+					probePlatformExtension
+			);
+
+			applySchemaContributors(providerInjector);
+			IdenticaProvider provider = instanceFactory.createInjectedProvider(
+					providerInjector,
+					providerClass,
 					probeProvider
 			);
 			if (provider == null) {
@@ -117,16 +118,16 @@ public class ProviderLifecycleController {
 				return;
 			}
 
-				provider.setDescriptor(descriptor);
-				provider.setWorkingPath(workingPath);
-				if (platformExtensionClass != null) {
-					ProviderPlatformExtension platformExtension = instanceFactory.createInjectedPlatformExtension(
-							providerInjector,
-							platformExtensionClass,
-							probePlatformExtension
-					);
-					provider.setPlatformExtension(platformExtension);
-				}
+			provider.setDescriptor(descriptor);
+			provider.setWorkingPath(workingPath);
+			if (platformExtensionClass != null) {
+				ProviderPlatformExtension platformExtension = instanceFactory.createInjectedPlatformExtension(
+						providerInjector,
+						platformExtensionClass,
+						probePlatformExtension
+				);
+				provider.setPlatformExtension(platformExtension);
+			}
 
 			internal.setProvider(provider);
 			internal.setWorkingPath(workingPath);

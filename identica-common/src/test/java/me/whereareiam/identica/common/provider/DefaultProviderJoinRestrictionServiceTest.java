@@ -7,9 +7,8 @@ import me.whereareiam.identica.common.replication.ReplicationTestFixtures;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
-import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionDecision;
 import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionStatus;
@@ -78,6 +77,24 @@ class DefaultProviderJoinRestrictionServiceTest {
 		assertFalse(decision.isActive());
 		assertTrue(decision.isConfigured());
 		assertEquals(Set.of(ProviderJoinRestrictionCondition.RECOGNIZED), decision.getAllow());
+	}
+
+	@DisplayName("Provider-only evaluation allows when restriction config is absent")
+	@Test
+	void providerOnlyEvaluationAllowsWhenRestrictionIsMissing() {
+		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
+				this::providers,
+				new TestToggleStore(),
+				mock(SessionRecognitionService.class),
+				mock(ProviderLinkPersistenceService.class)
+		);
+
+		ProviderJoinRestrictionDecision decision = service.evaluate("missing");
+
+		assertTrue(decision.isAllowed());
+		assertFalse(decision.isActive());
+		assertFalse(decision.isConfigured());
+		assertTrue(decision.getAllow().isEmpty());
 	}
 
 	@DisplayName("Provider-only evaluation denies active restrictions that require context")
@@ -248,46 +265,44 @@ class DefaultProviderJoinRestrictionServiceTest {
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
 		premium.setId("premium");
-		Providers.ProviderEntry.JoinRestriction active = new Providers.ProviderEntry.JoinRestriction();
-		active.setEnabled(true);
-		active.setAllow(List.of(ProviderJoinRestrictionCondition.RECOGNIZED));
-		premium.setJoinRestriction(active);
+		premium.setRestriction(restriction(true, List.of(ProviderJoinRestrictionCondition.RECOGNIZED)));
 
 		Providers.ProviderEntry credential = new Providers.ProviderEntry();
 		credential.setId("credential");
-		Providers.ProviderEntry.JoinRestriction inactive = new Providers.ProviderEntry.JoinRestriction();
-		inactive.setEnabled(false);
-		credential.setJoinRestriction(inactive);
+		credential.setRestriction(restriction(false, null));
 
 		Providers.ProviderEntry denyAll = new Providers.ProviderEntry();
 		denyAll.setId("deny-all");
-		Providers.ProviderEntry.JoinRestriction denyAllRestriction =
-				new Providers.ProviderEntry.JoinRestriction();
-		denyAllRestriction.setEnabled(true);
-		denyAllRestriction.setAllow(List.of());
-		denyAll.setJoinRestriction(denyAllRestriction);
+		denyAll.setRestriction(restriction(true, List.of()));
 
 		Providers.ProviderEntry linkedOnly = new Providers.ProviderEntry();
 		linkedOnly.setId("linked-only");
-		Providers.ProviderEntry.JoinRestriction linkedOnlyRestriction =
-				new Providers.ProviderEntry.JoinRestriction();
-		linkedOnlyRestriction.setEnabled(true);
-		linkedOnlyRestriction.setAllow(List.of(ProviderJoinRestrictionCondition.LINKED));
-		linkedOnly.setJoinRestriction(linkedOnlyRestriction);
+		linkedOnly.setRestriction(restriction(true, List.of(ProviderJoinRestrictionCondition.LINKED)));
 
 		Providers.ProviderEntry combined = new Providers.ProviderEntry();
 		combined.setId("combined");
-		Providers.ProviderEntry.JoinRestriction combinedRestriction =
-				new Providers.ProviderEntry.JoinRestriction();
-		combinedRestriction.setEnabled(true);
-		combinedRestriction.setAllow(List.of(
+		combined.setRestriction(restriction(true, List.of(
 				ProviderJoinRestrictionCondition.RECOGNIZED,
 				ProviderJoinRestrictionCondition.LINKED
-		));
-		combined.setJoinRestriction(combinedRestriction);
+		)));
 
-		providers.setProviders(List.of(premium, credential, denyAll, linkedOnly, combined));
+		Providers.ProviderEntry missing = new Providers.ProviderEntry();
+		missing.setId("missing");
+
+		providers.setProviders(List.of(premium, credential, denyAll, linkedOnly, combined, missing));
 		return providers;
+	}
+
+	private Providers.ProviderEntry.Restriction restriction(
+			boolean enabled,
+			List<ProviderJoinRestrictionCondition> allow
+	) {
+		Providers.ProviderEntry.Restriction restriction = new Providers.ProviderEntry.Restriction();
+		Providers.ProviderEntry.Restriction.Join join = new Providers.ProviderEntry.Restriction.Join();
+		join.setEnabled(enabled);
+		join.setAllow(allow);
+		restriction.setJoin(join);
+		return restriction;
 	}
 
 	private static final class TestToggleStore extends ProviderJoinRestrictionToggleStore {

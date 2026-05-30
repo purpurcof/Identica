@@ -1,16 +1,16 @@
 package me.whereareiam.identica.common.config.defaults.messages;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
-import me.whereareiam.identica.model.config.type.DateTimePattern;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.config.type.DateTimePattern;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
+public class MessagesDefaults implements DefaultsProvider<Messages> {
 	@Override
 	public Messages supply(@NotNull Messages messages) {
 		applyGeneral(messages);

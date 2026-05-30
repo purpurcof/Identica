@@ -3,6 +3,10 @@ package me.whereareiam.identica.common.config.provider;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import me.whereareiam.configura.Config;
+import me.whereareiam.configura.Configura;
+import me.whereareiam.configura.feature.polymorphic.PolymorphicFeature;
+import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.common.config.defaults.PersistenceDefaults;
 import me.whereareiam.identica.config.ConfigProvider;
@@ -11,7 +15,6 @@ import me.whereareiam.identica.model.config.persistence.Persistence;
 import me.whereareiam.identica.model.config.persistence.SqlitePersistence;
 import me.whereareiam.identica.model.config.persistence.external.MysqlPersistence;
 import me.whereareiam.identica.model.config.persistence.external.PostgresPersistence;
-import me.whereareiam.identica.Registry;
 
 import java.nio.file.Path;
 
@@ -22,19 +25,20 @@ public class PersistenceProvider extends ConfigProvider<Persistence> {
 			@Named("dataPath") Path dataPath,
 			Registry<Reloadable> registry
 	) {
-		super(
-				dataPath,
-				"persistence",
-				Persistence.class,
-				registry,
-				configure(
-						PersistenceDefaults.class,
-						SqlitePersistence.class,
-						H2Persistence.class,
-						MysqlPersistence.class,
-						PostgresPersistence.class
-				)
-		);
+		super(dataPath, "persistence", Persistence.class, registry);
+	}
+
+	@Override
+	protected Configura configura() {
+		Configura configura = Config.configured()
+				.withDefaults(PersistenceDefaults.class)
+				.withFeature(PolymorphicFeature.defaults());
+		configura = versioned(configura, SqlitePersistence.class);
+		configura = versioned(configura, H2Persistence.class);
+		configura = versioned(configura, MysqlPersistence.class);
+		configura = versioned(configura, PostgresPersistence.class);
+
+		return configura;
 	}
 
 	@Override

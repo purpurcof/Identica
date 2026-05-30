@@ -1,5 +1,5 @@
 plugins {
-    id("common")
+    id("shared")
     alias(libs.plugins.attache)
 }
 

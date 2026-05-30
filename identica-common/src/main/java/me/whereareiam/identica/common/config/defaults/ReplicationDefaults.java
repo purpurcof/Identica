@@ -1,13 +1,13 @@
 package me.whereareiam.identica.common.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.config.Replication;
 
 import java.util.UUID;
 
 @Singleton
-public class ReplicationDefaults implements MergeDefaultsProvider<Replication> {
+public class ReplicationDefaults implements DefaultsProvider<Replication> {
 	@Override
 	public Replication supply(Replication replication) {
 		replication.setEnabled(false);

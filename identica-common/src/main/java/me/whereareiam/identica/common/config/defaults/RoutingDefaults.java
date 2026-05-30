@@ -1,14 +1,14 @@
 package me.whereareiam.identica.common.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.config.Routing;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
 
 import java.util.HashMap;
 
 @Singleton
-public class RoutingDefaults implements MergeDefaultsProvider<Routing> {
+public class RoutingDefaults implements DefaultsProvider<Routing> {
 	@Override
 	public Routing supply(Routing routing) {
 		Routing.Defaults defaults = new Routing.Defaults();

@@ -15,15 +15,7 @@ import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -39,7 +31,7 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 		Providers.ProviderEntry provider = findProvider(providerId);
 		if (provider == null) return missing(normalize(providerId));
 
-		Providers.ProviderEntry.JoinRestriction restriction = provider.getJoinRestriction();
+		Providers.ProviderEntry.Restriction.Join restriction = joinRestriction(provider);
 		if (restriction == null || !restriction.isEnabled() || restriction.getAllow() == null)
 			return unconfigured(provider.getId());
 
@@ -81,14 +73,14 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 		Providers.ProviderEntry provider = findProvider(providerId);
 		if (provider == null) return inactiveDecision(Set.of(), Set.of(), false);
 
-		Providers.ProviderEntry.JoinRestriction restriction = provider.getJoinRestriction();
+		Providers.ProviderEntry.Restriction.Join restriction = joinRestriction(provider);
 		Set<ProviderJoinRestrictionCondition> allow = allowSet(restriction);
 		if (!isActive(provider, restriction))
-			return inactiveDecision(allow, Set.of(), restriction.getAllow() != null);
+			return inactiveDecision(allow, Set.of(), isConfigured(restriction));
 
 		return ProviderJoinRestrictionDecision.builder()
 				.allowed(false)
-				.configured(restriction.getAllow() != null)
+				.configured(isConfigured(restriction))
 				.active(true)
 				.allow(allow)
 				.matchedConditions(Set.of())
@@ -107,10 +99,10 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 		if (provider == null)
 			return inactiveDecision(Set.of(), Set.of(), false);
 
-		Providers.ProviderEntry.JoinRestriction restriction = provider.getJoinRestriction();
+		Providers.ProviderEntry.Restriction.Join restriction = joinRestriction(provider);
 		Set<ProviderJoinRestrictionCondition> allow = allowSet(restriction);
 		if (!isActive(provider, restriction))
-			return inactiveDecision(allow, Set.of(), restriction.getAllow() != null);
+			return inactiveDecision(allow, Set.of(), isConfigured(restriction));
 		if (allow.isEmpty())
 			return deniedDecision(allow, Set.of());
 
@@ -146,7 +138,7 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 	}
 
 	private @NotNull ProviderJoinRestrictionStatus resolveStatus(@NotNull Providers.ProviderEntry provider) {
-		Providers.ProviderEntry.JoinRestriction restriction = provider.getJoinRestriction();
+		Providers.ProviderEntry.Restriction.Join restriction = joinRestriction(provider);
 		Set<ProviderJoinRestrictionCondition> allow = allowSet(restriction);
 		return ProviderJoinRestrictionStatus.builder()
 				.providerId(provider.getId())
@@ -160,7 +152,7 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 
 	private boolean isActive(
 			@NotNull Providers.ProviderEntry provider,
-			@Nullable Providers.ProviderEntry.JoinRestriction restriction
+			@Nullable Providers.ProviderEntry.Restriction.Join restriction
 	) {
 		return restriction != null
 				&& restriction.isEnabled()
@@ -168,8 +160,12 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 				&& toggleStore.isActive(provider.getId());
 	}
 
+	private boolean isConfigured(@Nullable Providers.ProviderEntry.Restriction.Join restriction) {
+		return restriction != null && restriction.getAllow() != null;
+	}
+
 	private @NotNull Set<ProviderJoinRestrictionCondition> allowSet(
-			@Nullable Providers.ProviderEntry.JoinRestriction restriction
+			@Nullable Providers.ProviderEntry.Restriction.Join restriction
 	) {
 		if (restriction == null || restriction.getAllow() == null)
 			return Set.of();
@@ -181,6 +177,11 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 						Collectors.toCollection(LinkedHashSet::new),
 						Collections::unmodifiableSet
 				));
+	}
+
+	private @Nullable Providers.ProviderEntry.Restriction.Join joinRestriction(@NotNull Providers.ProviderEntry provider) {
+		Providers.ProviderEntry.Restriction restriction = provider.getRestriction();
+		return restriction != null ? restriction.getJoin() : null;
 	}
 
 	private @Nullable Providers.ProviderEntry findProvider(@Nullable String providerId) {

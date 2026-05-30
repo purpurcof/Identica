@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.type.pipeline.PipelineConcurrencyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
@@ -10,7 +10,7 @@ import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import java.time.Duration;
 
 @Singleton
-public class EngineDefaults implements MergeDefaultsProvider<Engine> {
+public class EngineDefaults implements DefaultsProvider<Engine> {
 	@Override
 	public Engine supply(Engine engine) {
 		Engine.Behavior behavior = new Engine.Behavior();

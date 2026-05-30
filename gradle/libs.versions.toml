@@ -11,7 +11,7 @@ lombok = "1.18.42"
 
 # general
 attache = "dev-5e11e1c"
-configura = "dev-f971327"
+configura = "dev-8cde90a"
 commandant = "dev-866e0f7"
 keystone = "dev-90d39d2"
 dialectica = "dev-62409af"
@@ -68,6 +68,9 @@ attache-bungeecord = { group = "me.whereareiam", name = "attache-bungeecord", ve
 attache-velocity = { group = "me.whereareiam", name = "attache-velocity", version.ref = "attache" }
 attache-standalone = { group = "me.whereareiam", name = "attache-standalone", version.ref = "attache" }
 configura = { group = "me.whereareiam", name = "configura", version.ref = "configura" }
+configura-feature-extension = { group = "me.whereareiam.configura.feature", name = "extension", version.ref = "configura" }
+configura-feature-polymorphic = { group = "me.whereareiam.configura.feature", name = "polymorphic", version.ref = "configura" }
+configura-feature-postprocess = { group = "me.whereareiam.configura.feature", name = "postprocess", version.ref = "configura" }
 commandant = { group = "me.whereareiam", name = "commandant", version.ref = "commandant" }
 keystone = { group = "me.whereareiam", name = "keystone", version.ref = "keystone" }
 dialectica = { group = "me.whereareiam", name = "dialectica", version.ref = "dialectica" }

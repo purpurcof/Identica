@@ -3,13 +3,13 @@ package me.whereareiam.identica.common.config.defaults.provider;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.config.provider.Conflicts;
 
 import java.util.List;
 
 @Singleton
-public class ConflictsDefaults implements MergeDefaultsProvider<Conflicts> {
+public class ConflictsDefaults implements DefaultsProvider<Conflicts> {
 	@Override
 	public Conflicts supply(Conflicts config) {
 		Conflicts.ConflictRules usernameRules = new Conflicts.ConflictRules();

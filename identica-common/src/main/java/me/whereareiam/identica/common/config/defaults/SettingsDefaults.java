@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class SettingsDefaults implements MergeDefaultsProvider<Settings> {
+public class SettingsDefaults implements DefaultsProvider<Settings> {
 	@Override
 	public Settings supply(Settings settings) {
 		settings.setLevel(2);

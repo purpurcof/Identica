@@ -1,13 +1,13 @@
 package me.whereareiam.identica.provider.credential.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 
 import java.util.List;
 
 @Singleton
-public class CredentialMessagesDefaults implements MergeDefaultsProvider<CredentialMessages> {
+public class CredentialMessagesDefaults implements DefaultsProvider<CredentialMessages> {
 	@Override
 	public CredentialMessages supply(CredentialMessages messages) {
 		CredentialMessages.Scenario scenario = new CredentialMessages.Scenario();

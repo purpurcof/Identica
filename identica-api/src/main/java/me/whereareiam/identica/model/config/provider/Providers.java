@@ -4,8 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
-import me.whereareiam.configura.merge.annotation.Merge;
-import me.whereareiam.configura.merge.annotation.MergeList;
+import me.whereareiam.configura.annotation.PreserveUnknownFields;
+import me.whereareiam.configura.annotation.merge.Merge;
+import me.whereareiam.configura.annotation.merge.MergeList;
+import me.whereareiam.configura.feature.extension.api.annotation.ExtendableDocument;
 import me.whereareiam.configura.merge.strategy.DeclaredObjectDefaults;
 import me.whereareiam.configura.type.merge.tree.list.ListMode;
 import me.whereareiam.configura.type.merge.tree.list.ListPresence;
@@ -87,6 +89,8 @@ public class Providers extends ConfigDocument {
 	@Getter
 	@Setter
 	@ToString
+	@ExtendableDocument
+	@PreserveUnknownFields
 	public static class ProviderEntry {
 		private @NotNull String id;
 		/**
@@ -100,10 +104,16 @@ public class Providers extends ConfigDocument {
 		 * Provider-specific session settings.
 		 */
 		@Merge(DeclaredObjectDefaults.class)
+		@ExtendableDocument
 		private @Nullable Session session;
+		/**
+		 * Provider-specific restriction settings.
+		 */
 		@Merge(DeclaredObjectDefaults.class)
-		private @Nullable JoinRestriction joinRestriction;
+		@ExtendableDocument
+		private @Nullable Restriction restriction;
 		@Merge(DeclaredObjectDefaults.class)
+		@ExtendableDocument
 		private @Nullable Verification verification;
 		/**
 		 * Hostnames (optionally with port) that map to this provider.
@@ -117,9 +127,11 @@ public class Providers extends ConfigDocument {
 		@Getter
 		@Setter
 		@ToString
+		@ExtendableDocument
 		public static class Session {
 			private @Nullable SessionConcurrencyPolicy concurrencyPolicy;
 			@Merge(DeclaredObjectDefaults.class)
+			@ExtendableDocument
 			private @Nullable Recognition recognition;
 
 			/**
@@ -128,6 +140,7 @@ public class Providers extends ConfigDocument {
 			@Getter
 			@Setter
 			@ToString
+			@ExtendableDocument
 			public static class Recognition {
 				private @Nullable Boolean enabled;
 				private @NotNull List<RecognitionSignal> signals = new ArrayList<>();
@@ -136,14 +149,31 @@ public class Providers extends ConfigDocument {
 		}
 
 		/**
-		 * Runtime-toggleable provider join restriction settings.
+		 * Provider-specific restriction settings.
 		 */
 		@Getter
 		@Setter
 		@ToString
-		public static class JoinRestriction {
-			private boolean enabled;
-			private @Nullable List<ProviderJoinRestrictionCondition> allow;
+		@ExtendableDocument
+		public static class Restriction {
+			/**
+			 * Runtime-toggleable provider join restriction settings.
+			 */
+			@Merge(DeclaredObjectDefaults.class)
+			@ExtendableDocument
+			private @Nullable Join join;
+
+			/**
+			 * Runtime-toggleable provider join restriction settings.
+			 */
+			@Getter
+			@Setter
+			@ToString
+			@ExtendableDocument
+			public static class Join {
+				private boolean enabled;
+				private @Nullable List<ProviderJoinRestrictionCondition> allow;
+			}
 		}
 
 		/**
@@ -152,6 +182,7 @@ public class Providers extends ConfigDocument {
 		@Getter
 		@Setter
 		@ToString
+		@ExtendableDocument
 		public static class Verification {
 			private boolean enabled;
 			private boolean required;
@@ -171,6 +202,7 @@ public class Providers extends ConfigDocument {
 			@Getter
 			@Setter
 			@ToString
+			@ExtendableDocument
 			public static class MethodEntry {
 				private @NotNull String id = "";
 				private boolean enabled;

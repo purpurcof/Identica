@@ -44,11 +44,11 @@ class ProvidersDefaultsTest {
 		assertTrue(generated.contains("providers:"));
 		assertTrue(generated.contains("entrypoints:"));
 		assertFalse(generated.contains("session:"), generated);
-		assertFalse(generated.contains("joinRestriction:"), generated);
+		assertFalse(generated.contains("restriction:"), generated);
 		assertFalse(generated.contains("verification:"), generated);
 
 		assertNull(premium.getSession());
-		assertNull(premium.getJoinRestriction());
+		assertNull(premium.getRestriction());
 		assertNull(premium.getVerification());
 	}
 
@@ -116,25 +116,44 @@ class ProvidersDefaultsTest {
 		assertFalse(recognition.isAllowOnUntrustedIps());
 	}
 
-	@DisplayName("Declared join restriction merges provider defaults")
+	@DisplayName("Declared restriction does not create join until declared")
+	@Test
+	void declaredRestrictionDoesNotCreateJoinUntilDeclared(@TempDir Path tempDir) throws Exception {
+		Path providersPath = tempDir.resolve("providers.yml");
+		Files.writeString(providersPath, """
+				providers:
+				  - id: premium
+				    restriction: {}
+				""");
+
+		Providers providers = yaml().update(providersPath, Providers.class);
+		Providers.ProviderEntry.Restriction restriction = provider(providers, "premium").getRestriction();
+
+		assertNotNull(restriction);
+		assertNull(restriction.getJoin());
+	}
+
+	@DisplayName("Declared restriction join merges provider defaults")
 	@Test
 	void declaredJoinRestrictionMergesProviderDefaults(@TempDir Path tempDir) throws Exception {
 		Path providersPath = tempDir.resolve("providers.yml");
 		Files.writeString(providersPath, """
 				providers:
 				  - id: credential
-				    joinRestriction:
-				      enabled: true
+				    restriction:
+				      join:
+				        enabled: true
 				""");
 
 		Providers providers = yaml().update(providersPath, Providers.class);
-		Providers.ProviderEntry.JoinRestriction restriction = provider(providers, "credential").getJoinRestriction();
+		Providers.ProviderEntry.Restriction restriction = provider(providers, "credential").getRestriction();
 
 		assertNotNull(restriction);
-		assertTrue(restriction.isEnabled());
+		assertNotNull(restriction.getJoin());
+		assertTrue(restriction.getJoin().isEnabled());
 		assertEquals(
 				List.of(ProviderJoinRestrictionCondition.RECOGNIZED, ProviderJoinRestrictionCondition.LINKED),
-				restriction.getAllow()
+				restriction.getJoin().getAllow()
 		);
 	}
 

@@ -5,8 +5,6 @@ import me.whereareiam.identica.common.provider.restriction.ProviderJoinRestricti
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.common.replication.ReplicationTestFixtures;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
-import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
@@ -25,23 +23,19 @@ import static org.mockito.Mockito.when;
 
 @DisplayName("Default Provider Join-Restriction Service")
 class DefaultProviderJoinRestrictionServiceTest {
-	private static final ConnectionIdentity.Origin ORIGIN =
-			new ConnectionIdentity.Origin("premium.arcadeya.com", 25565);
-
-	@DisplayName("Enable activates configured provider restriction")
+	@DisplayName("Enable does not activate recognized-only restriction temporarily")
 	@Test
-	void enableActivatesConfiguredRestriction() {
+	void enableDoesNotActivateRecognizedOnlyRestriction() {
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				new TestToggleStore(),
-				mock(SessionRecognitionService.class),
 				mock(ProviderLinkPersistenceService.class)
 		);
 
 		ProviderJoinRestrictionStatus status = service.enable("premium");
 
-		assertTrue(status.isActive());
-		assertEquals(Set.of(ProviderJoinRestrictionCondition.RECOGNIZED), status.getAllow());
+		assertFalse(status.isActive());
+		assertTrue(status.getAllow().isEmpty());
 	}
 
 	@DisplayName("Enable does not activate unconfigured provider restriction")
@@ -50,7 +44,6 @@ class DefaultProviderJoinRestrictionServiceTest {
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				new TestToggleStore(),
-				mock(SessionRecognitionService.class),
 				mock(ProviderLinkPersistenceService.class)
 		);
 
@@ -67,7 +60,6 @@ class DefaultProviderJoinRestrictionServiceTest {
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				store,
-				mock(SessionRecognitionService.class),
 				mock(ProviderLinkPersistenceService.class)
 		);
 
@@ -75,8 +67,8 @@ class DefaultProviderJoinRestrictionServiceTest {
 
 		assertTrue(decision.isAllowed());
 		assertFalse(decision.isActive());
-		assertTrue(decision.isConfigured());
-		assertEquals(Set.of(ProviderJoinRestrictionCondition.RECOGNIZED), decision.getAllow());
+		assertFalse(decision.isConfigured());
+		assertTrue(decision.getAllow().isEmpty());
 	}
 
 	@DisplayName("Provider-only evaluation allows when restriction config is absent")
@@ -85,7 +77,6 @@ class DefaultProviderJoinRestrictionServiceTest {
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				new TestToggleStore(),
-				mock(SessionRecognitionService.class),
 				mock(ProviderLinkPersistenceService.class)
 		);
 
@@ -104,17 +95,16 @@ class DefaultProviderJoinRestrictionServiceTest {
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				store,
-				mock(SessionRecognitionService.class),
 				mock(ProviderLinkPersistenceService.class)
 		);
 
-		store.enable("premium");
-		ProviderJoinRestrictionDecision decision = service.evaluate("premium");
+		store.enable("linked-only");
+		ProviderJoinRestrictionDecision decision = service.evaluate("linked-only");
 
 		assertFalse(decision.isAllowed());
 		assertTrue(decision.isActive());
 		assertTrue(decision.isConfigured());
-		assertEquals(Set.of(ProviderJoinRestrictionCondition.RECOGNIZED), decision.getAllow());
+		assertEquals(Set.of(ProviderJoinRestrictionCondition.LINKED), decision.getAllow());
 		assertTrue(decision.getMatchedConditions().isEmpty());
 	}
 
@@ -125,7 +115,6 @@ class DefaultProviderJoinRestrictionServiceTest {
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				store,
-				mock(SessionRecognitionService.class),
 				mock(ProviderLinkPersistenceService.class)
 		);
 
@@ -139,34 +128,30 @@ class DefaultProviderJoinRestrictionServiceTest {
 		assertTrue(decision.getMatchedConditions().isEmpty());
 	}
 
-	@DisplayName("Full evaluation allows recognized sessions")
+	@DisplayName("Full evaluation ignores recognized-only restriction temporarily")
 	@Test
-	void fullEvaluationAllowsRecognizedSessions() {
+	void fullEvaluationIgnoresRecognizedOnlyRestrictionTemporarily() {
 		TestToggleStore store = new TestToggleStore();
-		SessionRecognitionService recognitionService = mock(SessionRecognitionService.class);
-		when(recognitionService.matches("premium", "subject", "Player", "1.1.1.1", ORIGIN))
-				.thenReturn(true);
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				store,
-				recognitionService,
 				mock(ProviderLinkPersistenceService.class)
 		);
 
 		store.enable("premium");
-		ProviderJoinRestrictionDecision decision = service.evaluate("premium", "subject", "Player", "1.1.1.1", ORIGIN);
+		ProviderJoinRestrictionDecision decision = service.evaluate("premium", "subject", "Player", "1.1.1.1", null);
 
 		assertTrue(decision.isAllowed());
-		assertEquals(Set.of(ProviderJoinRestrictionCondition.RECOGNIZED), decision.getMatchedConditions());
+		assertFalse(decision.isConfigured());
+		assertFalse(decision.isActive());
+		assertTrue(decision.getAllow().isEmpty());
+		assertTrue(decision.getMatchedConditions().isEmpty());
 	}
 
 	@DisplayName("Full evaluation allows linked accounts")
 	@Test
 	void fullEvaluationAllowsLinkedAccounts() {
 		TestToggleStore store = new TestToggleStore();
-		SessionRecognitionService recognitionService = mock(SessionRecognitionService.class);
-		when(recognitionService.matches("linked-only", "subject", "Player", "1.1.1.1", ORIGIN))
-				.thenReturn(false);
 		ProviderLinkPersistenceService linkPersistenceService = mock(ProviderLinkPersistenceService.class);
 		when(linkPersistenceService.findBySubject("linked-only", "subject"))
 				.thenReturn(Optional.of(AccountProviderLink.builder()
@@ -178,12 +163,11 @@ class DefaultProviderJoinRestrictionServiceTest {
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				store,
-				recognitionService,
 				linkPersistenceService
 		);
 
 		store.enable("linked-only");
-		ProviderJoinRestrictionDecision decision = service.evaluate("linked-only", "subject", "Player", "1.1.1.1", ORIGIN);
+		ProviderJoinRestrictionDecision decision = service.evaluate("linked-only", "subject", "Player", "1.1.1.1", null);
 
 		assertTrue(decision.isAllowed());
 		assertEquals(Set.of(ProviderJoinRestrictionCondition.LINKED), decision.getMatchedConditions());
@@ -193,9 +177,6 @@ class DefaultProviderJoinRestrictionServiceTest {
 	@Test
 	void fullEvaluationAllowsAnyMatchedCondition() {
 		TestToggleStore store = new TestToggleStore();
-		SessionRecognitionService recognitionService = mock(SessionRecognitionService.class);
-		when(recognitionService.matches("combined", "subject", "Player", "1.1.1.1", ORIGIN))
-				.thenReturn(false);
 		ProviderLinkPersistenceService linkPersistenceService = mock(ProviderLinkPersistenceService.class);
 		when(linkPersistenceService.findBySubject("combined", "subject"))
 				.thenReturn(Optional.of(AccountProviderLink.builder()
@@ -207,14 +188,14 @@ class DefaultProviderJoinRestrictionServiceTest {
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				store,
-				recognitionService,
 				linkPersistenceService
 		);
 
 		store.enable("combined");
-		ProviderJoinRestrictionDecision decision = service.evaluate("combined", "subject", "Player", "1.1.1.1", ORIGIN);
+		ProviderJoinRestrictionDecision decision = service.evaluate("combined", "subject", "Player", "1.1.1.1", null);
 
 		assertTrue(decision.isAllowed());
+		assertEquals(Set.of(ProviderJoinRestrictionCondition.LINKED), decision.getAllow());
 		assertEquals(Set.of(ProviderJoinRestrictionCondition.LINKED), decision.getMatchedConditions());
 	}
 
@@ -222,20 +203,17 @@ class DefaultProviderJoinRestrictionServiceTest {
 	@Test
 	void fullEvaluationDeniesWhenNoConditionMatches() {
 		TestToggleStore store = new TestToggleStore();
-		SessionRecognitionService recognitionService = mock(SessionRecognitionService.class);
-		when(recognitionService.matches("premium", "subject", "Player", "1.1.1.1", ORIGIN))
-				.thenReturn(false);
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				store,
-				recognitionService,
 				mock(ProviderLinkPersistenceService.class)
 		);
 
-		store.enable("premium");
-		ProviderJoinRestrictionDecision decision = service.evaluate("premium", "subject", "Player", "1.1.1.1", ORIGIN);
+		store.enable("combined");
+		ProviderJoinRestrictionDecision decision = service.evaluate("combined", "subject", "Player", "1.1.1.1", null);
 
 		assertFalse(decision.isAllowed());
+		assertEquals(Set.of(ProviderJoinRestrictionCondition.LINKED), decision.getAllow());
 		assertTrue(decision.getMatchedConditions().isEmpty());
 	}
 
@@ -243,18 +221,14 @@ class DefaultProviderJoinRestrictionServiceTest {
 	@Test
 	void fullEvaluationDeniesLinkedRestrictionWithoutSubject() {
 		TestToggleStore store = new TestToggleStore();
-		SessionRecognitionService recognitionService = mock(SessionRecognitionService.class);
-		when(recognitionService.matches("linked-only", null, "Player", "1.1.1.1", ORIGIN))
-				.thenReturn(false);
 		DefaultProviderJoinRestrictionService service = new DefaultProviderJoinRestrictionService(
 				this::providers,
 				store,
-				recognitionService,
 				mock(ProviderLinkPersistenceService.class)
 		);
 
 		store.enable("linked-only");
-		ProviderJoinRestrictionDecision decision = service.evaluate("linked-only", null, "Player", "1.1.1.1", ORIGIN);
+		ProviderJoinRestrictionDecision decision = service.evaluate("linked-only", null, "Player", "1.1.1.1", null);
 
 		assertFalse(decision.isAllowed());
 		assertTrue(decision.getMatchedConditions().isEmpty());
@@ -282,7 +256,6 @@ class DefaultProviderJoinRestrictionServiceTest {
 		Providers.ProviderEntry combined = new Providers.ProviderEntry();
 		combined.setId("combined");
 		combined.setRestriction(restriction(true, List.of(
-				ProviderJoinRestrictionCondition.RECOGNIZED,
 				ProviderJoinRestrictionCondition.LINKED
 		)));
 

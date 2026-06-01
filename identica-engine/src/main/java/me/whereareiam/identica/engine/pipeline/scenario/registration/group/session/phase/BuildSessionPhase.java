@@ -3,11 +3,11 @@ package me.whereareiam.identica.engine.pipeline.scenario.registration.group.sess
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.SessionState;
 import me.whereareiam.identica.engine.pipeline.scenario.base.session.phase.base.AbstractBuildSessionPhase;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.scenario.registration.SessionState;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;

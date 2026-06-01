@@ -24,10 +24,7 @@ public class ProvidersDefaults implements DefaultsProvider<Providers> {
 		credential.setEnabled(true);
 		credential.setPriority(50);
 		credential.setEntrypoints(List.of("credential.arcadeya.com"));
-		credential.setRestriction(restriction(
-				ProviderJoinRestrictionCondition.RECOGNIZED,
-				ProviderJoinRestrictionCondition.LINKED
-		));
+		credential.setRestriction(restriction(ProviderJoinRestrictionCondition.LINKED));
 		credential.setVerification(credentialVerification());
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
@@ -36,7 +33,6 @@ public class ProvidersDefaults implements DefaultsProvider<Providers> {
 		premium.setEnabled(true);
 		premium.setPriority(100);
 		premium.setEntrypoints(List.of("premium.arcadeya.com"));
-		premium.setRestriction(restriction(ProviderJoinRestrictionCondition.RECOGNIZED));
 		premium.setVerification(premiumVerification());
 
 		config.setProviders(List.of(credential, premium));

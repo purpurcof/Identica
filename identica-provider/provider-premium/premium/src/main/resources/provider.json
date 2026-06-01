@@ -7,6 +7,7 @@
   "supportedPlatforms": ["VELOCITY", "BUNGEECORD"],
   "priority": 100,
   "capabilities": [
+    "recognition",
     "online",
     "authoritative_username",
     "migration",

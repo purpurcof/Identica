@@ -18,9 +18,4 @@ public class SessionOpenedEvent implements Event, SynchronousEvent {
 	private final @NotNull UUID connectionUniqueId;
 	private final @NotNull PipelineType pipelineType;
 	private final @NotNull Session session;
-	/**
-	 * Whether the authentication journey completed through framework
-	 * recognition before the session was opened.
-	 */
-	private final boolean authenticationRecognized;
 }

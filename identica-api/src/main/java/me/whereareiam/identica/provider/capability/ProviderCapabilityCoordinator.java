@@ -17,24 +17,24 @@ import java.util.Set;
  */
 public interface ProviderCapabilityCoordinator {
 	/**
-	 * Validates provider-supplied bootstraps against the descriptor declaration.
+	 * Resolves provider-supplied bootstraps against the descriptor declaration.
 	 *
 	 * @param descriptor provider descriptor
 	 * @param bootstraps provider bootstraps
 	 * @return validated bootstraps ordered by declared capability ids
 	 */
-	@NotNull List<ProviderCapabilityBootstrap> validateBootstraps(
+	@NotNull List<ProviderCapabilityBootstrap> resolveBootstraps(
 			@NotNull ProviderDescriptor descriptor,
 			@Nullable List<ProviderCapabilityBootstrap> bootstraps
 	);
 
 	/**
-	 * Ensures shared global installations exist for the supplied bootstraps.
+	 * Installs shared global capability runtime for the supplied bootstraps.
 	 *
 	 * @param provider provider being loaded
 	 * @param bootstraps validated capability bootstraps
 	 */
-	void ensureGlobalInstallations(
+	void installGlobalCapabilities(
 			@NotNull InternalProvider provider,
 			@NotNull List<ProviderCapabilityBootstrap> bootstraps
 	);
@@ -46,7 +46,7 @@ public interface ProviderCapabilityCoordinator {
 	 * @param bootstraps validated capability bootstraps
 	 * @return provider-local capability modules
 	 */
-	@NotNull List<Module> localModules(
+	@NotNull List<Module> resolveLocalModules(
 			@NotNull InternalProvider provider,
 			@NotNull List<ProviderCapabilityBootstrap> bootstraps
 	);
@@ -57,7 +57,7 @@ public interface ProviderCapabilityCoordinator {
 	 * @param injector provider injector
 	 * @return resolved contributions
 	 */
-	@NotNull Set<ProviderCapabilityContribution> resolveContributions(@NotNull Injector injector);
+	@NotNull Set<ProviderCapabilityContribution> resolveCapabilityContributions(@NotNull Injector injector);
 
 	/**
 	 * Validates resolved contributions against declared capabilities.
@@ -66,7 +66,7 @@ public interface ProviderCapabilityCoordinator {
 	 * @param bootstraps validated capability bootstraps
 	 * @param contributions resolved contributions
 	 */
-	void validateContributions(
+	void validateCapabilityContributions(
 			@NotNull ProviderDescriptor descriptor,
 			@NotNull List<ProviderCapabilityBootstrap> bootstraps,
 			@NotNull Set<ProviderCapabilityContribution> contributions

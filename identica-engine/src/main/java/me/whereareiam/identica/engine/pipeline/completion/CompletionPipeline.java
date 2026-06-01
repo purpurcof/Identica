@@ -9,6 +9,7 @@ import me.whereareiam.identica.model.pipeline.GroupOutcome;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.completion.CompletionPipelineState;
 import me.whereareiam.identica.pipeline.PipelineGroup;
 import me.whereareiam.identica.pipeline.completion.CompletionPendingStore;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +33,6 @@ public class CompletionPipeline {
 				.identity(identity)
 				.pendingState(pendingState)
 				.pipelineType(pendingState.getPipelineType())
-				.authenticationRecognized(pendingState.isAuthenticationRecognized())
 				.build();
 
 		PipelineState pipelineState = PipelineState.initial();

@@ -9,9 +9,8 @@ import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
-import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem.AuthenticationOutcome;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.scenario.authentication.SessionState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,14 +49,13 @@ class OpenSessionCompletionPendingTest {
 				.originalUsername("PlayerOne")
 				.effectiveUsername("PlayerOne")
 				.build();
-		me.whereareiam.identica.engine.pipeline.scenario.authentication.group.session.SessionState state =
-				new me.whereareiam.identica.engine.pipeline.scenario.authentication.group.session.SessionState();
+
+		SessionState state = new SessionState();
 		state.setAuthContext(context);
 		state.setSession(session);
 		state.setResult(PipelineResult.complete());
 		PipelineState pipelineState = PipelineState.initial();
 		pipelineState.setPipelineType(PipelineType.AUTHENTICATION);
-		pipelineState.putItem(new AuthenticationOutcomeItem(AuthenticationOutcome.RECOGNIZED), 0L);
 
 		when(sessionService.open(session))
 				.thenReturn(CompletableFuture.completedFuture(session));
@@ -69,7 +67,6 @@ class OpenSessionCompletionPendingTest {
 				&& requested.getPipelineType() == PipelineType.AUTHENTICATION
 				&& accountUniqueId.equals(requested.getSession().getUniqueId())
 				&& "credential".equals(requested.getSession().getProviderId())
-				&& requested.isAuthenticationRecognized()
 		));
 	}
 

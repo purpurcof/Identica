@@ -3,7 +3,6 @@ package me.whereareiam.identica.common.provider;
 import com.google.inject.AbstractModule;
 import me.whereareiam.identica.common.provider.capability.DefaultProviderCapabilityCoordinator;
 import me.whereareiam.identica.common.provider.capability.DefaultProviderCapabilityRegistry;
-import me.whereareiam.identica.common.provider.capability.DefaultProviderCapabilityServiceRegistry;
 import me.whereareiam.identica.common.provider.reader.DefaultProviderDescriptorReader;
 import me.whereareiam.identica.common.provider.restriction.DefaultProviderJoinRestrictionService;
 import me.whereareiam.identica.common.provider.restriction.ProviderJoinRestrictionToggleStore;
@@ -12,7 +11,6 @@ import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.capability.ProviderCapabilityCoordinator;
 import me.whereareiam.identica.provider.capability.ProviderCapabilityRegistry;
-import me.whereareiam.identica.provider.capability.ProviderCapabilityServiceRegistry;
 import me.whereareiam.identica.provider.restriction.ProviderJoinRestrictionService;
 
 public class ProviderConfiguration extends AbstractModule {
@@ -21,7 +19,6 @@ public class ProviderConfiguration extends AbstractModule {
 		bind(ProviderDescriptorReader.class).to(DefaultProviderDescriptorReader.class).asEagerSingleton();
 		bind(ProviderCapabilityCoordinator.class).to(DefaultProviderCapabilityCoordinator.class).asEagerSingleton();
 		bind(ProviderCapabilityRegistry.class).to(DefaultProviderCapabilityRegistry.class).asEagerSingleton();
-		bind(ProviderCapabilityServiceRegistry.class).to(DefaultProviderCapabilityServiceRegistry.class).asEagerSingleton();
 		bind(ProviderManager.class).to(DefaultProviderManager.class).asEagerSingleton();
 		bind(ProviderJoinRestrictionToggleStore.class).asEagerSingleton();
 		bind(ProviderJoinRestrictionService.class).to(DefaultProviderJoinRestrictionService.class).asEagerSingleton();

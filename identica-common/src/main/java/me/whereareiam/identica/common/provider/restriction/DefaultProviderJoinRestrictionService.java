@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionDecision;
 import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionStatus;
@@ -23,7 +22,6 @@ import java.util.stream.Collectors;
 public class DefaultProviderJoinRestrictionService implements ProviderJoinRestrictionService {
 	private final Provider<Providers> providersProvider;
 	private final ProviderJoinRestrictionToggleStore toggleStore;
-	private final SessionRecognitionService sessionRecognitionService;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 
 	@Override
@@ -32,7 +30,7 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 		if (provider == null) return missing(normalize(providerId));
 
 		Providers.ProviderEntry.Restriction.Join restriction = joinRestriction(provider);
-		if (restriction == null || !restriction.isEnabled() || restriction.getAllow() == null)
+		if (restriction == null || !restriction.isEnabled() || !isConfigured(restriction))
 			return unconfigured(provider.getId());
 
 		toggleStore.enable(provider.getId());
@@ -107,16 +105,8 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 			return deniedDecision(allow, Set.of());
 
 		Set<ProviderJoinRestrictionCondition> matched = new LinkedHashSet<>();
-		boolean recognized = sessionRecognitionService.matches(
-				provider.getId(),
-				providerSubject,
-				providerUsername,
-				ip,
-				origin
-		);
-		if (recognized && allow.contains(ProviderJoinRestrictionCondition.RECOGNIZED))
-			matched.add(ProviderJoinRestrictionCondition.RECOGNIZED);
-
+		// TODO restore RECOGNIZED join-restriction matching after allowance
+		// evaluation is contributed by capability modules instead of core.
 		if (
 				allow.contains(ProviderJoinRestrictionCondition.LINKED)
 						&& providerSubject != null
@@ -144,7 +134,7 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 				.providerId(provider.getId())
 				.active(restriction != null
 						&& restriction.isEnabled()
-						&& restriction.getAllow() != null
+						&& isConfigured(restriction)
 						&& toggleStore.isActive(provider.getId()))
 				.allow(allow)
 				.build();
@@ -156,12 +146,18 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 	) {
 		return restriction != null
 				&& restriction.isEnabled()
-				&& restriction.getAllow() != null
+				&& isConfigured(restriction)
 				&& toggleStore.isActive(provider.getId());
 	}
 
 	private boolean isConfigured(@Nullable Providers.ProviderEntry.Restriction.Join restriction) {
-		return restriction != null && restriction.getAllow() != null;
+		if (restriction == null || restriction.getAllow() == null)
+			return false;
+
+		if (restriction.getAllow().isEmpty())
+			return true;
+
+		return !allowSet(restriction).isEmpty();
 	}
 
 	private @NotNull Set<ProviderJoinRestrictionCondition> allowSet(
@@ -172,6 +168,7 @@ public class DefaultProviderJoinRestrictionService implements ProviderJoinRestri
 
 		return restriction.getAllow().stream()
 				.filter(Objects::nonNull)
+				.filter(condition -> condition != ProviderJoinRestrictionCondition.RECOGNIZED)
 				.sorted(Comparator.comparingInt(Enum::ordinal))
 				.collect(Collectors.collectingAndThen(
 						Collectors.toCollection(LinkedHashSet::new),

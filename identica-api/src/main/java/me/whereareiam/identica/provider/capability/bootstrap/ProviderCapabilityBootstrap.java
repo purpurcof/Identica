@@ -18,6 +18,14 @@ public interface ProviderCapabilityBootstrap {
 	@NotNull ProviderCapabilityDescriptor descriptor();
 
 	/**
+	 * Initializes capability runtime state after the global injector is created.
+	 *
+	 * @param context initialization context
+	 */
+	default void initialize(@NotNull ProviderCapabilityInitializationContext context) {
+	}
+
+	/**
 	 * Returns modules installed once into a capability-global child injector.
 	 *
 	 * @param context global installation context

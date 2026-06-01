@@ -11,8 +11,8 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.common.config.ConfigBindings;
 import me.whereareiam.identica.common.config.IdenticaModule;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
-import me.whereareiam.identica.common.connection.ConnectionStateConfiguration;
 import me.whereareiam.identica.common.conflict.ConflictConfiguration;
+import me.whereareiam.identica.common.connection.ConnectionStateConfiguration;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.identity.IdentityConfiguration;
 import me.whereareiam.identica.common.identity.session.SessionConfiguration;
@@ -35,6 +35,7 @@ import me.whereareiam.keystone.serializer.SerializerEngine;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 @RequiredArgsConstructor
 public class CommonConfiguration extends AbstractModule {
 	private final Path dataPath;
@@ -107,6 +108,13 @@ public class CommonConfiguration extends AbstractModule {
 	@Named("providersPath")
 	Path provideProvidersPath(@Named("dataPath") Path dataPath) {
 		return ensureDirectory(dataPath.resolve("providers"), "providers");
+	}
+
+	@Provides
+	@Singleton
+	@Named("capabilitiesPath")
+	Path provideCapabilitiesPath(@Named("providersPath") Path providersPath) {
+		return ensureDirectory(providersPath.resolve("capabilities"), "capabilities");
 	}
 
 	private Path ensureDirectory(Path path, String label) {

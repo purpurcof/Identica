@@ -9,11 +9,9 @@ import me.whereareiam.identica.type.event.EventPriority;
 import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.platform.PlatformType;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
-import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 @Singleton
@@ -42,31 +40,6 @@ public class SettingsDefaults implements DefaultsProvider<Settings> {
 		Settings.Sessions sessions = new Settings.Sessions();
 		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		sessions.setActiveTtl(Duration.ofHours(12));
-
-		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
-		recognition.setEnabled(false);
-		recognition.setValidity(Duration.ofHours(12));
-		recognition.setDefaultSignals(List.of(
-				RecognitionSignal.USERNAME,
-				RecognitionSignal.IP,
-				RecognitionSignal.VIRTUAL_HOST
-		));
-
-		Settings.Sessions.Recognition.Eligibility.UntrustedIps untrustedIps =
-				new Settings.Sessions.Recognition.Eligibility.UntrustedIps();
-		untrustedIps.setEnabled(true);
-		untrustedIps.setEntries(List.of(
-				"127.0.0.1",
-				"::1",
-				"10.0.0.0/8",
-				"172.16.0.0/12",
-				"192.168.0.0/16"
-		));
-
-		Settings.Sessions.Recognition.Eligibility eligibility = new Settings.Sessions.Recognition.Eligibility();
-		eligibility.setUntrustedIps(untrustedIps);
-		recognition.setEligibility(eligibility);
-		sessions.setRecognition(recognition);
 		return sessions;
 	}
 

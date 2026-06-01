@@ -3,12 +3,12 @@ package me.whereareiam.identica.engine.pipeline.scenario.authentication.group.id
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.IdentityState;
 import me.whereareiam.identica.engine.pipeline.scenario.base.identity.phase.base.AbstractEnforceProviderJoinRestrictionPhase;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.scenario.authentication.IdentityState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.restriction.ProviderJoinRestrictionService;

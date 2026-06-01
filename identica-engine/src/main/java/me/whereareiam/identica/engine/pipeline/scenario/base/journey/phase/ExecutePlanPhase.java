@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.base.journey.JourneyState;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.pipeline.scenario.shared.ProviderSelectedEvent;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
@@ -16,8 +15,6 @@ import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
-import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
-import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem.AuthenticationOutcome;
 import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
@@ -29,13 +26,12 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.pipeline.state.scenario.base.JourneyState;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.routing.RoutingSignal;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.step.Step;
-import me.whereareiam.identica.pipeline.journey.step.type.AuthenticationRecognitionStep;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.routing.RoutingCoordinator;
@@ -472,7 +468,6 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				if (status == PipelineStatus.CONTINUE)
 					continue;
 				if (status == PipelineStatus.COMPLETE) {
-					applyAuthenticationOutcome(pipelineState, pipelineType, journeyStep.getStep());
 					completedStage = true;
 					break;
 				}
@@ -560,18 +555,6 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				result
 		));
 		return result;
-	}
-
-	private void applyAuthenticationOutcome(
-			@NotNull PipelineState pipelineState,
-			@NotNull PipelineType pipelineType,
-			@NotNull Step step
-	) {
-		if (pipelineType != PipelineType.AUTHENTICATION) return;
-		if (!(step instanceof AuthenticationRecognitionStep))
-			return;
-
-		pipelineState.putItem(new AuthenticationOutcomeItem(AuthenticationOutcome.RECOGNIZED), 0L);
 	}
 
 	private int resolveStartIndex(

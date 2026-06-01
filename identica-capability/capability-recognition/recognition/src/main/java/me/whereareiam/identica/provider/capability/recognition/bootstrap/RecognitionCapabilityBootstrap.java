@@ -1,0 +1,66 @@
+package me.whereareiam.identica.provider.capability.recognition.bootstrap;
+
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import me.whereareiam.identica.event.EventManager;
+import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDescriptor;
+import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityGlobalInstallContext;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityInitializationContext;
+import me.whereareiam.identica.provider.capability.recognition.RecognitionCapability;
+import me.whereareiam.identica.provider.capability.recognition.RecognitionGlobalModule;
+import me.whereareiam.identica.provider.capability.recognition.config.RecognitionSettings;
+import me.whereareiam.identica.provider.capability.recognition.eligibility.RecognitionEligibilityRegistry;
+import me.whereareiam.identica.provider.capability.recognition.eligibility.rule.ExplicitSelectionRecognitionEligibilityRule;
+import me.whereareiam.identica.provider.capability.recognition.eligibility.rule.RecognitionEnabledEligibilityRule;
+import me.whereareiam.identica.provider.capability.recognition.eligibility.rule.UntrustedIpRecognitionEligibilityRule;
+import me.whereareiam.identica.provider.capability.recognition.pipeline.RecognitionAppliedLifecycle;
+import me.whereareiam.identica.provider.capability.recognition.pipeline.RecognitionPipelineExtension;
+import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.Set;
+
+/**
+ * Bootstrap for the built-in reconnect recognition capability.
+ */
+public final class RecognitionCapabilityBootstrap implements ProviderCapabilityBootstrap {
+	public static final @NotNull RecognitionCapabilityBootstrap INSTANCE = new RecognitionCapabilityBootstrap();
+
+	@Override
+	public @NotNull ProviderCapabilityDescriptor descriptor() {
+		return ProviderCapabilityDescriptor.builder()
+				.capability(RecognitionCapability.CAPABILITY)
+				.scopes(Set.of(ProviderCapabilityScope.GLOBAL))
+				.build();
+	}
+
+	@Override
+	public void initialize(@NotNull ProviderCapabilityInitializationContext context) {
+		Injector globalInjector = context.getGlobalInjector();
+		if (globalInjector == null) return;
+
+		globalInjector.getInstance(RecognitionSettings.class);
+
+		RecognitionEligibilityRegistry eligibilityRegistry = globalInjector.getInstance(RecognitionEligibilityRegistry.class);
+		eligibilityRegistry.register(globalInjector.getInstance(RecognitionEnabledEligibilityRule.class));
+		eligibilityRegistry.register(globalInjector.getInstance(ExplicitSelectionRecognitionEligibilityRule.class));
+		eligibilityRegistry.register(globalInjector.getInstance(UntrustedIpRecognitionEligibilityRule.class));
+
+		context.getRootInjector()
+				.getInstance(PipelineExtensionRegistry.class)
+				.register(globalInjector.getInstance(RecognitionPipelineExtension.class));
+		context.getRootInjector()
+				.getInstance(EventManager.class)
+				.register(globalInjector.getInstance(RecognitionAppliedLifecycle.class));
+	}
+
+	@Override
+	public @NotNull List<Module> globalModules(@NotNull ProviderCapabilityGlobalInstallContext context) {
+		return List.of(new RecognitionGlobalModule(
+				context.getCapabilitiesPath().resolve(RecognitionCapability.CAPABILITY.getId())
+		));
+	}
+}

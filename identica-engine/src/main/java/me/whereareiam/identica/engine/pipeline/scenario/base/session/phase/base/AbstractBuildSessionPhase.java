@@ -2,12 +2,12 @@ package me.whereareiam.identica.engine.pipeline.scenario.base.session.phase.base
 
 import com.google.inject.Provider;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.base.AbstractGroupState;
 import me.whereareiam.identica.engine.pipeline.scenario.base.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.pipeline.state.AbstractGroupState;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;

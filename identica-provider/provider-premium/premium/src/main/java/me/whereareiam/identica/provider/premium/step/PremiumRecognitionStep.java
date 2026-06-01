@@ -2,24 +2,29 @@ package me.whereareiam.identica.provider.premium.step;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.step.type.AuthenticationRecognitionStep;
 import me.whereareiam.identica.pipeline.journey.step.type.InteractiveStep;
+import me.whereareiam.identica.provider.capability.recognition.SessionRecognitionService;
+import me.whereareiam.identica.provider.capability.recognition.store.RecognizedConnectionStore;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
-public class PremiumRecognitionStep extends InteractiveStep implements AuthenticationRecognitionStep {
+public class PremiumRecognitionStep extends InteractiveStep {
 	private final SessionRecognitionService sessionRecognitionService;
+	private final RecognizedConnectionStore recognizedConnectionStore;
 
 	@Inject
-	public PremiumRecognitionStep(SessionRecognitionService sessionRecognitionService) {
+	public PremiumRecognitionStep(
+			SessionRecognitionService sessionRecognitionService,
+			RecognizedConnectionStore recognizedConnectionStore
+	) {
 		super("premium-recognition");
 		this.sessionRecognitionService = sessionRecognitionService;
+		this.recognizedConnectionStore = recognizedConnectionStore;
 	}
 
 	@Override
@@ -40,6 +45,9 @@ public class PremiumRecognitionStep extends InteractiveStep implements Authentic
 				context.getIp(),
 				context.getIdentity().getOrigin()
 		);
+		if (recognized && context.getIdentity().getConnectionUniqueId() != null)
+			recognizedConnectionStore.markRecognized(context.getIdentity().getConnectionUniqueId());
+
 		return CompletableFuture.completedFuture(recognized
 				? StepResult.complete(context)
 				: StepResult.proceed(context));

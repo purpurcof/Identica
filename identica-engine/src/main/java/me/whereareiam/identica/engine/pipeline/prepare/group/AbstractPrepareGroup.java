@@ -1,8 +1,9 @@
 package me.whereareiam.identica.engine.pipeline.prepare.group;
 
+import me.whereareiam.identica.model.pipeline.GroupOutcome;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.GroupOutcome;
+import me.whereareiam.identica.model.pipeline.state.prepare.PrepareGroupState;
 import me.whereareiam.identica.pipeline.PipelineGroup;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -2,10 +2,10 @@ package me.whereareiam.identica.provider.credential.pipeline.scenario.authentica
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import me.whereareiam.identica.identity.session.recognition.SessionRecognitionService;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.step.type.AuthenticationRecognitionStep;
+import me.whereareiam.identica.provider.capability.recognition.SessionRecognitionService;
+import me.whereareiam.identica.provider.capability.recognition.store.RecognizedConnectionStore;
 import me.whereareiam.identica.provider.credential.CredentialConstants;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.base.AbstractCredentialStep;
 import org.jetbrains.annotations.NotNull;
@@ -13,13 +13,18 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.CompletableFuture;
 
 @Singleton
-public class CredentialRecognitionStep extends AbstractCredentialStep implements AuthenticationRecognitionStep {
+public class CredentialRecognitionStep extends AbstractCredentialStep {
 	private final SessionRecognitionService sessionRecognitionService;
+	private final RecognizedConnectionStore recognizedConnectionStore;
 
 	@Inject
-	public CredentialRecognitionStep(SessionRecognitionService sessionRecognitionService) {
+	public CredentialRecognitionStep(
+			SessionRecognitionService sessionRecognitionService,
+			RecognizedConnectionStore recognizedConnectionStore
+	) {
 		super("password-recognition");
 		this.sessionRecognitionService = sessionRecognitionService;
+		this.recognizedConnectionStore = recognizedConnectionStore;
 	}
 
 	@Override
@@ -32,6 +37,9 @@ public class CredentialRecognitionStep extends AbstractCredentialStep implements
 				context.getIp(),
 				context.getIdentity().getOrigin()
 		);
+		if (recognized && context.getIdentity().getConnectionUniqueId() != null)
+			recognizedConnectionStore.markRecognized(context.getIdentity().getConnectionUniqueId());
+
 		return CompletableFuture.completedFuture(recognized
 				? StepResult.complete(context)
 				: StepResult.proceed(context));

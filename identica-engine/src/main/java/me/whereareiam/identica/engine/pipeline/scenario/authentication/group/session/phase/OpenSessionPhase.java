@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.session.SessionState;
 import me.whereareiam.identica.engine.pipeline.scenario.base.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
@@ -13,10 +12,9 @@ import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
-import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem.AuthenticationOutcome;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.scenario.authentication.SessionState;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -70,12 +68,6 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 			state.setResult(PipelineResult.failed(authenticationFailedMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
-		PipelineState source = result.getState() != null ? result.getState() : pipelineState;
-		boolean authenticationRecognized = source.item(AuthenticationOutcomeItem.class)
-				.map(AuthenticationOutcomeItem::getOutcome)
-				.map(outcome -> outcome == AuthenticationOutcome.RECOGNIZED)
-				.orElse(false);
-
 		return sessionService.open(session)
 				.thenApply(openedSession -> {
 					if (openedSession == null) {
@@ -89,8 +81,7 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 					publishSessionOpened(
 							pipelineType,
 							authContext.getConnectionUniqueId(),
-							openedSession,
-							authenticationRecognized
+							openedSession
 					);
 					state.setResult(result);
 					return PhaseResult.pass(state);
@@ -100,15 +91,13 @@ public class OpenSessionPhase implements PipelinePhase<SessionState> {
 	private void publishSessionOpened(
 			@NotNull PipelineType pipelineType,
 			UUID connectionUniqueId,
-			@NotNull Session session,
-			boolean authenticationRecognized
+			@NotNull Session session
 	) {
 		if (connectionUniqueId == null) return;
 		eventManager.call(new SessionOpenedEvent(
 				connectionUniqueId,
 				pipelineType,
-				session,
-				authenticationRecognized
+				session
 		));
 	}
 

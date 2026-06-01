@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     // capabilities
+    compileOnly(projects.capabilityRecognition)
     compileOnly(projects.capabilityOnline)
     compileOnly(projects.capabilityAuthoritativeUsername)
     compileOnly(projects.capabilityMigration)
@@ -17,6 +18,7 @@ dependencies {
     implementation(projects.providerPremiumPlatformVelocity)
 
     // capabilities
+    testImplementation(projects.capabilityRecognition)
     testImplementation(projects.capabilityOnline)
     testImplementation(projects.capabilityAuthoritativeUsername)
     testImplementation(projects.capabilityMigration)

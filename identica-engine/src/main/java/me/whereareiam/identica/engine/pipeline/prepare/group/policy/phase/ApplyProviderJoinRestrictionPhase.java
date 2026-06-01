@@ -5,15 +5,15 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionDecision;
+import me.whereareiam.identica.model.pipeline.state.prepare.PrepareGroupState;
 import me.whereareiam.identica.model.provider.ProviderContext;
+import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionDecision;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.restriction.ProviderJoinRestrictionService;
@@ -23,9 +23,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)

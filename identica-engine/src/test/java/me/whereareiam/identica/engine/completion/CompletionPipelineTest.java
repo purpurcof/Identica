@@ -60,7 +60,6 @@ class CompletionPipelineTest {
 				.pipelineType(PipelineType.MIGRATION)
 				.connectionUniqueId(connectionUniqueId)
 				.accountUniqueId(accountUniqueId)
-				.authenticationRecognized(true)
 				.build();
 		Session session = Session.builder()
 				.uniqueId(accountUniqueId)
@@ -91,7 +90,6 @@ class CompletionPipelineTest {
 						&& context.getPipelineType() == PipelineType.MIGRATION
 						&& context.getSession().getProviderId().equals("credential")
 						&& context.getProvider() == provider
-						&& context.isAuthenticationRecognized()
 		));
 	}
 

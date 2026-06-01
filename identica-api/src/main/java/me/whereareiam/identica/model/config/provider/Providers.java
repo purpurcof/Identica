@@ -14,7 +14,6 @@ import me.whereareiam.configura.type.merge.tree.list.ListPresence;
 import me.whereareiam.configura.type.merge.tree.list.ListUnknownEntries;
 import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
-import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -116,6 +115,12 @@ public class Providers extends ConfigDocument {
 		@ExtendableDocument
 		private @Nullable Verification verification;
 		/**
+		 * Capability-specific provider settings.
+		 */
+		@Merge(DeclaredObjectDefaults.class)
+		@ExtendableDocument
+		private @Nullable Capabilities capabilities;
+		/**
 		 * Hostnames (optionally with port) that map to this provider.
 		 * Entries must use the format {@code host} or {@code host:port}.
 		 */
@@ -130,22 +135,6 @@ public class Providers extends ConfigDocument {
 		@ExtendableDocument
 		public static class Session {
 			private @Nullable SessionConcurrencyPolicy concurrencyPolicy;
-			@Merge(DeclaredObjectDefaults.class)
-			@ExtendableDocument
-			private @Nullable Recognition recognition;
-
-			/**
-			 * Provider-specific reconnect recognition settings.
-			 */
-			@Getter
-			@Setter
-			@ToString
-			@ExtendableDocument
-			public static class Recognition {
-				private @Nullable Boolean enabled;
-				private @NotNull List<RecognitionSignal> signals = new ArrayList<>();
-				private boolean allowOnUntrustedIps;
-			}
 		}
 
 		/**
@@ -210,6 +199,17 @@ public class Providers extends ConfigDocument {
 				private @Nullable Boolean required;
 				private @Nullable UnavailableSelectionPolicy unavailableSelectionPolicy;
 			}
+		}
+
+		/**
+		 * Capability-specific provider settings.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		@ExtendableDocument
+		@PreserveUnknownFields
+		public static class Capabilities {
 		}
 	}
 }

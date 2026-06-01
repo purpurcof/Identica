@@ -1,11 +1,10 @@
 package me.whereareiam.identica.common.migration;
 
-import me.whereareiam.identica.common.config.defaults.SettingsDefaults;
 import me.whereareiam.identica.common.config.defaults.EngineDefaults;
+import me.whereareiam.identica.common.config.defaults.SettingsDefaults;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.event.scenario.migration.MigrationRequiredEvent;
 import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;
 import me.whereareiam.identica.identity.IdentityService;
@@ -29,6 +28,7 @@ import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.service.DeliveryService;
+import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
@@ -47,9 +47,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -110,7 +108,6 @@ class DefaultMigrationServiceTest {
 				identityService,
 				deliveryService,
 				eventManager,
-				Settings::new,
 				this::engine,
 				() -> commands,
 				() -> messages
@@ -144,7 +141,6 @@ class DefaultMigrationServiceTest {
 				identityService,
 				deliveryService,
 				eventManager,
-				Settings::new,
 				this::engine,
 				this::commands,
 				this::messages
@@ -203,7 +199,6 @@ class DefaultMigrationServiceTest {
 				identityService,
 				deliveryService,
 				eventManager,
-				Settings::new,
 				this::engine,
 				this::commands,
 				this::messages
@@ -246,7 +241,6 @@ class DefaultMigrationServiceTest {
 				identityService,
 				deliveryService,
 				eventManager,
-				() -> settings,
 				this::engine,
 				this::commands,
 				Messages::new
@@ -309,7 +303,6 @@ class DefaultMigrationServiceTest {
 				identityService,
 				deliveryService,
 				eventManager,
-				Settings::new,
 				this::engine,
 				this::commands,
 				this::messages

@@ -39,6 +39,5 @@ public class DeliveryPayload {
 		private @Nullable UUID connectionUniqueId;
 		private @Nullable UUID accountUniqueId;
 		private @Nullable PipelineType pipelineType;
-		private boolean authenticationRecognized;
 	}
 }

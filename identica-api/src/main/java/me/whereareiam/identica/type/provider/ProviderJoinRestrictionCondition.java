@@ -6,6 +6,9 @@ package me.whereareiam.identica.type.provider;
 public enum ProviderJoinRestrictionCondition {
 	/**
 	 * Allow reconnect-recognized players.
+	 *
+	 * <p>TODO restore runtime support after join-restriction allowance
+	 * evaluation is contributed by capability modules instead of core.</p>
 	 */
 	RECOGNIZED,
 	/**

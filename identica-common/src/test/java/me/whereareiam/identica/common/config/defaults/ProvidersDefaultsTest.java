@@ -76,9 +76,9 @@ class ProvidersDefaultsTest {
 		assertEquals(100, verification.getMethods().getFirst().getPriority());
 	}
 
-	@DisplayName("Declared session does not create recognition until declared")
+	@DisplayName("Declared session stays minimal when no provider session fields are set")
 	@Test
-	void declaredSessionDoesNotCreateRecognitionUntilDeclared(@TempDir Path tempDir) throws Exception {
+	void declaredSessionStaysMinimalWhenNoFieldsAreSet(@TempDir Path tempDir) throws Exception {
 		Path providersPath = tempDir.resolve("providers.yml");
 		Files.writeString(providersPath, """
 				providers:
@@ -91,29 +91,6 @@ class ProvidersDefaultsTest {
 
 		assertNotNull(session);
 		assertNull(session.getConcurrencyPolicy());
-		assertNull(session.getRecognition());
-	}
-
-	@DisplayName("Declared recognition merges its defaults once present")
-	@Test
-	void declaredRecognitionMergesItsDefaultsOncePresent(@TempDir Path tempDir) throws Exception {
-		Path providersPath = tempDir.resolve("providers.yml");
-		Files.writeString(providersPath, """
-				providers:
-				  - id: premium
-				    session:
-				      recognition:
-				        enabled: true
-				""");
-
-		Providers providers = yaml().update(providersPath, Providers.class);
-		Providers.ProviderEntry.Session.Recognition recognition =
-				provider(providers, "premium").getSession().getRecognition();
-
-		assertNotNull(recognition);
-		assertTrue(recognition.getEnabled());
-		assertTrue(recognition.getSignals().isEmpty());
-		assertFalse(recognition.isAllowOnUntrustedIps());
 	}
 
 	@DisplayName("Declared restriction does not create join until declared")
@@ -151,10 +128,7 @@ class ProvidersDefaultsTest {
 		assertNotNull(restriction);
 		assertNotNull(restriction.getJoin());
 		assertTrue(restriction.getJoin().isEnabled());
-		assertEquals(
-				List.of(ProviderJoinRestrictionCondition.RECOGNIZED, ProviderJoinRestrictionCondition.LINKED),
-				restriction.getJoin().getAllow()
-		);
+		assertEquals(List.of(ProviderJoinRestrictionCondition.LINKED), restriction.getJoin().getAllow());
 	}
 
 	private Configura yaml() {

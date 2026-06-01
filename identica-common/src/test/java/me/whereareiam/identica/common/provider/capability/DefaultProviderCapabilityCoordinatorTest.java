@@ -3,14 +3,16 @@ package me.whereareiam.identica.common.provider.capability;
 import com.google.inject.*;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDescriptor;
+import me.whereareiam.identica.model.provider.capability.ProviderCapabilityInstallation;
 import me.whereareiam.identica.provider.capability.ProviderCapabilityCoordinator;
 import me.whereareiam.identica.provider.capability.ProviderCapabilityRegistry;
-import me.whereareiam.identica.provider.capability.ProviderCapabilityServiceRegistry;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityGlobalInstallContext;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityInitializationContext;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityLocalInstallContext;
 import me.whereareiam.identica.provider.capability.contribution.ProviderCapabilityContribution;
 import me.whereareiam.identica.type.provider.ProviderState;
@@ -23,60 +25,73 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class DefaultProviderCapabilityCoordinatorTest {
 	private static final ProviderCapability SAMPLE_CAPABILITY = ProviderCapability.of("sample");
+	private static final AtomicInteger GLOBAL_INITIALIZE_COUNT = new AtomicInteger();
 
 	@Test
 	void installsGlobalRuntimeOnceAndResolvesLocalModules(@TempDir Path tempDir) {
-		Injector injector = Guice.createInjector(new CapabilityTestModule());
+		GLOBAL_INITIALIZE_COUNT.set(0);
+		Injector injector = Guice.createInjector(new CapabilityTestModule(tempDir));
 		ProviderCapabilityCoordinator coordinator = injector.getInstance(ProviderCapabilityCoordinator.class);
 		ProviderCapabilityRegistry registry = injector.getInstance(ProviderCapabilityRegistry.class);
-		ProviderCapabilityServiceRegistry serviceRegistry = injector.getInstance(ProviderCapabilityServiceRegistry.class);
 
 		InternalProvider provider = provider("provider-a", tempDir);
-		List<ProviderCapabilityBootstrap> bootstraps = coordinator.validateBootstraps(
+		List<ProviderCapabilityBootstrap> bootstraps = coordinator.resolveBootstraps(
 				provider.getDescriptor(),
 				List.of(SampleCapabilityBootstrap.INSTANCE)
 		);
-		coordinator.ensureGlobalInstallations(provider, bootstraps);
+		coordinator.installGlobalCapabilities(provider, bootstraps);
 
 		assertNotNull(registry.findInstallation(SAMPLE_CAPABILITY));
-		assertNotNull(serviceRegistry.resolve(SAMPLE_CAPABILITY, SampleGlobalService.class));
+		assertEquals(1, GLOBAL_INITIALIZE_COUNT.get());
 
-		List<Module> localModules = coordinator.localModules(provider, bootstraps);
+		List<Module> localModules = coordinator.resolveLocalModules(provider, bootstraps);
 		Injector providerInjector = injector.createChildInjector(localModules);
+		ProviderCapabilityInstallation installation = registry.findInstallation(SAMPLE_CAPABILITY);
+		assertNotNull(installation);
+		assertNotNull(installation.getGlobalInjector());
+		assertSame(
+				installation.getGlobalInjector().getInstance(SampleGlobalService.class),
+				providerInjector.getInstance(SampleGlobalService.class)
+		);
 		assertEquals("provider-a", providerInjector.getInstance(SampleLocalService.class).providerId());
 
 		InternalProvider nextProvider = provider("provider-b", tempDir);
-		coordinator.ensureGlobalInstallations(nextProvider, bootstraps);
+		coordinator.installGlobalCapabilities(nextProvider, bootstraps);
 		assertEquals(1, registry.installations().size());
+		assertEquals(1, GLOBAL_INITIALIZE_COUNT.get());
 	}
 
 	@Test
 	void rejectsMissingRequiredContribution() {
-		Injector injector = Guice.createInjector(new CapabilityTestModule());
+		Injector injector = Guice.createInjector(new CapabilityTestModule(Path.of("build", "tmp", "capability-test")));
 		ProviderCapabilityCoordinator coordinator = injector.getInstance(ProviderCapabilityCoordinator.class);
 		ProviderDescriptor descriptor = descriptor("provider-a");
-		List<ProviderCapabilityBootstrap> bootstraps = coordinator.validateBootstraps(
+		List<ProviderCapabilityBootstrap> bootstraps = coordinator.resolveBootstraps(
 				descriptor,
 				List.of(RequiredContributionCapabilityBootstrap.INSTANCE)
 		);
 
 		IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-				coordinator.validateContributions(descriptor, bootstraps, Set.of()));
+				coordinator.validateCapabilityContributions(descriptor, bootstraps, Set.of()));
 
 		assertTrue(exception.getMessage().contains("sample"));
 	}
 
 	@Test
 	void resolvesContributionsFromProviderInjector() {
-		Injector injector = Guice.createInjector(new CapabilityTestModule(), new ContributionModule());
+		Injector injector = Guice.createInjector(
+				new CapabilityTestModule(Path.of("build", "tmp", "capability-test")),
+				new ContributionModule()
+		);
 		ProviderCapabilityCoordinator coordinator = injector.getInstance(ProviderCapabilityCoordinator.class);
 
-		Set<ProviderCapabilityContribution> contributions = coordinator.resolveContributions(injector);
+		Set<ProviderCapabilityContribution> contributions = coordinator.resolveCapabilityContributions(injector);
 
 		assertEquals(1, contributions.size());
 		assertEquals(SAMPLE_CAPABILITY, contributions.iterator().next().capability());
@@ -102,11 +117,22 @@ class DefaultProviderCapabilityCoordinatorTest {
 	}
 
 	private static final class CapabilityTestModule extends AbstractModule {
+		private final Path rootPath;
+
+		private CapabilityTestModule(@NotNull Path rootPath) {
+			this.rootPath = rootPath;
+		}
+
 		@Override
 		protected void configure() {
 			bind(ProviderCapabilityCoordinator.class).to(DefaultProviderCapabilityCoordinator.class).asEagerSingleton();
 			bind(ProviderCapabilityRegistry.class).to(DefaultProviderCapabilityRegistry.class).asEagerSingleton();
-			bind(ProviderCapabilityServiceRegistry.class).to(DefaultProviderCapabilityServiceRegistry.class).asEagerSingleton();
+		}
+
+		@Provides
+		@Named("capabilitiesPath")
+		Path provideCapabilitiesPath() {
+			return rootPath.resolve("providers").resolve("capabilities");
 		}
 	}
 
@@ -144,6 +170,14 @@ class DefaultProviderCapabilityCoordinatorTest {
 		}
 
 		@Override
+		public void initialize(@NotNull ProviderCapabilityInitializationContext context) {
+			Injector globalInjector = context.getGlobalInjector();
+			assertNotNull(globalInjector);
+
+			GLOBAL_INITIALIZE_COUNT.incrementAndGet();
+		}
+
+		@Override
 		public @NotNull List<Module> localModules(@NotNull ProviderCapabilityLocalInstallContext context) {
 			return List.of(new SampleLocalModule(context.getProviderId()));
 		}
@@ -165,18 +199,6 @@ class DefaultProviderCapabilityCoordinatorTest {
 		@Override
 		protected void configure() {
 			bind(SampleGlobalService.class).toInstance(() -> "global");
-			bind(SampleGlobalRegistrar.class).asEagerSingleton();
-		}
-	}
-
-	@Singleton
-	private static final class SampleGlobalRegistrar {
-		@Inject
-		private SampleGlobalRegistrar(
-				ProviderCapabilityServiceRegistry serviceRegistry,
-				SampleGlobalService service
-		) {
-			serviceRegistry.register(SAMPLE_CAPABILITY, SampleGlobalService.class, service);
 		}
 	}
 

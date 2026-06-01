@@ -2,12 +2,12 @@ package me.whereareiam.identica.engine.pipeline.scenario.migration.group.identit
 
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
-import me.whereareiam.identica.engine.pipeline.scenario.migration.group.identity.IdentityState;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.state.scenario.migration.IdentityState;
 import me.whereareiam.identica.type.UsernameSource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

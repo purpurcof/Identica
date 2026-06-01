@@ -69,7 +69,6 @@ public class CompletionPendingLifecycle implements EventListener {
 								.connectionUniqueId(event.getConnectionUniqueId())
 								.accountUniqueId(event.getSession().getUniqueId())
 								.pipelineType(event.getPipelineType())
-								.authenticationRecognized(event.isAuthenticationRecognized())
 								.build())
 						.build())
 				.checkpoint(DeliveryCheckpoint.PLATFORM_READY_INITIAL)
@@ -109,7 +108,6 @@ public class CompletionPendingLifecycle implements EventListener {
 					.pipelineType(completion.getPipelineType())
 					.connectionUniqueId(completion.getConnectionUniqueId())
 					.accountUniqueId(completion.getAccountUniqueId())
-					.authenticationRecognized(completion.isAuthenticationRecognized())
 					.build());
 			deliveryService.acknowledge(request.getId(), "completion-dispatched");
 		}

@@ -29,7 +29,6 @@ import me.whereareiam.identica.provider.ProviderPlatformBinding;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
 import me.whereareiam.identica.provider.capability.ProviderCapabilityCoordinator;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
-import me.whereareiam.identica.provider.capability.contribution.ProviderCapabilityContribution;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
@@ -49,7 +48,6 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<ProviderEligibilityResolver>> ELIGIBILITY_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProfileSubjectResolver>> PROFILE_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderMigrationPrecheck>> MIGRATION_PRECHECKS = new TypeLiteral<>() {};
-	private static final TypeLiteral<Set<ProviderCapabilityContribution>> CAPABILITY_CONTRIBUTIONS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<SchemaContributor>> SCHEMA_CONTRIBUTORS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderPlatformBinding>> PLATFORM_BINDINGS = new TypeLiteral<>() {};
 
@@ -101,13 +99,13 @@ public class ProviderLifecycleController {
 					: null;
 
 			dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
-			List<ProviderCapabilityBootstrap> capabilityBootstraps = capabilityCoordinator.validateBootstraps(
+			List<ProviderCapabilityBootstrap> capabilityBootstraps = capabilityCoordinator.resolveBootstraps(
 					descriptor,
 					probeProvider != null ? probeProvider.capabilities() : List.of()
 			);
 			internal.setWorkingPath(workingPath);
-			capabilityCoordinator.ensureGlobalInstallations(internal, capabilityBootstraps);
-			List<Module> capabilityModules = capabilityCoordinator.localModules(internal, capabilityBootstraps);
+			capabilityCoordinator.installGlobalCapabilities(internal, capabilityBootstraps);
+			List<Module> capabilityModules = capabilityCoordinator.resolveLocalModules(internal, capabilityBootstraps);
 
 			Injector providerInjector = injectorFactory.create(
 					workingPath,
@@ -145,7 +143,7 @@ public class ProviderLifecycleController {
 			internal.setClassLoader(classLoader);
 			prewarmProviderConfigs(providerInjector, internal);
 			storeBindings(internal, providerInjector);
-			capabilityCoordinator.validateContributions(
+			capabilityCoordinator.validateCapabilityContributions(
 					descriptor,
 					capabilityBootstraps,
 					internal.getCapabilityContributions() != null ? internal.getCapabilityContributions() : Set.of()
@@ -253,7 +251,7 @@ public class ProviderLifecycleController {
 		internal.setEligibilityResolvers(copySet(resolveSet(injector, ELIGIBILITY_RESOLVERS)));
 		internal.setProfileSubjectResolvers(copySet(resolveSet(injector, PROFILE_RESOLVERS)));
 		internal.setMigrationPrechecks(copySet(resolveSet(injector, MIGRATION_PRECHECKS)));
-		internal.setCapabilityContributions(copySet(resolveSet(injector, CAPABILITY_CONTRIBUTIONS)));
+		internal.setCapabilityContributions(copySet(capabilityCoordinator.resolveCapabilityContributions(injector)));
 	}
 
 	private void registerProviderBindings(InternalProvider internal) {

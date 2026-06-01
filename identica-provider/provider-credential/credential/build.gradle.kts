@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     // capabilities
+    compileOnly(projects.capabilityRecognition)
     compileOnly(projects.capabilityOffline)
     compileOnly(projects.capabilityMigration)
     compileOnly(projects.capabilityVerification)
@@ -19,6 +20,7 @@ dependencies {
     implementation(projects.providerCredentialCryptographyArgon2)
 
     // capabilities
+    testImplementation(projects.capabilityRecognition)
     testImplementation(projects.capabilityOffline)
     testImplementation(projects.capabilityMigration)
     testImplementation(projects.capabilityVerification)

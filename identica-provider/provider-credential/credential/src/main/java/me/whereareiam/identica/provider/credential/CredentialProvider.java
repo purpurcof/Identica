@@ -14,6 +14,7 @@ import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.migration.bootstrap.MigrationCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.offline.bootstrap.OfflineCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.recognition.bootstrap.RecognitionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.verification.bootstrap.VerificationCapabilityBootstrap;
 import me.whereareiam.identica.provider.credential.command.CommandRegistrar;
 import me.whereareiam.identica.provider.credential.completion.CredentialCompletionExtension;
@@ -54,6 +55,7 @@ public class CredentialProvider extends IdenticaProvider {
 	@Override
 	public @NotNull List<ProviderCapabilityBootstrap> capabilities() {
 		return List.of(
+				RecognitionCapabilityBootstrap.INSTANCE,
 				OfflineCapabilityBootstrap.INSTANCE,
 				MigrationCapabilityBootstrap.INSTANCE,
 				VerificationCapabilityBootstrap.INSTANCE
@@ -64,6 +66,11 @@ public class CredentialProvider extends IdenticaProvider {
 	public @NotNull ProviderLibraries libraries() {
 		ProviderLibraries libraries = new ProviderLibraries();
 		libraries.setLibraries(List.of(
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("recognition")
+						.version(BuildConfig.VERSION)
+						.build(),
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
 						.artifactId("offline")

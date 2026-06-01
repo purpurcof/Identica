@@ -17,13 +17,13 @@ import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.model.migration.operation.MigrationRequest;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.provider.capability.migration.type.MigrationCapability;
 import me.whereareiam.identica.provider.credential.CredentialConstants;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationCancelScope;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
-import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
 import org.jetbrains.annotations.NotNull;
@@ -202,7 +202,7 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 	}
 
 	private boolean supportsMigration() {
-		return providerManager.findProviders(ProviderCapability.MIGRATION).stream()
+		return providerManager.findProviders(MigrationCapability.CAPABILITY).stream()
 				.anyMatch(provider -> provider != null
 						&& provider.getDescriptor() != null
 						&& CredentialConstants.PROVIDER_ID.equalsIgnoreCase(provider.getDescriptor().getId()));

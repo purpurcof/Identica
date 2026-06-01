@@ -4,12 +4,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
-import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Descriptor for a provider module.
@@ -30,7 +31,7 @@ public class ProviderDescriptor {
 	/**
 	 * Provider capability ids.
 	 */
-	private List<ProviderCapability> capabilities = new ArrayList<>();
+	private @NotNull List<String> capabilities = new ArrayList<>();
 
 	private int priority = 0;
 
@@ -44,9 +45,9 @@ public class ProviderDescriptor {
 	 */
 	public boolean hasCapability(@Nullable ProviderCapability capability) {
 		if (capability == null) return false;
-		if (capabilities == null || capabilities.isEmpty()) return false;
-		for (ProviderCapability entry : capabilities)
-			if (entry == capability) return true;
+		for (String entry : capabilities)
+			if (capability.matches(entry))
+				return true;
 
 		return false;
 	}
@@ -58,6 +59,15 @@ public class ProviderDescriptor {
 	 * @return {@code true} when the id is listed
 	 */
 	public boolean hasCapabilityId(@Nullable String capabilityId) {
-		return hasCapability(ProviderCapability.fromId(capabilityId));
+		if (capabilityId == null || capabilityId.isBlank() || capabilities.isEmpty()) return false;
+
+		String normalized = capabilityId.trim().toLowerCase(Locale.ROOT);
+		for (String entry : capabilities) {
+			if (entry == null || entry.isBlank()) continue;
+			if (normalized.equals(entry.trim().toLowerCase(Locale.ROOT)))
+				return true;
+		}
+
+		return false;
 	}
 }

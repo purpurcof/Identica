@@ -11,25 +11,27 @@ import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
-import me.whereareiam.identica.type.provider.ProviderCapability;
-import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class UsernameReplicationPhase implements PipelinePhase<IdentityState> {
+	// TODO Migrate and use capbility api class
+	private static final ProviderCapability AUTHORITATIVE_USERNAME_CAPABILITY = ProviderCapability.of("authoritative_username");
 	private final ProviderManager providerManager;
 	private final Provider<Messages> messagesProvider;
 
@@ -124,6 +126,6 @@ public class UsernameReplicationPhase implements PipelinePhase<IdentityState> {
 				.map(InternalProvider::getDescriptor)
 				.filter(Objects::nonNull)
 				.anyMatch(descriptor -> descriptor.getId().equalsIgnoreCase(providerId)
-						&& descriptor.hasCapability(ProviderCapability.AUTHORITATIVE_USERNAME));
+						&& descriptor.hasCapability(AUTHORITATIVE_USERNAME_CAPABILITY));
 	}
 }

@@ -4,10 +4,18 @@ import com.google.inject.Inject;
 import com.google.inject.Module;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import me.whereareiam.identica.BuildConfig;
+import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
+import me.whereareiam.identica.model.provider.dependency.ProviderLibrary;
 import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
+import me.whereareiam.identica.provider.capability.authoritative.username.bootstrap.AuthoritativeUsernameCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.migration.bootstrap.MigrationCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.online.bootstrap.OnlineCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.verification.bootstrap.VerificationCapabilityBootstrap;
 import me.whereareiam.identica.provider.premium.command.CommandRegistrar;
 import me.whereareiam.identica.provider.premium.completion.PremiumCompletionExtension;
 import me.whereareiam.identica.provider.premium.completion.PremiumCompletionStep;
@@ -39,6 +47,44 @@ public class PremiumProvider extends IdenticaProvider {
 	@Override
 	public @NotNull List<Module> modules() {
 		return List.of(new PremiumModule());
+	}
+
+	@Override
+	public @NotNull ProviderLibraries libraries() {
+		ProviderLibraries libraries = new ProviderLibraries();
+		libraries.setLibraries(List.of(
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("online")
+						.version(BuildConfig.VERSION)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("authoritative-username")
+						.version(BuildConfig.VERSION)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("migration")
+						.version(BuildConfig.VERSION)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("verification")
+						.version(BuildConfig.VERSION)
+						.build()
+		));
+		return libraries;
+	}
+
+	@Override
+	public @NotNull List<ProviderCapabilityBootstrap> capabilities() {
+		return List.of(
+				OnlineCapabilityBootstrap.INSTANCE,
+				AuthoritativeUsernameCapabilityBootstrap.INSTANCE,
+				MigrationCapabilityBootstrap.INSTANCE,
+				VerificationCapabilityBootstrap.INSTANCE
+		);
 	}
 
 	@Override

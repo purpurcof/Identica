@@ -28,7 +28,7 @@ import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyExecutionPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
-import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,6 +37,8 @@ import java.util.*;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class SelectProvidersRule implements JourneyRule {
+	// TODO Migrate and use capbility api class
+	private static final ProviderCapability MIGRATION_CAPABILITY = ProviderCapability.of("migration");
 	private final ProviderOperations providerOperations;
 	private final AuthenticationJourneyRegistry authenticationJourneyRegistry;
 	private final RegistrationJourneyRegistry registrationJourneyRegistry;
@@ -77,7 +79,7 @@ public class SelectProvidersRule implements JourneyRule {
 		if (pipelineType == PipelineType.MIGRATION) {
 			eligibleProviders.removeIf(provider -> provider == null
 					|| provider.getDescriptor() == null
-					|| !provider.getDescriptor().hasCapability(ProviderCapability.MIGRATION));
+					|| !provider.getDescriptor().hasCapability(MIGRATION_CAPABILITY));
 		}
 		String pendingProviderId = resolvePendingProviderId(context, pipelineType);
 		String preferredProviderId = resolvePreferredProviderId(context, pipelineType);

@@ -1,9 +1,7 @@
 package me.whereareiam.identica.common.provider;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
+import com.google.inject.Module;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.common.config.ConfigInitializer;
 import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
@@ -29,6 +27,9 @@ import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.ProviderPlatformBinding;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
+import me.whereareiam.identica.provider.capability.ProviderCapabilityCoordinator;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.contribution.ProviderCapabilityContribution;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
@@ -48,6 +49,7 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<ProviderEligibilityResolver>> ELIGIBILITY_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProfileSubjectResolver>> PROFILE_RESOLVERS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderMigrationPrecheck>> MIGRATION_PRECHECKS = new TypeLiteral<>() {};
+	private static final TypeLiteral<Set<ProviderCapabilityContribution>> CAPABILITY_CONTRIBUTIONS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<SchemaContributor>> SCHEMA_CONTRIBUTORS = new TypeLiteral<>() {};
 	private static final TypeLiteral<Set<ProviderPlatformBinding>> PLATFORM_BINDINGS = new TypeLiteral<>() {};
 
@@ -58,6 +60,7 @@ public class ProviderLifecycleController {
 	private final ProviderInstanceFactory instanceFactory;
 	private final ProviderPlatformExtensionResolver platformExtensionResolver;
 	private final ProviderResolverRegistry resolverRegistry;
+	private final ProviderCapabilityCoordinator capabilityCoordinator;
 	private final ConflictService conflictService;
 	private final SchemaBootstrap schemaBootstrap;
 	private final EventManager eventManager;
@@ -98,12 +101,20 @@ public class ProviderLifecycleController {
 					: null;
 
 			dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
+			List<ProviderCapabilityBootstrap> capabilityBootstraps = capabilityCoordinator.validateBootstraps(
+					descriptor,
+					probeProvider != null ? probeProvider.capabilities() : List.of()
+			);
+			internal.setWorkingPath(workingPath);
+			capabilityCoordinator.ensureGlobalInstallations(internal, capabilityBootstraps);
+			List<Module> capabilityModules = capabilityCoordinator.localModules(internal, capabilityBootstraps);
 
 			Injector providerInjector = injectorFactory.create(
 					workingPath,
 					descriptor,
 					probeProvider,
-					probePlatformExtension
+					probePlatformExtension,
+					capabilityModules
 			);
 
 			applySchemaContributors(providerInjector);
@@ -134,6 +145,11 @@ public class ProviderLifecycleController {
 			internal.setClassLoader(classLoader);
 			prewarmProviderConfigs(providerInjector, internal);
 			storeBindings(internal, providerInjector);
+			capabilityCoordinator.validateContributions(
+					descriptor,
+					capabilityBootstraps,
+					internal.getCapabilityContributions() != null ? internal.getCapabilityContributions() : Set.of()
+			);
 			internal.setState(ProviderState.LOADED);
 			if (checkRequirements(internal))
 				return;
@@ -237,6 +253,7 @@ public class ProviderLifecycleController {
 		internal.setEligibilityResolvers(copySet(resolveSet(injector, ELIGIBILITY_RESOLVERS)));
 		internal.setProfileSubjectResolvers(copySet(resolveSet(injector, PROFILE_RESOLVERS)));
 		internal.setMigrationPrechecks(copySet(resolveSet(injector, MIGRATION_PRECHECKS)));
+		internal.setCapabilityContributions(copySet(resolveSet(injector, CAPABILITY_CONTRIBUTIONS)));
 	}
 
 	private void registerProviderBindings(InternalProvider internal) {

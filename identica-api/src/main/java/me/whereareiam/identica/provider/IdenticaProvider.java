@@ -6,6 +6,7 @@ import me.whereareiam.identica.conflict.ConflictType;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,6 +38,18 @@ public abstract class IdenticaProvider {
 	 * @return list of modules to install
 	 */
 	public @NotNull List<Module> modules() {
+		return List.of();
+	}
+
+	/**
+	 * Provides capability bootstraps supported by this provider.
+	 *
+	 * <p>The returned bootstraps must match the capability ids declared in
+	 * {@code provider.json}.</p>
+	 *
+	 * @return capability bootstraps
+	 */
+	public @NotNull List<ProviderCapabilityBootstrap> capabilities() {
 		return List.of();
 	}
 

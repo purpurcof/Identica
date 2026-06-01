@@ -19,7 +19,7 @@ import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
-import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -30,6 +30,8 @@ import java.util.concurrent.CompletionStage;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class ValidateTargetPhase implements PipelinePhase<IdentityState> {
+	// TODO Migrate and use capbility api class
+	private static final ProviderCapability MIGRATION_CAPABILITY = ProviderCapability.of("migration");
 	private final ProviderManager providerManager;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final Provider<Messages> messagesProvider;
@@ -98,7 +100,7 @@ public class ValidateTargetPhase implements PipelinePhase<IdentityState> {
 	}
 
 	private boolean supportsMigration(@NotNull String providerId) {
-		for (InternalProvider provider : providerManager.findProviders(ProviderCapability.MIGRATION)) {
+		for (InternalProvider provider : providerManager.findProviders(MIGRATION_CAPABILITY)) {
 			if (provider == null || provider.getDescriptor() == null) continue;
 
 			String id = provider.getDescriptor().getId();

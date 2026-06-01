@@ -27,7 +27,7 @@ import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationCancelScope;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
-import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import me.whereareiam.identica.util.UniqueIdUtil;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
@@ -40,6 +40,8 @@ import java.util.function.Function;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class MigrationCommand {
+	// TODO Migrate and use capbility api class
+	private static final ProviderCapability MIGRATION_CAPABILITY = ProviderCapability.of("migration");
 	private final Provider<Messages> messagesProvider;
 	private final AccountPersistenceService accountPersistenceService;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
@@ -281,7 +283,7 @@ public class MigrationCommand {
 	}
 
 	private boolean supportsMigration(@NotNull String providerId) {
-		for (InternalProvider provider : providerManager.findProviders(ProviderCapability.MIGRATION)) {
+		for (InternalProvider provider : providerManager.findProviders(MIGRATION_CAPABILITY)) {
 			if (provider == null || provider.getDescriptor() == null)
 				continue;
 			String id = provider.getDescriptor().getId();

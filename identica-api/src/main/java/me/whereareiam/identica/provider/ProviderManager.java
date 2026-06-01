@@ -2,7 +2,7 @@ package me.whereareiam.identica.provider;
 
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
-import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

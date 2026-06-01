@@ -8,7 +8,6 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.event.scenario.migration.MigrationRequiredEvent;
 import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;
 import me.whereareiam.identica.identity.IdentityService;
@@ -19,7 +18,6 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.delivery.DeliveryPayload;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
 import me.whereareiam.identica.model.delivery.DeliveryTarget;
@@ -41,6 +39,7 @@ import me.whereareiam.identica.provider.migration.MigrationPrecheckResult;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.service.MigrationService;
+import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.type.messaging.DeliveryCheckpoint;
 import me.whereareiam.identica.type.messaging.DeliverySemantics;
 import me.whereareiam.identica.type.messaging.DeliverySource;
@@ -49,8 +48,8 @@ import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
-import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -64,6 +63,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultMigrationService implements MigrationService {
+	// TODO Migrate and use capbility api class
+	private static final ProviderCapability OFFLINE_CAPABILITY = ProviderCapability.of("offline");
 	private final ProviderManager providerManager;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final AccountPersistenceService accountPersistenceService;
@@ -72,7 +73,6 @@ public class DefaultMigrationService implements MigrationService {
 	private final IdentityService identityService;
 	private final DeliveryService deliveryService;
 	private final EventManager eventManager;
-	private final Provider<Settings> settingsProvider;
 	private final Provider<Engine> engineProvider;
 	private final Provider<Commands> commandsProvider;
 	private final Provider<Messages> messagesProvider;
@@ -318,7 +318,7 @@ public class DefaultMigrationService implements MigrationService {
 		if (targetProvider == null || targetProvider.getDescriptor() == null)
 			return null;
 
-		if (!targetProvider.getDescriptor().hasCapability(ProviderCapability.OFFLINE_MODE))
+		if (!targetProvider.getDescriptor().hasCapability(OFFLINE_CAPABILITY))
 			return null;
 
 		UUID offlineUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(normalizedUsername);

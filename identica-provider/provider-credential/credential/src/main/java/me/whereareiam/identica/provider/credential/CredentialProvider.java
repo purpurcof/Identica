@@ -11,6 +11,10 @@ import me.whereareiam.identica.model.provider.dependency.ProviderLibrary;
 import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.migration.bootstrap.MigrationCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.offline.bootstrap.OfflineCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.verification.bootstrap.VerificationCapabilityBootstrap;
 import me.whereareiam.identica.provider.credential.command.CommandRegistrar;
 import me.whereareiam.identica.provider.credential.completion.CredentialCompletionExtension;
 import me.whereareiam.identica.provider.credential.cryptography.CryptographyModule;
@@ -48,9 +52,33 @@ public class CredentialProvider extends IdenticaProvider {
 	}
 
 	@Override
+	public @NotNull List<ProviderCapabilityBootstrap> capabilities() {
+		return List.of(
+				OfflineCapabilityBootstrap.INSTANCE,
+				MigrationCapabilityBootstrap.INSTANCE,
+				VerificationCapabilityBootstrap.INSTANCE
+		);
+	}
+
+	@Override
 	public @NotNull ProviderLibraries libraries() {
 		ProviderLibraries libraries = new ProviderLibraries();
 		libraries.setLibraries(List.of(
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("offline")
+						.version(BuildConfig.VERSION)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("migration")
+						.version(BuildConfig.VERSION)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("verification")
+						.version(BuildConfig.VERSION)
+						.build(),
 				ProviderLibrary.builder()
 						.groupId("at.favre.lib")
 						.artifactId("bcrypt")

@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.provider.capability.contribution.ProviderCapabilityContribution;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
@@ -65,4 +66,8 @@ public class InternalProvider {
 	 * Migration prechecks registered for this provider.
 	 */
 	private @Nullable Set<ProviderMigrationPrecheck> migrationPrechecks;
+	/**
+	 * Capability contributions registered for this provider.
+	 */
+	private @Nullable Set<ProviderCapabilityContribution> capabilityContributions;
 }

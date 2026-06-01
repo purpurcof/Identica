@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.common.verification.challenge.VerificationChallengeLifecycle;
 import me.whereareiam.identica.common.verification.enrollment.VerificationEnrollmentLifecycle;
 import me.whereareiam.identica.common.verification.enrollment.VerificationEnrollmentStore;
+import me.whereareiam.identica.common.verification.resolution.VerificationRequirementResolver;
 import me.whereareiam.identica.database.VerificationPersistenceService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.verification.VerificationMethodDisabledEvent;
@@ -16,18 +17,17 @@ import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Verification;
 import me.whereareiam.identica.model.verification.VerificationDisableResult;
+import me.whereareiam.identica.model.verification.VerificationResetResult;
 import me.whereareiam.identica.model.verification.VerificationResolutionRequest;
 import me.whereareiam.identica.model.verification.VerificationResolutionResult;
-import me.whereareiam.identica.model.verification.VerificationResetResult;
 import me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult;
-import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.enrollment.PendingVerificationEnrollment;
+import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollmentResult;
 import me.whereareiam.identica.model.verification.selection.VerificationSelection;
 import me.whereareiam.identica.model.verification.selection.VerificationSelectionResult;
-import me.whereareiam.identica.common.verification.resolution.VerificationRequirementResolver;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import me.whereareiam.identica.type.verification.VerificationEnrollmentStatus;
 import me.whereareiam.identica.type.verification.status.VerificationDisableStatus;
@@ -45,6 +45,8 @@ import java.util.UUID;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultVerificationService implements VerificationService {
+	// TODO Migrate and use capbility api class
+	private static final ProviderCapability VERIFICATION_CAPABILITY = ProviderCapability.of("verification");
 	private final VerificationPersistenceService persistenceService;
 	private final VerificationEnrollmentStore enrollmentStore;
 	private final Provider<Verification> verificationProvider;
@@ -259,6 +261,6 @@ public class DefaultVerificationService implements VerificationService {
 				.anyMatch(provider -> provider != null
 						&& provider.getDescriptor() != null
 						&& providerId.equalsIgnoreCase(provider.getDescriptor().getId())
-						&& provider.getDescriptor().hasCapability(ProviderCapability.VERIFICATION));
+						&& provider.getDescriptor().hasCapability(VERIFICATION_CAPABILITY));
 	}
 }

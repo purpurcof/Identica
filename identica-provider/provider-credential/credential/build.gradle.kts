@@ -5,6 +5,12 @@ plugins {
 }
 
 dependencies {
+    // capabilities
+    compileOnly(projects.capabilityOffline)
+    compileOnly(projects.capabilityMigration)
+    compileOnly(projects.capabilityVerification)
+
+    // general
     implementation(projects.providerCredentialApi)
     implementation(projects.providerCredentialCommon)
     implementation(projects.providerCredentialDatabase)
@@ -12,6 +18,12 @@ dependencies {
     implementation(projects.providerCredentialCryptographyBcrypt)
     implementation(projects.providerCredentialCryptographyArgon2)
 
+    // capabilities
+    testImplementation(projects.capabilityOffline)
+    testImplementation(projects.capabilityMigration)
+    testImplementation(projects.capabilityVerification)
+
+    // general
     testImplementation(projects.providerCredentialApi)
 }
 

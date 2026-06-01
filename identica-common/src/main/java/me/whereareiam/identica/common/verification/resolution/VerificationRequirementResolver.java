@@ -14,7 +14,7 @@ import me.whereareiam.identica.model.verification.challenge.VerificationChalleng
 import me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.model.verification.selection.VerificationSelection;
 import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import me.whereareiam.identica.type.verification.VerificationChallengeStatus;
 import me.whereareiam.identica.type.verification.VerificationResolutionStatus;
@@ -29,6 +29,8 @@ import java.util.UUID;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class VerificationRequirementResolver {
+	// TODO Migrate and use capbility api class
+	private static final ProviderCapability VERIFICATION_CAPABILITY = ProviderCapability.of("verification");
 	private final VerificationPersistenceService persistenceService;
 	private final VerificationChallengeStore challengeStore;
 	private final VerificationPolicyResolver policyResolver;
@@ -152,9 +154,11 @@ public class VerificationRequirementResolver {
 		if (status == VerificationChallengeStatus.VERIFIED) return VerificationResolutionStatus.SATISFIED;
 		if (status == VerificationChallengeStatus.WAITING || status == VerificationChallengeStatus.INVALID)
 			return VerificationResolutionStatus.WAITING;
+
 		if (status == VerificationChallengeStatus.PROVIDER_UNSUPPORTED
 				|| status == VerificationChallengeStatus.PROVIDER_VERIFICATION_DISABLED)
 			return VerificationResolutionStatus.SKIPPED;
+
 		return VerificationResolutionStatus.DENIED;
 	}
 
@@ -165,6 +169,6 @@ public class VerificationRequirementResolver {
 				.anyMatch(provider -> provider != null
 						&& provider.getDescriptor() != null
 						&& providerId.equalsIgnoreCase(provider.getDescriptor().getId())
-						&& provider.getDescriptor().hasCapability(ProviderCapability.VERIFICATION));
+						&& provider.getDescriptor().hasCapability(VERIFICATION_CAPABILITY));
 	}
 }

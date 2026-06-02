@@ -20,7 +20,7 @@ public class PremiumMessages extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Completion {
-		private @NotNull Pipeline session;
+		private @NotNull Pipeline recognition;
 		private @NotNull Pipeline authentication;
 		private @NotNull Pipeline registration;
 		private @NotNull Pipeline migration;

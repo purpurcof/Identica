@@ -57,7 +57,7 @@ public class CredentialCompletionStep extends AbstractMessageCompletionStep {
 		if (context.getPipelineType() == PipelineType.REGISTRATION)
 			return completion.getRegistration();
 		if (isRecognized(context))
-			return completion.getSession();
+			return completion.getRecognition();
 
 		return completion.getAuthentication();
 	}

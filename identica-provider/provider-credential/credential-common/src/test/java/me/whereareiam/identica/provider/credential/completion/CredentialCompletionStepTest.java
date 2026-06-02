@@ -32,7 +32,7 @@ class CredentialCompletionStepTest {
 
 		List<String> lines = step.lines(context(true, PipelineType.AUTHENTICATION));
 
-		assertEquals(messages.getCompletion().getSession().getBody(), lines);
+		assertEquals(messages.getCompletion().getRecognition().getBody(), lines);
 	}
 
 	@DisplayName("Uses the authentication completion message for authentication pipelines")

@@ -51,7 +51,7 @@ public class PremiumCompletionStep extends AbstractMessageCompletionStep {
 
 		if (context.getPipelineType() == PipelineType.MIGRATION) return completion.getMigration();
 		if (context.getPipelineType() == PipelineType.REGISTRATION) return completion.getRegistration();
-		if (isRecognized(context)) return completion.getSession();
+		if (isRecognized(context)) return completion.getRecognition();
 
 		return completion.getAuthentication();
 	}

@@ -145,12 +145,12 @@ public class CredentialMessagesDefaults implements DefaultsProvider<CredentialMe
 		messages.setScenario(scenario);
 
 		CredentialMessages.Completion completion = new CredentialMessages.Completion();
-		CredentialMessages.Completion.Pipeline sessionCompletion = new CredentialMessages.Completion.Pipeline();
-		CredentialMessages.Completion.Pipeline.Title sessionTitle = new CredentialMessages.Completion.Pipeline.Title();
-		sessionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");
-		sessionTitle.setSubtitle("<dark_gray>Your session was reused.</dark_gray>");
-		sessionCompletion.setTitle(sessionTitle);
-		sessionCompletion.setBody(List.of(
+		CredentialMessages.Completion.Pipeline recognitionCompletion = new CredentialMessages.Completion.Pipeline();
+		CredentialMessages.Completion.Pipeline.Title recognitionTitle = new CredentialMessages.Completion.Pipeline.Title();
+		recognitionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");
+		recognitionTitle.setSubtitle("<dark_gray>Your session was reused.</dark_gray>");
+		recognitionCompletion.setTitle(recognitionTitle);
+		recognitionCompletion.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
 				" ",
@@ -160,7 +160,7 @@ public class CredentialMessagesDefaults implements DefaultsProvider<CredentialMe
 				"  <gray>Enjoy your stay.</gray>",
 				" "
 		));
-		completion.setSession(sessionCompletion);
+		completion.setRecognition(recognitionCompletion);
 
 		CredentialMessages.Completion.Pipeline authenticationCompletion = new CredentialMessages.Completion.Pipeline();
 		CredentialMessages.Completion.Pipeline.Title authenticationTitle = new CredentialMessages.Completion.Pipeline.Title();

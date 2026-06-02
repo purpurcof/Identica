@@ -32,7 +32,7 @@ class PremiumCompletionStepTest {
 
 		List<String> lines = step.lines(context(true, PipelineType.AUTHENTICATION));
 
-		assertEquals(messages.getCompletion().getSession().getBody(), lines);
+		assertEquals(messages.getCompletion().getRecognition().getBody(), lines);
 	}
 
 	@DisplayName("Keeps the migration completion message even when recognition was applied")

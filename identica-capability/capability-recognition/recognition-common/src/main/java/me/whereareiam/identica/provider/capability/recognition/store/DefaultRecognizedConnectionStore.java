@@ -26,9 +26,9 @@ public class DefaultRecognizedConnectionStore implements RecognizedConnectionSto
 	) {
 		this.settingsProvider = settingsProvider;
 		RecognitionSettings settings = settingsProvider.get();
-		long ttlMs = settings.recognizedConnectionTtlMillis();
+		long ttlMs = settings.windowMillis();
 
-		var namespace = settings.getReplication().getRecognizedConnectionNamespace();
+		String namespace = resolveNamespace(settings);
 		this.cache = replicationProvider.get().isEnabled()
 				? replicationSystem.cache(namespace)
 						.defaultTtl(ttlMs)
@@ -40,7 +40,7 @@ public class DefaultRecognizedConnectionStore implements RecognizedConnectionSto
 
 	@Override
 	public void markRecognized(@NotNull UUID connectionUniqueId) {
-		cache.put(connectionUniqueId.toString(), Boolean.TRUE, settingsProvider.get().recognizedConnectionTtlMillis()).join();
+		cache.put(connectionUniqueId.toString(), Boolean.TRUE, settingsProvider.get().windowMillis()).join();
 	}
 
 	@Override
@@ -53,5 +53,13 @@ public class DefaultRecognizedConnectionStore implements RecognizedConnectionSto
 	public boolean consumeRecognized(@NotNull UUID connectionUniqueId) {
 		Optional<Boolean> stored = cache.consume(connectionUniqueId.toString()).join();
 		return stored.orElse(false);
+	}
+
+	private static @NotNull String resolveNamespace(@NotNull RecognitionSettings settings) {
+		String namespace = settings.getReplication().getRecognizedConnectionNamespace();
+		if (namespace.isBlank())
+			throw new IllegalStateException("providers.capabilities.recognition.settings.replication.recognizedConnectionNamespace is missing");
+
+		return namespace;
 	}
 }

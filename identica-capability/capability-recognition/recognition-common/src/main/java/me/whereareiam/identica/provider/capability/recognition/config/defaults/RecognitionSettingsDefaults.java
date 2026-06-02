@@ -14,7 +14,7 @@ public class RecognitionSettingsDefaults implements DefaultsProvider<Recognition
 	public RecognitionSettings supply(RecognitionSettings settings) {
 		settings.setEnabled(false);
 		settings.setValidity(Duration.ofHours(12));
-		settings.setRecognizedConnectionTtl(Duration.ofMinutes(10));
+		settings.setWindow(Duration.ofMinutes(10));
 		settings.setDefaultSignals(List.of(
 				RecognitionSignal.USERNAME,
 				RecognitionSignal.IP,

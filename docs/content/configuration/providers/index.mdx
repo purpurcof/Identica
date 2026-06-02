@@ -4,7 +4,7 @@ description: Field-by-field explanation of Identica's provider configuration are
 ---
 
 The providers configuration controls which identity providers are enabled and how provider-specific behavior is applied.
-Use this file to enable providers, set priority and entrypoints, configure restrictions and verification, and tune provider-specific session and recognition behavior.
+Use this file to enable providers, set priority and entrypoints, configure restrictions and verification, tune provider-specific session behavior, and apply capability-owned provider fields.
 
 ## behavior
 
@@ -57,7 +57,7 @@ behavior:
 ## providers
 
 - Takes: a list of provider entries
-- Affects: provider enablement, ordering, entrypoint routing, verification policy, and provider-specific session and recognition behavior
+- Affects: provider enablement, ordering, entrypoint routing, verification policy, provider-specific session behavior, and capability-owned provider overrides
 
 Provider ids should match installed provider descriptors, such as `premium` or `credential`.
 
@@ -73,12 +73,6 @@ providers:
       - "premium.example.com"
     session:
       concurrencyPolicy: "REJECT_NEW"
-      recognition:
-        enabled: true
-        signals:
-          - "USERNAME"
-          - "VIRTUAL_HOST"
-        allowOnUntrustedIps: false
     restriction:
       join:
         enabled: false
@@ -105,12 +99,7 @@ providers:
       "priority": 100,
       "entrypoints": ["premium.example.com"],
       "session": {
-        "concurrencyPolicy": "REJECT_NEW",
-        "recognition": {
-          "enabled": true,
-          "signals": ["USERNAME", "VIRTUAL_HOST"],
-          "allowOnUntrustedIps": false
-        }
+        "concurrencyPolicy": "REJECT_NEW"
       },
       "restriction": {
         "join": {
@@ -186,44 +175,19 @@ Use `session` when one provider should behave differently from the global live-s
 
 If this is absent, Identica uses `settings.sessions.concurrencyPolicy`.
 
-#### session.recognition
+### capabilities
 
-- Takes: an object
-- Current default: `{}` for providers without recognition-specific changes
-- Affects: provider-specific reconnect recognition behavior
+Use `capabilities` for provider-scoped fields owned by installed capabilities.
+Only providers that advertise a capability can use that capability's fields.
 
-Use `session.recognition` when one provider should evaluate reconnect recognition differently from the global defaults.
-
-##### session.recognition.enabled
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: `true` or `false`
+- Takes: an object keyed by capability id
 - Current default: absent
-- Affects: whether this provider inherits or overrides `settings.sessions.recognition.enabled`
+- Affects: provider-scoped overrides contributed by capabilities
 
-When this field is absent, the provider inherits `settings.sessions.recognition.enabled`.
+The shape inside `capabilities` is not global.
+Each installed capability defines its own nested fields.
 
-##### session.recognition.signals
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: a list containing any of `"USERNAME"`, `"IP"`, `"VIRTUAL_HOST"`
-- Current default: absent
-- Affects: the signal set used when this provider evaluates reconnect recognition
-
-When this field is absent or empty, the provider inherits `settings.sessions.recognition.defaultSignals`.
-
-##### session.recognition.allowOnUntrustedIps
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether this provider stays recognition-eligible from client IPs blocked by `settings.sessions.recognition.eligibility.untrustedIps`
-
-Leave this `false` for the normal safety posture.
-Set it to `true` only when this specific provider should remain recognition-eligible on client IPs that are otherwise blocked.
+<Include src="../../providers/capabilities/_partials/provider-overrides.mdx" />
 
 ### restriction
 

@@ -17,7 +17,7 @@ import java.util.List;
 public class RecognitionSettings extends ConfigDocument {
 	private boolean enabled;
 	private @NotNull Duration validity;
-	private @NotNull Duration recognizedConnectionTtl;
+	private @NotNull Duration window;
 	private @NotNull List<RecognitionSignal> defaultSignals = new ArrayList<>();
 	private @NotNull Eligibility eligibility = new Eligibility();
 	private @NotNull Replication replication = new Replication();
@@ -29,11 +29,11 @@ public class RecognitionSettings extends ConfigDocument {
 		return validity.toMillis();
 	}
 
-	public long recognizedConnectionTtlMillis() {
-		if (recognizedConnectionTtl.isZero() || recognizedConnectionTtl.isNegative())
-			throw new IllegalStateException("providers.capabilities.recognition.settings.recognizedConnectionTtl must be positive");
+	public long windowMillis() {
+		if (window.isZero() || window.isNegative())
+			throw new IllegalStateException("providers.capabilities.recognition.settings.window must be positive");
 
-		return recognizedConnectionTtl.toMillis();
+		return window.toMillis();
 	}
 
 	@Getter

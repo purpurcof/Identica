@@ -61,7 +61,7 @@ class DefaultRecognizedConnectionStoreTest {
 
 	private @NotNull RecognitionSettings settings(@NotNull Duration ttl, @NotNull String namespace) {
 		RecognitionSettings settings = new RecognitionSettings();
-		settings.setRecognizedConnectionTtl(ttl);
+		settings.setWindow(ttl);
 
 		RecognitionSettings.Replication replication = new RecognitionSettings.Replication();
 		replication.setRecognizedConnectionNamespace(namespace);

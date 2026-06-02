@@ -8,10 +8,11 @@ Instead of treating authentication methods as hard-coded built-ins, Identica tre
 
 ## Provider discovery
 
-Use these pages to discover the broader provider ecosystem:
+Use these pages to discover the broader provider ecosystem and the built-in capability layer around it:
 
 - [Official providers](./official/index.md)
 - [Community providers](./community/index.md)
+- [Capabilities](./capabilities/index.md)
 
 Some providers may be documented directly in this docs site.
 Others may link out to separate documentation maintained elsewhere.

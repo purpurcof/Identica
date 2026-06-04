@@ -1,5 +1,6 @@
 package me.whereareiam.identica.provider.capability.recognition.bootstrap;
 
+import com.google.inject.ConfigurationException;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import me.whereareiam.identica.event.EventManager;
@@ -8,8 +9,10 @@ import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityGlobalInstallContext;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityInitializationContext;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityLocalInstallContext;
 import me.whereareiam.identica.provider.capability.recognition.RecognitionCapability;
 import me.whereareiam.identica.provider.capability.recognition.RecognitionGlobalModule;
+import me.whereareiam.identica.provider.capability.recognition.RecognitionLocalModule;
 import me.whereareiam.identica.provider.capability.recognition.config.RecognitionSettings;
 import me.whereareiam.identica.provider.capability.recognition.eligibility.RecognitionEligibilityRegistry;
 import me.whereareiam.identica.provider.capability.recognition.eligibility.rule.ExplicitSelectionRecognitionEligibilityRule;
@@ -17,6 +20,10 @@ import me.whereareiam.identica.provider.capability.recognition.eligibility.rule.
 import me.whereareiam.identica.provider.capability.recognition.eligibility.rule.UntrustedIpRecognitionEligibilityRule;
 import me.whereareiam.identica.provider.capability.recognition.pipeline.RecognitionAppliedLifecycle;
 import me.whereareiam.identica.provider.capability.recognition.pipeline.RecognitionPipelineExtension;
+import me.whereareiam.identica.provider.capability.restriction.join.JoinRestrictionType;
+import me.whereareiam.identica.provider.capability.restriction.model.RestrictionSignalDescriptor;
+import me.whereareiam.identica.provider.capability.restriction.registry.RestrictionSignalRegistry;
+import me.whereareiam.identica.provider.capability.restriction.type.RestrictionSignal;
 import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,7 +40,7 @@ public final class RecognitionCapabilityBootstrap implements ProviderCapabilityB
 	public @NotNull ProviderCapabilityDescriptor descriptor() {
 		return ProviderCapabilityDescriptor.builder()
 				.capability(RecognitionCapability.CAPABILITY)
-				.scopes(Set.of(ProviderCapabilityScope.GLOBAL))
+				.scopes(Set.of(ProviderCapabilityScope.GLOBAL, ProviderCapabilityScope.LOCAL))
 				.build();
 	}
 
@@ -55,6 +62,18 @@ public final class RecognitionCapabilityBootstrap implements ProviderCapabilityB
 		context.getRootInjector()
 				.getInstance(EventManager.class)
 				.register(globalInjector.getInstance(RecognitionAppliedLifecycle.class));
+
+		try {
+			context.getRootInjector()
+					.getInstance(RestrictionSignalRegistry.class)
+					.register(RestrictionSignalDescriptor.builder()
+							.restrictionType(JoinRestrictionType.TYPE)
+							.signal(RestrictionSignal.of("recognized"))
+							.displayName("Recognized")
+							.description("Allows recognized reconnects through join restriction.")
+							.build());
+		} catch (ConfigurationException ignored) {
+		}
 	}
 
 	@Override
@@ -62,5 +81,10 @@ public final class RecognitionCapabilityBootstrap implements ProviderCapabilityB
 		return List.of(new RecognitionGlobalModule(
 				context.getCapabilitiesPath().resolve(RecognitionCapability.CAPABILITY.getId())
 		));
+	}
+
+	@Override
+	public @NotNull List<Module> localModules(@NotNull ProviderCapabilityLocalInstallContext context) {
+		return List.of(new RecognitionLocalModule());
 	}
 }

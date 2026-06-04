@@ -31,7 +31,7 @@ import java.util.concurrent.CompletionStage;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class UsernameReplicationPhase implements PipelinePhase<IdentityState> {
 	// TODO Migrate and use capbility api class
-	private static final ProviderCapability AUTHORITATIVE_USERNAME_CAPABILITY = ProviderCapability.of("authoritative_username");
+	private static final ProviderCapability AUTHORITATIVE_USERNAME_CAPABILITY = ProviderCapability.of("authoritative-username");
 	private final ProviderManager providerManager;
 	private final Provider<Messages> messagesProvider;
 

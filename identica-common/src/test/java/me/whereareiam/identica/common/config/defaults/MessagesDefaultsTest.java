@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Messages Defaults")
 class MessagesDefaultsTest {
@@ -17,11 +16,5 @@ class MessagesDefaultsTest {
 
 		assertNotNull(messages.getEngine());
 		assertNotNull(messages.getEngine().getPrepare());
-		assertNotNull(messages.getEngine().getPrepare().getProviderRestricted());
-		assertTrue(messages.getEngine().getPrepare().getProviderRestricted().stream().anyMatch(line -> line.contains("{providerName}")));
-		assertNotNull(messages.getProviders());
-		assertNotNull(messages.getProviders().getProviderRestriction());
-		assertNotNull(messages.getProviders().getProviderRestriction().getDenied());
-		assertTrue(messages.getProviders().getProviderRestriction().getDenied().stream().anyMatch(line -> line.contains("{allow}")));
 	}
 }

@@ -1,7 +1,0 @@
-level: 3
-sessions:
-  recognition:
-    enabled: true
-    eligibility:
-      untrustedIps:
-        enabled: false

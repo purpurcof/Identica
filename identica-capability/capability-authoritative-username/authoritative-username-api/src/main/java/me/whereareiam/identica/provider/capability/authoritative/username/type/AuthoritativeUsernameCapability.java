@@ -7,5 +7,5 @@ import org.jetbrains.annotations.NotNull;
  * Built-in authoritative username capability identifier.
  */
 public final class AuthoritativeUsernameCapability {
-	public static final @NotNull ProviderCapability CAPABILITY = ProviderCapability.of("authoritative_username");
+	public static final @NotNull ProviderCapability CAPABILITY = ProviderCapability.of("authoritative-username");
 }

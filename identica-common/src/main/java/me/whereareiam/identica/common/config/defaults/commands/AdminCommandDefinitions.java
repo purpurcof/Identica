@@ -29,42 +29,9 @@ public class AdminCommandDefinitions implements CommandDefinitions {
 
 		registerClear(registry);
 		registerDelete(registry);
-		registerProviderRestriction(registry);
 		registerReservation(registry);
 		registerSessions(registry);
 		registerVerification(registry);
-	}
-
-	private void registerProviderRestriction(Registry registry) {
-		registry.register("admin-provider-restriction-enable", CommandDefinition.builder()
-				.enabled(true)
-				.aliases(List.of("admin provider restriction enable"))
-				.permission("identica.admin.provider.restriction")
-				.description("Enable configured provider join restriction")
-				.usage("{command} {alias} <provider>")
-				.arguments(Map.of("provider", "Provider id"))
-				.cooldown(globalCooldown())
-				.build());
-
-		registry.register("admin-provider-restriction-disable", CommandDefinition.builder()
-				.enabled(true)
-				.aliases(List.of("admin provider restriction disable"))
-				.permission("identica.admin.provider.restriction")
-				.description("Disable runtime provider join restriction")
-				.usage("{command} {alias} <provider>")
-				.arguments(Map.of("provider", "Provider id"))
-				.cooldown(globalCooldown())
-				.build());
-
-		registry.register("admin-provider-restriction-status", CommandDefinition.builder()
-				.enabled(true)
-				.aliases(List.of("admin provider restriction status"))
-				.permission("identica.admin.provider.restriction")
-				.description("Show provider join restriction status")
-				.usage("{command} {alias} [provider]")
-				.arguments(Map.of("provider", "Provider id"))
-				.cooldown(globalCooldown())
-				.build());
 	}
 
 	private void registerClear(Registry registry) {

@@ -4,4 +4,6 @@ plugins {
 
 dependencies {
     api(projects.capabilityRecognitionApi)
+    api(projects.capabilityRestrictionApi)
+    api(projects.capabilityRestrictionJoinApi)
 }

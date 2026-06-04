@@ -16,6 +16,7 @@ import me.whereareiam.identica.adapter.command.annotation.IdenticaAnnotationPars
 import me.whereareiam.identica.adapter.command.definition.CommandDefinitionAdapter;
 import me.whereareiam.identica.adapter.command.executor.*;
 import me.whereareiam.identica.adapter.command.executor.admin.*;
+import me.whereareiam.identica.adapter.command.executor.verification.VerificationCommand;
 import me.whereareiam.identica.adapter.command.executor.verification.VerificationConfirmCommand;
 import me.whereareiam.identica.adapter.command.executor.verification.VerificationEnrollmentCommand;
 import me.whereareiam.identica.adapter.command.executor.verification.VerificationSelectionCommand;
@@ -87,13 +88,12 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(AdminRootCommand.class),
 				injector.getInstance(ClearCommand.class),
 				injector.getInstance(DeleteCommand.class),
-				injector.getInstance(ProviderRestrictionCommand.class),
 				injector.getInstance(ReservationCommand.class),
 				injector.getInstance(SessionsCommand.class),
 				injector.getInstance(EnrollCommand.class),
 				injector.getInstance(MigrationCommand.class),
 				injector.getInstance(AvailabilityCommand.class),
-				injector.getInstance(me.whereareiam.identica.adapter.command.executor.verification.VerificationCommand.class),
+				injector.getInstance(VerificationCommand.class),
 				injector.getInstance(VerificationEnrollmentCommand.class),
 				injector.getInstance(VerificationConfirmCommand.class),
 				injector.getInstance(VerificationSelectionCommand.class),

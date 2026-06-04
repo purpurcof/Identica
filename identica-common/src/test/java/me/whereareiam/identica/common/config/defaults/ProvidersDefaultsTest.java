@@ -5,7 +5,6 @@ import me.whereareiam.configura.Configura;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.common.config.defaults.provider.ProvidersDefaults;
 import me.whereareiam.identica.model.config.provider.Providers;
-import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,11 +43,9 @@ class ProvidersDefaultsTest {
 		assertTrue(generated.contains("providers:"));
 		assertTrue(generated.contains("entrypoints:"));
 		assertFalse(generated.contains("session:"), generated);
-		assertFalse(generated.contains("restriction:"), generated);
 		assertFalse(generated.contains("verification:"), generated);
 
 		assertNull(premium.getSession());
-		assertNull(premium.getRestriction());
 		assertNull(premium.getVerification());
 	}
 
@@ -91,44 +88,6 @@ class ProvidersDefaultsTest {
 
 		assertNotNull(session);
 		assertNull(session.getConcurrencyPolicy());
-	}
-
-	@DisplayName("Declared restriction does not create join until declared")
-	@Test
-	void declaredRestrictionDoesNotCreateJoinUntilDeclared(@TempDir Path tempDir) throws Exception {
-		Path providersPath = tempDir.resolve("providers.yml");
-		Files.writeString(providersPath, """
-				providers:
-				  - id: premium
-				    restriction: {}
-				""");
-
-		Providers providers = yaml().update(providersPath, Providers.class);
-		Providers.ProviderEntry.Restriction restriction = provider(providers, "premium").getRestriction();
-
-		assertNotNull(restriction);
-		assertNull(restriction.getJoin());
-	}
-
-	@DisplayName("Declared restriction join merges provider defaults")
-	@Test
-	void declaredJoinRestrictionMergesProviderDefaults(@TempDir Path tempDir) throws Exception {
-		Path providersPath = tempDir.resolve("providers.yml");
-		Files.writeString(providersPath, """
-				providers:
-				  - id: credential
-				    restriction:
-				      join:
-				        enabled: true
-				""");
-
-		Providers providers = yaml().update(providersPath, Providers.class);
-		Providers.ProviderEntry.Restriction restriction = provider(providers, "credential").getRestriction();
-
-		assertNotNull(restriction);
-		assertNotNull(restriction.getJoin());
-		assertTrue(restriction.getJoin().isEnabled());
-		assertEquals(List.of(ProviderJoinRestrictionCondition.LINKED), restriction.getJoin().getAllow());
 	}
 
 	private Configura yaml() {

@@ -7,7 +7,7 @@ import me.whereareiam.identica.pipeline.extension.PipelineExtension;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
 import me.whereareiam.identica.provider.capability.recognition.pipeline.authentication.AuthenticationRecognitionSnapshotPhase;
 import me.whereareiam.identica.provider.capability.recognition.pipeline.registration.RegistrationRecognitionSnapshotPhase;
-import me.whereareiam.identica.type.pipeline.PipelineScope;
+import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 
 @RequiredArgsConstructor(onConstructor_ = @Inject)
@@ -27,14 +27,14 @@ public class RecognitionPipelineExtension implements PipelineExtension {
 
 	@Override
 	public void apply(@NotNull PipelineExtensionBuilder builder) {
-		builder.registerPhase(
-				PipelineScope.AUTHENTICATION,
+		builder.registerScenarioPhase(
+				PipelineType.AUTHENTICATION,
 				"identity",
 				authenticationRecognitionSnapshotPhase,
 				PhasePlacement.after("refresh-provider-profile")
 		);
-		builder.registerPhase(
-				PipelineScope.REGISTRATION,
+		builder.registerScenarioPhase(
+				PipelineType.REGISTRATION,
 				"identity",
 				registrationRecognitionSnapshotPhase,
 				PhasePlacement.after("link-provider")

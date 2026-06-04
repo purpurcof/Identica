@@ -18,7 +18,6 @@ import me.whereareiam.identica.engine.pipeline.prepare.group.handshake.phase.Eva
 import me.whereareiam.identica.engine.pipeline.prepare.group.handshake.phase.FinalizeHandshakePhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.policy.PolicyGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyPreparePolicyPhase;
-import me.whereareiam.identica.engine.pipeline.prepare.group.policy.phase.ApplyProviderJoinRestrictionPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.ProfileGroup;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.LoadPrepareAccountPhase;
 import me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase.ResolvePendingMigrationAccountPhase;
@@ -46,12 +45,10 @@ import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
-import me.whereareiam.identica.model.provider.restriction.ProviderJoinRestrictionDecision;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.profile.ProfileResolution;
-import me.whereareiam.identica.provider.restriction.ProviderJoinRestrictionService;
 import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.type.PrepareStage;
 import me.whereareiam.identica.type.UsernameSource;
@@ -97,21 +94,10 @@ class PreparePipelineTest {
 	private PipelineStateStore pipelineStateStore;
 	@Mock
 	private DeliveryService deliveryService;
-	@Mock
-	private ProviderJoinRestrictionService providerJoinRestrictionService;
 
 	@BeforeEach
 	void setUpProviderRestrictionService() {
 		EventUtil.initialize(eventManager);
-		ProviderJoinRestrictionDecision allowed = ProviderJoinRestrictionDecision.builder()
-				.allowed(true)
-				.configured(false)
-				.active(false)
-				.allow(java.util.Set.of())
-				.matchedConditions(java.util.Set.of())
-				.build();
-		lenient().when(providerJoinRestrictionService.evaluate(anyString())).thenReturn(allowed);
-		lenient().when(providerJoinRestrictionService.evaluate(anyString(), any(), any(), any(), any())).thenReturn(allowed);
 	}
 
 	@DisplayName("Profile preparation builds a transient account and applies the event decision")
@@ -474,11 +460,6 @@ class PreparePipelineTest {
 						accountPersistenceService,
 						providerLinkPersistenceService,
 						providerProfilePersistenceService
-				),
-				new ApplyProviderJoinRestrictionPhase(
-						providerJoinRestrictionService,
-						providerOperations,
-						Messages::new
 				),
 				new ApplyPreparePolicyPhase(eventManager, Messages::new),
 				new StorePrepareDecisionPhase(prepareStateStore)

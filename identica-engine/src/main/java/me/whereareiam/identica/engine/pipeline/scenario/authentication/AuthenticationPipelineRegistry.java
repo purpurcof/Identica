@@ -3,7 +3,10 @@ package me.whereareiam.identica.engine.pipeline.scenario.authentication;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.IdentityGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.*;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.LoadIdentityProfilePhase;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.RefreshProviderProfilePhase;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.ResolveIdentityPhase;
+import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.UsernameReplicationPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.PolicyGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.phase.AccountReviewPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.phase.PersistUsernameChangePhase;
@@ -36,7 +39,6 @@ public class AuthenticationPipelineRegistry extends AbstractPipelineGroupRegistr
 			ExecutePlanPhase executePlanPhase,
 			ResolveIdentityPhase resolveIdentityPhase,
 			LoadIdentityProfilePhase loadIdentityProfilePhase,
-			EnforceProviderJoinRestrictionPhase enforceProviderJoinRestrictionPhase,
 			RefreshProviderProfilePhase refreshProviderProfilePhase,
 			UsernameReplicationPhase usernameReplicationPhase,
 			AccountReviewPhase accountReviewPhase,
@@ -59,8 +61,7 @@ public class AuthenticationPipelineRegistry extends AbstractPipelineGroupRegistr
 
 		registerPhase(identityGroup.id(), resolveIdentityPhase, PhasePlacement.first());
 		registerPhase(identityGroup.id(), loadIdentityProfilePhase, PhasePlacement.after(resolveIdentityPhase.id()));
-		registerPhase(identityGroup.id(), enforceProviderJoinRestrictionPhase, PhasePlacement.after(loadIdentityProfilePhase.id()));
-		registerPhase(identityGroup.id(), refreshProviderProfilePhase, PhasePlacement.after(enforceProviderJoinRestrictionPhase.id()));
+		registerPhase(identityGroup.id(), refreshProviderProfilePhase, PhasePlacement.after(loadIdentityProfilePhase.id()));
 		registerPhase(identityGroup.id(), usernameReplicationPhase, PhasePlacement.last());
 
 		registerPhase(policyGroup.id(), accountReviewPhase, PhasePlacement.first());

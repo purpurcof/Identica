@@ -76,16 +76,19 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 		if (descriptor == null || provider.getWorkingPath() == null) return List.of();
 
 		List<Module> modules = new ArrayList<>();
+		List<Injector> globalInjectors = new ArrayList<>();
 		for (ProviderCapabilityBootstrap bootstrap : bootstraps) {
 			ProviderCapabilityDescriptor capabilityDescriptor = bootstrap.descriptor();
 			ProviderCapabilityInstallation installation = capabilityRegistry.findInstallation(capabilityDescriptor.getCapability());
 
-			if (installation == null || installation.getGlobalInjector() == null) continue;
-			modules.add(new CapabilityGlobalBridgeModule(installation.getGlobalInjector()));
+			if (installation != null && installation.getGlobalInjector() != null)
+				globalInjectors.add(installation.getGlobalInjector());
 
 			if (!capabilityDescriptor.getScopes().contains(ProviderCapabilityScope.LOCAL)) continue;
 			modules.addAll(resolveLocalModules(bootstrap, capabilityDescriptor.getCapability(), descriptor.getId(), provider.getWorkingPath()));
 		}
+		if (!globalInjectors.isEmpty())
+			modules.addFirst(new CapabilityGlobalBridgeModule(rootInjector, globalInjectors));
 
 		return List.copyOf(modules);
 	}
@@ -194,7 +197,9 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 				.rootInjector(rootInjector)
 				.capabilitiesPath(rootInjector.getInstance(Key.get(Path.class, Names.named("capabilitiesPath"))))
 				.build());
-		Injector capabilityInjector = modules.isEmpty() ? null : rootInjector.createChildInjector(modules);
+		List<Module> injectorModules = new ArrayList<>(resolveGlobalBridgeModules());
+		injectorModules.addAll(modules);
+		Injector capabilityInjector = injectorModules.isEmpty() ? null : rootInjector.createChildInjector(injectorModules);
 		bootstrap.initialize(ProviderCapabilityInitializationContext.builder()
 				.capability(capability)
 				.rootInjector(rootInjector)
@@ -230,30 +235,49 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 		return descriptor.getId();
 	}
 
-	private static final class CapabilityGlobalBridgeModule extends AbstractModule {
-		private final Injector globalInjector;
+	private @NotNull List<Module> resolveGlobalBridgeModules() {
+		List<Injector> globalInjectors = new ArrayList<>();
+		for (ProviderCapabilityInstallation installation : capabilityRegistry.installations()) {
+			if (installation == null || installation.getGlobalInjector() == null) continue;
 
-		private CapabilityGlobalBridgeModule(@NotNull Injector globalInjector) {
-			this.globalInjector = globalInjector;
+			globalInjectors.add(installation.getGlobalInjector());
+		}
+		if (globalInjectors.isEmpty()) return List.of();
+
+		return List.of(new CapabilityGlobalBridgeModule(rootInjector, globalInjectors));
+	}
+
+	private static final class CapabilityGlobalBridgeModule extends AbstractModule {
+		private final Injector parentInjector;
+		private final List<Injector> globalInjectors;
+
+		private CapabilityGlobalBridgeModule(@NotNull Injector parentInjector, @NotNull List<Injector> globalInjectors) {
+			this.parentInjector = parentInjector;
+			this.globalInjectors = List.copyOf(globalInjectors);
 		}
 
 		@Override
 		protected void configure() {
-			for (Key<?> key : globalInjector.getBindings().keySet()) {
-				if (shouldSkip(key)) continue;
+			Set<Key<?>> seen = new HashSet<>();
+			for (Injector globalInjector : globalInjectors) {
+				for (Key<?> key : globalInjector.getBindings().keySet()) {
+					if (!seen.add(key) || shouldSkip(key)) continue;
 
-				bindBridge(key);
+					bindBridge(globalInjector, key);
+				}
 			}
 		}
 
 		@SuppressWarnings({"rawtypes", "unchecked"})
-		private <T> void bindBridge(@NotNull Key<T> key) {
+		private <T> void bindBridge(@NotNull Injector globalInjector, @NotNull Key<T> key) {
 			bind((Key) key).toProvider(globalInjector.getProvider(key));
 		}
 
 		private boolean shouldSkip(@NotNull Key<?> key) {
 			Class<?> rawType = key.getTypeLiteral().getRawType();
-			return rawType == Injector.class || rawType.getName().startsWith("com.google.inject.");
+			return rawType == Injector.class
+					|| rawType.getName().startsWith("com.google.inject.")
+					|| parentInjector.getExistingBinding(key) != null;
 		}
 	}
 }

@@ -11,14 +11,15 @@ import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifec
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
 import me.whereareiam.identica.engine.pipeline.completion.CompletionPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.completion.DefaultCompletionExtensionRegistry;
+import me.whereareiam.identica.engine.pipeline.prepare.PreparePipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.ScenarioRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.AuthenticationPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.DefaultAuthenticationStageRegistry;
+import me.whereareiam.identica.engine.pipeline.scenario.base.journey.rule.DefaultJourneyRuleRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.DefaultMigrationStageRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.migration.MigrationPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.DefaultRegistrationStageRegistry;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.RegistrationPipelineRegistry;
-import me.whereareiam.identica.engine.pipeline.scenario.base.journey.rule.DefaultJourneyRuleRegistry;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
@@ -35,6 +36,9 @@ public class EngineConfiguration extends AbstractModule {
 
 		bind(PipelineRegistry.class).annotatedWith(Names.named("authenticationPipelineRegistry"))
 				.to(AuthenticationPipelineRegistry.class)
+				.asEagerSingleton();
+		bind(PipelineRegistry.class).annotatedWith(Names.named("preparePipelineRegistry"))
+				.to(PreparePipelineRegistry.class)
 				.asEagerSingleton();
 		bind(PipelineRegistry.class).annotatedWith(Names.named("registrationPipelineRegistry"))
 				.to(RegistrationPipelineRegistry.class)

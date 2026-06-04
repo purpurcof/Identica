@@ -2,6 +2,10 @@ package me.whereareiam.identica.engine.pipeline.scenario.registration;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.engine.pipeline.scenario.base.finalize.FinalizeGroup;
+import me.whereareiam.identica.engine.pipeline.scenario.base.journey.JourneyGroup;
+import me.whereareiam.identica.engine.pipeline.scenario.base.journey.phase.*;
+import me.whereareiam.identica.engine.pipeline.scenario.base.preparation.PreparationGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.phase.*;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.policy.PolicyGroup;
@@ -10,10 +14,6 @@ import me.whereareiam.identica.engine.pipeline.scenario.registration.group.polic
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.SessionGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.phase.BuildSessionPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.phase.OpenSessionPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.base.finalize.FinalizeGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.base.journey.JourneyGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.base.journey.phase.*;
-import me.whereareiam.identica.engine.pipeline.scenario.base.preparation.PreparationGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.registry.AbstractPipelineGroupRegistry;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
@@ -35,7 +35,6 @@ public class RegistrationPipelineRegistry extends AbstractPipelineGroupRegistry 
 			ApplyRulesPhase applyRulesPhase,
 			ExecutePlanPhase executePlanPhase,
 			ValidateProviderPhase validateProviderPhase,
-			EnforceProviderJoinRestrictionPhase enforceProviderJoinRestrictionPhase,
 			EnsureNewAccountPhase ensureNewAccountPhase,
 			CreateAccountPhase createAccountPhase,
 			LinkProviderPhase linkProviderPhase,
@@ -59,8 +58,7 @@ public class RegistrationPipelineRegistry extends AbstractPipelineGroupRegistry 
 		registerPhase(journeyGroup.id(), executePlanPhase, PhasePlacement.last());
 
 		registerPhase(identityGroup.id(), validateProviderPhase, PhasePlacement.first());
-		registerPhase(identityGroup.id(), enforceProviderJoinRestrictionPhase, PhasePlacement.after(validateProviderPhase.id()));
-		registerPhase(identityGroup.id(), ensureNewAccountPhase, PhasePlacement.after(enforceProviderJoinRestrictionPhase.id()));
+		registerPhase(identityGroup.id(), ensureNewAccountPhase, PhasePlacement.after(validateProviderPhase.id()));
 		registerPhase(identityGroup.id(), createAccountPhase, PhasePlacement.after(ensureNewAccountPhase.id()));
 		registerPhase(identityGroup.id(), linkProviderPhase, PhasePlacement.after(createAccountPhase.id()));
 		registerPhase(identityGroup.id(), usernameReplicationPhase, PhasePlacement.last());

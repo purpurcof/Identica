@@ -8,7 +8,6 @@ import me.whereareiam.identica.provider.capability.recognition.type.RecognitionS
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -18,9 +17,9 @@ public class RecognitionSettings extends ConfigDocument {
 	private boolean enabled;
 	private @NotNull Duration validity;
 	private @NotNull Duration window;
-	private @NotNull List<RecognitionSignal> defaultSignals = new ArrayList<>();
-	private @NotNull Eligibility eligibility = new Eligibility();
-	private @NotNull Replication replication = new Replication();
+	private @NotNull List<RecognitionSignal> defaultSignals;
+	private @NotNull Eligibility eligibility;
+	private @NotNull Replication replication;
 
 	public long validityMillis() {
 		if (validity.isZero() || validity.isNegative())
@@ -40,14 +39,14 @@ public class RecognitionSettings extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Eligibility {
-		private @NotNull UntrustedIps untrustedIps = new UntrustedIps();
+		private @NotNull UntrustedIps untrustedIps;
 
 		@Getter
 		@Setter
 		@ToString
 		public static class UntrustedIps {
 			private boolean enabled;
-			private @NotNull List<String> entries = new ArrayList<>();
+			private @NotNull List<String> entries;
 		}
 	}
 
@@ -55,7 +54,7 @@ public class RecognitionSettings extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Replication {
-		private @NotNull String snapshotNamespace = "";
-		private @NotNull String recognizedConnectionNamespace = "";
+		private @NotNull String snapshotNamespace;
+		private @NotNull String recognizedConnectionNamespace;
 	}
 }

@@ -3,7 +3,6 @@ package me.whereareiam.identica.common.config.defaults.provider;
 import com.google.inject.Singleton;
 import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.config.provider.Providers;
-import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 
 import java.time.Duration;
@@ -15,7 +14,6 @@ public class ProvidersDefaults implements DefaultsProvider<Providers> {
 	public Providers supply(Providers config) {
 		Providers.Behavior behavior = new Providers.Behavior();
 		behavior.setAttemptTtl(Duration.ofMinutes(10));
-		behavior.setJoinRestrictionToggleTtl(Duration.ofDays(365));
 		config.setBehavior(behavior);
 
 		Providers.ProviderEntry credential = new Providers.ProviderEntry();
@@ -24,7 +22,6 @@ public class ProvidersDefaults implements DefaultsProvider<Providers> {
 		credential.setEnabled(true);
 		credential.setPriority(50);
 		credential.setEntrypoints(List.of("credential.arcadeya.com"));
-		credential.setRestriction(restriction(ProviderJoinRestrictionCondition.LINKED));
 		credential.setVerification(credentialVerification());
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
@@ -70,18 +67,5 @@ public class ProvidersDefaults implements DefaultsProvider<Providers> {
 		verification.setMethods(List.of(totp));
 
 		return verification;
-	}
-
-	private Providers.ProviderEntry.Restriction restriction(ProviderJoinRestrictionCondition... allow) {
-		Providers.ProviderEntry.Restriction restriction = new Providers.ProviderEntry.Restriction();
-		restriction.setJoin(joinRestriction(allow));
-		return restriction;
-	}
-
-	private Providers.ProviderEntry.Restriction.Join joinRestriction(ProviderJoinRestrictionCondition... allow) {
-		Providers.ProviderEntry.Restriction.Join restriction = new Providers.ProviderEntry.Restriction.Join();
-		restriction.setEnabled(false);
-		restriction.setAllow(List.of(allow));
-		return restriction;
 	}
 }

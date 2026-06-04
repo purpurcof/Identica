@@ -17,4 +17,5 @@ Only providers that advertise a capability can use that capability's provider-sc
 
 ## Documented capabilities
 
+- [Restriction](./restriction/index.mdx)
 - [Recognition](./recognition/index.mdx)

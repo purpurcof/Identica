@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.pipeline.extension.PipelineExtension;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
 import me.whereareiam.identica.provider.premium.step.*;
-import me.whereareiam.identica.type.pipeline.PipelineScope;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import org.jetbrains.annotations.NotNull;
@@ -53,46 +52,40 @@ public class PremiumPipelineExtension implements PipelineExtension {
 				finalizeProfileStep
 		);
 		builder.registerStep(
-				PipelineScope.AUTHENTICATION,
+				PipelineType.AUTHENTICATION,
 				providerId,
 				StageType.PROVIDER,
-				PipelineType.AUTHENTICATION,
 				premiumRecognitionStep
 		);
 		builder.registerStep(
-				PipelineScope.AUTHENTICATION,
+				PipelineType.AUTHENTICATION,
 				providerId,
 				StageType.PROVIDER,
-				PipelineType.AUTHENTICATION,
 				premiumVerificationStep
 		);
 
 		builder.registerStep(
-				PipelineScope.MIGRATION,
+				PipelineType.MIGRATION,
 				providerId,
 				StageType.PROVIDER,
-				PipelineType.MIGRATION,
 				profilePresenceStep
 		);
 		builder.registerStep(
-				PipelineScope.MIGRATION,
+				PipelineType.MIGRATION,
 				providerId,
 				StageType.PROVIDER,
-				PipelineType.MIGRATION,
 				offlineCheckStep
 		);
 		builder.registerStep(
-				PipelineScope.MIGRATION,
+				PipelineType.MIGRATION,
 				providerId,
 				StageType.PROVIDER,
-				PipelineType.MIGRATION,
 				finalizeProfileStep
 		);
 		builder.registerStep(
-				PipelineScope.MIGRATION,
+				PipelineType.MIGRATION,
 				providerId,
 				StageType.PROVIDER,
-				PipelineType.MIGRATION,
 				premiumMigrationCompleteStep
 		);
 	}

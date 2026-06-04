@@ -18,7 +18,6 @@ import me.whereareiam.identica.provider.credential.pipeline.scenario.migration.C
 import me.whereareiam.identica.provider.credential.pipeline.scenario.registration.CredentialAccountPresenceStep;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.registration.CredentialRegistrationConfirmStep;
 import me.whereareiam.identica.provider.credential.pipeline.scenario.registration.CredentialRegistrationStep;
-import me.whereareiam.identica.type.pipeline.PipelineScope;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
@@ -71,92 +70,80 @@ public class CredentialPipelineExtension implements PipelineExtension {
 
 		registerForBothJourneyModes(
 				builder,
-				PipelineScope.REGISTRATION,
-				providerId,
 				PipelineType.REGISTRATION,
+				providerId,
 				validationStep
 		);
 		registerForBothJourneyModes(
 				builder,
-				PipelineScope.REGISTRATION,
-				providerId,
 				PipelineType.REGISTRATION,
+				providerId,
 				credentialAccountPresenceStep
 		);
 		registerForBothJourneyModes(
 				builder,
-				PipelineScope.REGISTRATION,
-				providerId,
 				PipelineType.REGISTRATION,
+				providerId,
 				credentialRegistrationStep
 		);
 		if (requireRepeat) {
 			registerForBothJourneyModes(
 					builder,
-					PipelineScope.REGISTRATION,
-					providerId,
 					PipelineType.REGISTRATION,
+					providerId,
 					credentialRegistrationConfirmStep
 			);
 		}
 
 		registerForBothJourneyModes(
 				builder,
-				PipelineScope.AUTHENTICATION,
-				providerId,
 				PipelineType.AUTHENTICATION,
+				providerId,
 				validationStep
 		);
 		registerForBothJourneyModes(
 				builder,
-				PipelineScope.AUTHENTICATION,
-				providerId,
 				PipelineType.AUTHENTICATION,
+				providerId,
 				recognitionStep
 		);
 
 		registerForBothJourneyModes(
 				builder,
-				PipelineScope.AUTHENTICATION,
-				providerId,
 				PipelineType.AUTHENTICATION,
+				providerId,
 				authenticationPasswordStep
 		);
 		registerForBothJourneyModes(
 				builder,
-				PipelineScope.AUTHENTICATION,
-				providerId,
 				PipelineType.AUTHENTICATION,
+				providerId,
 				authenticationVerificationStep
 		);
 
 		builder.registerStep(
-				PipelineScope.MIGRATION,
+				PipelineType.MIGRATION,
 				providerId,
 				StageType.PROVIDER,
-				PipelineType.MIGRATION,
 				validationStep
 		);
 		builder.registerStep(
-				PipelineScope.MIGRATION,
+				PipelineType.MIGRATION,
 				providerId,
 				StageType.PROVIDER,
-				PipelineType.MIGRATION,
 				migrationAuthenticationStep
 		);
 		builder.registerStep(
-				PipelineScope.MIGRATION,
+				PipelineType.MIGRATION,
 				providerId,
 				StageType.PROVIDER,
-				PipelineType.MIGRATION,
 				migrationRegistrationStep
 		);
 		if (requireRepeat) {
 			builder.registerStep(
-					PipelineScope.MIGRATION,
+					PipelineType.MIGRATION,
 					providerId,
 					StageType.PROVIDER,
-					PipelineType.MIGRATION,
 					migrationConfirmStep
 			);
 		}
@@ -164,12 +151,11 @@ public class CredentialPipelineExtension implements PipelineExtension {
 
 	private void registerForBothJourneyModes(
 			@NotNull PipelineExtensionBuilder builder,
-			@NotNull PipelineScope scope,
-			@NotNull String providerId,
 			@NotNull PipelineType pipelineType,
+			@NotNull String providerId,
 			@NotNull Step step
 	) {
-		builder.registerStep(scope, providerId, StageType.PROVIDER, pipelineType, JourneyMode.SEAMLESS, step);
-		builder.registerStep(scope, providerId, StageType.PROVIDER, pipelineType, JourneyMode.INTERACTIVE, step);
+		builder.registerStep(pipelineType, providerId, StageType.PROVIDER, JourneyMode.SEAMLESS, step);
+		builder.registerStep(pipelineType, providerId, StageType.PROVIDER, JourneyMode.INTERACTIVE, step);
 	}
 }

@@ -136,6 +136,26 @@ project(":capability-recognition-api").projectDir = file("identica-capability/ca
 include(":capability-recognition-common")
 project(":capability-recognition-common").projectDir = file("identica-capability/capability-recognition/recognition-common")
 
+include(":capability-restriction")
+project(":capability-restriction").projectDir = file("identica-capability/capability-restriction/restriction")
+
+include(":capability-restriction-api")
+project(":capability-restriction-api").projectDir = file("identica-capability/capability-restriction/restriction-api")
+
+include(":capability-restriction-common")
+project(":capability-restriction-common").projectDir = file("identica-capability/capability-restriction/restriction-common")
+
+include(":capability-restriction-join")
+project(":capability-restriction-join").projectDir = file("identica-capability/capability-restriction/restriction-join/join")
+
+include(":capability-restriction-join-api")
+project(":capability-restriction-join-api").projectDir =
+    file("identica-capability/capability-restriction/restriction-join/join-api")
+
+include(":capability-restriction-join-common")
+project(":capability-restriction-join-common").projectDir =
+    file("identica-capability/capability-restriction/restriction-join/join-common")
+
 include(":provider-credential")
 project(":provider-credential").projectDir = file("identica-provider/provider-credential")
 

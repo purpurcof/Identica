@@ -4,7 +4,7 @@ description: Field-by-field explanation of Identica's provider configuration are
 ---
 
 The providers configuration controls which identity providers are enabled and how provider-specific behavior is applied.
-Use this file to enable providers, set priority and entrypoints, configure restrictions and verification, tune provider-specific session behavior, and apply capability-owned provider fields.
+Use this file to enable providers, set priority and entrypoints, configure verification, tune provider-specific session behavior, and apply capability-owned provider fields.
 
 ## behavior
 
@@ -22,32 +22,18 @@ Identica uses this when it marks that a provider attempt already happened for a 
 Longer values make repeated attempts stay blocked longer.
 Shorter values let retries happen sooner.
 
-### joinRestrictionToggleTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"365d"`
-- Affects: how long provider join restriction runtime toggles stay active in the replicated toggle store
-
-This TTL is used when join restrictions are enabled at runtime.
-Longer values make administrative toggles persist for longer without needing to be reapplied.
-Shorter values let temporary restrictions expire automatically sooner.
-
 <Tabs items={["YAML", "JSON"]}>
   <Tab value="YAML">
 ```yaml
 behavior:
   attemptTtl: "10m"
-  joinRestrictionToggleTtl: "365d"
 ```
   </Tab>
   <Tab value="JSON">
 ```json
 {
   "behavior": {
-    "attemptTtl": "10m",
-    "joinRestrictionToggleTtl": "365d"
+    "attemptTtl": "10m"
   }
 }
 ```
@@ -73,11 +59,6 @@ providers:
       - "premium.example.com"
     session:
       concurrencyPolicy: "REJECT_NEW"
-    restriction:
-      join:
-        enabled: false
-        allow:
-          - "RECOGNIZED"
     verification:
       enabled: true
       required: false
@@ -100,12 +81,6 @@ providers:
       "entrypoints": ["premium.example.com"],
       "session": {
         "concurrencyPolicy": "REJECT_NEW"
-      },
-      "restriction": {
-        "join": {
-          "enabled": false,
-          "allow": ["RECOGNIZED"]
-        }
       },
       "verification": {
         "enabled": true,
@@ -188,42 +163,6 @@ The shape inside `capabilities` is not global.
 Each installed capability defines its own nested fields.
 
 <Include src="../../providers/capabilities/_partials/provider-overrides.mdx" />
-
-### restriction
-
-Use `restriction` for provider-specific restriction policies.
-Right now it contains `restriction.join`, and the extra nesting leaves room for more restriction types later without flattening the provider entry further.
-
-#### restriction.join
-
-Use `restriction.join` when a provider should support runtime join restriction toggles through the admin provider restriction commands.
-
-##### restriction.join.enabled
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether this provider exposes a runtime-toggleable join restriction policy
-
-When this is `false`, `/identica admin provider restriction enable <provider>` will fail for that provider.
-When this is `true`, the configured allow-list can be activated at runtime by command.
-
-##### restriction.join.allow
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a list containing `"RECOGNIZED"` and/or `"LINKED"`
-- Current default: absent unless explicitly configured
-- Affects: what the runtime provider restriction does when it is active
-
-Available conditions:
-
-- `RECOGNIZED`: only reconnect-recognized players may continue through this provider
-- `LINKED`: already-linked players may continue through this provider
-
-When the list contains both values, players may continue when either condition matches.
-When the list is empty, all new joins through the provider are denied.
 
 ### verification
 

@@ -16,6 +16,8 @@ import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityB
 import me.whereareiam.identica.provider.capability.migration.bootstrap.MigrationCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.online.bootstrap.OnlineCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.recognition.bootstrap.RecognitionCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.restriction.bootstrap.RestrictionCapabilityBootstrap;
+import me.whereareiam.identica.provider.capability.restriction.join.bootstrap.JoinRestrictionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.verification.bootstrap.VerificationCapabilityBootstrap;
 import me.whereareiam.identica.provider.premium.command.CommandRegistrar;
 import me.whereareiam.identica.provider.premium.completion.PremiumCompletionExtension;
@@ -56,6 +58,16 @@ public class PremiumProvider extends IdenticaProvider {
 		libraries.setLibraries(List.of(
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
+						.artifactId("restriction")
+						.version(BuildConfig.VERSION)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("restriction-join")
+						.version(BuildConfig.VERSION)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
 						.artifactId("recognition")
 						.version(BuildConfig.VERSION)
 						.build(),
@@ -86,6 +98,8 @@ public class PremiumProvider extends IdenticaProvider {
 	@Override
 	public @NotNull List<ProviderCapabilityBootstrap> capabilities() {
 		return List.of(
+				RestrictionCapabilityBootstrap.INSTANCE,
+				JoinRestrictionCapabilityBootstrap.INSTANCE,
 				RecognitionCapabilityBootstrap.INSTANCE,
 				OnlineCapabilityBootstrap.INSTANCE,
 				AuthoritativeUsernameCapabilityBootstrap.INSTANCE,

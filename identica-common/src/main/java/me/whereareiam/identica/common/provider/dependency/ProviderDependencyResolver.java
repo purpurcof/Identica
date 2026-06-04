@@ -6,9 +6,9 @@ import com.google.inject.name.Named;
 import me.whereareiam.attache.model.LibraryRequest;
 import me.whereareiam.attache.platform.standalone.StandaloneLibraryManager;
 import me.whereareiam.attache.type.VerbosityMode;
-import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
+import me.whereareiam.identica.provider.IdenticaProvider;
 
 import java.nio.file.Path;
 import java.util.List;

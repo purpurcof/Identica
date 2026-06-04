@@ -12,7 +12,6 @@ import me.whereareiam.configura.merge.strategy.DeclaredObjectDefaults;
 import me.whereareiam.configura.type.merge.tree.list.ListMode;
 import me.whereareiam.configura.type.merge.tree.list.ListPresence;
 import me.whereareiam.configura.type.merge.tree.list.ListUnknownEntries;
-import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
 import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
@@ -50,10 +49,6 @@ public class Providers extends ConfigDocument {
 		 * Time-to-live for provider attempt markers.
 		 */
 		private @NotNull Duration attemptTtl;
-		/**
-		 * Time-to-live for provider join restriction runtime toggles.
-		 */
-		private @NotNull Duration joinRestrictionToggleTtl;
 
 		/**
 		 * Returns attempt TTL in milliseconds with validation.
@@ -68,18 +63,6 @@ public class Providers extends ConfigDocument {
 			return attemptTtl.toMillis();
 		}
 
-		/**
-		 * Returns join restriction toggle TTL in milliseconds with validation.
-		 *
-		 * @return join restriction toggle TTL in milliseconds
-		 */
-		public long joinRestrictionToggleTtlMillis() {
-			if (joinRestrictionToggleTtl.isZero() || joinRestrictionToggleTtl.isNegative()) {
-				throw new IllegalStateException("providers.behavior.joinRestrictionToggleTtl must be positive");
-			}
-
-			return joinRestrictionToggleTtl.toMillis();
-		}
 	}
 
 	/**
@@ -105,12 +88,6 @@ public class Providers extends ConfigDocument {
 		@Merge(DeclaredObjectDefaults.class)
 		@ExtendableDocument
 		private @Nullable Session session;
-		/**
-		 * Provider-specific restriction settings.
-		 */
-		@Merge(DeclaredObjectDefaults.class)
-		@ExtendableDocument
-		private @Nullable Restriction restriction;
 		@Merge(DeclaredObjectDefaults.class)
 		@ExtendableDocument
 		private @Nullable Verification verification;
@@ -135,34 +112,6 @@ public class Providers extends ConfigDocument {
 		@ExtendableDocument
 		public static class Session {
 			private @Nullable SessionConcurrencyPolicy concurrencyPolicy;
-		}
-
-		/**
-		 * Provider-specific restriction settings.
-		 */
-		@Getter
-		@Setter
-		@ToString
-		@ExtendableDocument
-		public static class Restriction {
-			/**
-			 * Runtime-toggleable provider join restriction settings.
-			 */
-			@Merge(DeclaredObjectDefaults.class)
-			@ExtendableDocument
-			private @Nullable Join join;
-
-			/**
-			 * Runtime-toggleable provider join restriction settings.
-			 */
-			@Getter
-			@Setter
-			@ToString
-			@ExtendableDocument
-			public static class Join {
-				private boolean enabled;
-				private @Nullable List<ProviderJoinRestrictionCondition> allow;
-			}
 		}
 
 		/**

@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     // capabilities
+    compileOnly(projects.capabilityRestriction)
+    compileOnly(projects.capabilityRestrictionJoin)
     compileOnly(projects.capabilityRecognition)
     compileOnly(projects.capabilityOnline)
     compileOnly(projects.capabilityAuthoritativeUsername)
@@ -18,6 +20,8 @@ dependencies {
     implementation(projects.providerPremiumPlatformVelocity)
 
     // capabilities
+    testImplementation(projects.capabilityRestriction)
+    testImplementation(projects.capabilityRestrictionJoin)
     testImplementation(projects.capabilityRecognition)
     testImplementation(projects.capabilityOnline)
     testImplementation(projects.capabilityAuthoritativeUsername)

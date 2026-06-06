@@ -12,9 +12,9 @@ import me.whereareiam.identica.provider.capability.restriction.join.config.provi
 import me.whereareiam.identica.provider.capability.restriction.join.config.provider.JoinRestrictionMessagesProvider;
 import me.whereareiam.identica.provider.capability.restriction.join.config.provider.JoinRestrictionProvidersProvider;
 import me.whereareiam.identica.provider.capability.restriction.join.pipeline.JoinPipelineExtension;
-import me.whereareiam.identica.provider.capability.restriction.join.pipeline.prepare.ApplyJoinRestrictionPhase;
-import me.whereareiam.identica.provider.capability.restriction.join.pipeline.scenario.EnforceAuthenticationJoinRestrictionPhase;
-import me.whereareiam.identica.provider.capability.restriction.join.pipeline.scenario.EnforceRegistrationJoinRestrictionPhase;
+import me.whereareiam.identica.provider.capability.restriction.join.pipeline.prepare.group.policy.phase.ApplyJoinRestrictionPhase;
+import me.whereareiam.identica.provider.capability.restriction.join.pipeline.scenario.type.authentication.group.identity.phase.EnforceAuthenticationJoinRestrictionPhase;
+import me.whereareiam.identica.provider.capability.restriction.join.pipeline.scenario.type.registration.group.identity.phase.EnforceRegistrationJoinRestrictionPhase;
 
 import java.nio.file.Path;
 import java.util.Set;

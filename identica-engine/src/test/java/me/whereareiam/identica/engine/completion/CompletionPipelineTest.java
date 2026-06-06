@@ -1,14 +1,14 @@
 package me.whereareiam.identica.engine.completion;
 
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.completion.group.context.CompletionContextGroup;
 import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.BuildCompletionContextPhase;
 import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.ResolveCompletionProviderPhase;
 import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.ResolveCompletionSessionPhase;
 import me.whereareiam.identica.engine.pipeline.completion.group.step.CompletionStepGroup;
 import me.whereareiam.identica.engine.pipeline.completion.group.step.phase.ExecuteCompletionStepsPhase;
+import me.whereareiam.identica.engine.pipeline.completion.registry.CompletionPipelineRegistry;
+import me.whereareiam.identica.engine.pipeline.completion.runtime.CompletionPipeline;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;

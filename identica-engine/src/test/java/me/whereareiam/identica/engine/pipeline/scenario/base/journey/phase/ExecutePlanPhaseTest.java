@@ -1,5 +1,6 @@
 package me.whereareiam.identica.engine.pipeline.scenario.base.journey.phase;
 
+import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.phase.ExecutePlanPhase;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
@@ -14,12 +15,12 @@ import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
-import me.whereareiam.identica.model.pipeline.state.scenario.base.JourneyState;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.Step;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.state.scenario.shared.JourneyState;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
@@ -55,7 +56,7 @@ class ExecutePlanPhaseTest {
 		ProviderManager providerManager = mock(ProviderManager.class);
 		PipelineStateStore pipelineStateStore = mock(PipelineStateStore.class);
 		RoutingCoordinator routingCoordinator = mock(RoutingCoordinator.class);
-		when(pipelineStateStore.find(any(me.whereareiam.identica.model.pipeline.state.PipelineStateReference.class)))
+		when(pipelineStateStore.find(any(me.whereareiam.identica.pipeline.state.PipelineStateReference.class)))
 				.thenReturn(Optional.empty());
 
 		ExecutePlanPhase phase = new ExecutePlanPhase(

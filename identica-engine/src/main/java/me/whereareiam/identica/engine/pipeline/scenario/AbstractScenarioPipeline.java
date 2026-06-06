@@ -4,7 +4,6 @@ import com.google.inject.Provider;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
 import me.whereareiam.identica.event.pipeline.attempt.ScenarioContextBuiltEvent;
-import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
@@ -16,15 +15,16 @@ import me.whereareiam.identica.model.pipeline.AdvanceMarkerItem;
 import me.whereareiam.identica.model.pipeline.GroupOutcome;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.PipelineGroup;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
-import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
+import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -145,7 +145,7 @@ public abstract class AbstractScenarioPipeline {
 
 	protected abstract @NotNull ScenarioContext mergeContext(@NotNull ScenarioContext base, @NotNull ResumeRequest request);
 
-	protected abstract boolean isPending(@NotNull PipelineState state);
+	public abstract boolean isPending(@NotNull PipelineState state);
 
 	protected abstract void onStart(@NotNull PipelineState state, boolean resumed);
 

@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import me.whereareiam.identica.pipeline.extension.PipelineExtension;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
-import me.whereareiam.identica.provider.capability.recognition.pipeline.authentication.AuthenticationRecognitionSnapshotPhase;
-import me.whereareiam.identica.provider.capability.recognition.pipeline.registration.RegistrationRecognitionSnapshotPhase;
+import me.whereareiam.identica.provider.capability.recognition.pipeline.scenario.type.authentication.group.identity.phase.AuthenticationRecognitionSnapshotPhase;
+import me.whereareiam.identica.provider.capability.recognition.pipeline.scenario.type.registration.group.identity.phase.RegistrationRecognitionSnapshotPhase;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 

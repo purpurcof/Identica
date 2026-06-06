@@ -8,6 +8,7 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
+import me.whereareiam.identica.provider.premium.pipeline.step.shared.OfflineCheckStep;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.util.UniqueIdGenerator;

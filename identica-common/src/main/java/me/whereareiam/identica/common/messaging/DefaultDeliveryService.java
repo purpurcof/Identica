@@ -4,12 +4,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.delivery.DeliveryDispatchContext;
 import me.whereareiam.identica.model.delivery.DeliveryPayload;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
+import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.service.DeliveryStore;
@@ -26,7 +28,6 @@ import java.util.*;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultDeliveryService implements DeliveryService {
 	private final DeliveryStore deliveryStore;
-	private final IdentityService identityService;
 	private final PipelineStateStore pipelineStateStore;
 
 	@Override
@@ -150,31 +151,18 @@ public class DefaultDeliveryService implements DeliveryService {
 		UUID connectionUniqueId = identity.getConnectionUniqueId();
 		if (connectionUniqueId == null) return false;
 
-		me.whereareiam.identica.model.pipeline.state.PipelineStateReference reference =
-				me.whereareiam.identica.model.pipeline.state.PipelineStateReference.builder()
+		PipelineStateReference reference = PipelineStateReference.builder()
 						.connectionUniqueId(connectionUniqueId)
 						.build();
-		me.whereareiam.identica.model.pipeline.state.PipelineState state = pipelineStateStore.find(reference).orElse(null);
+		PipelineState state = pipelineStateStore.find(reference).orElse(null);
 		if (state == null) return false;
 
-		me.whereareiam.identica.model.pipeline.journey.JourneyStateItem journey = state.item(me.whereareiam.identica.model.pipeline.journey.JourneyStateItem.class).orElse(null);
+		JourneyStateItem journey = state.item(JourneyStateItem.class).orElse(null);
 		String stageId = journey != null ? journey.getStageId() : null;
 		int stepIndex = journey != null ? journey.getStepIndex() : -1;
 
 		return state.getPipelineType() == request.getMarker().getPipelineType()
 				&& stepIndex == request.getMarker().getStepIndex()
 				&& java.util.Objects.equals(stageId, request.getMarker().getStageId());
-	}
-
-	private Identity resolveIdentity(@NotNull DeliveryRequest request) {
-		UUID connectionUniqueId = request.getTarget().getConnectionUniqueId();
-		if (connectionUniqueId != null)
-			return identityService.findByConnectionUniqueId(connectionUniqueId).orElse(null);
-
-		UUID accountUniqueId = request.getTarget().getAccountUniqueId();
-		if (accountUniqueId != null)
-			return identityService.findByAccountUniqueId(accountUniqueId).orElse(null);
-
-		return null;
 	}
 }

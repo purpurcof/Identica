@@ -9,21 +9,21 @@ import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.prepare.PrepareGroupState;
-import me.whereareiam.identica.model.pipeline.state.scenario.registration.PolicyState;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.registration.RegistrationContext;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
+import me.whereareiam.identica.pipeline.state.scenario.type.registration.PolicyState;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.capability.authoritative.username.conflict.resolver.UsernameConflictResolver;
 import me.whereareiam.identica.provider.capability.authoritative.username.database.AccountUsernameStatePersistenceService;
 import me.whereareiam.identica.provider.capability.authoritative.username.model.AuthoritativeUsernameMessages;
 import me.whereareiam.identica.provider.capability.authoritative.username.model.conflict.UsernameConflictResult;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.prepare.ApplyAuthoritativeUsernamePhase;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.prepare.ReviewAuthenticationUsernamePhase;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.prepare.ReviewRegistrationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.prepare.group.policy.phase.ApplyAuthoritativeUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.authentication.group.policy.phase.ReviewAuthenticationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.registration.group.policy.phase.ReviewRegistrationUsernamePhase;
 import me.whereareiam.identica.provider.capability.authoritative.username.type.AccountUsernameSource;
 import me.whereareiam.identica.provider.capability.authoritative.username.type.AuthoritativeUsernameCapability;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -124,8 +124,8 @@ class AuthoritativeUsernameConflictPhasesTest {
 		pipelineState.setScenario(context);
 		pipelineState.putItem(snapshot(), 0L);
 
-		me.whereareiam.identica.model.pipeline.state.scenario.authentication.PolicyState state =
-				new me.whereareiam.identica.model.pipeline.state.scenario.authentication.PolicyState();
+		me.whereareiam.identica.pipeline.state.scenario.type.authentication.PolicyState state =
+				new me.whereareiam.identica.pipeline.state.scenario.type.authentication.PolicyState();
 		state.setResult(PipelineResult.complete());
 		phase.execute(pipelineState, state).toCompletableFuture().join();
 

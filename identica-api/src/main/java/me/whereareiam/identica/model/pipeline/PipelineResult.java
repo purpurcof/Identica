@@ -3,7 +3,7 @@ package me.whereareiam.identica.model.pipeline;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

@@ -14,11 +14,11 @@ import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateIte
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.prepare.PrepareGroupState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;

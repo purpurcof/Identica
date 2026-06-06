@@ -1,6 +1,6 @@
 package me.whereareiam.identica.engine.pipeline.scenario.session;
 
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.session.phase.OpenSessionPhase;
+import me.whereareiam.identica.engine.pipeline.scenario.type.authentication.group.session.phase.OpenSessionPhase;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
@@ -9,8 +9,8 @@ import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.scenario.authentication.SessionState;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.scenario.type.authentication.SessionState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

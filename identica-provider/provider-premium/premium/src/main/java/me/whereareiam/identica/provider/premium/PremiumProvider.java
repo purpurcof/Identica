@@ -23,9 +23,14 @@ import me.whereareiam.identica.provider.premium.command.CommandRegistrar;
 import me.whereareiam.identica.provider.premium.completion.PremiumCompletionExtension;
 import me.whereareiam.identica.provider.premium.completion.PremiumCompletionStep;
 import me.whereareiam.identica.provider.premium.pipeline.PremiumPipelineExtension;
+import me.whereareiam.identica.provider.premium.pipeline.step.shared.FinalizeProfileStep;
+import me.whereareiam.identica.provider.premium.pipeline.step.shared.OfflineCheckStep;
+import me.whereareiam.identica.provider.premium.pipeline.step.shared.ProfilePresenceStep;
+import me.whereareiam.identica.provider.premium.pipeline.step.type.authentication.PremiumRecognitionStep;
+import me.whereareiam.identica.provider.premium.pipeline.step.type.authentication.PremiumVerificationStep;
+import me.whereareiam.identica.provider.premium.pipeline.step.type.migration.PremiumMigrationCompleteStep;
 import me.whereareiam.identica.provider.premium.platform.bungeecord.PremiumBungeeCordExtension;
 import me.whereareiam.identica.provider.premium.platform.velocity.PremiumVelocityExtension;
-import me.whereareiam.identica.provider.premium.step.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

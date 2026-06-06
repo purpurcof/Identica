@@ -11,10 +11,14 @@ import me.whereareiam.identica.provider.capability.authoritative.username.confli
 import me.whereareiam.identica.provider.capability.authoritative.username.conflict.resolver.UsernameConflictResolver;
 import me.whereareiam.identica.provider.capability.authoritative.username.model.AuthoritativeUsernameMessages;
 import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.AuthoritativeUsernamePipelineExtension;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.prepare.*;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.authentication.SynchronizeAuthenticationUsernamePhase;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.migration.SynchronizeMigrationUsernamePhase;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.registration.SynchronizeRegistrationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.prepare.group.policy.phase.ApplyAuthoritativeUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.authentication.group.identity.phase.SynchronizeAuthenticationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.authentication.group.policy.phase.PersistAuthenticationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.authentication.group.policy.phase.ReviewAuthenticationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.migration.group.identity.phase.SynchronizeMigrationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.registration.group.identity.phase.SynchronizeRegistrationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.registration.group.policy.phase.PersistRegistrationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.registration.group.policy.phase.ReviewRegistrationUsernamePhase;
 
 import java.nio.file.Path;
 

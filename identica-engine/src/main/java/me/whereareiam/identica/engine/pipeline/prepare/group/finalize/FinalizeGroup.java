@@ -3,8 +3,8 @@ package me.whereareiam.identica.engine.pipeline.prepare.group.finalize;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.engine.pipeline.prepare.group.AbstractPrepareGroup;
 import me.whereareiam.identica.model.pipeline.GroupOutcome;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.prepare.PrepareGroupState;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton

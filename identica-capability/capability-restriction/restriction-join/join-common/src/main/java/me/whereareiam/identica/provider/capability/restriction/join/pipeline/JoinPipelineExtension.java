@@ -5,9 +5,9 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import me.whereareiam.identica.pipeline.extension.PipelineExtension;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
-import me.whereareiam.identica.provider.capability.restriction.join.pipeline.prepare.ApplyJoinRestrictionPhase;
-import me.whereareiam.identica.provider.capability.restriction.join.pipeline.scenario.EnforceAuthenticationJoinRestrictionPhase;
-import me.whereareiam.identica.provider.capability.restriction.join.pipeline.scenario.EnforceRegistrationJoinRestrictionPhase;
+import me.whereareiam.identica.provider.capability.restriction.join.pipeline.prepare.group.policy.phase.ApplyJoinRestrictionPhase;
+import me.whereareiam.identica.provider.capability.restriction.join.pipeline.scenario.type.authentication.group.identity.phase.EnforceAuthenticationJoinRestrictionPhase;
+import me.whereareiam.identica.provider.capability.restriction.join.pipeline.scenario.type.registration.group.identity.phase.EnforceRegistrationJoinRestrictionPhase;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 

@@ -6,6 +6,7 @@ import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.provider.capability.recognition.SessionRecognitionService;
 import me.whereareiam.identica.provider.capability.recognition.store.RecognizedConnectionStore;
+import me.whereareiam.identica.provider.premium.pipeline.step.type.authentication.PremiumRecognitionStep;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

@@ -1,7 +1,6 @@
 package me.whereareiam.identica.common.migration;
 
 import me.whereareiam.identica.common.config.defaults.EngineDefaults;
-import me.whereareiam.identica.common.config.defaults.SettingsDefaults;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
@@ -13,7 +12,6 @@ import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
@@ -23,8 +21,8 @@ import me.whereareiam.identica.model.migration.operation.MigrationRequest;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
 import me.whereareiam.identica.model.migration.operation.MigrationStart;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.service.DeliveryService;
@@ -229,8 +227,7 @@ class DefaultMigrationServiceTest {
 		when(sessionService.close(any(UUID.class))).thenReturn(CompletableFuture.completedFuture(null));
 		when(identityService.findByConnectionUniqueId(any(UUID.class))).thenReturn(Optional.empty());
 
-		Settings settings = new SettingsDefaults().supply(new Settings());
-		DefaultMigrationService service = new DefaultMigrationService(
+        DefaultMigrationService service = new DefaultMigrationService(
 				providerManager,
 				providerLinkPersistenceService,
 				accountPersistenceService,

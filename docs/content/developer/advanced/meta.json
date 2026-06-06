@@ -1,6 +1,7 @@
 {
   "title": "Advanced",
   "pages": [
+    "pipeline-layout",
     "events"
   ]
 }

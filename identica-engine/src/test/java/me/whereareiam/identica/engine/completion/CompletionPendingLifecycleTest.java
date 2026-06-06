@@ -1,7 +1,7 @@
 package me.whereareiam.identica.engine.completion;
 
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
+import me.whereareiam.identica.engine.pipeline.completion.lifecycle.CompletionPendingLifecycle;
+import me.whereareiam.identica.engine.pipeline.completion.runtime.CompletionPipeline;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.delivery.DeliveryCheckpointReachedEvent;
 import me.whereareiam.identica.event.routing.completion.CompletionRoutingReachedEvent;

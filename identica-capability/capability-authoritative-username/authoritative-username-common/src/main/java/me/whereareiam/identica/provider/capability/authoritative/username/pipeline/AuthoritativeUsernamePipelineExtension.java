@@ -5,10 +5,14 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
 import me.whereareiam.identica.pipeline.extension.PipelineExtension;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionBuilder;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.prepare.*;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.authentication.SynchronizeAuthenticationUsernamePhase;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.migration.SynchronizeMigrationUsernamePhase;
-import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.registration.SynchronizeRegistrationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.prepare.group.policy.phase.ApplyAuthoritativeUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.authentication.group.identity.phase.SynchronizeAuthenticationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.authentication.group.policy.phase.PersistAuthenticationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.authentication.group.policy.phase.ReviewAuthenticationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.migration.group.identity.phase.SynchronizeMigrationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.registration.group.identity.phase.SynchronizeRegistrationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.registration.group.policy.phase.PersistRegistrationUsernamePhase;
+import me.whereareiam.identica.provider.capability.authoritative.username.pipeline.scenario.type.registration.group.policy.phase.ReviewRegistrationUsernamePhase;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 

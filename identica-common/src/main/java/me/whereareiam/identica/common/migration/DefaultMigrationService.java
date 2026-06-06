@@ -29,7 +29,6 @@ import me.whereareiam.identica.model.migration.operation.*;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
 import me.whereareiam.identica.model.provider.InternalProvider;
-import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -48,9 +47,6 @@ import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
-import me.whereareiam.identica.type.provider.ProviderOrigin;
-import me.whereareiam.identica.type.provider.capability.ProviderCapability;
-import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -63,8 +59,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultMigrationService implements MigrationService {
-	// TODO Migrate and use capbility api class
-	private static final ProviderCapability OFFLINE_CAPABILITY = ProviderCapability.of("offline");
 	private final ProviderManager providerManager;
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final AccountPersistenceService accountPersistenceService;
@@ -270,10 +264,6 @@ public class DefaultMigrationService implements MigrationService {
 				))
 				.targetProviderId(pendingMigration.targetProviderId())
 				.build();
-		context.setProvider(resolvePendingProviderContext(
-				pendingMigration.targetProviderId(),
-				pendingMigration.username()
-		));
 
 		PipelineState pipelineState = PipelineState.initial();
 		pipelineState.setPipelineType(PipelineType.MIGRATION);
@@ -303,41 +293,6 @@ public class DefaultMigrationService implements MigrationService {
 		);
 
 		return true;
-	}
-
-	private @Nullable ProviderContext resolvePendingProviderContext(
-			@Nullable String targetProviderId,
-			@Nullable String username
-	) {
-		String normalizedProviderId = normalize(targetProviderId);
-		String normalizedUsername = normalize(username);
-		if (normalizedProviderId == null || normalizedUsername == null)
-			return null;
-
-		InternalProvider targetProvider = resolveProvider(normalizedProviderId);
-		if (targetProvider == null || targetProvider.getDescriptor() == null)
-			return null;
-
-		if (!targetProvider.getDescriptor().hasCapability(OFFLINE_CAPABILITY))
-			return null;
-
-		UUID offlineUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(normalizedUsername);
-		if (offlineUniqueId == null)
-			return null;
-
-		ProviderContext provider = ProviderContext.builder()
-				.providerId(normalizedProviderId)
-				.providerSubject(offlineUniqueId.toString())
-				.providerUsername(normalizedUsername)
-				.source(ProviderOrigin.AUTO)
-				.build();
-		Logger.debug(
-				"Prepared offline migration provider context target=%s username=%s subject=%s",
-				normalizedProviderId,
-				normalizedUsername,
-				offlineUniqueId
-		);
-		return provider;
 	}
 
 	private boolean hasPendingMigration(@NotNull UUID connectionUniqueId) {

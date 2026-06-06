@@ -9,7 +9,6 @@ dependencies {
     compileOnly(projects.capabilityRestriction)
     compileOnly(projects.capabilityRestrictionJoin)
     compileOnly(projects.capabilityRecognition)
-    compileOnly(projects.capabilityOffline)
     compileOnly(projects.capabilityMigration)
     compileOnly(projects.capabilityVerification)
 
@@ -25,7 +24,6 @@ dependencies {
     testImplementation(projects.capabilityRestriction)
     testImplementation(projects.capabilityRestrictionJoin)
     testImplementation(projects.capabilityRecognition)
-    testImplementation(projects.capabilityOffline)
     testImplementation(projects.capabilityMigration)
     testImplementation(projects.capabilityVerification)
 

@@ -4,16 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.AccountPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
-import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.delivery.DeliveryPayload;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
 import me.whereareiam.identica.model.delivery.DeliveryTarget;
 import me.whereareiam.identica.model.identity.Account;
-import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
-import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
@@ -35,7 +31,6 @@ import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.util.EventUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -45,8 +40,6 @@ import java.util.concurrent.CompletionStage;
 public class ResolvePendingMigrationAccountPhase implements PipelinePhase<PrepareGroupState> {
 	private final PipelineStateStore pipelineStateStore;
 	private final AccountPersistenceService accountPersistenceService;
-	private final ProviderLinkPersistenceService providerLinkPersistenceService;
-	private final ProviderProfilePersistenceService providerProfilePersistenceService;
 	private final DeliveryService deliveryService;
 
 	@Override
@@ -73,9 +66,7 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 		return context != null
 				&& context.getProvider() != null
 				&& context.getProvider().getProviderId() != null
-				&& !context.getProvider().getProviderId().isBlank()
-				&& context.getProvider().getProviderSubject() != null
-				&& !context.getProvider().getProviderSubject().isBlank();
+				&& !context.getProvider().getProviderId().isBlank();
 	}
 
 	@Override
@@ -92,11 +83,8 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 
 		String connectionKey = request.getConnectionKey();
 		String providerId = provider.getProviderId();
-		String providerSubject = provider.getProviderSubject();
 		String requestedUsername = request.getIdentity().getUsername();
-		if (connectionKey == null || connectionKey.isBlank()
-				|| providerId == null || providerId.isBlank()
-				|| providerSubject == null || providerSubject.isBlank()) {
+		if (connectionKey == null || connectionKey.isBlank() || providerId == null || providerId.isBlank()) {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
@@ -154,14 +142,6 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 		if (accountUniqueId == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
-		Optional<AccountProviderLink> storedLink = providerLinkPersistenceService.findBySubject(providerId, providerSubject);
-		AccountProviderLink link = storedLink.orElseGet(() -> AccountProviderLink.builder()
-				.uniqueId(accountUniqueId)
-				.providerId(providerId)
-				.providerSubject(providerSubject)
-				.primaryLink(true)
-				.build());
-
 		Account storedAccount = accountPersistenceService.findByUniqueId(accountUniqueId).orElse(null);
 		Account account = storedAccount != null
 				? storedAccount.toBuilder().username(requestedUsername).build()
@@ -169,19 +149,13 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 						.uniqueId(accountUniqueId)
 						.username(requestedUsername)
 						.build();
-		AccountProviderProfile profile = providerProfilePersistenceService.findBySubject(providerId, providerSubject)
-				.orElseGet(() -> AccountProviderProfile.builder()
-						.providerId(providerId)
-						.providerSubject(providerSubject)
-						.providerUsername(requestedUsername)
-						.build());
 
 		pipelineState.putItem(new PrepareAccountCandidateItem(
 				accountUniqueId,
 				null,
 				account,
-				link,
-				profile
+				null,
+				null
 		), 0L);
 		Logger.debug(
 				"Prepare reusing pending migration account provider=%s identica=%s key=%s",

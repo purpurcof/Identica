@@ -26,9 +26,7 @@ import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.provider.ProviderState;
-import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import me.whereareiam.identica.util.NetworkUtil;
-import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,8 +36,6 @@ import java.util.stream.Stream;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultProviderOperations implements ProviderOperations {
-	// TODO Migrate and use capbility api class
-	private static final ProviderCapability OFFLINE_CAPABILITY = ProviderCapability.of("offline");
 	private static final Comparator<EntrypointCandidate> ENTRYPOINT_ORDER =
 			Comparator.comparingInt(EntrypointCandidate::priority)
 					.thenComparing(EntrypointCandidate::providerId, String.CASE_INSENSITIVE_ORDER.reversed());
@@ -53,8 +49,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 	@Override
 	public @Nullable ProfileResolution resolveProfile(@NotNull ProfileResolveContext context) {
 		List<InternalProvider> sorted = sortedEnabledProviders();
-		if (sorted.isEmpty())
-			return resolveOfflineProfileFallback(context);
+		if (sorted.isEmpty()) return null;
 
 		for (InternalProvider provider : sorted) {
 			Set<ProfileSubjectResolver> registered = provider.getProfileSubjectResolvers();
@@ -77,7 +72,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 			}
 		}
 
-		return resolveOfflineProfileFallback(context);
+		return null;
 	}
 
 	@Override
@@ -272,22 +267,6 @@ public class DefaultProviderOperations implements ProviderOperations {
 						.reversed()
 						.thenComparing(provider -> provider.getDescriptor().getId(), String.CASE_INSENSITIVE_ORDER))
 				.toList();
-	}
-
-	private @Nullable ProfileResolution resolveOfflineProfileFallback(@NotNull ProfileResolveContext context) {
-		InternalProvider provider = providerManager.findProvider(OFFLINE_CAPABILITY);
-		if (provider == null || provider.getDescriptor() == null) return null;
-
-		String username = context.getUsername();
-		if (username == null || username.isBlank()) return null;
-
-		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		if (offlineUuid == null) return null;
-
-		return ProfileResolution.builder()
-				.providerId(provider.getDescriptor().getId())
-				.providerSubject(offlineUuid.toString())
-				.build();
 	}
 
 	private boolean isBlank(@Nullable String value) {

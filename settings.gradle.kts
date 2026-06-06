@@ -80,32 +80,11 @@ project(":identica-provider").projectDir = file("identica-provider")
 include(":identica-capability")
 project(":identica-capability").projectDir = file("identica-capability")
 
-include(":capability-offline")
-project(":capability-offline").projectDir = file("identica-capability/capability-offline/offline")
-
-include(":capability-offline-api")
-project(":capability-offline-api").projectDir = file("identica-capability/capability-offline/offline-api")
-
-include(":capability-offline-common")
-project(":capability-offline-common").projectDir = file("identica-capability/capability-offline/offline-common")
-
-include(":capability-online")
-project(":capability-online").projectDir = file("identica-capability/capability-online/online")
-
-include(":capability-online-api")
-project(":capability-online-api").projectDir = file("identica-capability/capability-online/online-api")
-
-include(":capability-online-common")
-project(":capability-online-common").projectDir = file("identica-capability/capability-online/online-common")
-
 include(":capability-migration")
 project(":capability-migration").projectDir = file("identica-capability/capability-migration/migration")
 
 include(":capability-migration-api")
 project(":capability-migration-api").projectDir = file("identica-capability/capability-migration/migration-api")
-
-include(":capability-migration-common")
-project(":capability-migration-common").projectDir = file("identica-capability/capability-migration/migration-common")
 
 include(":capability-verification")
 project(":capability-verification").projectDir = file("identica-capability/capability-verification/verification")

@@ -82,13 +82,6 @@ public class ResolvePendingMigrationContextPhase implements PipelinePhase<Prepar
 	}
 
 	private ProviderContext resolveProviderContext(@NotNull MigrationContext migration, @NotNull PrepareGroupState state) {
-		ProviderContext provider = migration.getProvider();
-		if (provider != null)
-			return provider.toBuilder()
-					.providerUsername(state.getRequest().getIdentity().getUsername())
-					.source(ProviderOrigin.MANUAL)
-					.build();
-
 		return ProviderContext.of(
 				migration.getTargetProviderId(),
 				null,

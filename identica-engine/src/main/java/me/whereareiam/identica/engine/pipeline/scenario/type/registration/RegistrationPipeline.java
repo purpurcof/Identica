@@ -27,7 +27,6 @@ import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.util.EventUtil;
-import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,18 +59,8 @@ public class RegistrationPipeline extends AbstractScenarioPipeline {
 	@Override
 	protected @Nullable ScenarioContext buildContext(@NotNull ConnectionRequest request) {
 		if (request.getIdentity().getAccountUniqueId() == null) {
-			UUID fallbackUniqueId = request.getConnectionUniqueId();
-			String username = request.getUsername();
-			if (fallbackUniqueId == null && username != null)
-				fallbackUniqueId = UniqueIdGenerator.offlinePlayerUniqueId(username);
-
-			if (fallbackUniqueId == null) {
-				Logger.severe("%s request missing Identica UUID and fallback UUID", type());
-				return null;
-			}
-
-			Logger.warn("%s request missing Identica UUID, applying fallback UUID %s", type(), fallbackUniqueId);
-			request.getIdentity().setAccountUniqueId(fallbackUniqueId);
+			Logger.severe("%s request missing Identica UUID", type());
+			return null;
 		}
 
 		RegistrationContext context = RegistrationContext.builder()

@@ -14,7 +14,6 @@ import me.whereareiam.identica.provider.ProviderPlatformExtension;
 import me.whereareiam.identica.provider.capability.authoritative.username.bootstrap.AuthoritativeUsernameCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.migration.bootstrap.MigrationCapabilityBootstrap;
-import me.whereareiam.identica.provider.capability.online.bootstrap.OnlineCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.recognition.bootstrap.RecognitionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.bootstrap.RestrictionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.join.bootstrap.JoinRestrictionCapabilityBootstrap;
@@ -102,19 +101,6 @@ public class PremiumProvider extends IdenticaProvider {
 						.build(),
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
-						.artifactId("online-api")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
-						.loader("shared")
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
-						.artifactId("online")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
 						.artifactId("authoritative-username-api")
 						.version(Constants.VERSION)
 						.resolveTransitiveDependencies(false)
@@ -162,7 +148,6 @@ public class PremiumProvider extends IdenticaProvider {
 				RestrictionCapabilityBootstrap.INSTANCE,
 				JoinRestrictionCapabilityBootstrap.INSTANCE,
 				RecognitionCapabilityBootstrap.INSTANCE,
-				OnlineCapabilityBootstrap.INSTANCE,
 				AuthoritativeUsernameCapabilityBootstrap.INSTANCE,
 				MigrationCapabilityBootstrap.INSTANCE,
 				VerificationCapabilityBootstrap.INSTANCE

@@ -42,8 +42,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -265,6 +264,57 @@ class DefaultMigrationServiceTest {
 						&& connectionUniqueId.equals(requiredEvent.getConnectionUniqueId())
 						&& accountUniqueId.equals(requiredEvent.getAccountUniqueId())
 		));
+	}
+
+	@DisplayName("Stores pending migration without precomputing a provider subject")
+	@Test
+	void confirmStoresPendingMigrationWithoutProviderContext() {
+		doReturn(Optional.empty()).when(pipelineStateStore).find(any(PipelineStateReference.class));
+		when(accountPersistenceService.findByUsername("PlayerOne")).thenReturn(List.of());
+		when(providerLinkPersistenceService.findByUniqueIdAndProviderId(any(UUID.class), any(String.class)))
+				.thenReturn(Optional.empty());
+		when(sessionService.close(any(UUID.class))).thenReturn(CompletableFuture.completedFuture(null));
+		when(identityService.findByConnectionUniqueId(any(UUID.class))).thenReturn(Optional.empty());
+
+		DefaultMigrationService service = new DefaultMigrationService(
+				providerManager,
+				providerLinkPersistenceService,
+				accountPersistenceService,
+				pipelineStateStore,
+				sessionService,
+				identityService,
+				deliveryService,
+				eventManager,
+				this::engine,
+				this::commands,
+				Messages::new
+		);
+
+		UUID connectionUniqueId = UUID.randomUUID();
+		UUID accountUniqueId = UUID.randomUUID();
+		service.request(MigrationRequest.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.accountUniqueId(accountUniqueId)
+				.targetProviderId("credential")
+				.username("PlayerOne")
+				.ip("127.0.0.1")
+				.build());
+
+		MigrationResult confirmed = service.confirm(MigrationConfirm.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.kickMessage("rejoin")
+				.build());
+
+		assertEquals(MigrationResultStatus.STARTED, confirmed.getStatus());
+
+		@SuppressWarnings("unchecked")
+		org.mockito.ArgumentCaptor<PipelineState> stateCaptor = org.mockito.ArgumentCaptor.forClass(PipelineState.class);
+		verify(pipelineStateStore).save(any(PipelineStateReference.class), stateCaptor.capture(), anyLong());
+
+		MigrationContext stored = (MigrationContext) stateCaptor.getValue().getScenario(PipelineType.MIGRATION);
+		assertNotNull(stored);
+		assertNull(stored.getProvider());
+		assertEquals("credential", stored.getTargetProviderId());
 	}
 
 	@DisplayName("Queues a next-join notice when a started migration is cancelled")

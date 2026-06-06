@@ -2,7 +2,7 @@
   "title": "Providers",
   "pages": [
     "index",
-    "official",
-    "community"
+    "capabilities",
+    "conflicts"
   ]
 }

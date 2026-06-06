@@ -1,7 +1,10 @@
 ---
 title: Community Providers
-description: Entry point for unofficial and community-maintained providers.
+description: Entry point for community-maintained providers.
 ---
+
+Community providers are provider modules made by the community and not maintained by Identica developers.
+They still participate directly in Identica's provider flow.
 
 This page is the routing point for unofficial and community-maintained Identica providers.
 

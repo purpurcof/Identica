@@ -7,7 +7,6 @@
     "engine",
     "routing",
     "commands",
-    "conflicts",
     "messages",
     "persistence",
     "replication",

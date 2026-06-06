@@ -1,6 +1,6 @@
 ---
 title: Capabilities
-description: Built-in provider capabilities documented for Identica.
+description: Shared and provider-scoped configuration for built-in provider capabilities.
 ---
 
 Capabilities are optional behavior modules that providers can advertise and install.

@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "authoritative-username",
-    "recognition"
+    "recognition",
+    "restriction"
   ]
 }

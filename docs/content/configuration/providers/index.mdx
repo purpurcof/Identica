@@ -6,6 +6,9 @@ description: Field-by-field explanation of Identica's provider configuration are
 The providers configuration controls which identity providers are enabled and how provider-specific behavior is applied.
 Use this file to enable providers, set priority and entrypoints, configure verification, tune provider-specific session behavior, and apply capability-owned provider fields.
 
+Capability-specific shared fields and provider-scoped capability overrides are documented under [Capabilities](./capabilities/index.md).
+Conflict configuration for provider-owned conflicts is documented under [Conflicts](./conflicts.mdx).
+
 ## behavior
 
 `behavior` contains shared runtime timings for all providers.
@@ -162,7 +165,7 @@ Only providers that advertise a capability can use that capability's fields.
 The shape inside `capabilities` is not global.
 Each installed capability defines its own nested fields.
 
-<Include src="../../providers/capabilities/_partials/provider-overrides.mdx" />
+<Include src="./capabilities/_partials/provider-overrides.mdx" />
 
 ### verification
 

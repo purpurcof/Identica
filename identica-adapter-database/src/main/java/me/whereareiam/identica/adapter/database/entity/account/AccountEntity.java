@@ -1,10 +1,6 @@
 package me.whereareiam.identica.adapter.database.entity.account;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import me.whereareiam.dialectica.EntitySchemaProvider;
 import me.whereareiam.dialectica.annotation.Entity;
 
@@ -19,7 +15,6 @@ import java.util.UUID;
 public class AccountEntity implements EntitySchemaProvider {
 	private UUID uniqueId;
 	private String username;
-	private String usernameSource;
 	private long createdAt;
 	private long lastSeenAt;
 
@@ -40,7 +35,6 @@ public class AccountEntity implements EntitySchemaProvider {
 				CREATE TABLE IF NOT EXISTS identica_accounts (
 					unique_id %s PRIMARY KEY,
 					username VARCHAR(64) NOT NULL,
-					username_source VARCHAR(32) NOT NULL,
 					created_at %s,
 					last_seen_at %s
 				)

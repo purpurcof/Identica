@@ -19,8 +19,8 @@ class ConflictsDefaultsTest {
 		assertNotNull(rules);
 		assertEquals(1, rules.getDefaultRule().getResolvers().size());
 		assertEquals("format_display", rules.getDefaultRule().getResolvers().getFirst().getId());
-		assertEquals(1, rules.getPairs().size());
-		assertEquals("premium", rules.getPairs().getFirst().getProviders().getFirst());
-		assertEquals("credential", rules.getPairs().getFirst().getProviders().get(1));
+		assertEquals(1, rules.getCases().size());
+		assertEquals("premium", rules.getCases().getFirst().getWhen().path("providers").get(0).asText());
+		assertEquals("credential", rules.getCases().getFirst().getWhen().path("providers").get(1).asText());
 	}
 }

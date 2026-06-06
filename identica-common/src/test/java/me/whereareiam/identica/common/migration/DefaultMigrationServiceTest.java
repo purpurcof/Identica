@@ -29,7 +29,6 @@ import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.type.ScenarioResolution;
-import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -78,7 +77,6 @@ class DefaultMigrationServiceTest {
 		Account existing = Account.builder()
 				.uniqueId(UUID.randomUUID())
 				.username("Player")
-				.source(UsernameSource.SYSTEM)
 				.build();
 		when(accountPersistenceService.findByUsername("Player")).thenReturn(List.of(existing));
 

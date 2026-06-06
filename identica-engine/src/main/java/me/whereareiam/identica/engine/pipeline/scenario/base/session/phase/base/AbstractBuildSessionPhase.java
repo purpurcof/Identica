@@ -2,7 +2,6 @@ package me.whereareiam.identica.engine.pipeline.scenario.base.session.phase.base
 
 import com.google.inject.Provider;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.base.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
@@ -43,14 +42,13 @@ public abstract class AbstractBuildSessionPhase<C extends ScenarioContext, S ext
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		C context = resolveContext(state, pipelineState);
-		IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
-		if (context == null || identity == null) {
+		if (context == null) {
 			state.setResult(PipelineResult.failed(sessionBuildMissingMessage(messagesProvider.get())));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
 		ProviderContext provider = context.getProvider();
-		String currentUsername = resolveCurrentUsername(identity);
+		String currentUsername = context.getUsername();
 		if (provider == null || isBlank(currentUsername) || context.getAccountUniqueId() == null) {
 			state.setResult(PipelineResult.failed(sessionBuildMissingMessage(messagesProvider.get())));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
@@ -61,16 +59,12 @@ public abstract class AbstractBuildSessionPhase<C extends ScenarioContext, S ext
 				? currentUsername
 				: providerUsername;
 
-		String effectiveUsername = identity.getEffectiveUsername();
-		if (effectiveUsername == null || effectiveUsername.isBlank())
-			effectiveUsername = currentUsername;
-
 		Session session = Session.builder()
 				.uniqueId(context.getAccountUniqueId())
 				.providerId(provider.getProviderId())
 				.providerSubject(provider.getProviderSubject())
 				.originalUsername(originalUsername)
-				.effectiveUsername(effectiveUsername)
+				.effectiveUsername(currentUsername)
 				.ip(context.getIp())
 				.createdAt(System.currentTimeMillis())
 				.build();
@@ -87,11 +81,6 @@ public abstract class AbstractBuildSessionPhase<C extends ScenarioContext, S ext
 	protected abstract void storeSession(@NotNull S state, @NotNull Session session);
 
 	protected abstract @NotNull String sessionBuildMissingMessage(@NotNull Messages messages);
-
-	private @Nullable String resolveCurrentUsername(@NotNull IdentityMetaItem identity) {
-		IdentityMetaItem.Change<String> username = identity.getUsername();
-		return username != null ? username.getCurrent() : null;
-	}
 
 	private boolean isBlank(@Nullable String value) {
 		return value == null || value.isBlank();

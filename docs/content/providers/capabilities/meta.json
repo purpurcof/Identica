@@ -2,6 +2,7 @@
   "title": "Capabilities",
   "pages": [
     "index",
+    "authoritative-username",
     "recognition"
   ]
 }

@@ -7,10 +7,11 @@ import me.whereareiam.identica.engine.pipeline.scenario.base.journey.JourneyGrou
 import me.whereareiam.identica.engine.pipeline.scenario.base.journey.phase.*;
 import me.whereareiam.identica.engine.pipeline.scenario.base.preparation.PreparationGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.phase.*;
+import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.phase.CreateAccountPhase;
+import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.phase.EnsureNewAccountPhase;
+import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.phase.LinkProviderPhase;
+import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.phase.ValidateProviderPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.policy.PolicyGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.registration.group.policy.phase.AccountReviewPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.registration.group.policy.phase.PersistUsernameChangePhase;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.SessionGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.phase.BuildSessionPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.session.phase.OpenSessionPhase;
@@ -38,9 +39,6 @@ public class RegistrationPipelineRegistry extends AbstractPipelineGroupRegistry 
 			EnsureNewAccountPhase ensureNewAccountPhase,
 			CreateAccountPhase createAccountPhase,
 			LinkProviderPhase linkProviderPhase,
-			UsernameReplicationPhase usernameReplicationPhase,
-			AccountReviewPhase accountReviewPhase,
-			PersistUsernameChangePhase persistUsernameChangePhase,
 			BuildSessionPhase buildSessionPhase,
 			OpenSessionPhase openSessionPhase
 	) {
@@ -61,10 +59,6 @@ public class RegistrationPipelineRegistry extends AbstractPipelineGroupRegistry 
 		registerPhase(identityGroup.id(), ensureNewAccountPhase, PhasePlacement.after(validateProviderPhase.id()));
 		registerPhase(identityGroup.id(), createAccountPhase, PhasePlacement.after(ensureNewAccountPhase.id()));
 		registerPhase(identityGroup.id(), linkProviderPhase, PhasePlacement.after(createAccountPhase.id()));
-		registerPhase(identityGroup.id(), usernameReplicationPhase, PhasePlacement.last());
-
-		registerPhase(policyGroup.id(), accountReviewPhase, PhasePlacement.first());
-		registerPhase(policyGroup.id(), persistUsernameChangePhase, PhasePlacement.last());
 
 		registerPhase(sessionGroup.id(), buildSessionPhase, PhasePlacement.first());
 		registerPhase(sessionGroup.id(), openSessionPhase, PhasePlacement.last());

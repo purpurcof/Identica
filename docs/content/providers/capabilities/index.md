@@ -17,5 +17,6 @@ Only providers that advertise a capability can use that capability's provider-sc
 
 ## Documented capabilities
 
+- [Authoritative Username](./authoritative-username/index.mdx)
 - [Restriction](./restriction/index.mdx)
 - [Recognition](./recognition/index.mdx)

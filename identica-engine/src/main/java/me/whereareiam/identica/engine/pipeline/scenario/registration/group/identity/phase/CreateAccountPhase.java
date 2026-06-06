@@ -15,7 +15,6 @@ import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.scenario.registration.IdentityState;
 import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
@@ -83,7 +82,6 @@ public class CreateAccountPhase implements PipelinePhase<IdentityState> {
 		Account account = Account.builder()
 				.uniqueId(uniqueId)
 				.username(profile.getProviderUsername())
-				.source(UsernameSource.PROVIDER)
 				.createdAt(now)
 				.lastSeenAt(now)
 				.build();

@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.base.identity.item.IdentityMetaItem;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
@@ -53,9 +52,8 @@ public class BuildSessionPhase implements PipelinePhase<SessionState> {
 
 		PipelineState source = result.getState() != null ? result.getState() : pipelineState;
 		AuthContext authContext = resolveAuthContext(source);
-		IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
 		ProviderContext provider = resolveProvider(authContext);
-		if (authContext == null || identity == null) {
+		if (authContext == null) {
 			state.setResult(PipelineResult.failed(sessionBuildFailedMessage()));
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
@@ -69,18 +67,12 @@ public class BuildSessionPhase implements PipelinePhase<SessionState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		String effectiveUsername = identity.getEffectiveUsername();
-		if (isBlank(effectiveUsername))
-			effectiveUsername = resolveCurrentUsername(identity);
-		if (isBlank(effectiveUsername))
-			effectiveUsername = authContext.getUsername();
-
 		Session session = Session.builder()
 				.uniqueId(authContext.getAccountUniqueId())
 				.providerId(provider.getProviderId())
 				.providerSubject(provider.getProviderSubject())
 				.originalUsername(authContext.getUsername())
-				.effectiveUsername(effectiveUsername)
+				.effectiveUsername(authContext.getUsername())
 				.ip(authContext.getIp())
 				.createdAt(System.currentTimeMillis())
 				.build();
@@ -96,11 +88,6 @@ public class BuildSessionPhase implements PipelinePhase<SessionState> {
 
 	private @NotNull String sessionBuildFailedMessage() {
 		return String.join("\n", messagesProvider.get().getScenarios().getAuthentication().getSessionBuildFailed());
-	}
-
-	private @Nullable String resolveCurrentUsername(@NotNull IdentityMetaItem identity) {
-		IdentityMetaItem.Change<String> username = identity.getUsername();
-		return username != null ? username.getCurrent() : null;
 	}
 
 	private @Nullable AuthContext resolveAuthContext(@NotNull PipelineState source) {

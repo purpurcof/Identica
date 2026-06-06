@@ -4,6 +4,7 @@ import com.google.inject.*;
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
+import me.whereareiam.identica.common.provider.classloader.SharedCapabilityClassLoaderFactory;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDescriptor;
@@ -45,6 +46,8 @@ class DefaultProviderCapabilityCoordinatorTest {
 				provider.getDescriptor(),
 				List.of(SampleCapabilityBootstrap.INSTANCE)
 		);
+		assertTrue(provider.getDescriptor().hasCapability(SAMPLE_CAPABILITY));
+
 		coordinator.installGlobalCapabilities(provider, bootstraps);
 
 		assertNotNull(registry.findInstallation(SAMPLE_CAPABILITY));
@@ -112,7 +115,6 @@ class DefaultProviderCapabilityCoordinatorTest {
 		descriptor.setVersion("1.0.0");
 		descriptor.setMain("ignored.Main");
 		descriptor.setSupportedPlatforms(List.of("ANY"));
-		descriptor.setCapabilities(List.of("sample"));
 		return descriptor;
 	}
 
@@ -127,6 +129,7 @@ class DefaultProviderCapabilityCoordinatorTest {
 		protected void configure() {
 			bind(ProviderCapabilityCoordinator.class).to(DefaultProviderCapabilityCoordinator.class).asEagerSingleton();
 			bind(ProviderCapabilityRegistry.class).to(DefaultProviderCapabilityRegistry.class).asEagerSingleton();
+			bind(SharedCapabilityClassLoaderFactory.class).toInstance(new SharedCapabilityClassLoaderFactory());
 		}
 
 		@Provides

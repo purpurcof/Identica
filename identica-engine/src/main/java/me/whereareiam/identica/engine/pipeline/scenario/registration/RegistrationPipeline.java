@@ -7,9 +7,8 @@ import com.google.inject.name.Named;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
 import me.whereareiam.identica.engine.pipeline.scenario.AbstractScenarioPipeline;
+import me.whereareiam.identica.engine.pipeline.scenario.base.state.IdentityMetaItem;
 import me.whereareiam.identica.event.pipeline.scenario.registration.RegistrationContextBuiltEvent;
-import me.whereareiam.identica.engine.pipeline.scenario.base.identity.item.IdentityMetaItem;
-import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.event.scenario.registration.RegistrationRequiredEvent;
 import me.whereareiam.identica.event.scenario.registration.RegistrationResolvedEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
@@ -24,6 +23,7 @@ import me.whereareiam.identica.model.registration.RegistrationContext;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.type.ScenarioResolution;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.util.EventUtil;
@@ -119,11 +119,7 @@ public class RegistrationPipeline extends AbstractScenarioPipeline {
 
 	@Override
 	protected void onStart(@NotNull PipelineState pipelineState, boolean resumed) {
-		IdentityMetaItem identity = pipelineState.item(IdentityMetaItem.class).orElse(null);
-		if (identity == null) identity = new IdentityMetaItem();
-
-		identity.setResumed(resumed);
-		pipelineState.putItem(identity, 0L);
+		pipelineState.putItem(new IdentityMetaItem(resumed), 0L);
 	}
 
 	@Override

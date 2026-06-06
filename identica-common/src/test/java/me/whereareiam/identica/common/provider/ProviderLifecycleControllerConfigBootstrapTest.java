@@ -13,10 +13,14 @@ import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.common.provider.capability.DefaultProviderCapabilityCoordinator;
 import me.whereareiam.identica.common.provider.capability.DefaultProviderCapabilityRegistry;
-import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
-import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
+import me.whereareiam.identica.common.provider.classloader.ProviderRuntimeClassLoaderFactory;
+import me.whereareiam.identica.common.provider.classloader.SharedCapabilityClassLoaderFactory;
+import me.whereareiam.identica.common.provider.dependency.ProviderDependencyLoggingAdapter;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
 import me.whereareiam.identica.common.provider.injector.ProviderInjectorFactory;
+import me.whereareiam.identica.common.provider.library.ProviderLibraryInstaller;
+import me.whereareiam.identica.common.provider.library.ProviderLibraryPlanner;
+import me.whereareiam.identica.common.provider.library.SharedLibraryConflictTracker;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
@@ -49,7 +53,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -151,27 +154,39 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 
 		@Provides
 		@Singleton
-		ProviderClassLoaderFactory provideClassLoaderFactory() {
-			return new ProviderClassLoaderFactory() {
+		ProviderRuntimeClassLoaderFactory provideProviderRuntimeClassLoaderFactory() {
+			return new ProviderRuntimeClassLoaderFactory(new SharedCapabilityClassLoaderFactory()) {
 				@Override
 				public URLClassLoader create(Path jarPath) {
-					return new URLClassLoader(new URL[0], getClass().getClassLoader());
+					return new URLClassLoader(new java.net.URL[0], getClass().getClassLoader());
 				}
 			};
 		}
 
 		@Provides
 		@Singleton
-		ProviderDependencyResolver provideDependencyResolver(@Named("providersPath") Path providersPath) {
-			return new ProviderDependencyResolver(providersPath, null) {
+		ProviderLibraryInstaller provideProviderLibraryInstaller() {
+			return new ProviderLibraryInstaller(
+					tempDir.resolve("providers"),
+					tempDir.resolve("capabilities"),
+					org.mockito.Mockito.mock(ProviderDependencyLoggingAdapter.class),
+					new SharedCapabilityClassLoaderFactory()
+			) {
 				@Override
-				public void loadDescriptorLibraries(ProviderDescriptor descriptor, ClassLoader classLoader) {
-				}
-
-				@Override
-				public void loadProviderLibraries(ProviderDescriptor descriptor, IdenticaProvider provider, ClassLoader classLoader) {
+				protected void install(
+						@NotNull Path basePath,
+						@NotNull String cacheNamespace,
+						ProviderLibraries libraries,
+						@NotNull URLClassLoader classLoader
+				) {
 				}
 			};
+		}
+
+		@Provides
+		@Singleton
+		ProviderLibraryPlanner provideProviderLibraryPlanner() {
+			return new ProviderLibraryPlanner(new SharedLibraryConflictTracker());
 		}
 
 		@Provides
@@ -352,20 +367,20 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 		}
 
 		@Override
-		public void register(@NotNull ConflictType type) {
+		public void register(@NotNull ConflictType<?> type) {
 		}
 
 		@Override
-		public void unregister(@NotNull ConflictType type) {
+		public void unregister(@NotNull ConflictType<?> type) {
 		}
 
 		@Override
-		public ConflictType getType(@NotNull String key) {
+		public ConflictType<?> getType(@NotNull String key) {
 			return null;
 		}
 
 		@Override
-		public @NotNull Set<ConflictType> getTypes() {
+		public @NotNull Set<ConflictType<?>> getTypes() {
 			return Set.of();
 		}
 

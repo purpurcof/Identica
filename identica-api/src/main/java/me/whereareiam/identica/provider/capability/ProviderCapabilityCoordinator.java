@@ -17,11 +17,12 @@ import java.util.Set;
  */
 public interface ProviderCapabilityCoordinator {
 	/**
-	 * Resolves provider-supplied bootstraps against the descriptor declaration.
+	 * Resolves provider-supplied capability bootstraps and updates the
+	 * descriptor's runtime capability ids.
 	 *
 	 * @param descriptor provider descriptor
 	 * @param bootstraps provider bootstraps
-	 * @return validated bootstraps ordered by declared capability ids
+	 * @return validated bootstraps in provider-declared order
 	 */
 	@NotNull List<ProviderCapabilityBootstrap> resolveBootstraps(
 			@NotNull ProviderDescriptor descriptor,

@@ -29,7 +29,7 @@ public class ProviderDescriptor {
 	private @NotNull List<String> supportedPlatforms;
 
 	/**
-	 * Provider capability ids.
+	 * Runtime capability ids resolved from provider-supplied bootstraps.
 	 */
 	private @NotNull List<String> capabilities = new ArrayList<>();
 

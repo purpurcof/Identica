@@ -51,7 +51,7 @@ public class EnforceRegistrationJoinRestrictionPhase extends AbstractEnforceJoin
 		if (!settings.getScenarios().getRegistration().isAllowProviderRestrictionResumeBypass())
 			return false;
 
-		var meta = identityMeta(pipelineState);
-		return meta != null && meta.isResumed();
+		var resumeState = identityMeta(pipelineState);
+		return resumeState != null && resumeState.isResumed();
 	}
 }

@@ -6,10 +6,7 @@ import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.ide
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.LoadIdentityProfilePhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.RefreshProviderProfilePhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.ResolveIdentityPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.identity.phase.UsernameReplicationPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.PolicyGroup;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.phase.AccountReviewPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.policy.phase.PersistUsernameChangePhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.session.SessionGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.session.phase.BuildSessionPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.authentication.group.session.phase.OpenSessionPhase;
@@ -40,9 +37,6 @@ public class AuthenticationPipelineRegistry extends AbstractPipelineGroupRegistr
 			ResolveIdentityPhase resolveIdentityPhase,
 			LoadIdentityProfilePhase loadIdentityProfilePhase,
 			RefreshProviderProfilePhase refreshProviderProfilePhase,
-			UsernameReplicationPhase usernameReplicationPhase,
-			AccountReviewPhase accountReviewPhase,
-			PersistUsernameChangePhase persistUsernameChangePhase,
 			BuildSessionPhase buildSessionPhase,
 			OpenSessionPhase openSessionPhase
 	) {
@@ -62,10 +56,6 @@ public class AuthenticationPipelineRegistry extends AbstractPipelineGroupRegistr
 		registerPhase(identityGroup.id(), resolveIdentityPhase, PhasePlacement.first());
 		registerPhase(identityGroup.id(), loadIdentityProfilePhase, PhasePlacement.after(resolveIdentityPhase.id()));
 		registerPhase(identityGroup.id(), refreshProviderProfilePhase, PhasePlacement.after(loadIdentityProfilePhase.id()));
-		registerPhase(identityGroup.id(), usernameReplicationPhase, PhasePlacement.last());
-
-		registerPhase(policyGroup.id(), accountReviewPhase, PhasePlacement.first());
-		registerPhase(policyGroup.id(), persistUsernameChangePhase, PhasePlacement.last());
 
 		registerPhase(sessionGroup.id(), buildSessionPhase, PhasePlacement.first());
 		registerPhase(sessionGroup.id(), openSessionPhase, PhasePlacement.last());

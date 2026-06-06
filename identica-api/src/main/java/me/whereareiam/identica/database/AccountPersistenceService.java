@@ -1,7 +1,6 @@
 package me.whereareiam.identica.database;
 
 import me.whereareiam.identica.model.identity.Account;
-import me.whereareiam.identica.type.UsernameSource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -59,14 +58,6 @@ public interface AccountPersistenceService {
 	 * @param username new username
 	 */
 	void updateUsername(@NotNull UUID uniqueId, @NotNull String username);
-
-	/**
-	 * Update username source.
-	 *
-	 * @param uniqueId account id
-	 * @param source username source
-	 */
-	void updateUsernameSource(@NotNull UUID uniqueId, @NotNull UsernameSource source);
 
 	/**
 	 * Delete an account record.

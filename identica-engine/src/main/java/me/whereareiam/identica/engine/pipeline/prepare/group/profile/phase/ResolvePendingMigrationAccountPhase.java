@@ -28,7 +28,6 @@ import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.type.ScenarioResolution;
-import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.messaging.DeliveryCheckpoint;
 import me.whereareiam.identica.type.messaging.DeliverySemantics;
 import me.whereareiam.identica.type.messaging.DeliverySource;
@@ -169,7 +168,6 @@ public class ResolvePendingMigrationAccountPhase implements PipelinePhase<Prepar
 				: Account.builder()
 						.uniqueId(accountUniqueId)
 						.username(requestedUsername)
-						.source(UsernameSource.PROVIDER)
 						.build();
 		AccountProviderProfile profile = providerProfilePersistenceService.findBySubject(providerId, providerSubject)
 				.orElseGet(() -> AccountProviderProfile.builder()

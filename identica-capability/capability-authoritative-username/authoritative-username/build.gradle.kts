@@ -1,10 +1,11 @@
 plugins {
-    id("capability")
+    id("capability-artifact")
 }
 
 dependencies {
     api(projects.capabilityAuthoritativeUsernameApi)
     implementation(projects.capabilityAuthoritativeUsernameCommon)
+    implementation(projects.capabilityAuthoritativeUsernameDatabase)
 }
 
 toolkitPublish {

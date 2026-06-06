@@ -17,10 +17,15 @@ public class ConflictsDefaults implements DefaultsProvider<Conflicts> {
 		defaultRule.setResolvers(List.of(formatResolver("{username}*")));
 		usernameRules.setDefaultRule(defaultRule);
 
+		ObjectNode when = JsonNodeFactory.instance.objectNode();
+		when.putArray("providers")
+				.add("premium")
+				.add("credential");
+
 		Conflicts.ConflictRules.ConflictRule premiumVsCredential = new Conflicts.ConflictRules.ConflictRule();
-		premiumVsCredential.setProviders(List.of("premium", "credential"));
+		premiumVsCredential.setWhen(when);
 		premiumVsCredential.setResolvers(List.of(formatResolver("{username}_{incomingProvider}")));
-		usernameRules.setPairs(List.of(premiumVsCredential));
+		usernameRules.setCases(List.of(premiumVsCredential));
 
 		config.getRules().put("username", usernameRules);
 		return config;

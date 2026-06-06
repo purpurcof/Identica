@@ -5,6 +5,7 @@ pluginManagement {
     includeBuild("build-logic")
 
     repositories {
+        mavenLocal()
         gradlePluginPortal()
         mavenCentral()
         maven("https://maven.whereareiam.me/release")
@@ -126,6 +127,10 @@ project(":capability-authoritative-username-api").projectDir =
 include(":capability-authoritative-username-common")
 project(":capability-authoritative-username-common").projectDir =
     file("identica-capability/capability-authoritative-username/authoritative-username-common")
+
+include(":capability-authoritative-username-database")
+project(":capability-authoritative-username-database").projectDir =
+    file("identica-capability/capability-authoritative-username/authoritative-username-database")
 
 include(":capability-recognition")
 project(":capability-recognition").projectDir = file("identica-capability/capability-recognition/recognition")

@@ -20,7 +20,6 @@ import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.prepare.PrepareGroupState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.type.UsernameSource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -115,7 +114,6 @@ public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState>
 				: Account.builder()
 						.uniqueId(accountUniqueId)
 						.username(requestedUsername)
-						.source(UsernameSource.PROVIDER)
 						.build();
 		AccountProviderProfile profile = providerProfilePersistenceService.findBySubject(
 				provider.getProviderId(),

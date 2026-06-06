@@ -2,7 +2,6 @@ package me.whereareiam.identica.adapter.database.mapper.account;
 
 import me.whereareiam.identica.adapter.database.entity.account.AccountEntity;
 import me.whereareiam.identica.model.identity.Account;
-import me.whereareiam.identica.type.UsernameSource;
 
 public final class AccountMapper {
 	public static Account toModel(AccountEntity entity) {
@@ -10,7 +9,6 @@ public final class AccountMapper {
 		return Account.builder()
 				.uniqueId(entity.getUniqueId())
 				.username(entity.getUsername())
-				.source(UsernameSource.fromId(entity.getUsernameSource()))
 				.createdAt(entity.getCreatedAt())
 				.lastSeenAt(entity.getLastSeenAt())
 				.build();
@@ -21,7 +19,6 @@ public final class AccountMapper {
 		return AccountEntity.builder()
 				.uniqueId(account.getUniqueId())
 				.username(account.getUsername())
-				.usernameSource(account.getSource().getId())
 				.createdAt(account.getCreatedAt())
 				.lastSeenAt(account.getLastSeenAt())
 				.build();

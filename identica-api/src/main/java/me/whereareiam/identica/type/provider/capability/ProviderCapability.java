@@ -11,12 +11,8 @@ import java.util.Locale;
 /**
  * Normalized provider capability identifier.
  *
- * <p>Capabilities are declared by providers in {@code provider.json} as a list
- * of ids and resolved at runtime through provider-supplied bootstraps.</p>
- *
- * <pre>{@code
- * "capabilities": ["offline", "migration"]
- * }</pre>
+ * <p>Capabilities are resolved from provider-supplied bootstraps after the
+ * provider has declared and loaded its required runtime libraries.</p>
  */
 @Getter
 @ToString

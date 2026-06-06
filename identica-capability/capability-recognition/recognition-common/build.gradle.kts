@@ -7,3 +7,7 @@ dependencies {
     api(projects.capabilityRestrictionApi)
     api(projects.capabilityRestrictionJoinApi)
 }
+
+toolkitPublish {
+    artifactId.set("recognition-common")
+}

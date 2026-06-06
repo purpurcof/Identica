@@ -9,7 +9,7 @@ Conflicts are configured per conflict key.
 Each key defines:
 
 - a `default` rule
-- optional provider-pair-specific `pairs` rules
+- optional ordered `cases` rules
 - an ordered list of resolvers inside each rule
 
 ## conflicts
@@ -17,7 +17,7 @@ Each key defines:
 - Takes: a map keyed by conflict key
 - Affects: how Identica resolves registered conflicts before allowing or denying progress
 
-Use this section when you want to change the resolver chain for a conflict type or define provider-specific behavior for a provider combination.
+Use this section when you want to change the resolver chain for a conflict type or define type-specific behavior for a matching rule selector.
 
 <Tabs items={["YAML", "JSON"]}>
   <Tab value="YAML">
@@ -31,10 +31,11 @@ conflicts:
             format:
               pattern: "{username}*"
             target: "joiner"
-    pairs:
-      - providers:
-          - "premium"
-          - "credential"
+    cases:
+      - when:
+          providers:
+            - "premium"
+            - "credential"
         resolvers:
           - id: "format_display"
             parameters:
@@ -61,9 +62,11 @@ conflicts:
           }
         ]
       },
-      "pairs": [
+      "cases": [
         {
-          "providers": ["premium", "credential"],
+          "when": {
+            "providers": ["premium", "credential"]
+          },
           "resolvers": [
             {
               "id": "format_display",
@@ -88,7 +91,7 @@ conflicts:
 
 When Identica resolves a conflict for a key such as `username`, it evaluates rules in this order:
 
-1. matching provider-pair rules from `pairs`
+1. matching rules from `cases`
 2. the `default` rule
 
 Inside a rule, resolvers run in list order.
@@ -96,30 +99,35 @@ If a resolver returns `PASS`, Identica continues to the next resolver.
 If every resolver passes, Identica falls back to the next applicable rule.
 If no rule produces a result, Identica logs a warning and allows the conflict.
 
+Rule matching is owned by the contributed conflict type for that key.
+Core stores the opaque `when` object but does not interpret it.
+
 ## conflicts.<key>.default
 
 - Takes: a conflict rule object
 - Affects: the fallback resolver chain for that conflict key
 
-The `default` rule runs when no provider-pair rule produces a non-pass result.
+The `default` rule runs when no matching case rule produces a non-pass result.
 
-## conflicts.<key>.pairs
+## conflicts.<key>.cases
 
 - Takes: a list of conflict rule objects
 - Current default: `[]`
-- Affects: provider-pair-specific conflict resolution before the default rule runs
+- Affects: type-owned conflict resolution before the default rule runs
 
-Each pair rule is matched when both provider ids are present in the conflict context, regardless of their order in the list.
+Each case rule is checked in list order.
+The contributed conflict type decides whether the rule's `when` object matches the current conflict context.
 
-## conflicts.<key>.pairs[].providers
+## conflicts.<key>.cases[].when
 
-- Takes: a list of provider ids
-- Affects: which provider combination the pair rule applies to
+- Takes: an object
+- Current default: `{}`
+- Affects: which contexts the rule applies to, according to the contributed conflict type
 
-Most pair rules should contain exactly two provider ids such as `premium` and `credential`.
+The shape and meaning of `when` is owned by the contributed conflict type for that key.
 
 ## conflicts.<key>.default.force
-## conflicts.<key>.pairs[].force
+## conflicts.<key>.cases[].force
 
 <Badge type="warning">Advanced</Badge>
 
@@ -130,7 +138,7 @@ Most pair rules should contain exactly two provider ids such as `premium` and `c
 Leave this disabled unless you intentionally want to bypass normal resolver compatibility checks.
 
 ## conflicts.<key>.default.resolvers
-## conflicts.<key>.pairs[].resolvers
+## conflicts.<key>.cases[].resolvers
 
 - Takes: a list of resolver entries
 - Affects: the ordered resolver chain for the selected rule
@@ -138,174 +146,19 @@ Leave this disabled unless you intentionally want to bypass normal resolver comp
 Each resolver entry selects a resolver type and provides its configuration parameters.
 
 ## conflicts.<key>.default.resolvers[].id
-## conflicts.<key>.pairs[].resolvers[].id
+## conflicts.<key>.cases[].resolvers[].id
 
 - Takes: a string
 - Affects: which registered conflict resolver is invoked
 
-Resolver ids must match a resolver registered by Identica core or an installed provider.
+Resolver ids must match a resolver registered by a contributed conflict type or another installed module.
 
 ## conflicts.<key>.default.resolvers[].parameters
-## conflicts.<key>.pairs[].resolvers[].parameters
+## conflicts.<key>.cases[].resolvers[].parameters
 
 - Takes: an object
 - Current default: `{}`
 - Affects: resolver-specific behavior
 
 The parameter structure depends on the selected resolver type.
-
-## Resolver types
-
-The sections above describe how conflict rules select and run resolvers.
-The sections below describe the built-in resolver types themselves.
-
-### format_display
-
-`format_display` formats a replacement value from the current conflict context and returns that formatted value as the resolver result.
-
-#### conflicts.<key>.default.resolvers[].parameters.format.pattern
-#### conflicts.<key>.pairs[].resolvers[].parameters.format.pattern
-
-- Takes: a string
-- Affects: the formatted override value produced by `format_display`
-
-Supported placeholders:
-
-- `{username}` or `{requested}`
-- `{incomingProvider}` and `{existingProvider}`
-- `{incomingProviderId}` and `{existingProviderId}`
-- `{random}` or `{random:4}`
-
-Provider display-name placeholders support optional truncation with `:maxSymbolCount`.
-
-Examples:
-
-```text
-{incomingProvider}
-{incomingProvider:8}
-{existingProvider:6}
-{username}_{incomingProvider:8}_{random:3}
-```
-
-Only `{incomingProvider}` and `{existingProvider}` support truncation.
-
-#### conflicts.<key>.default.resolvers[].parameters.format.uppercase
-#### conflicts.<key>.pairs[].resolvers[].parameters.format.uppercase
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether the full formatted result is converted to uppercase
-
-#### conflicts.<key>.default.resolvers[].parameters.format.lowercase
-#### conflicts.<key>.pairs[].resolvers[].parameters.format.lowercase
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether the full formatted result is converted to lowercase
-
-Avoid enabling both `uppercase` and `lowercase` at the same time.
-
-#### conflicts.<key>.default.resolvers[].parameters.target
-#### conflicts.<key>.pairs[].resolvers[].parameters.target
-
-- Takes: `"joiner"`, `"existing"`, or `"both"`
-- Current default: `"joiner"`
-- Affects: which side receives the formatted override value
-
-Pattern with provider-name truncation:
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-resolvers:
-  - id: "format_display"
-    parameters:
-      format:
-        pattern: "{username}_{incomingProvider:8}"
-      target: "joiner"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "resolvers": [
-    {
-      "id": "format_display",
-      "parameters": {
-        "format": {
-          "pattern": "{username}_{incomingProvider:8}"
-        },
-        "target": "joiner"
-      }
-    }
-  ]
-}
-```
-  </Tab>
-</Tabs>
-
-Pattern with full-result uppercase formatting:
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-resolvers:
-  - id: "format_display"
-    parameters:
-      format:
-        pattern: "{username}_{incomingProvider}"
-        uppercase: true
-      target: "joiner"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "resolvers": [
-    {
-      "id": "format_display",
-      "parameters": {
-        "format": {
-          "pattern": "{username}_{incomingProvider}",
-          "uppercase": true
-        },
-        "target": "joiner"
-      }
-    }
-  ]
-}
-```
-  </Tab>
-</Tabs>
-
-Pattern applied to both sides:
-
-<Tabs items={["YAML", "JSON"]}>
-  <Tab value="YAML">
-```yaml
-resolvers:
-  - id: "format_display"
-    parameters:
-      format:
-        pattern: "{username}_{random:3}"
-      target: "both"
-```
-  </Tab>
-  <Tab value="JSON">
-```json
-{
-  "resolvers": [
-    {
-      "id": "format_display",
-      "parameters": {
-        "format": {
-          "pattern": "{username}_{random:3}"
-        },
-        "target": "both"
-      }
-    }
-  ]
-}
-```
-  </Tab>
-</Tabs>
+Resolver ids, parameter schemas, and type-specific `when` selectors should be documented by the module that contributes them.

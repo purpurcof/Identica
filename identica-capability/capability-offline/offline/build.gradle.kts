@@ -1,5 +1,5 @@
 plugins {
-    id("capability")
+    id("capability-artifact")
 }
 
 dependencies {

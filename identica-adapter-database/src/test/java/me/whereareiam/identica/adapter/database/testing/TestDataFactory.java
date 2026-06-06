@@ -1,10 +1,8 @@
 package me.whereareiam.identica.adapter.database.testing;
 
-import me.whereareiam.identica.model.UsernameHistoryEntry;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
-import me.whereareiam.identica.type.UsernameSource;
 
 import java.util.UUID;
 
@@ -12,16 +10,11 @@ public final class TestDataFactory {
 	public static final long CREATED_AT = 1_700_000_000_000L;
 	public static final long LAST_SEEN_AT = 1_700_000_000_500L;
 	public static final long LINKED_AT = 1_700_000_001_000L;
-	public static final long CHANGED_AT = 1_700_000_002_000L;
-
-	private TestDataFactory() {
-	}
 
 	public static Account account(UUID uniqueId, String username) {
 		return Account.builder()
 				.uniqueId(uniqueId)
 				.username(username)
-				.source(UsernameSource.MANUAL)
 				.createdAt(CREATED_AT)
 				.lastSeenAt(LAST_SEEN_AT)
 				.build();
@@ -43,17 +36,6 @@ public final class TestDataFactory {
 				.providerId(providerId)
 				.providerSubject(subject)
 				.providerUsername(username)
-				.build();
-	}
-
-	public static UsernameHistoryEntry usernameHistoryEntry(UUID uniqueId, String providerId, String oldUsername, String newUsername, String source) {
-		return UsernameHistoryEntry.builder()
-				.uniqueId(uniqueId)
-				.providerId(providerId)
-				.oldUsername(oldUsername)
-				.newUsername(newUsername)
-				.source(source)
-				.changedAt(CHANGED_AT)
 				.build();
 	}
 }

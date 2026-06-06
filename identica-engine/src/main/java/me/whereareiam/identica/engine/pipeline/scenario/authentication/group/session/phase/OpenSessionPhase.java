@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.base.identity.item.IdentityMetaItem;
+import me.whereareiam.identica.engine.pipeline.scenario.base.state.IdentityMetaItem;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.session.SessionService;

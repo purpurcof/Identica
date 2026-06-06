@@ -24,7 +24,16 @@ public abstract class IdenticaProvider {
 	protected @Nullable ProviderPlatformExtension platformExtension;
 
 	/**
-	 * Provides dependency metadata for this eligibility.
+	 * Provides runtime dependency metadata required before capability bootstraps
+	 * can be resolved.
+	 *
+	 * <p>Libraries may target either the provider-local runtime classloader or
+	 * the shared capability API parent classloader. Capability runtime artifacts
+	 * and their shared APIs should be declared here so the provider loader can
+	 * make them available before calling {@link #capabilities()}. Libraries
+	 * with {@code loader = "shared"} are installed into the shared capability
+	 * API parent loader, while libraries without an explicit loader target are
+	 * treated as provider-local.</p>
 	 *
 	 * @return provider libraries descriptor
 	 */
@@ -44,8 +53,8 @@ public abstract class IdenticaProvider {
 	/**
 	 * Provides capability bootstraps supported by this provider.
 	 *
-	 * <p>The returned bootstraps must match the capability ids declared in
-	 * {@code provider.json}.</p>
+	 * <p>The returned bootstraps are resolved after {@link #libraries()} has
+	 * been loaded into the appropriate runtime classloaders.</p>
 	 *
 	 * @return capability bootstraps
 	 */

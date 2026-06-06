@@ -3,7 +3,7 @@ package me.whereareiam.identica.provider.capability.restriction.join.pipeline.sc
 import com.google.inject.Provider;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.engine.pipeline.scenario.base.identity.item.IdentityMetaItem;
+import me.whereareiam.identica.engine.pipeline.scenario.base.state.IdentityMetaItem;
 import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;

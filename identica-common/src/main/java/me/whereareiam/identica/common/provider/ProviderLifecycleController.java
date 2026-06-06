@@ -4,10 +4,11 @@ import com.google.inject.*;
 import com.google.inject.Module;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.common.config.ConfigInitializer;
-import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
-import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
+import me.whereareiam.identica.common.provider.classloader.ProviderRuntimeClassLoaderFactory;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
 import me.whereareiam.identica.common.provider.injector.ProviderInjectorFactory;
+import me.whereareiam.identica.common.provider.library.ProviderLibraryInstaller;
+import me.whereareiam.identica.common.provider.library.ProviderLibraryPlanner;
 import me.whereareiam.identica.common.provider.resolver.ProviderPlatformExtensionResolver;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
@@ -24,6 +25,7 @@ import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.ProviderPlatformBinding;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
@@ -52,8 +54,9 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<ProviderPlatformBinding>> PLATFORM_BINDINGS = new TypeLiteral<>() {};
 
 	private final ProviderWorkingPathResolver workingPathResolver;
-	private final ProviderClassLoaderFactory classLoaderFactory;
-	private final ProviderDependencyResolver dependencyResolver;
+	private final ProviderRuntimeClassLoaderFactory providerRuntimeClassLoaderFactory;
+	private final ProviderLibraryPlanner providerLibraryPlanner;
+	private final ProviderLibraryInstaller providerLibraryInstaller;
 	private final ProviderInjectorFactory injectorFactory;
 	private final ProviderInstanceFactory instanceFactory;
 	private final ProviderPlatformExtensionResolver platformExtensionResolver;
@@ -71,18 +74,17 @@ public class ProviderLifecycleController {
 		if (internal == null || internal.getState() != ProviderState.DISCOVERED) return;
 		Logger.debug("Loading provider %s", safeId(internal));
 
+		URLClassLoader classLoader = null;
 		try {
 			ProviderDescriptor descriptor = internal.getDescriptor();
 			Path workingPath = workingPathResolver.resolve(descriptor);
-			URLClassLoader classLoader = classLoaderFactory.create(internal.getPath());
-
-			dependencyResolver.loadDescriptorLibraries(descriptor, classLoader);
+			classLoader = providerRuntimeClassLoaderFactory.create(internal.getPath());
 
 			Class<?> providerClass = classLoader.loadClass(descriptor.getMain());
 			if (!IdenticaProvider.class.isAssignableFrom(providerClass)) {
 				Logger.warn("Provider main class does not extend IdenticaProvider: %s", descriptor.getId());
 				internal.setState(ProviderState.FAILED);
-				classLoaderFactory.close(classLoader);
+				providerRuntimeClassLoaderFactory.close(classLoader);
 
 				return;
 			}
@@ -93,12 +95,18 @@ public class ProviderLifecycleController {
 				probeProvider.setWorkingPath(workingPath);
 			}
 
+			ProviderLibraries libraries = probeProvider != null
+					? probeProvider.libraries()
+					: ProviderLibraries.empty();
+
+			ProviderLibraryPlanner.ProviderLibraryPlan libraryPlan = providerLibraryPlanner.plan(libraries);
+			providerLibraryInstaller.installSharedCapabilityApis(libraryPlan.sharedCapabilityApis());
+			providerLibraryInstaller.installProviderRuntime(descriptor, libraryPlan.providerRuntimeLibraries(), classLoader);
 			Class<? extends ProviderPlatformExtension> platformExtensionClass = platformExtensionResolver.resolve(probeProvider);
 			ProviderPlatformExtension probePlatformExtension = platformExtensionClass != null
 					? instanceFactory.instantiatePlatformExtension(platformExtensionClass)
 					: null;
 
-			dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
 			List<ProviderCapabilityBootstrap> capabilityBootstraps = capabilityCoordinator.resolveBootstraps(
 					descriptor,
 					probeProvider != null ? probeProvider.capabilities() : List.of()
@@ -123,7 +131,7 @@ public class ProviderLifecycleController {
 			);
 			if (provider == null) {
 				internal.setState(ProviderState.FAILED);
-				classLoaderFactory.close(classLoader);
+				providerRuntimeClassLoaderFactory.close(classLoader);
 				return;
 			}
 
@@ -155,6 +163,9 @@ public class ProviderLifecycleController {
 			provider.onLoad();
 			fireProviderLoaded(internal);
 		} catch (Exception e) {
+			if (classLoader != null && internal.getClassLoader() != classLoader)
+				providerRuntimeClassLoaderFactory.close(classLoader);
+
 			internal.setState(ProviderState.FAILED);
 			Logger.warn("Failed to load provider %s: %s", safeId(internal), e.getMessage());
 		}
@@ -210,7 +221,7 @@ public class ProviderLifecycleController {
 			Logger.warn("Failed to unload provider %s: %s", safeId(internal), e.getMessage());
 			fireProviderUnloaded(internal);
 		} finally {
-			classLoaderFactory.close(internal.getClassLoader());
+			providerRuntimeClassLoaderFactory.close(internal.getClassLoader());
 		}
 	}
 

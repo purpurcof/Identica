@@ -8,7 +8,6 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.scenario.migration.IdentityState;
-import me.whereareiam.identica.type.UsernameSource;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +39,6 @@ class ApplyProviderLinkPhaseTest {
 		Account account = Account.builder()
 				.uniqueId(existingAccountUniqueId)
 				.username("MigratedPlayer")
-				.source(UsernameSource.PROVIDER)
 				.build();
 		AccountProviderProfile profile = AccountProviderProfile.builder()
 				.providerId("premium")

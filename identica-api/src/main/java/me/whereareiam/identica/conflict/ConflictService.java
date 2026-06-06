@@ -40,14 +40,14 @@ public interface ConflictService {
 	 *
 	 * @param type conflict type
 	 */
-	void register(@NotNull ConflictType type);
+	void register(@NotNull ConflictType<?> type);
 
 	/**
 	 * Unregister a conflict type.
 	 *
 	 * @param type conflict type
 	 */
-	void unregister(@NotNull ConflictType type);
+	void unregister(@NotNull ConflictType<?> type);
 
 	/**
 	 * Resolve a registered conflict type by key.
@@ -56,7 +56,7 @@ public interface ConflictService {
 	 * @return conflict type or {@code null}
 	 */
 	@Nullable
-	ConflictType getType(@NotNull String key);
+	ConflictType<?> getType(@NotNull String key);
 
 	/**
 	 * Return registered conflict types.
@@ -64,14 +64,14 @@ public interface ConflictService {
 	 * @return conflict types
 	 */
 	@NotNull
-	Set<ConflictType> getTypes();
+	Set<ConflictType<?>> getTypes();
 
 	/**
 	 * Resolve a conflict for the provided context.
 	 *
 	 * <pre>{@code
 	 * ConflictResolution resolution = conflictService.resolve(context);
-	 * if (resolution != null && resolution.getAction() == ConflictResolution.Action.DENY) {
+	 * if (resolution != null && resolution.getDecision() == ConflictResolution.Decision.DENY) {
 	 *     // handle denial
 	 * }
 	 * }</pre>

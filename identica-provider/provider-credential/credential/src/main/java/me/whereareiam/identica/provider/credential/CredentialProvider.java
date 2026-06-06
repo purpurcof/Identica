@@ -5,6 +5,7 @@ import com.google.inject.Module;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import me.whereareiam.identica.BuildConfig;
+import me.whereareiam.identica.Constants;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibrary;
@@ -72,33 +73,81 @@ public class CredentialProvider extends IdenticaProvider {
 		libraries.setLibraries(List.of(
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
+						.artifactId("restriction-api")
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.loader("shared")
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
 						.artifactId("restriction")
-						.version(BuildConfig.VERSION)
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("restriction-join-api")
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.loader("shared")
 						.build(),
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
 						.artifactId("restriction-join")
-						.version(BuildConfig.VERSION)
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("recognition-api")
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.loader("shared")
 						.build(),
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
 						.artifactId("recognition")
-						.version(BuildConfig.VERSION)
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("offline-api")
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.loader("shared")
 						.build(),
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
 						.artifactId("offline")
-						.version(BuildConfig.VERSION)
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("migration-api")
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.loader("shared")
 						.build(),
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
 						.artifactId("migration")
-						.version(BuildConfig.VERSION)
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.build(),
+				ProviderLibrary.builder()
+						.groupId("me.whereareiam.identica.capability")
+						.artifactId("verification-api")
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
+						.loader("shared")
 						.build(),
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
 						.artifactId("verification")
-						.version(BuildConfig.VERSION)
+						.version(Constants.VERSION)
+						.resolveTransitiveDependencies(false)
 						.build(),
 				ProviderLibrary.builder()
 						.groupId("at.favre.lib")

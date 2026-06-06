@@ -32,16 +32,16 @@ public class Conflicts extends ConfigDocument {
 	public static class ConflictRules {
 		@JsonProperty("default")
 		private @NotNull ConflictRule defaultRule;
-		private @NotNull List<ConflictRule> pairs = new ArrayList<>();
+		private @NotNull List<ConflictRule> cases = new ArrayList<>();
 
 		/**
-		 * Conflict rule for provider pairs or default scope.
+		 * Conflict rule for a type-owned selector scope.
 		 */
 		@Getter
 		@Setter
 		@ToString
 		public static class ConflictRule {
-			private @NotNull List<String> providers = new ArrayList<>();
+			private @NotNull JsonNode when = JsonNodeFactory.instance.objectNode();
 			private boolean force;
 			private @NotNull List<ResolverEntry> resolvers = new ArrayList<>();
 

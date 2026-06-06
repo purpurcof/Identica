@@ -4,6 +4,7 @@ import com.google.inject.*;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.common.provider.classloader.SharedCapabilityClassLoaderFactory;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
@@ -31,28 +32,27 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 
 	private final Injector rootInjector;
 	private final ProviderCapabilityRegistry capabilityRegistry;
+	private final SharedCapabilityClassLoaderFactory sharedCapabilityClassLoaderFactory;
 
 	@Override
 	public @NotNull List<ProviderCapabilityBootstrap> resolveBootstraps(
 			@NotNull ProviderDescriptor descriptor,
 			@Nullable List<ProviderCapabilityBootstrap> bootstraps
 	) {
-		Map<String, ProviderCapabilityBootstrap> bootstrapsById = indexBootstraps(bootstraps);
-		List<String> declaredCapabilityIds = resolveDeclaredCapabilityIds(descriptor);
-		List<ProviderCapabilityBootstrap> resolvedBootstraps = new ArrayList<>(declaredCapabilityIds.size());
+		List<ProviderCapabilityBootstrap> resolvedBootstraps = new ArrayList<>();
+		List<String> resolvedCapabilityIds = new ArrayList<>();
+		for (ProviderCapabilityBootstrap bootstrap : bootstraps != null ? bootstraps : List.<ProviderCapabilityBootstrap>of()) {
+			if (bootstrap == null) continue;
 
-		for (String capabilityId : declaredCapabilityIds) {
-			ProviderCapabilityBootstrap bootstrap = bootstrapsById.remove(capabilityId);
-			if (bootstrap == null)
-				throw new IllegalStateException("Provider declared capability without bootstrap: " + capabilityId);
+			String capabilityId = bootstrap.descriptor().getCapability().getId();
+			if (resolvedCapabilityIds.contains(capabilityId))
+				throw new IllegalStateException("Provider declared duplicate capability bootstrap: " + capabilityId);
 
 			resolvedBootstraps.add(bootstrap);
+			resolvedCapabilityIds.add(capabilityId);
 		}
 
-		if (!bootstrapsById.isEmpty()) {
-			throw new IllegalStateException("Provider exposed undeclared capability bootstraps: " + String.join(", ", bootstrapsById.keySet()));
-		}
-
+		descriptor.setCapabilities(List.copyOf(resolvedCapabilityIds));
 		return List.copyOf(resolvedBootstraps);
 	}
 
@@ -88,7 +88,7 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 			modules.addAll(resolveLocalModules(bootstrap, capabilityDescriptor.getCapability(), descriptor.getId(), provider.getWorkingPath()));
 		}
 		if (!globalInjectors.isEmpty())
-			modules.addFirst(new CapabilityGlobalBridgeModule(rootInjector, globalInjectors));
+			modules.addFirst(new CapabilityGlobalBridgeModule(rootInjector, sharedCapabilityClassLoaderFactory.sharedClassLoader(), globalInjectors));
 
 		return List.copyOf(modules);
 	}
@@ -111,7 +111,10 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 			@NotNull List<ProviderCapabilityBootstrap> bootstraps,
 			@NotNull Set<ProviderCapabilityContribution> contributions
 	) {
-		Set<String> declaredCapabilityIds = new LinkedHashSet<>(resolveDeclaredCapabilityIds(descriptor));
+		Set<String> declaredCapabilityIds = new LinkedHashSet<>();
+		for (ProviderCapabilityBootstrap bootstrap : bootstraps)
+			declaredCapabilityIds.add(bootstrap.descriptor().getCapability().getId());
+
 		Map<String, Integer> contributionCounts = countContributions(declaredCapabilityIds, contributions);
 
 		for (ProviderCapabilityBootstrap bootstrap : bootstraps) {
@@ -122,35 +125,6 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 			if (contributionCounts.getOrDefault(capabilityId, 0) <= 0)
 				throw new IllegalStateException("Provider is missing required capability contribution: " + capabilityId);
 		}
-	}
-
-	private @NotNull Map<String, ProviderCapabilityBootstrap> indexBootstraps(
-			@Nullable List<ProviderCapabilityBootstrap> bootstraps
-	) {
-		Map<String, ProviderCapabilityBootstrap> bootstrapsById = new LinkedHashMap<>();
-		for (ProviderCapabilityBootstrap bootstrap : bootstraps != null ? bootstraps : List.<ProviderCapabilityBootstrap>of()) {
-			if (bootstrap == null) continue;
-
-			String capabilityId = bootstrap.descriptor().getCapability().getId();
-			if (bootstrapsById.putIfAbsent(capabilityId, bootstrap) != null)
-				throw new IllegalStateException("Provider declared duplicate capability bootstrap: " + capabilityId);
-		}
-
-		return bootstrapsById;
-	}
-
-	private @NotNull List<String> resolveDeclaredCapabilityIds(@NotNull ProviderDescriptor descriptor) {
-		List<String> capabilityIds = new ArrayList<>(descriptor.getCapabilities().size());
-		Set<String> uniqueCapabilityIds = new LinkedHashSet<>();
-		for (String capabilityId : descriptor.getCapabilities()) {
-			String normalizedCapabilityId = ProviderCapability.of(capabilityId).getId();
-			if (!uniqueCapabilityIds.add(normalizedCapabilityId))
-				throw new IllegalStateException("Provider descriptor contains duplicate capability ids");
-
-			capabilityIds.add(normalizedCapabilityId);
-		}
-
-		return List.copyOf(capabilityIds);
 	}
 
 	private @NotNull Map<String, Integer> countContributions(
@@ -244,16 +218,24 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 		}
 		if (globalInjectors.isEmpty()) return List.of();
 
-		return List.of(new CapabilityGlobalBridgeModule(rootInjector, globalInjectors));
+		return List.of(new CapabilityGlobalBridgeModule(rootInjector, sharedCapabilityClassLoaderFactory.sharedClassLoader(), globalInjectors));
 	}
 
 	private static final class CapabilityGlobalBridgeModule extends AbstractModule {
 		private final Injector parentInjector;
+		private final ClassLoader sharedCapabilityApiClassLoader;
 		private final List<Injector> globalInjectors;
+		private final ClassLoader parentClassLoader;
 
-		private CapabilityGlobalBridgeModule(@NotNull Injector parentInjector, @NotNull List<Injector> globalInjectors) {
+		private CapabilityGlobalBridgeModule(
+				@NotNull Injector parentInjector,
+				@NotNull ClassLoader sharedCapabilityApiClassLoader,
+				@NotNull List<Injector> globalInjectors
+		) {
 			this.parentInjector = parentInjector;
+			this.sharedCapabilityApiClassLoader = sharedCapabilityApiClassLoader;
 			this.globalInjectors = List.copyOf(globalInjectors);
+			this.parentClassLoader = parentInjector.getClass().getClassLoader();
 		}
 
 		@Override
@@ -277,7 +259,17 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 			Class<?> rawType = key.getTypeLiteral().getRawType();
 			return rawType == Injector.class
 					|| rawType.getName().startsWith("com.google.inject.")
+					|| isProviderLocalType(rawType)
 					|| parentInjector.getExistingBinding(key) != null;
+		}
+
+		private boolean isProviderLocalType(@NotNull Class<?> rawType) {
+			ClassLoader classLoader = rawType.getClassLoader();
+			if (classLoader == null) return false;
+
+			return classLoader != parentClassLoader
+					&& classLoader != parentClassLoader.getParent()
+					&& classLoader != sharedCapabilityApiClassLoader;
 		}
 	}
 }

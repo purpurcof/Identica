@@ -25,7 +25,6 @@ import me.whereareiam.identica.common.registry.RegistryConfiguration;
 import me.whereareiam.identica.common.replication.ReplicationConfiguration;
 import me.whereareiam.identica.common.routing.RoutingConfiguration;
 import me.whereareiam.identica.common.sentinel.SentinelConfiguration;
-import me.whereareiam.identica.common.verification.VerificationConfiguration;
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.logging.BannerContributor;
@@ -58,7 +57,6 @@ public class CommonConfiguration extends AbstractModule {
 		install(new ReplicationConfiguration());
 		install(new IdentityConfiguration());
 		install(new SessionConfiguration());
-		install(new VerificationConfiguration());
 		install(new RoutingConfiguration());
 		install(new ConflictConfiguration());
 		install(new ProviderConfiguration());
@@ -115,6 +113,13 @@ public class CommonConfiguration extends AbstractModule {
 	@Named("capabilitiesPath")
 	Path provideCapabilitiesPath(@Named("providersPath") Path providersPath) {
 		return ensureDirectory(providersPath.resolve("capabilities"), "capabilities");
+	}
+
+	@Provides
+	@Singleton
+	@Named("featuresPath")
+	Path provideFeaturesPath(@Named("dataPath") Path dataPath) {
+		return ensureDirectory(dataPath.resolve("features"), "features");
 	}
 
 	private Path ensureDirectory(Path path, String label) {

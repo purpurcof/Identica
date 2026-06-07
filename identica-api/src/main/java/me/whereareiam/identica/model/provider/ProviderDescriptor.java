@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
+import me.whereareiam.identica.type.provider.ProviderFeature;
 import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +33,10 @@ public class ProviderDescriptor {
 	 * Declared capability ids resolved from provider-supplied bootstraps.
 	 */
 	private @NotNull List<String> declaredCapabilityIds = new ArrayList<>();
+	/**
+	 * Declared feature ids resolved from provider-supplied declarations.
+	 */
+	private @NotNull List<String> declaredFeatureIds = new ArrayList<>();
 
 	private int priority = 0;
 
@@ -66,6 +71,38 @@ public class ProviderDescriptor {
 			if (entry == null || entry.isBlank()) continue;
 			if (normalized.equals(entry.trim().toLowerCase(Locale.ROOT)))
 				return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks whether the provider advertises the feature.
+	 *
+	 * @param feature feature to check
+	 * @return {@code true} when the feature is listed
+	 */
+	public boolean hasFeature(@Nullable ProviderFeature feature) {
+		if (feature == null) return false;
+		for (String entry : declaredFeatureIds)
+			if (feature.matches(entry)) return true;
+
+		return false;
+	}
+
+	/**
+	 * Checks whether the provider advertises a feature id.
+	 *
+	 * @param featureId feature id to check
+	 * @return {@code true} when the id is listed
+	 */
+	public boolean hasFeatureId(@Nullable String featureId) {
+		if (featureId == null || featureId.isBlank() || declaredFeatureIds.isEmpty()) return false;
+
+		String normalized = featureId.trim().toLowerCase(Locale.ROOT);
+		for (String entry : declaredFeatureIds) {
+			if (entry == null || entry.isBlank()) continue;
+			if (normalized.equals(entry.trim().toLowerCase(Locale.ROOT))) return true;
 		}
 
 		return false;

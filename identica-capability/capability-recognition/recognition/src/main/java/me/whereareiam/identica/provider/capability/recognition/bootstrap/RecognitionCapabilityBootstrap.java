@@ -24,7 +24,6 @@ import me.whereareiam.identica.provider.capability.restriction.join.JoinRestrict
 import me.whereareiam.identica.provider.capability.restriction.model.RestrictionSignalDescriptor;
 import me.whereareiam.identica.provider.capability.restriction.registry.RestrictionSignalRegistry;
 import me.whereareiam.identica.provider.capability.restriction.type.RestrictionSignal;
-import me.whereareiam.identica.type.provider.capability.ProviderCapabilityKind;
 import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
 import org.jetbrains.annotations.NotNull;
 
@@ -41,7 +40,6 @@ public final class RecognitionCapabilityBootstrap implements ProviderCapabilityB
 	public @NotNull ProviderCapabilityDeclaration declaration() {
 		return ProviderCapabilityDeclaration.builder()
 				.capability(RecognitionCapability.CAPABILITY)
-				.kind(ProviderCapabilityKind.RUNTIME)
 				.scopes(Set.of(ProviderCapabilityScope.GLOBAL, ProviderCapabilityScope.LOCAL))
 				.build();
 	}

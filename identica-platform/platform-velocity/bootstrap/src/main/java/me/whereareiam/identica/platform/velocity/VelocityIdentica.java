@@ -22,6 +22,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaBootstrappedEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
+import me.whereareiam.identica.feature.verification.VerificationFeatureConfiguration;
 import me.whereareiam.identica.platform.velocity.logging.VelocityLoggingHelper;
 import me.whereareiam.identica.type.PluginType;
 import org.jetbrains.annotations.Nullable;
@@ -66,6 +67,7 @@ public class VelocityIdentica {
 
 		Injector injector = Guice.createInjector(
 				new CommonConfiguration(dataPath),
+				new VerificationFeatureConfiguration(),
 				new EngineConfiguration(),
 				new VelocityConfiguration(proxyServer, this, pluginContainer, dataPath, logger),
 				new CommandConfiguration(),

@@ -77,17 +77,23 @@ project(":platform-bungeecord-bootstrap").projectDir = file("identica-platform/p
 include(":identica-provider")
 project(":identica-provider").projectDir = file("identica-provider")
 
+include(":identica-feature")
+project(":identica-feature").projectDir = file("identica-feature")
+
 include(":identica-capability")
 project(":identica-capability").projectDir = file("identica-capability")
 
-include(":capability-verification")
-project(":capability-verification").projectDir = file("identica-capability/capability-verification/verification")
+include(":feature-verification")
+project(":feature-verification").projectDir = file("identica-feature/feature-verification/verification")
 
-include(":capability-verification-api")
-project(":capability-verification-api").projectDir = file("identica-capability/capability-verification/verification-api")
+include(":feature-verification-api")
+project(":feature-verification-api").projectDir = file("identica-feature/feature-verification/verification-api")
 
-include(":capability-verification-common")
-project(":capability-verification-common").projectDir = file("identica-capability/capability-verification/verification-common")
+include(":feature-verification-common")
+project(":feature-verification-common").projectDir = file("identica-feature/feature-verification/verification-common")
+
+include(":feature-verification-database")
+project(":feature-verification-database").projectDir = file("identica-feature/feature-verification/verification-database")
 
 include(":capability-authoritative-username")
 project(":capability-authoritative-username").projectDir =

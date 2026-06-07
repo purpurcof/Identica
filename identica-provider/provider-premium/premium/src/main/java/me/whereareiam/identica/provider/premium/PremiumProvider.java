@@ -5,6 +5,7 @@ import com.google.inject.Module;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import me.whereareiam.identica.Constants;
+import me.whereareiam.identica.feature.verification.VerificationFeature;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibrary;
 import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
@@ -16,7 +17,6 @@ import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityB
 import me.whereareiam.identica.provider.capability.recognition.bootstrap.RecognitionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.bootstrap.RestrictionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.join.bootstrap.JoinRestrictionCapabilityBootstrap;
-import me.whereareiam.identica.provider.capability.verification.bootstrap.VerificationCapabilityBootstrap;
 import me.whereareiam.identica.provider.premium.command.CommandRegistrar;
 import me.whereareiam.identica.provider.premium.completion.PremiumCompletionExtension;
 import me.whereareiam.identica.provider.premium.completion.PremiumCompletionStep;
@@ -29,6 +29,7 @@ import me.whereareiam.identica.provider.premium.pipeline.step.type.authenticatio
 import me.whereareiam.identica.provider.premium.pipeline.step.type.migration.PremiumMigrationCompleteStep;
 import me.whereareiam.identica.provider.premium.platform.bungeecord.PremiumBungeeCordExtension;
 import me.whereareiam.identica.provider.premium.platform.velocity.PremiumVelocityExtension;
+import me.whereareiam.identica.type.provider.ProviderFeature;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -110,19 +111,6 @@ public class PremiumProvider extends IdenticaProvider {
 						.artifactId("authoritative-username")
 						.version(Constants.VERSION)
 						.resolveTransitiveDependencies(false)
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
-						.artifactId("verification-api")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
-						.loader("shared")
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
-						.artifactId("verification")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
 						.build()
 		));
 		return libraries;
@@ -134,9 +122,13 @@ public class PremiumProvider extends IdenticaProvider {
 				RestrictionCapabilityBootstrap.INSTANCE,
 				JoinRestrictionCapabilityBootstrap.INSTANCE,
 				RecognitionCapabilityBootstrap.INSTANCE,
-				AuthoritativeUsernameCapabilityBootstrap.INSTANCE,
-				VerificationCapabilityBootstrap.INSTANCE
+				AuthoritativeUsernameCapabilityBootstrap.INSTANCE
 		);
+	}
+
+	@Override
+	public @NotNull List<ProviderFeature> declaredFeatures() {
+		return List.of(VerificationFeature.FEATURE);
 	}
 
 	@Override

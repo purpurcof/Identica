@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import me.whereareiam.identica.BuildConfig;
 import me.whereareiam.identica.Constants;
 import me.whereareiam.identica.Registry;
+import me.whereareiam.identica.feature.verification.VerificationFeature;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibrary;
 import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
@@ -16,7 +17,6 @@ import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityB
 import me.whereareiam.identica.provider.capability.recognition.bootstrap.RecognitionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.bootstrap.RestrictionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.join.bootstrap.JoinRestrictionCapabilityBootstrap;
-import me.whereareiam.identica.provider.capability.verification.bootstrap.VerificationCapabilityBootstrap;
 import me.whereareiam.identica.provider.credential.command.CommandRegistrar;
 import me.whereareiam.identica.provider.credential.completion.CredentialCompletionExtension;
 import me.whereareiam.identica.provider.credential.cryptography.CryptographyModule;
@@ -26,6 +26,7 @@ import me.whereareiam.identica.provider.credential.database.DatabaseModule;
 import me.whereareiam.identica.provider.credential.pipeline.CredentialPipelineExtension;
 import me.whereareiam.identica.provider.credential.sentinel.BruteForceSentinelDefinition;
 import me.whereareiam.identica.sentinel.SentinelDefinition;
+import me.whereareiam.identica.type.provider.ProviderFeature;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -58,9 +59,13 @@ public class CredentialProvider extends IdenticaProvider {
 		return List.of(
 				RestrictionCapabilityBootstrap.INSTANCE,
 				JoinRestrictionCapabilityBootstrap.INSTANCE,
-				RecognitionCapabilityBootstrap.INSTANCE,
-				VerificationCapabilityBootstrap.INSTANCE
+				RecognitionCapabilityBootstrap.INSTANCE
 		);
+	}
+
+	@Override
+	public @NotNull List<ProviderFeature> declaredFeatures() {
+		return List.of(VerificationFeature.FEATURE);
 	}
 
 	@Override
@@ -103,19 +108,6 @@ public class CredentialProvider extends IdenticaProvider {
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
 						.artifactId("recognition")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
-						.artifactId("verification-api")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
-						.loader("shared")
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
-						.artifactId("verification")
 						.version(Constants.VERSION)
 						.resolveTransitiveDependencies(false)
 						.build(),

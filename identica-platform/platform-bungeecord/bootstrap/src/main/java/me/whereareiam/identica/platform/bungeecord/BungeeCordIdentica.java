@@ -13,6 +13,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaBootstrappedEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
+import me.whereareiam.identica.feature.verification.VerificationFeatureConfiguration;
 import me.whereareiam.identica.platform.bungeecord.logging.BungeeCordLoggingHelper;
 import me.whereareiam.identica.type.PluginType;
 import net.kyori.adventure.platform.bungeecord.BungeeAudiences;
@@ -34,6 +35,7 @@ public class BungeeCordIdentica extends Plugin {
 		audiences = BungeeAudiences.builder(this).build();
 		injector = Guice.createInjector(
 				new CommonConfiguration(getDataFolder().toPath()),
+				new VerificationFeatureConfiguration(),
 				new EngineConfiguration(),
 				new BungeeCordConfiguration(getProxy(), this, getDataFolder().toPath(), audiences),
 				new CommandConfiguration(),

@@ -18,7 +18,6 @@ import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityI
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityLocalInstallContext;
 import me.whereareiam.identica.provider.capability.contribution.ProviderCapabilityContribution;
 import me.whereareiam.identica.type.provider.capability.ProviderCapability;
-import me.whereareiam.identica.type.provider.capability.ProviderCapabilityKind;
 import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +48,6 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 			String capabilityId = declaration.getCapability().getId();
 			if (resolvedDeclaredCapabilityIds.contains(capabilityId))
 				throw new IllegalStateException("Provider declared duplicate capability bootstrap: " + capabilityId);
-			warnInvalidMarkerDeclaration(descriptor, declaration);
 
 			resolvedBootstraps.add(bootstrap);
 			resolvedDeclaredCapabilityIds.add(capabilityId);
@@ -196,7 +194,6 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 			@NotNull ProviderCapabilityBootstrap requested
 	) {
 		if (existing.getClass().getName().equals(requested.getClass().getName())
-				&& existing.declaration().getKind() == requested.declaration().getKind()
 				&& existing.declaration().getScopes().equals(requested.declaration().getScopes())
 				&& existing.declaration().isRequiresContribution() == requested.declaration().isRequiresContribution())
 			return;
@@ -216,32 +213,6 @@ public class DefaultProviderCapabilityCoordinator implements ProviderCapabilityC
 
 		return descriptor.getId();
 	}
-
-	private void warnInvalidMarkerDeclaration(
-			@NotNull ProviderDescriptor descriptor,
-			@NotNull ProviderCapabilityDeclaration declaration
-	) {
-		if (declaration.getKind() != ProviderCapabilityKind.MARKER) return;
-
-		String providerId = safeId(descriptor);
-		String capabilityId = declaration.getCapability().getId();
-		if (!declaration.getScopes().isEmpty()) {
-			Logger.warn(
-					"Provider %s declared marker capability %s with runtime scopes %s",
-					providerId,
-					capabilityId,
-					declaration.getScopes()
-			);
-		}
-		if (declaration.isRequiresContribution()) {
-			Logger.warn(
-					"Provider %s declared marker capability %s with required contributions",
-					providerId,
-					capabilityId
-			);
-		}
-	}
-
 	private @NotNull List<Module> resolveGlobalBridgeModules() {
 		List<Injector> globalInjectors = new ArrayList<>();
 		for (ProviderCapabilityInstallation installation : capabilityRegistry.installations()) {

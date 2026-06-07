@@ -15,7 +15,6 @@ import me.whereareiam.identica.provider.capability.authoritative.username.type.A
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityGlobalInstallContext;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityInitializationContext;
-import me.whereareiam.identica.type.provider.capability.ProviderCapabilityKind;
 import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,7 +32,6 @@ public final class AuthoritativeUsernameCapabilityBootstrap implements ProviderC
 	public @NotNull ProviderCapabilityDeclaration declaration() {
 		return ProviderCapabilityDeclaration.builder()
 				.capability(AuthoritativeUsernameCapability.CAPABILITY)
-				.kind(ProviderCapabilityKind.RUNTIME)
 				.scopes(Set.of(ProviderCapabilityScope.GLOBAL, ProviderCapabilityScope.LOCAL))
 				.build();
 	}

@@ -9,7 +9,6 @@ import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityI
 import me.whereareiam.identica.provider.capability.restriction.RestrictionCapability;
 import me.whereareiam.identica.provider.capability.restriction.RestrictionGlobalModule;
 import me.whereareiam.identica.provider.capability.restriction.config.RestrictionSettings;
-import me.whereareiam.identica.type.provider.capability.ProviderCapabilityKind;
 import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,7 +25,6 @@ public final class RestrictionCapabilityBootstrap implements ProviderCapabilityB
 	public @NotNull ProviderCapabilityDeclaration declaration() {
 		return ProviderCapabilityDeclaration.builder()
 				.capability(RestrictionCapability.CAPABILITY)
-				.kind(ProviderCapabilityKind.RUNTIME)
 				.scopes(Set.of(ProviderCapabilityScope.GLOBAL))
 				.build();
 	}

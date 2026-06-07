@@ -13,7 +13,6 @@ import me.whereareiam.configura.type.merge.tree.list.ListMode;
 import me.whereareiam.configura.type.merge.tree.list.ListPresence;
 import me.whereareiam.configura.type.merge.tree.list.ListUnknownEntries;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
-import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -90,13 +89,13 @@ public class Providers extends ConfigDocument {
 		private @Nullable Session session;
 		@Merge(DeclaredObjectDefaults.class)
 		@ExtendableDocument
-		private @Nullable Verification verification;
+		private @Nullable Capabilities capabilities;
 		/**
-		 * Capability-specific provider settings.
+		 * Feature-specific provider settings.
 		 */
 		@Merge(DeclaredObjectDefaults.class)
 		@ExtendableDocument
-		private @Nullable Capabilities capabilities;
+		private @Nullable Features features;
 		/**
 		 * Hostnames (optionally with port) that map to this provider.
 		 * Entries must use the format {@code host} or {@code host:port}.
@@ -115,42 +114,6 @@ public class Providers extends ConfigDocument {
 		}
 
 		/**
-		 * Shared verification settings for a provider.
-		 */
-		@Getter
-		@Setter
-		@ToString
-		@ExtendableDocument
-		public static class Verification {
-			private boolean enabled;
-			private boolean required;
-			private @Nullable UnavailableSelectionPolicy unavailableSelectionPolicy;
-			@Merge
-			@MergeList(
-					mode = ListMode.KEYED,
-					key = "id",
-					presence = ListPresence.DECLARED_ONLY,
-					unknownEntries = ListUnknownEntries.ALLOW
-			)
-			private @NotNull List<MethodEntry> methods = new ArrayList<>();
-
-			/**
-			 * Verification method entry for a provider.
-			 */
-			@Getter
-			@Setter
-			@ToString
-			@ExtendableDocument
-			public static class MethodEntry {
-				private @NotNull String id = "";
-				private boolean enabled;
-				private int priority;
-				private @Nullable Boolean required;
-				private @Nullable UnavailableSelectionPolicy unavailableSelectionPolicy;
-			}
-		}
-
-		/**
 		 * Capability-specific provider settings.
 		 */
 		@Getter
@@ -159,6 +122,17 @@ public class Providers extends ConfigDocument {
 		@ExtendableDocument
 		@PreserveUnknownFields
 		public static class Capabilities {
+		}
+
+		/**
+		 * Feature-specific provider settings.
+		 */
+		@Getter
+		@Setter
+		@ToString
+		@ExtendableDocument
+		@PreserveUnknownFields
+		public static class Features {
 		}
 	}
 }

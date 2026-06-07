@@ -5,7 +5,6 @@ import me.whereareiam.configura.Configura;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.common.config.defaults.provider.ProvidersDefaults;
 import me.whereareiam.identica.model.config.provider.Providers;
-import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -43,34 +42,27 @@ class ProvidersDefaultsTest {
 		assertTrue(generated.contains("providers:"));
 		assertTrue(generated.contains("entrypoints:"));
 		assertFalse(generated.contains("session:"), generated);
-		assertFalse(generated.contains("verification:"), generated);
+		assertFalse(generated.contains("features:"), generated);
 
 		assertNull(premium.getSession());
-		assertNull(premium.getVerification());
+		assertNull(premium.getFeatures());
 	}
 
-	@DisplayName("Declared verification merges provider defaults")
+	@DisplayName("Declared feature subtree stays generic in shared providers config")
 	@Test
-	void declaredVerificationMergesProviderDefaults(@TempDir Path tempDir) throws Exception {
+	void declaredFeatureSubtreeStaysGeneric(@TempDir Path tempDir) throws Exception {
 		Path providersPath = tempDir.resolve("providers.yml");
 		Files.writeString(providersPath, """
 				providers:
 				  - id: premium
-				    verification:
-				      enabled: false
+				    features:
+				      verification:
+				        enabled: false
 				""");
 
 		Providers providers = yaml().update(providersPath, Providers.class);
-		Providers.ProviderEntry.Verification verification = provider(providers, "premium").getVerification();
 
-		assertNotNull(verification);
-		assertFalse(verification.isEnabled());
-		assertFalse(verification.isRequired());
-		assertEquals(UnavailableSelectionPolicy.KEEP_LOCKED, verification.getUnavailableSelectionPolicy());
-		assertEquals(1, verification.getMethods().size());
-		assertEquals("totp", verification.getMethods().getFirst().getId());
-		assertTrue(verification.getMethods().getFirst().isEnabled());
-		assertEquals(100, verification.getMethods().getFirst().getPriority());
+		assertNotNull(provider(providers, "premium").getFeatures());
 	}
 
 	@DisplayName("Declared session stays minimal when no provider session fields are set")

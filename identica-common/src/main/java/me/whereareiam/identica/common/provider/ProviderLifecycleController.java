@@ -35,11 +35,13 @@ import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
+import me.whereareiam.identica.type.provider.ProviderFeature;
 import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -111,6 +113,14 @@ public class ProviderLifecycleController {
 					descriptor,
 					probeProvider != null ? probeProvider.declaredCapabilities() : List.of()
 			);
+			descriptor.setDeclaredFeatureIds(probeProvider != null
+					? probeProvider.declaredFeatures().stream()
+							.filter(feature -> feature != null && !feature.getId().isBlank())
+							.map(ProviderFeature::getId)
+							.map(id -> id.trim().toLowerCase(Locale.ROOT))
+							.distinct()
+							.toList()
+					: List.of());
 			internal.setWorkingPath(workingPath);
 			capabilityCoordinator.installGlobalCapabilities(internal, capabilityBootstraps);
 			List<Module> capabilityModules = capabilityCoordinator.resolveLocalModules(internal, capabilityBootstraps);

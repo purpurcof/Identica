@@ -9,7 +9,7 @@ dependencies {
     compileOnly(projects.capabilityRestriction)
     compileOnly(projects.capabilityRestrictionJoin)
     compileOnly(projects.capabilityRecognition)
-    compileOnly(projects.capabilityVerification)
+    compileOnly(projects.featureVerificationApi)
 
     // general
     implementation(projects.providerCredentialApi)
@@ -23,7 +23,7 @@ dependencies {
     testImplementation(projects.capabilityRestriction)
     testImplementation(projects.capabilityRestrictionJoin)
     testImplementation(projects.capabilityRecognition)
-    testImplementation(projects.capabilityVerification)
+    testImplementation(projects.featureVerificationApi)
 
     // general
     testImplementation(projects.providerCredentialApi)

@@ -7,6 +7,7 @@ import me.whereareiam.identica.conflict.resolver.ConflictResolver;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
+import me.whereareiam.identica.type.provider.ProviderFeature;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -59,6 +60,15 @@ public abstract class IdenticaProvider {
 	 * @return capability bootstraps
 	 */
 	public @NotNull List<ProviderCapabilityBootstrap> declaredCapabilities() {
+		return List.of();
+	}
+
+	/**
+	 * Provides built-in features declared by this provider.
+	 *
+	 * @return built-in feature declarations
+	 */
+	public @NotNull List<ProviderFeature> declaredFeatures() {
 		return List.of();
 	}
 

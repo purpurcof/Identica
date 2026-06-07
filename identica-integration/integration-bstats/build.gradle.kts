@@ -3,5 +3,6 @@ plugins {
 }
 
 dependencies {
+    compileOnly(projects.featureVerificationApi)
     compileOnly(libs.bStats)
 }

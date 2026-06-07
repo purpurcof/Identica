@@ -1,14 +1,14 @@
 ---
-title: Verification
-description: Field-by-field explanation of Identica's verification configuration area.
+title: Settings
+description: Field-by-field explanation of Identica's verification settings.
 ---
 
-The verification configuration controls global verification timing and the built-in TOTP verification method.
+This page provides the settings for verification and allows you to control its behavior.
+You can also override the default behavior through provider overrides in `providers[].features.verification`.
 
-Provider-specific rules such as whether verification is enabled, required, or selectable for a provider belong in the providers configuration.
-This page is about the shared verification system itself.
+## Settings
 
-## challengeTtl
+### challengeTtl
 
 - Takes: a positive duration
 - Current default: `"2m"`
@@ -18,7 +18,7 @@ This TTL is used for pending challenge state such as a player being asked to ent
 If it is too short, players can lose their challenge before they finish it.
 If it is too long, stale pending challenge state remains valid longer than necessary.
 
-## enrollmentTtl
+### enrollmentTtl
 
 - Takes: a positive duration
 - Current default: `"10m"`
@@ -26,7 +26,7 @@ If it is too long, stale pending challenge state remains valid longer than neces
 
 This TTL is used for enrollment state such as a player being partway through TOTP setup and confirmation.
 
-## autoSelectCurrentProvider
+### autoSelectCurrentProvider
 
 <Badge type="warning">Advanced</Badge>
 
@@ -39,11 +39,11 @@ If no explicit provider id is present in the enrollment flow, Identica falls bac
 
 This reduces friction after successful enrollment, but some operators may prefer to require explicit method selection instead.
 
-## totp
+### totp
 
 The `totp` section configures the built-in authenticator-app verification method.
 
-### displayName
+#### displayName
 
 - Takes: a string
 - Current default: `"Authenticator App"`
@@ -51,7 +51,7 @@ The `totp` section configures the built-in authenticator-app verification method
 
 If this is blank, the built-in method descriptor falls back to `totp`.
 
-### issuer
+#### issuer
 
 - Takes: a string
 - Current default: `"Identica"`
@@ -59,7 +59,7 @@ If this is blank, the built-in method descriptor falls back to `totp`.
 
 This is what authenticator apps usually show as the service or account issuer when the QR code or OTPAuth URI is imported.
 
-### labelFormat
+#### labelFormat
 
 - Takes: a string
 - Current default: `"{player}@{providerId}"`
@@ -72,7 +72,7 @@ The current TOTP setup step replaces these placeholders:
 
 This affects what the entry looks like in authenticator apps.
 
-### digits
+#### digits
 
 <Badge type="warning">Advanced</Badge>
 
@@ -82,7 +82,7 @@ This affects what the entry looks like in authenticator apps.
 
 This value is used both when the OTPAuth URI is generated and when TOTP codes are later verified.
 
-### period
+#### period
 
 <Badge type="warning">Advanced</Badge>
 
@@ -92,7 +92,7 @@ This value is used both when the OTPAuth URI is generated and when TOTP codes ar
 
 Internally, the built-in TOTP method converts this to seconds for OTPAuth generation and code verification.
 
-### allowedPastWindows
+#### allowedPastWindows
 
 <Badge type="warning">Advanced</Badge>
 
@@ -102,7 +102,7 @@ Internally, the built-in TOTP method converts this to seconds for OTPAuth genera
 
 Higher values are more tolerant of clock drift and slow input, but they also make verification more permissive.
 
-### allowedFutureWindows
+#### allowedFutureWindows
 
 <Badge type="warning">Advanced</Badge>
 
@@ -112,11 +112,11 @@ Higher values are more tolerant of clock drift and slow input, but they also mak
 
 Higher values can help with clock drift, but they also widen the accepted verification window.
 
-## recoveryCodes
+### recoveryCodes
 
 The `recoveryCodes` subsection controls backup codes generated during TOTP enrollment.
 
-### enabled
+#### enabled
 
 - Takes: `true` or `false`
 - Current default: `true`
@@ -124,7 +124,7 @@ The `recoveryCodes` subsection controls backup codes generated during TOTP enrol
 
 If this is disabled, the built-in TOTP enrollment flow produces no recovery codes.
 
-### amount
+#### amount
 
 <Badge type="warning">Advanced</Badge>
 
@@ -132,7 +132,7 @@ If this is disabled, the built-in TOTP enrollment flow produces no recovery code
 - Current default: `8`
 - Affects: how many recovery codes are generated during TOTP enrollment
 
-### length
+#### length
 
 <Badge type="warning">Advanced</Badge>
 
@@ -140,7 +140,7 @@ If this is disabled, the built-in TOTP enrollment flow produces no recovery code
 - Current default: `10`
 - Affects: how many characters each recovery code contains before grouping is applied
 
-### groupSize
+#### groupSize
 
 <Badge type="warning">Advanced</Badge>
 
@@ -149,3 +149,48 @@ If this is disabled, the built-in TOTP enrollment flow produces no recovery code
 - Affects: how recovery codes are visually grouped when generated
 
 This changes the formatting style of generated recovery codes, not whether they exist.
+
+## Provider overrides
+
+The verification feature contributes provider-scoped verification fields inside the providers configuration through `providers[].features.verification`.
+
+<Callout title="Declared subtree behavior" type="info">
+  Provider-scoped verification defaults are only applied when a provider declares a `features.verification` subtree.
+  In the current source, the official `credential` and `premium` providers then default to enabled verification with one enabled `totp` method.
+</Callout>
+
+### features.verification.enabled
+
+- Takes: `true` or `false`
+- Affects: whether this provider participates in the shared verification system
+
+If the provider does not declare `features.verification` at all, it does not participate through this feature-owned subtree.
+
+### features.verification.required
+
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: whether verification becomes mandatory for this provider instead of optional
+
+### features.verification.unavailableSelectionPolicy
+
+- Takes: `"CLEAR_SELECTION"` or `"KEEP_LOCKED"`
+- Current default: `KEEP_LOCKED` in the current declared defaults for official providers
+- Affects: what happens when the selected verification method is unavailable
+
+### features.verification.methods
+
+- Takes: a list of method entries
+- Affects: which verification methods can be used for this provider and in what order
+
+In the current declared defaults for the official `credential` and `premium` providers, this contains one enabled `totp` entry with priority `100`.
+
+Each method entry supports:
+
+- `id`: the verification method id, such as `totp`
+- `enabled`: whether that method can be used
+- `priority`: ordering when more than one method is available
+- `required`: optional method-level override for provider-wide `required`
+- `unavailableSelectionPolicy`: optional method-level override for provider-wide `unavailableSelectionPolicy`
+
+When a method entry leaves `required` or `unavailableSelectionPolicy` unset, the current resolver falls back to the provider-level verification settings.

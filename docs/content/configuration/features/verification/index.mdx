@@ -1,0 +1,16 @@
+---
+title: Overview
+description: Overview of configuration owned by Identica's verification feature.
+---
+
+Verification adds a second step that can be required after a provider already identifies the player.
+In practice, this means a player first authenticates with a provider and then confirms an additional verification method before the flow can continue.
+Verification methods can come from built-in functionality or from installed addons.
+
+## Verification in practice
+
+A player joins through the `credential` provider and enters their password successfully.
+Instead of finishing login immediately, Identica asks for a code from the built-in default TOTP verification method.
+The player enters the current code from their authenticator app, verification succeeds, and only then does the login flow complete.
+
+If verification is optional instead of required, the same provider can still work without forcing that second step for every player or every situation.

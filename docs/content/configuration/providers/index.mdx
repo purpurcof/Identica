@@ -4,7 +4,7 @@ description: Field-by-field explanation of Identica's provider configuration are
 ---
 
 The providers configuration controls which identity providers are enabled and how provider-specific behavior is applied.
-Use this file to enable providers, set priority and entrypoints, configure verification, tune provider-specific session behavior, and apply capability-owned provider fields.
+Use this file to enable providers, set priority and entrypoints, tune provider-specific session behavior, and apply capability-owned and feature-owned provider fields.
 
 Capability-specific shared fields and provider-scoped capability overrides are documented under [Capabilities](./capabilities/index.md).
 Conflict configuration for provider-owned conflicts is documented under [Conflicts](./conflicts.mdx).
@@ -46,7 +46,7 @@ behavior:
 ## providers
 
 - Takes: a list of provider entries
-- Affects: provider enablement, ordering, entrypoint routing, verification policy, provider-specific session behavior, and capability-owned provider overrides
+- Affects: provider enablement, ordering, entrypoint routing, provider-specific session behavior, capability and feature-owned provider overrides
 
 Provider ids should match installed provider descriptors, such as `premium` or `credential`.
 
@@ -62,14 +62,6 @@ providers:
       - "premium.example.com"
     session:
       concurrencyPolicy: "REJECT_NEW"
-    verification:
-      enabled: true
-      required: false
-      unavailableSelectionPolicy: "KEEP_LOCKED"
-      methods:
-        - id: "totp"
-          enabled: true
-          priority: 100
 ```
   </Tab>
   <Tab value="JSON">
@@ -84,18 +76,6 @@ providers:
       "entrypoints": ["premium.example.com"],
       "session": {
         "concurrencyPolicy": "REJECT_NEW"
-      },
-      "verification": {
-        "enabled": true,
-        "required": false,
-        "unavailableSelectionPolicy": "KEEP_LOCKED",
-        "methods": [
-          {
-            "id": "totp",
-            "enabled": true,
-            "priority": 100
-          }
-        ]
       }
     }
   ]
@@ -167,39 +147,17 @@ Each installed capability defines its own nested fields.
 
 <Include src="./capabilities/_partials/provider-overrides.mdx" />
 
-### verification
+### features
 
-Use `verification` when a provider should participate in the shared verification system or override its provider-level verification behavior.
+Use `features` for provider-scoped fields owned by installed features.
+Only installed features that extend provider configuration can use nested fields here.
 
-#### verification.enabled
+- Takes: an object keyed by feature id
+- Current default: absent
+- Affects: provider-scoped overrides contributed by features
 
-- Takes: `true` or `false`
-- Current default: `false` unless the provider entry explicitly enables it
-- Affects: whether this provider participates in the shared verification system
+The shape inside `features` is not global.
+Each installed feature defines its own nested fields.
 
-#### verification.required
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether verification becomes mandatory for this provider instead of optional
-
-#### verification.unavailableSelectionPolicy
-
-- Takes: `"CLEAR_SELECTION"` or `"KEEP_LOCKED"`
-- Current default: `CLEAR_SELECTION` when unset in current source
-- Affects: what happens when the selected verification method is unavailable
-
-#### verification.methods
-
-- Takes: a list of method entries
-- Affects: which verification methods can be used for this provider and in what order
-
-Each method entry supports:
-
-- `id`: the verification method id, such as `totp`
-- `enabled`: whether that method can be used
-- `priority`: ordering when more than one method is available
-- `required`: optional method-level override for provider-wide `verification.required`
-- `unavailableSelectionPolicy`: optional method-level override for provider-wide `verification.unavailableSelectionPolicy`
-
-When a method entry leaves `required` or `unavailableSelectionPolicy` unset, the current resolver falls back to the provider-level verification settings.
+The official verification feature contributes `verification` here.
+See [Verification settings](../features/verification/settings/index.mdx#provider-overrides).

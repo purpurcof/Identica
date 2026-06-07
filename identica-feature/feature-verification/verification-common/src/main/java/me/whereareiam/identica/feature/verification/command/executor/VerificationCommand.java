@@ -9,6 +9,7 @@ import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.command.SessionBoundCommand;
 import me.whereareiam.identica.feature.verification.VerificationRegistry;
 import me.whereareiam.identica.feature.verification.VerificationService;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.model.enrollment.VerificationEnrollment;
 import me.whereareiam.identica.feature.verification.model.selection.VerificationSelection;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -30,18 +31,21 @@ import java.util.*;
 public class VerificationCommand extends SessionBoundCommand {
 	private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.systemDefault());
 
-	private final Provider<Messages> messagesProvider;
+	private final Provider<Messages> coreMessagesProvider;
+	private final Provider<VerificationMessages> messagesProvider;
 	private final VerificationService verificationService;
 	private final VerificationRegistry verificationRegistry;
 	private final SessionService sessionService;
 
 	@Inject
 	public VerificationCommand(
-			Provider<Messages> messagesProvider,
+			Provider<Messages> coreMessagesProvider,
+			Provider<VerificationMessages> messagesProvider,
 			VerificationService verificationService,
 			VerificationRegistry verificationRegistry,
 			SessionService sessionService
 	) {
+		this.coreMessagesProvider = coreMessagesProvider;
 		this.messagesProvider = messagesProvider;
 		this.verificationService = verificationService;
 		this.verificationRegistry = verificationRegistry;
@@ -55,7 +59,7 @@ public class VerificationCommand extends SessionBoundCommand {
 
 	@Override
 	protected @Nullable String currentSessionRequiredMessage() {
-		return messagesProvider.get().getCommands().getCurrentSessionRequired();
+		return coreMessagesProvider.get().getCommands().getCurrentSessionRequired();
 	}
 
 	@Definition("verification")
@@ -73,8 +77,8 @@ public class VerificationCommand extends SessionBoundCommand {
 		var accountUniqueId = requireAccountUniqueId(identity);
 		if (accountUniqueId == null) return;
 
-		Messages.Commands.Verification messages = verificationMessages();
-		Messages.Commands.Verification.Status statusMessages = messages.getStatus();
+		VerificationMessages.Commands messages = verificationMessages();
+		VerificationMessages.Commands.Status statusMessages = messages.getStatus();
 		List<VerificationEnrollment> enrollments = verificationService.findEnrollments(accountUniqueId);
 		List<VerificationSelection> selections = verificationService.findSelections(accountUniqueId);
 
@@ -89,7 +93,7 @@ public class VerificationCommand extends SessionBoundCommand {
 	}
 
 	private List<String> buildEnrollmentLines(
-			Messages.Commands.Verification.Status messages,
+			VerificationMessages.Commands.Status messages,
 			List<VerificationEnrollment> enrollments
 	) {
 		if (enrollments == null || enrollments.isEmpty()) return List.of(messages.getEmptyEnrollments());
@@ -105,7 +109,7 @@ public class VerificationCommand extends SessionBoundCommand {
 	}
 
 	private List<String> buildSelectionLines(
-			Messages.Commands.Verification.Status messages,
+			VerificationMessages.Commands.Status messages,
 			List<VerificationSelection> selections
 	) {
 		if (selections == null || selections.isEmpty()) return List.of(messages.getEmptySelections());
@@ -120,7 +124,7 @@ public class VerificationCommand extends SessionBoundCommand {
 		return lines;
 	}
 
-	private String formatEntry(Messages.Commands.EntryFormat format, Map<String, String> placeholders) {
+	private String formatEntry(VerificationMessages.Commands.EntryFormat format, Map<String, String> placeholders) {
 		boolean complete = placeholders.values().stream().allMatch(value -> value != null && !value.isBlank());
 		String result = complete ? format.getFormat() : format.getEmptyFormat();
 		SerializerOptions.PlaceholderFormat placeholderFormat = placeholderFormat();
@@ -131,8 +135,8 @@ public class VerificationCommand extends SessionBoundCommand {
 		return result;
 	}
 
-	private Messages.Commands.Verification verificationMessages() {
-		return messagesProvider.get().getCommands().getVerification();
+	private VerificationMessages.Commands verificationMessages() {
+		return messagesProvider.get().getCommands();
 	}
 
 	private SerializerOptions.PlaceholderFormat placeholderFormat() {
@@ -155,7 +159,7 @@ public class VerificationCommand extends SessionBoundCommand {
 
 	private String formatDate(long millis) {
 		if (millis <= 0L) return "";
-		Messages.Format.Temporal temporal = messagesProvider.get().getFormat().getTemporal();
+		Messages.Format.Temporal temporal = coreMessagesProvider.get().getFormat().getTemporal();
 		DateTimeFormatter dateTimeFormatter = resolveFormatter(
 				temporal.getDateTime()
 		);

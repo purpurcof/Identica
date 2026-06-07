@@ -10,6 +10,7 @@ import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.feature.verification.VerificationService;
 import me.whereareiam.identica.feature.verification.command.ProtectedActionCommand;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.model.VerificationDisablePendingState;
 import me.whereareiam.identica.feature.verification.model.challenge.VerificationChallengeResult;
 import me.whereareiam.identica.feature.verification.model.config.VerificationSettings;
@@ -35,7 +36,8 @@ import java.util.Map;
 
 @Singleton
 public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
-	private final Provider<Messages> messagesProvider;
+	private final Provider<Messages> coreMessagesProvider;
+	private final Provider<VerificationMessages> messagesProvider;
 	private final Provider<VerificationSettings> verificationProvider;
 	private final VerificationService verificationService;
 	private final PipelineStateStore pipelineStateStore;
@@ -45,7 +47,8 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 
 	@Inject
 	public VerificationConfirmCommand(
-			Provider<Messages> messagesProvider,
+			Provider<Messages> coreMessagesProvider,
+			Provider<VerificationMessages> messagesProvider,
 			Provider<VerificationSettings> verificationProvider,
 			VerificationService verificationService,
 			PipelineStateStore pipelineStateStore,
@@ -54,6 +57,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 			SessionService sessionService
 	) {
 		super(verificationService);
+		this.coreMessagesProvider = coreMessagesProvider;
 		this.messagesProvider = messagesProvider;
 		this.verificationProvider = verificationProvider;
 		this.verificationService = verificationService;
@@ -70,7 +74,7 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 
 	@Override
 	protected @Nullable String currentSessionRequiredMessage() {
-		return messagesProvider.get().getCommands().getCurrentSessionRequired();
+		return coreMessagesProvider.get().getCommands().getCurrentSessionRequired();
 	}
 
 	@Definition("verification-confirm")
@@ -185,8 +189,8 @@ public class VerificationConfirmCommand extends ProtectedActionCommand<Void> {
 		return state.getScenario().getProvider().getProviderId();
 	}
 
-	private Messages.Commands.Verification verificationMessages() {
-		return messagesProvider.get().getCommands().getVerification();
+	private VerificationMessages.Commands verificationMessages() {
+		return messagesProvider.get().getCommands();
 	}
 
 	private void sendMessage(@NotNull Actor sender, @Nullable String message, @NotNull Map<String, String> placeholders) {

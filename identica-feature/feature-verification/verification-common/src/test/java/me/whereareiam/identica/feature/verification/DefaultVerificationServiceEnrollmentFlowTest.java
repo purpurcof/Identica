@@ -4,6 +4,7 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.feature.verification.challenge.VerificationChallengeLifecycle;
 import me.whereareiam.identica.feature.verification.challenge.VerificationChallengeStore;
 import me.whereareiam.identica.feature.verification.challenge.VerificationStateCodec;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.config.defaults.VerificationDefaults;
 import me.whereareiam.identica.feature.verification.database.VerificationPersistenceService;
 import me.whereareiam.identica.feature.verification.enrollment.VerificationEnrollmentActivator;
@@ -26,7 +27,6 @@ import me.whereareiam.identica.feature.verification.type.totp.step.TotpConfirmCo
 import me.whereareiam.identica.feature.verification.type.totp.step.TotpConfirmSavedStep;
 import me.whereareiam.identica.feature.verification.type.totp.step.TotpSetupStep;
 import me.whereareiam.identica.identity.session.SessionService;
-import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.provider.ProviderManager;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class DefaultVerificationServiceEnrollmentFlowTest {
-	private final Messages commandsMessages = messages();
+	private final VerificationMessages commandsMessages = messages();
 
 	@Test
 	@SuppressWarnings("unchecked")
@@ -181,17 +181,13 @@ class DefaultVerificationServiceEnrollmentFlowTest {
 		);
 	}
 
-	private Messages messages() {
-		Messages messages = new Messages();
-		Messages.Commands commands = new Messages.Commands();
-		Messages.Commands.Verification.Methods.Totp totp = new Messages.Commands.Verification.Methods.Totp();
+	private VerificationMessages messages() {
+		VerificationMessages messages = new VerificationMessages();
+		VerificationMessages.Methods.Totp totp = new VerificationMessages.Methods.Totp();
 		totp.setPending(List.of("TOTP secret {secret}"));
-		Messages.Commands.Verification.Methods methods = new Messages.Commands.Verification.Methods();
+		VerificationMessages.Methods methods = new VerificationMessages.Methods();
 		methods.setTotp(totp);
-		Messages.Commands.Verification verification = new Messages.Commands.Verification();
-		verification.setMethods(methods);
-		commands.setVerification(verification);
-		messages.setCommands(commands);
+		messages.setMethods(methods);
 		return messages;
 	}
 }

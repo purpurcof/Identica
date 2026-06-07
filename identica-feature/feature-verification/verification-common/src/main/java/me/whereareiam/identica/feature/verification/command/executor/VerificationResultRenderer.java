@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.feature.verification.VerificationRegistry;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.model.VerificationDisableResult;
 import me.whereareiam.identica.feature.verification.model.enrollment.VerificationEnrollmentResult;
 import me.whereareiam.identica.feature.verification.model.process.VerificationProcessDisplay;
@@ -13,7 +14,6 @@ import me.whereareiam.identica.feature.verification.type.status.VerificationDisa
 import me.whereareiam.identica.feature.verification.type.status.VerificationEnrollmentStatus;
 import me.whereareiam.identica.feature.verification.type.status.VerificationSelectionStatus;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
@@ -26,12 +26,12 @@ import java.util.*;
 
 @Singleton
 public class VerificationResultRenderer {
-	private final Provider<Messages> messagesProvider;
+	private final Provider<VerificationMessages> messagesProvider;
 	private final VerificationRegistry verificationRegistry;
 
 	@Inject
 	public VerificationResultRenderer(
-			Provider<Messages> messagesProvider,
+			Provider<VerificationMessages> messagesProvider,
 			VerificationRegistry verificationRegistry
 	) {
 		this.messagesProvider = messagesProvider;
@@ -39,9 +39,9 @@ public class VerificationResultRenderer {
 	}
 
 	public void presentEnrollmentResult(@NotNull Actor sender, @NotNull VerificationEnrollmentResult result) {
-		Messages.Commands.Verification messages = verificationMessages();
-		Messages.Commands.Verification.Enroll enrollMessages = messages.getEnroll();
-		Messages.Commands.Verification.Confirm confirmMessages = messages.getConfirm();
+		VerificationMessages.Commands messages = verificationMessages();
+		VerificationMessages.Commands.Enroll enrollMessages = messages.getEnroll();
+		VerificationMessages.Commands.Confirm confirmMessages = messages.getConfirm();
 		VerificationEnrollmentStatus status = result.getStatus();
 		if (status == null) return;
 
@@ -72,8 +72,8 @@ public class VerificationResultRenderer {
 	}
 
 	public void presentSelectionResult(@NotNull Actor sender, @NotNull VerificationSelectionResult result) {
-		Messages.Commands.Verification messages = verificationMessages();
-		Messages.Commands.Verification.Use useMessages = messages.getUse();
+		VerificationMessages.Commands messages = verificationMessages();
+		VerificationMessages.Commands.Use useMessages = messages.getUse();
 		VerificationSelectionStatus status = result.getStatus();
 		if (status == null) return;
 
@@ -90,7 +90,7 @@ public class VerificationResultRenderer {
 	}
 
 	public void presentDisableResult(@NotNull Actor sender, @NotNull VerificationDisableResult result) {
-		Messages.Commands.Verification.Disable disableMessages = verificationMessages().getDisable();
+		VerificationMessages.Commands.Disable disableMessages = verificationMessages().getDisable();
 		VerificationDisableStatus status = result.getStatus();
 		if (status == null) return;
 
@@ -105,7 +105,7 @@ public class VerificationResultRenderer {
 	}
 
 	private void sendRecoveryCodes(@NotNull Actor sender, @Nullable List<String> recoveryCodes) {
-		Messages.Commands.Verification.Confirm.RecoveryCodes messages = verificationMessages().getConfirm().getRecoveryCodes();
+		VerificationMessages.Commands.Confirm.RecoveryCodes messages = verificationMessages().getConfirm().getRecoveryCodes();
 		List<String> entries = buildRecoveryCodeLines(messages, recoveryCodes);
 		sendLines(sender, messages.getBody(), Map.of(
 				"entries", String.join("\n", entries)
@@ -113,7 +113,7 @@ public class VerificationResultRenderer {
 	}
 
 	private List<String> buildRecoveryCodeLines(
-			Messages.Commands.Verification.Confirm.RecoveryCodes messages,
+			VerificationMessages.Commands.Confirm.RecoveryCodes messages,
 			@Nullable List<String> recoveryCodes
 	) {
 		if (recoveryCodes == null || recoveryCodes.isEmpty())
@@ -126,10 +126,10 @@ public class VerificationResultRenderer {
 			entries.add(formatEntry(messages.getSingleColumnEntry(), placeholders));
 		}
 
-		if (messages.getLayout() == Messages.Commands.Verification.Confirm.RecoveryCodes.Layout.SINGLE_COLUMN)
+		if (messages.getLayout() == VerificationMessages.Commands.Confirm.RecoveryCodes.Layout.SINGLE_COLUMN)
 			return entries;
 
-		Messages.Commands.EntryFormat twoColumnEntry = messages.getTwoColumnEntry();
+		VerificationMessages.Commands.EntryFormat twoColumnEntry = messages.getTwoColumnEntry();
 		if (twoColumnEntry.getFormat().isBlank())
 			return entries;
 
@@ -144,7 +144,7 @@ public class VerificationResultRenderer {
 		return rows;
 	}
 
-	private String formatEntry(Messages.Commands.EntryFormat format, Map<String, String> placeholders) {
+	private String formatEntry(VerificationMessages.Commands.EntryFormat format, Map<String, String> placeholders) {
 		boolean complete = placeholders.values().stream().allMatch(value -> value != null && !value.isBlank());
 		String result = complete ? format.getFormat() : format.getEmptyFormat();
 		SerializerOptions.PlaceholderFormat placeholderFormat = placeholderFormat();
@@ -155,8 +155,8 @@ public class VerificationResultRenderer {
 		return result;
 	}
 
-	private Messages.Commands.Verification verificationMessages() {
-		return messagesProvider.get().getCommands().getVerification();
+	private VerificationMessages.Commands verificationMessages() {
+		return messagesProvider.get().getCommands();
 	}
 
 	private SerializerOptions.PlaceholderFormat placeholderFormat() {

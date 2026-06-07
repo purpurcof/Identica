@@ -2,6 +2,7 @@ package me.whereareiam.identica.provider.premium.command;
 
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.feature.verification.VerificationService;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.model.resolution.VerificationResolutionResult;
 import me.whereareiam.identica.feature.verification.type.status.VerificationResolutionStatus;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -89,6 +90,7 @@ class PremiumCommandTest {
 				migrationService,
 				() -> premiumMessages,
 				Messages::new,
+				this::verificationMessages,
 				verificationService,
 				sessionService
 		);
@@ -120,6 +122,7 @@ class PremiumCommandTest {
 				migrationService,
 				() -> new PremiumMessagesDefaults().supply(new PremiumMessages()),
 				Messages::new,
+				this::verificationMessages,
 				verificationService,
 				sessionService
 		);
@@ -149,6 +152,18 @@ class PremiumCommandTest {
 		return me.whereareiam.identica.feature.verification.model.enrollment.VerificationEnrollment.builder()
 				.methodId("totp")
 				.build();
+	}
+
+	private VerificationMessages verificationMessages() {
+		VerificationMessages messages = new VerificationMessages();
+		VerificationMessages.Commands commands = new VerificationMessages.Commands();
+		VerificationMessages.Commands.Confirm confirm = new VerificationMessages.Commands.Confirm();
+		confirm.setProtectedActionSelectionRequired("selection-required");
+		confirm.setProtectedActionSessionRequired("session-required");
+		confirm.setInvalidCode("invalid-code");
+		commands.setConfirm(confirm);
+		messages.setCommands(commands);
+		return messages;
 	}
 
 	private static final class TestIdentity extends Identity {

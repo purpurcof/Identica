@@ -8,6 +8,7 @@ import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.feature.verification.VerificationService;
 import me.whereareiam.identica.feature.verification.command.ProtectedActionCommand;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
@@ -34,6 +35,7 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 	private final MigrationService migrationService;
 	private final Provider<PremiumMessages> messagesProvider;
 	private final Provider<Messages> coreMessagesProvider;
+	private final Provider<VerificationMessages> verificationMessagesProvider;
 	private final SessionService sessionService;
 
 	@Inject
@@ -41,6 +43,7 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 			MigrationService migrationService,
 			Provider<PremiumMessages> messagesProvider,
 			Provider<Messages> coreMessagesProvider,
+			Provider<VerificationMessages> verificationMessagesProvider,
 			VerificationService verificationService,
 			SessionService sessionService
 	) {
@@ -48,6 +51,7 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 		this.migrationService = migrationService;
 		this.messagesProvider = messagesProvider;
 		this.coreMessagesProvider = coreMessagesProvider;
+		this.verificationMessagesProvider = verificationMessagesProvider;
 		this.sessionService = sessionService;
 	}
 
@@ -91,7 +95,7 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 
 			StepUpPreparation preparation = prepareStepUp(accountUniqueId, "migration-confirm");
 			if (preparation.getStatus() == StepUpPreparation.Status.SELECTION_REQUIRED) {
-				sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+				sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSelectionRequired());
 				return;
 			}
 			sendMessage(identity, messages.getVerificationRequired());
@@ -127,8 +131,8 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 			StepUpPreparation preparation = prepareStepUp(accountUniqueId, "migration-confirm");
 			if (preparation.getStatus() != StepUpPreparation.Status.READY) {
 				switch (preparation.getStatus()) {
-					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
-					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSessionRequired());
+					case SELECTION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSelectionRequired());
 					default -> sendMessage(identity, messagesProvider.get().getCommands().getPremium().getNoPending());
 				}
 				return;
@@ -142,9 +146,9 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 			StepUpResult result = confirmStepUp(accountUniqueId, input, "migration-confirm");
 			if (result.getStatus() != StepUpResult.Status.VERIFIED) {
 				switch (result.getStatus()) {
-					case INVALID_CODE -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getInvalidCode());
-					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
-					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					case INVALID_CODE -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getInvalidCode());
+					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSessionRequired());
+					case SELECTION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSelectionRequired());
 					default -> sendMessage(identity, messagesProvider.get().getCommands().getPremium().getNoPending());
 				}
 				return;

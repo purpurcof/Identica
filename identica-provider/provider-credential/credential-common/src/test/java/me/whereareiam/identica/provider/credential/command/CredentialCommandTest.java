@@ -2,6 +2,7 @@ package me.whereareiam.identica.provider.credential.command;
 
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.feature.verification.VerificationService;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.model.resolution.VerificationResolutionResult;
 import me.whereareiam.identica.feature.verification.type.status.VerificationResolutionStatus;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -88,6 +89,7 @@ class CredentialCommandTest {
 		CredentialCommand command = new CredentialCommand(
 				() -> passwordMessages,
 				Messages::new,
+				this::verificationMessages,
 				migrationService,
 				verificationService,
 				sessionService
@@ -119,6 +121,7 @@ class CredentialCommandTest {
 		CredentialCommand command = new CredentialCommand(
 				() -> new CredentialMessagesDefaults().supply(new CredentialMessages()),
 				Messages::new,
+				this::verificationMessages,
 				migrationService,
 				verificationService,
 				sessionService
@@ -149,6 +152,18 @@ class CredentialCommandTest {
 		return me.whereareiam.identica.feature.verification.model.enrollment.VerificationEnrollment.builder()
 				.methodId("totp")
 				.build();
+	}
+
+	private VerificationMessages verificationMessages() {
+		VerificationMessages messages = new VerificationMessages();
+		VerificationMessages.Commands commands = new VerificationMessages.Commands();
+		VerificationMessages.Commands.Confirm confirm = new VerificationMessages.Commands.Confirm();
+		confirm.setProtectedActionSelectionRequired("selection-required");
+		confirm.setProtectedActionSessionRequired("session-required");
+		confirm.setInvalidCode("invalid-code");
+		commands.setConfirm(confirm);
+		messages.setCommands(commands);
+		return messages;
 	}
 
 	private static final class TestIdentity extends Identity {

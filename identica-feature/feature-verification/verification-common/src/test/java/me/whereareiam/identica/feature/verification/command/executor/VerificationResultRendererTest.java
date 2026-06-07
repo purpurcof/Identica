@@ -3,13 +3,13 @@ package me.whereareiam.identica.feature.verification.command.executor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.feature.verification.VerificationMethod;
 import me.whereareiam.identica.feature.verification.VerificationRegistry;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.model.VerificationMethodDescriptor;
 import me.whereareiam.identica.feature.verification.model.enrollment.VerificationEnrollmentResult;
 import me.whereareiam.identica.feature.verification.model.process.VerificationProcessDisplay;
 import me.whereareiam.identica.feature.verification.process.VerificationChallengeProcess;
 import me.whereareiam.identica.feature.verification.process.VerificationEnrollmentProcess;
 import me.whereareiam.identica.feature.verification.type.status.VerificationEnrollmentStatus;
-import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
@@ -92,16 +92,15 @@ class VerificationResultRendererTest {
 		assertEquals("Verification method mail did not provide enrollment display", error.getMessage());
 	}
 
-	private Messages messages() {
-		Messages messages = new Messages();
-		Messages.Commands commands = new Messages.Commands();
-		Messages.Commands.Verification verification = new Messages.Commands.Verification();
-		Messages.Commands.Verification.Enroll enroll = new Messages.Commands.Verification.Enroll();
+	private VerificationMessages messages() {
+		VerificationMessages messages = new VerificationMessages();
+		VerificationMessages.Commands commands = new VerificationMessages.Commands();
+		VerificationMessages.Commands.Enroll enroll = new VerificationMessages.Commands.Enroll();
 		enroll.setUnknownMethod("unknown");
 		enroll.setAlreadyEnrolled("already");
-		verification.setEnroll(enroll);
+		commands.setEnroll(enroll);
 
-		Messages.Commands.Verification.Confirm confirm = new Messages.Commands.Verification.Confirm();
+		VerificationMessages.Commands.Confirm confirm = new VerificationMessages.Commands.Confirm();
 		confirm.setNoPending("no-pending");
 		confirm.setInvalidCode("invalid");
 		confirm.setProtectedActionSelectionRequired("selection-required");
@@ -109,18 +108,18 @@ class VerificationResultRendererTest {
 		confirm.setMethodUnavailable("method-unavailable");
 		confirm.setEnabled("enabled");
 		confirm.setAutoSelected("auto-selected");
-		Messages.Commands.Verification.Confirm.RecoveryCodes recoveryCodes = new Messages.Commands.Verification.Confirm.RecoveryCodes();
+		VerificationMessages.Commands.Confirm.RecoveryCodes recoveryCodes = new VerificationMessages.Commands.Confirm.RecoveryCodes();
 		recoveryCodes.setBody(List.of("{entries}"));
-		Messages.Commands.EntryFormat entryFormat = new Messages.Commands.EntryFormat();
+		VerificationMessages.Commands.EntryFormat entryFormat = new VerificationMessages.Commands.EntryFormat();
 		entryFormat.setFormat("{code}");
 		entryFormat.setEmptyFormat("{code}");
 		recoveryCodes.setSingleColumnEntry(entryFormat);
 		recoveryCodes.setTwoColumnEntry(entryFormat);
 		recoveryCodes.setEmpty("empty");
 		confirm.setRecoveryCodes(recoveryCodes);
-		verification.setConfirm(confirm);
+		commands.setConfirm(confirm);
 
-		Messages.Commands.Verification.Use use = new Messages.Commands.Verification.Use();
+		VerificationMessages.Commands.Use use = new VerificationMessages.Commands.Use();
 		use.setProviderNotFound("provider-not-found");
 		use.setProviderUnsupported("provider-unsupported");
 		use.setProviderVerificationDisabled("provider-verification-disabled");
@@ -128,23 +127,21 @@ class VerificationResultRendererTest {
 		use.setMethodDisabledForProvider("method-disabled-for-provider");
 		use.setAlreadySelected("already-selected");
 		use.setUpdated("updated");
-		verification.setUse(use);
+		commands.setUse(use);
 
-		Messages.Commands.Verification.Disable disable = new Messages.Commands.Verification.Disable();
+		VerificationMessages.Commands.Disable disable = new VerificationMessages.Commands.Disable();
 		disable.setMethodNotEnrolled("disable-method-not-enrolled");
 		disable.setProtectedPrompt("disable-protected-prompt");
 		disable.setDisabled("disabled");
-		verification.setDisable(disable);
+		commands.setDisable(disable);
 
-		Messages.Commands.Verification.Cancel cancel = new Messages.Commands.Verification.Cancel();
+		VerificationMessages.Commands.Cancel cancel = new VerificationMessages.Commands.Cancel();
 		cancel.setNoPending("cancel-no-pending");
 		cancel.setCancelled("cancelled");
 		cancel.setCancelledProtectedAction("cancelled-protected");
-		verification.setCancel(cancel);
-		verification.setPlayerOnly("player-only");
-		verification.setNotAllowed("not-allowed");
-
-		commands.setVerification(verification);
+		commands.setCancel(cancel);
+		commands.setPlayerOnly("player-only");
+		commands.setNotAllowed("not-allowed");
 		messages.setCommands(commands);
 		return messages;
 	}

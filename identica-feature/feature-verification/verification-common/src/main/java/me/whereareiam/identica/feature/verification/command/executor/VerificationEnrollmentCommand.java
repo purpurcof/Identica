@@ -12,6 +12,7 @@ import me.whereareiam.identica.feature.verification.VerificationInteraction;
 import me.whereareiam.identica.feature.verification.VerificationService;
 import me.whereareiam.identica.feature.verification.command.ProtectedActionCommand;
 import me.whereareiam.identica.feature.verification.command.suggestion.VerificationMethodSuggestions;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.model.interaction.CodeVerificationInteraction;
 import me.whereareiam.identica.feature.verification.model.interaction.SavedVerificationInteraction;
 import me.whereareiam.identica.identity.actor.Identity;
@@ -27,19 +28,22 @@ import java.util.Map;
 
 @Singleton
 public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> {
-	private final Provider<Messages> messagesProvider;
+	private final Provider<Messages> coreMessagesProvider;
+	private final Provider<VerificationMessages> messagesProvider;
 	private final VerificationService verificationService;
 	private final VerificationResultRenderer resultRenderer;
 	private final SessionService sessionService;
 
 	@Inject
 	public VerificationEnrollmentCommand(
-			Provider<Messages> messagesProvider,
+			Provider<Messages> coreMessagesProvider,
+			Provider<VerificationMessages> messagesProvider,
 			VerificationService verificationService,
 			VerificationResultRenderer resultRenderer,
 			SessionService sessionService
 	) {
 		super(verificationService);
+		this.coreMessagesProvider = coreMessagesProvider;
 		this.messagesProvider = messagesProvider;
 		this.verificationService = verificationService;
 		this.resultRenderer = resultRenderer;
@@ -53,7 +57,7 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 
 	@Override
 	protected @Nullable String currentSessionRequiredMessage() {
-		return messagesProvider.get().getCommands().getCurrentSessionRequired();
+		return coreMessagesProvider.get().getCommands().getCurrentSessionRequired();
 	}
 
 	@Definition("verification-enroll")
@@ -107,8 +111,8 @@ public class VerificationEnrollmentCommand extends ProtectedActionCommand<Void> 
 		sendMessage(sender, verificationMessages().getCancel().getNoPending(), Map.of());
 	}
 
-	private Messages.Commands.Verification verificationMessages() {
-		return messagesProvider.get().getCommands().getVerification();
+	private VerificationMessages.Commands verificationMessages() {
+		return messagesProvider.get().getCommands();
 	}
 
 	private VerificationInteraction interaction(@NotNull java.util.UUID uniqueId, @NotNull String input) {

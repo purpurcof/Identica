@@ -1,5 +1,6 @@
 package me.whereareiam.identica.feature.verification.type.totp.process;
 
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.config.defaults.VerificationDefaults;
 import me.whereareiam.identica.feature.verification.model.config.VerificationSettings;
 import me.whereareiam.identica.feature.verification.model.enrollment.VerificationEnrollmentContext;
@@ -14,7 +15,6 @@ import me.whereareiam.identica.feature.verification.type.totp.state.TotpEnrollme
 import me.whereareiam.identica.feature.verification.type.totp.step.TotpConfirmCodeStep;
 import me.whereareiam.identica.feature.verification.type.totp.step.TotpConfirmSavedStep;
 import me.whereareiam.identica.feature.verification.type.totp.step.TotpSetupStep;
-import me.whereareiam.identica.model.config.Messages;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -184,17 +184,13 @@ class TotpEnrollmentProcessTest {
 		return new VerificationDefaults().supply(new VerificationSettings());
 	}
 
-	private @NotNull Messages messages() {
-		Messages messages = new Messages();
-		Messages.Commands commands = new Messages.Commands();
-		Messages.Commands.Verification.Methods.Totp totp = new Messages.Commands.Verification.Methods.Totp();
+	private @NotNull VerificationMessages messages() {
+		VerificationMessages messages = new VerificationMessages();
+		VerificationMessages.Methods.Totp totp = new VerificationMessages.Methods.Totp();
 		totp.setPending(java.util.List.of("TOTP secret {secret}"));
-		Messages.Commands.Verification.Methods methods = new Messages.Commands.Verification.Methods();
+		VerificationMessages.Methods methods = new VerificationMessages.Methods();
 		methods.setTotp(totp);
-		Messages.Commands.Verification verification = new Messages.Commands.Verification();
-		verification.setMethods(methods);
-		commands.setVerification(verification);
-		messages.setCommands(commands);
+		messages.setMethods(methods);
 		return messages;
 	}
 

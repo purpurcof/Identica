@@ -1,19 +1,17 @@
-package me.whereareiam.identica.common.config.defaults.commands;
+package me.whereareiam.identica.feature.verification.config.defaults;
 
-import me.whereareiam.identica.common.config.defaults.commands.base.CommandDefinitions;
 import me.whereareiam.identica.model.CommandDefinition;
 
 import java.util.List;
 import java.util.Map;
 
-public class VerificationCommandDefinitions implements CommandDefinitions {
-	@Override
+public class VerificationCommandDefinitions {
 	public void register(Registry registry) {
 		registry.register(
 				"verification",
 				base("2fa", "Verification methods", "{alias}").toBuilder()
-				.hide(true)
-				.build()
+						.hide(true)
+						.build()
 		);
 		registry.register("verification-status", base("2fa status", "Show verification status", "{alias}"));
 		registry.register(
@@ -33,8 +31,8 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 						"{alias} <input>",
 						Map.of("input", "Verification code")
 				).toBuilder()
-				.hide(true)
-				.build()
+						.hide(true)
+						.build()
 		);
 		registry.register(
 				"verification-enroll-confirm",
@@ -44,8 +42,8 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 						"{alias} <input>",
 						Map.of("input", "Code or saved")
 				).toBuilder()
-				.hide(true)
-				.build()
+						.hide(true)
+						.build()
 		);
 		registry.register(
 				"verification-use",
@@ -68,8 +66,17 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 		registry.register(
 				"verification-enroll-cancel",
 				base("2fa enroll cancel", "Cancel pending verification enrollment", "{alias}").toBuilder()
-				.hide(true)
-				.build()
+						.hide(true)
+						.build()
+		);
+		registry.register(
+				"admin-verification-reset",
+				withArguments(
+						"identica admin 2fa reset",
+						"Reset verification state for a player",
+						"{alias} <target> [provider]",
+						Map.of("target", "Player/UUID", "provider", "Provider id")
+				)
 		);
 	}
 
@@ -92,5 +99,10 @@ public class VerificationCommandDefinitions implements CommandDefinitions {
 		return base(alias, description, usage).toBuilder()
 				.arguments(arguments)
 				.build();
+	}
+
+	@FunctionalInterface
+	public interface Registry {
+		void register(String key, CommandDefinition definition);
 	}
 }

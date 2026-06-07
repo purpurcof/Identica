@@ -1,5 +1,6 @@
 package me.whereareiam.identica.feature.verification;
 
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.config.defaults.VerificationDefaults;
 import me.whereareiam.identica.feature.verification.database.VerificationPersistenceService;
 import me.whereareiam.identica.feature.verification.model.config.VerificationSettings;
@@ -11,7 +12,6 @@ import me.whereareiam.identica.feature.verification.type.totp.step.TotpChallenge
 import me.whereareiam.identica.feature.verification.type.totp.step.TotpConfirmCodeStep;
 import me.whereareiam.identica.feature.verification.type.totp.step.TotpConfirmSavedStep;
 import me.whereareiam.identica.feature.verification.type.totp.step.TotpSetupStep;
-import me.whereareiam.identica.model.config.Messages;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -24,7 +24,7 @@ class DefaultVerificationServiceTest {
 	@Test
 	void registryFindsRegisteredMethodByDescriptorId() {
 		VerificationSettings verification = new VerificationDefaults().supply(new VerificationSettings());
-		Messages messages = messages();
+		VerificationMessages messages = messages();
 		VerificationPersistenceService persistenceService = mock(VerificationPersistenceService.class);
 		TotpSetupStep setupStep = new TotpSetupStep(() -> verification, () -> messages);
 		TotpConfirmCodeStep confirmCodeStep = new TotpConfirmCodeStep(() -> verification);
@@ -45,7 +45,7 @@ class DefaultVerificationServiceTest {
 	@Test
 	void builtInTotpDescriptorAdvertisesProcessCapabilities() {
 		VerificationSettings verification = new VerificationDefaults().supply(new VerificationSettings());
-		Messages messages = messages();
+		VerificationMessages messages = messages();
 		VerificationPersistenceService persistenceService = mock(VerificationPersistenceService.class);
 		TotpSetupStep setupStep = new TotpSetupStep(() -> verification, () -> messages);
 		TotpConfirmCodeStep confirmCodeStep = new TotpConfirmCodeStep(() -> verification);
@@ -63,17 +63,13 @@ class DefaultVerificationServiceTest {
 		assertTrue(method.descriptor().getCapabilities().contains(VerificationMethodCapability.RECOVERY_CODES));
 	}
 
-	private Messages messages() {
-		Messages messages = new Messages();
-		Messages.Commands commands = new Messages.Commands();
-		Messages.Commands.Verification.Methods.Totp totp = new Messages.Commands.Verification.Methods.Totp();
+	private VerificationMessages messages() {
+		VerificationMessages messages = new VerificationMessages();
+		VerificationMessages.Methods.Totp totp = new VerificationMessages.Methods.Totp();
 		totp.setPending(java.util.List.of("TOTP secret {secret}"));
-		Messages.Commands.Verification.Methods methods = new Messages.Commands.Verification.Methods();
+		VerificationMessages.Methods methods = new VerificationMessages.Methods();
 		methods.setTotp(totp);
-		Messages.Commands.Verification verification = new Messages.Commands.Verification();
-		verification.setMethods(methods);
-		commands.setVerification(verification);
-		messages.setCommands(commands);
+		messages.setMethods(methods);
 		return messages;
 	}
 }

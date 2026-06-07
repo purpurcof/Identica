@@ -3,6 +3,7 @@ package me.whereareiam.identica.feature.verification.type.totp.step;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.model.config.VerificationSettings;
 import me.whereareiam.identica.feature.verification.model.interaction.CodeVerificationInteraction;
 import me.whereareiam.identica.feature.verification.model.process.VerificationProcessContext;
@@ -13,7 +14,6 @@ import me.whereareiam.identica.feature.verification.process.VerificationProcessS
 import me.whereareiam.identica.feature.verification.type.process.VerificationProcessStatus;
 import me.whereareiam.identica.feature.verification.type.totp.TotpCodec;
 import me.whereareiam.identica.feature.verification.type.totp.state.TotpEnrollmentState;
-import me.whereareiam.identica.model.config.Messages;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.URLEncoder;
@@ -26,10 +26,10 @@ public class TotpSetupStep implements VerificationProcessStep<CodeVerificationIn
 	private static final int SECRET_BYTES = 20;
 
 	private final Provider<VerificationSettings> verificationProvider;
-	private final Provider<Messages> messagesProvider;
+	private final Provider<VerificationMessages> messagesProvider;
 
 	@Inject
-	public TotpSetupStep(Provider<VerificationSettings> verificationProvider, Provider<Messages> messagesProvider) {
+	public TotpSetupStep(Provider<VerificationSettings> verificationProvider, Provider<VerificationMessages> messagesProvider) {
 		this.verificationProvider = verificationProvider;
 		this.messagesProvider = messagesProvider;
 	}
@@ -89,7 +89,7 @@ public class TotpSetupStep implements VerificationProcessStep<CodeVerificationIn
 				.status(VerificationProcessStatus.WAITING)
 				.state(state)
 				.display(VerificationProcessDisplay.builder()
-						.lines(messagesProvider.get().getCommands().getVerification().getMethods().getTotp().getPending())
+						.lines(messagesProvider.get().getMethods().getTotp().getPending())
 						.placeholders(placeholders)
 						.build())
 				.transition(VerificationProcessTransition.advance())

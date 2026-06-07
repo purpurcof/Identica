@@ -11,10 +11,10 @@ import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.annotation.Suggestions;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.feature.verification.VerificationService;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.type.status.VerificationResetStatus;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
-import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.util.UniqueIdUtil;
 import me.whereareiam.keystone.Actor;
@@ -29,14 +29,14 @@ import java.util.UUID;
 
 @Singleton
 public class VerificationResetCommand {
-	private final Provider<Messages> messagesProvider;
+	private final Provider<VerificationMessages> messagesProvider;
 	private final VerificationService verificationService;
 	private final IdentityService identityService;
 	private final AccountPersistenceService accountPersistenceService;
 
 	@Inject
 	public VerificationResetCommand(
-			Provider<Messages> messagesProvider,
+			Provider<VerificationMessages> messagesProvider,
 			VerificationService verificationService,
 			IdentityService identityService,
 			AccountPersistenceService accountPersistenceService
@@ -80,8 +80,8 @@ public class VerificationResetCommand {
 		return new ResolvedTarget(account.getUniqueId(), account.getUsername());
 	}
 
-	private Messages.Commands.Admin.Verification.Reset resetMessages() {
-		return messagesProvider.get().getCommands().getAdmin().getVerification().getReset();
+	private VerificationMessages.Commands.Admin.Reset resetMessages() {
+		return messagesProvider.get().getCommands().getAdmin().getReset();
 	}
 
 	private void sendMessage(@NotNull Actor sender, @Nullable String message, @NotNull Map<String, String> placeholders) {

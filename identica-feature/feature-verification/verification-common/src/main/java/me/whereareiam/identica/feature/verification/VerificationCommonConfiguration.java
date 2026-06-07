@@ -12,7 +12,10 @@ import me.whereareiam.identica.feature.verification.command.executor.Verificatio
 import me.whereareiam.identica.feature.verification.command.executor.VerificationEnrollmentCommand;
 import me.whereareiam.identica.feature.verification.command.executor.VerificationSelectionCommand;
 import me.whereareiam.identica.feature.verification.command.executor.admin.VerificationResetCommand;
-import me.whereareiam.identica.feature.verification.config.provider.VerificationProvidersProvider;
+import me.whereareiam.identica.feature.verification.config.VerificationCommands;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
+import me.whereareiam.identica.feature.verification.config.provider.VerificationCommandsProvider;
+import me.whereareiam.identica.feature.verification.config.provider.VerificationMessagesProvider;
 import me.whereareiam.identica.feature.verification.config.provider.VerificationSettingsProvider;
 import me.whereareiam.identica.feature.verification.enrollment.VerificationEnrollmentStore;
 import me.whereareiam.identica.feature.verification.model.config.VerificationSettings;
@@ -21,9 +24,9 @@ import me.whereareiam.identica.feature.verification.type.totp.TotpVerificationMe
 public class VerificationCommonConfiguration extends AbstractModule {
 	@Override
 	protected void configure() {
+		bind(VerificationCommands.class).toProvider(VerificationCommandsProvider.class);
+		bind(VerificationMessages.class).toProvider(VerificationMessagesProvider.class);
 		bind(VerificationSettings.class).toProvider(VerificationSettingsProvider.class);
-		bind(VerificationSettingsProvider.class).asEagerSingleton();
-		bind(VerificationProvidersProvider.class).asEagerSingleton();
 		bind(VerificationEnrollmentStore.class).asEagerSingleton();
 		bind(VerificationChallengeStore.class).asEagerSingleton();
 		bind(VerificationService.class).to(DefaultVerificationService.class).asEagerSingleton();

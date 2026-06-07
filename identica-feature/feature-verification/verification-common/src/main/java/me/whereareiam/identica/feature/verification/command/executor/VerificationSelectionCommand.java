@@ -11,6 +11,7 @@ import me.whereareiam.identica.annotation.Suggestions;
 import me.whereareiam.identica.feature.verification.VerificationService;
 import me.whereareiam.identica.feature.verification.command.ProtectedActionCommand;
 import me.whereareiam.identica.feature.verification.command.suggestion.VerificationMethodSuggestions;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.feature.verification.model.VerificationDisablePendingState;
 import me.whereareiam.identica.feature.verification.model.config.VerificationSettings;
 import me.whereareiam.identica.feature.verification.model.resolution.VerificationResolutionRequest;
@@ -27,7 +28,8 @@ import org.jetbrains.annotations.Nullable;
 
 @Singleton
 public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
-	private final Provider<Messages> messagesProvider;
+	private final Provider<Messages> coreMessagesProvider;
+	private final Provider<VerificationMessages> messagesProvider;
 	private final Provider<VerificationSettings> verificationProvider;
 	private final VerificationService verificationService;
 	private final VerificationResultRenderer resultRenderer;
@@ -36,7 +38,8 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 
 	@Inject
 	public VerificationSelectionCommand(
-			Provider<Messages> messagesProvider,
+			Provider<Messages> coreMessagesProvider,
+			Provider<VerificationMessages> messagesProvider,
 			Provider<VerificationSettings> verificationProvider,
 			VerificationService verificationService,
 			VerificationResultRenderer resultRenderer,
@@ -44,6 +47,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 			SessionService sessionService
 	) {
 		super(verificationService);
+		this.coreMessagesProvider = coreMessagesProvider;
 		this.messagesProvider = messagesProvider;
 		this.verificationProvider = verificationProvider;
 		this.verificationService = verificationService;
@@ -59,7 +63,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 
 	@Override
 	protected @Nullable String currentSessionRequiredMessage() {
-		return messagesProvider.get().getCommands().getCurrentSessionRequired();
+		return coreMessagesProvider.get().getCommands().getCurrentSessionRequired();
 	}
 
 	@Definition("verification-use")
@@ -69,7 +73,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 			@Argument("provider") @Suggestions(ProviderIdSuggestions.KEY) String providerId,
 			@Argument("method") @Suggestions(VerificationMethodSuggestions.KEY) String methodId
 	) {
-		Identity identity = requireIdentity(sender, messagesProvider.get().getCommands().getVerification().getPlayerOnly());
+		Identity identity = requireIdentity(sender, messagesProvider.get().getCommands().getPlayerOnly());
 		if (identity == null) return;
 		if (requireCurrentSession(identity) == null) return;
 		var accountUniqueId = requireAccountUniqueId(identity);
@@ -84,7 +88,7 @@ public class VerificationSelectionCommand extends ProtectedActionCommand<Void> {
 			@NotNull Actor sender,
 			@Argument("method") @Suggestions(VerificationMethodSuggestions.KEY) String methodId
 	) {
-		Identity identity = requireIdentity(sender, messagesProvider.get().getCommands().getVerification().getPlayerOnly());
+		Identity identity = requireIdentity(sender, messagesProvider.get().getCommands().getPlayerOnly());
 		if (identity == null) return;
 		if (requireCurrentSession(identity) == null) return;
 		var accountUniqueId = requireAccountUniqueId(identity);

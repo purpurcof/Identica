@@ -13,7 +13,6 @@ import me.whereareiam.identica.pipeline.completion.extension.CompletionExtension
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
-import me.whereareiam.identica.provider.capability.migration.bootstrap.MigrationCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.recognition.bootstrap.RecognitionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.bootstrap.RestrictionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.join.bootstrap.JoinRestrictionCapabilityBootstrap;
@@ -55,12 +54,11 @@ public class CredentialProvider extends IdenticaProvider {
 	}
 
 	@Override
-	public @NotNull List<ProviderCapabilityBootstrap> capabilities() {
+	public @NotNull List<ProviderCapabilityBootstrap> declaredCapabilities() {
 		return List.of(
 				RestrictionCapabilityBootstrap.INSTANCE,
 				JoinRestrictionCapabilityBootstrap.INSTANCE,
 				RecognitionCapabilityBootstrap.INSTANCE,
-				MigrationCapabilityBootstrap.INSTANCE,
 				VerificationCapabilityBootstrap.INSTANCE
 		);
 	}
@@ -105,19 +103,6 @@ public class CredentialProvider extends IdenticaProvider {
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
 						.artifactId("recognition")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
-						.artifactId("migration-api")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
-						.loader("shared")
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
-						.artifactId("migration")
 						.version(Constants.VERSION)
 						.resolveTransitiveDependencies(false)
 						.build(),

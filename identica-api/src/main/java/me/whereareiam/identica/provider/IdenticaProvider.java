@@ -30,7 +30,7 @@ public abstract class IdenticaProvider {
 	 * <p>Libraries may target either the provider-local runtime classloader or
 	 * the shared capability API parent classloader. Capability runtime artifacts
 	 * and their shared APIs should be declared here so the provider loader can
-	 * make them available before calling {@link #capabilities()}. Libraries
+	 * make them available before calling {@link #declaredCapabilities()}. Libraries
 	 * with {@code loader = "shared"} are installed into the shared capability
 	 * API parent loader, while libraries without an explicit loader target are
 	 * treated as provider-local.</p>
@@ -51,14 +51,14 @@ public abstract class IdenticaProvider {
 	}
 
 	/**
-	 * Provides capability bootstraps supported by this provider.
+	 * Provides capability bootstraps declared by this provider.
 	 *
 	 * <p>The returned bootstraps are resolved after {@link #libraries()} has
 	 * been loaded into the appropriate runtime classloaders.</p>
 	 *
 	 * @return capability bootstraps
 	 */
-	public @NotNull List<ProviderCapabilityBootstrap> capabilities() {
+	public @NotNull List<ProviderCapabilityBootstrap> declaredCapabilities() {
 		return List.of();
 	}
 

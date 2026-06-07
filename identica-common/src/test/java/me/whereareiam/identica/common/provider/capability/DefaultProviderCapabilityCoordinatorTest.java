@@ -5,9 +5,11 @@ import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import me.whereareiam.identica.common.provider.classloader.SharedCapabilityClassLoaderFactory;
+import me.whereareiam.identica.logging.Logger;
+import me.whereareiam.identica.logging.LoggingHelper;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
-import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDescriptor;
+import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDeclaration;
 import me.whereareiam.identica.model.provider.capability.ProviderCapabilityInstallation;
 import me.whereareiam.identica.provider.capability.ProviderCapabilityCoordinator;
 import me.whereareiam.identica.provider.capability.ProviderCapabilityRegistry;
@@ -18,12 +20,14 @@ import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityL
 import me.whereareiam.identica.provider.capability.contribution.ProviderCapabilityContribution;
 import me.whereareiam.identica.type.provider.ProviderState;
 import me.whereareiam.identica.type.provider.capability.ProviderCapability;
+import me.whereareiam.identica.type.provider.capability.ProviderCapabilityKind;
 import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,7 +50,9 @@ class DefaultProviderCapabilityCoordinatorTest {
 				provider.getDescriptor(),
 				List.of(SampleCapabilityBootstrap.INSTANCE)
 		);
+		assertEquals(List.of(SAMPLE_CAPABILITY.getId()), provider.getDescriptor().getDeclaredCapabilityIds());
 		assertTrue(provider.getDescriptor().hasCapability(SAMPLE_CAPABILITY));
+		assertEquals(ProviderCapabilityKind.RUNTIME, bootstraps.getFirst().declaration().getKind());
 
 		coordinator.installGlobalCapabilities(provider, bootstraps);
 
@@ -98,6 +104,36 @@ class DefaultProviderCapabilityCoordinatorTest {
 
 		assertEquals(1, contributions.size());
 		assertEquals(SAMPLE_CAPABILITY, contributions.iterator().next().capability());
+	}
+
+	@Test
+	void warnsWhenMarkerDeclarationDeclaresRuntimeScopes() {
+		WarningCollector collector = new WarningCollector();
+		Logger.init(collector);
+
+		Injector injector = Guice.createInjector(new CapabilityTestModule(Path.of("build", "tmp", "capability-test")));
+		ProviderCapabilityCoordinator coordinator = injector.getInstance(ProviderCapabilityCoordinator.class);
+		ProviderDescriptor descriptor = descriptor("provider-a");
+
+		coordinator.resolveBootstraps(descriptor, List.of(InvalidMarkerScopesBootstrap.INSTANCE));
+
+		assertTrue(collector.warns.stream().anyMatch(message -> message.contains("marker capability sample")));
+		assertTrue(collector.warns.stream().anyMatch(message -> message.contains("runtime scopes")));
+	}
+
+	@Test
+	void warnsWhenMarkerDeclarationRequiresContribution() {
+		WarningCollector collector = new WarningCollector();
+		Logger.init(collector);
+
+		Injector injector = Guice.createInjector(new CapabilityTestModule(Path.of("build", "tmp", "capability-test")));
+		ProviderCapabilityCoordinator coordinator = injector.getInstance(ProviderCapabilityCoordinator.class);
+		ProviderDescriptor descriptor = descriptor("provider-a");
+
+		coordinator.resolveBootstraps(descriptor, List.of(InvalidMarkerContributionBootstrap.INSTANCE));
+
+		assertTrue(collector.warns.stream().anyMatch(message -> message.contains("marker capability sample")));
+		assertTrue(collector.warns.stream().anyMatch(message -> message.contains("required contributions")));
 	}
 
 	private static @NotNull InternalProvider provider(@NotNull String id, @NotNull Path workingPath) {
@@ -160,9 +196,10 @@ class DefaultProviderCapabilityCoordinatorTest {
 		private static final SampleCapabilityBootstrap INSTANCE = new SampleCapabilityBootstrap();
 
 		@Override
-		public @NotNull ProviderCapabilityDescriptor descriptor() {
-			return ProviderCapabilityDescriptor.builder()
+		public @NotNull ProviderCapabilityDeclaration declaration() {
+			return ProviderCapabilityDeclaration.builder()
 					.capability(SAMPLE_CAPABILITY)
+					.kind(ProviderCapabilityKind.RUNTIME)
 					.scopes(Set.of(ProviderCapabilityScope.GLOBAL, ProviderCapabilityScope.LOCAL))
 					.build();
 		}
@@ -190,9 +227,36 @@ class DefaultProviderCapabilityCoordinatorTest {
 		private static final RequiredContributionCapabilityBootstrap INSTANCE = new RequiredContributionCapabilityBootstrap();
 
 		@Override
-		public @NotNull ProviderCapabilityDescriptor descriptor() {
-			return ProviderCapabilityDescriptor.builder()
+		public @NotNull ProviderCapabilityDeclaration declaration() {
+			return ProviderCapabilityDeclaration.builder()
 					.capability(SAMPLE_CAPABILITY)
+					.kind(ProviderCapabilityKind.RUNTIME)
+					.requiresContribution(true)
+					.build();
+		}
+	}
+
+	private static final class InvalidMarkerScopesBootstrap implements ProviderCapabilityBootstrap {
+		private static final InvalidMarkerScopesBootstrap INSTANCE = new InvalidMarkerScopesBootstrap();
+
+		@Override
+		public @NotNull ProviderCapabilityDeclaration declaration() {
+			return ProviderCapabilityDeclaration.builder()
+					.capability(SAMPLE_CAPABILITY)
+					.kind(ProviderCapabilityKind.MARKER)
+					.scopes(Set.of(ProviderCapabilityScope.LOCAL))
+					.build();
+		}
+	}
+
+	private static final class InvalidMarkerContributionBootstrap implements ProviderCapabilityBootstrap {
+		private static final InvalidMarkerContributionBootstrap INSTANCE = new InvalidMarkerContributionBootstrap();
+
+		@Override
+		public @NotNull ProviderCapabilityDeclaration declaration() {
+			return ProviderCapabilityDeclaration.builder()
+					.capability(SAMPLE_CAPABILITY)
+					.kind(ProviderCapabilityKind.MARKER)
 					.requiresContribution(true)
 					.build();
 		}
@@ -223,6 +287,41 @@ class DefaultProviderCapabilityCoordinatorTest {
 		@Override
 		public @NotNull ProviderCapability capability() {
 			return SAMPLE_CAPABILITY;
+		}
+	}
+
+	private static final class WarningCollector implements LoggingHelper {
+		private final List<String> warns = new ArrayList<>();
+
+		@Override
+		public void info(String message, Object... objects) {
+		}
+
+		@Override
+		public void warn(String message, Object... objects) {
+			warns.add(format(message, objects));
+		}
+
+		@Override
+		public void severe(String message, Object... objects) {
+		}
+
+		@Override
+		public void debug(String message, Object... objects) {
+		}
+
+		@Override
+		public void trace(String message, Object... objects) {
+		}
+
+		private @NotNull String format(@NotNull String message, Object... objects) {
+			String formatted = message;
+			if (objects == null) return formatted;
+
+			for (Object object : objects)
+				formatted = formatted.replaceFirst("%s", java.util.regex.Matcher.quoteReplacement(String.valueOf(object)));
+
+			return formatted;
 		}
 	}
 }

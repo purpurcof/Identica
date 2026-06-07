@@ -109,7 +109,7 @@ public class ProviderLifecycleController {
 
 			List<ProviderCapabilityBootstrap> capabilityBootstraps = capabilityCoordinator.resolveBootstraps(
 					descriptor,
-					probeProvider != null ? probeProvider.capabilities() : List.of()
+					probeProvider != null ? probeProvider.declaredCapabilities() : List.of()
 			);
 			internal.setWorkingPath(workingPath);
 			capabilityCoordinator.installGlobalCapabilities(internal, capabilityBootstraps);

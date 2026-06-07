@@ -80,12 +80,6 @@ project(":identica-provider").projectDir = file("identica-provider")
 include(":identica-capability")
 project(":identica-capability").projectDir = file("identica-capability")
 
-include(":capability-migration")
-project(":capability-migration").projectDir = file("identica-capability/capability-migration/migration")
-
-include(":capability-migration-api")
-project(":capability-migration-api").projectDir = file("identica-capability/capability-migration/migration-api")
-
 include(":capability-verification")
 project(":capability-verification").projectDir = file("identica-capability/capability-verification/verification")
 

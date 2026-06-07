@@ -1,5 +1,8 @@
 package me.whereareiam.identica.provider.capability.authoritative.username.pipeline;
 
+import me.whereareiam.identica.database.AccountPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
+import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.identity.Account;
@@ -30,6 +33,7 @@ import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -124,8 +128,7 @@ class AuthoritativeUsernameConflictPhasesTest {
 		pipelineState.setScenario(context);
 		pipelineState.putItem(snapshot(), 0L);
 
-		me.whereareiam.identica.pipeline.state.scenario.type.authentication.PolicyState state =
-				new me.whereareiam.identica.pipeline.state.scenario.type.authentication.PolicyState();
+		PolicyState state = new PolicyState();
 		state.setResult(PipelineResult.complete());
 		phase.execute(pipelineState, state).toCompletableFuture().join();
 
@@ -159,23 +162,20 @@ class AuthoritativeUsernameConflictPhasesTest {
 				.build();
 	}
 
-	private me.whereareiam.identica.database.provider.ProviderLinkPersistenceService linkServiceEmpty() {
-		me.whereareiam.identica.database.provider.ProviderLinkPersistenceService service =
-				mock(me.whereareiam.identica.database.provider.ProviderLinkPersistenceService.class);
+	private ProviderLinkPersistenceService linkServiceEmpty() {
+		ProviderLinkPersistenceService service = mock(ProviderLinkPersistenceService.class);
 		when(service.findBySubject(anyString(), anyString())).thenReturn(Optional.empty());
 		return service;
 	}
 
-	private me.whereareiam.identica.database.provider.ProviderProfilePersistenceService profileServiceEmpty() {
-		me.whereareiam.identica.database.provider.ProviderProfilePersistenceService service =
-				mock(me.whereareiam.identica.database.provider.ProviderProfilePersistenceService.class);
+	private ProviderProfilePersistenceService profileServiceEmpty() {
+		ProviderProfilePersistenceService service = mock(ProviderProfilePersistenceService.class);
 		when(service.findBySubject(anyString(), anyString())).thenReturn(Optional.empty());
 		return service;
 	}
 
-	private me.whereareiam.identica.database.AccountPersistenceService accountServiceEmpty() {
-		me.whereareiam.identica.database.AccountPersistenceService service =
-				mock(me.whereareiam.identica.database.AccountPersistenceService.class);
+	private AccountPersistenceService accountServiceEmpty() {
+		AccountPersistenceService service = mock(AccountPersistenceService.class);
 		when(service.findByUniqueId(any())).thenReturn(Optional.empty());
 		return service;
 	}
@@ -193,14 +193,14 @@ class AuthoritativeUsernameConflictPhasesTest {
 		descriptor.setName("Premium");
 		descriptor.setVersion("1");
 		descriptor.setMain("Main");
-		descriptor.setSupportedPlatforms(java.util.List.of("velocity"));
-		descriptor.setCapabilities(java.util.List.of(AuthoritativeUsernameCapability.CAPABILITY.getId()));
+		descriptor.setSupportedPlatforms(List.of("velocity"));
+		descriptor.setDeclaredCapabilityIds(List.of(AuthoritativeUsernameCapability.CAPABILITY.getId()));
 
 		InternalProvider provider = InternalProvider.builder()
 				.descriptor(descriptor)
 				.state(me.whereareiam.identica.type.provider.ProviderState.ENABLED)
 				.build();
-		when(providerManager.getProviders()).thenReturn(java.util.List.of(provider));
+		when(providerManager.getProviders()).thenReturn(List.of(provider));
 		return providerManager;
 	}
 
@@ -214,13 +214,13 @@ class AuthoritativeUsernameConflictPhasesTest {
 
 	private AuthoritativeUsernameMessages messages() {
 		AuthoritativeUsernameMessages.Pipeline.Prepare prepare = new AuthoritativeUsernameMessages.Pipeline.Prepare();
-		prepare.setFailed(java.util.List.of("failed"));
+		prepare.setFailed(List.of("failed"));
 		AuthoritativeUsernameMessages.Pipeline.Identity identity = new AuthoritativeUsernameMessages.Pipeline.Identity();
-		identity.setSynchronizationFailed(java.util.List.of("sync"));
+		identity.setSynchronizationFailed(List.of("sync"));
 		AuthoritativeUsernameMessages.Pipeline.Policy policy = new AuthoritativeUsernameMessages.Pipeline.Policy();
-		policy.setPersistenceFailed(java.util.List.of("persist"));
-		policy.setConflictDenied(java.util.List.of("denied"));
-		policy.setEntrypointRequired(java.util.List.of("entrypoint"));
+		policy.setPersistenceFailed(List.of("persist"));
+		policy.setConflictDenied(List.of("denied"));
+		policy.setEntrypointRequired(List.of("entrypoint"));
 
 		AuthoritativeUsernameMessages.Pipeline pipeline = new AuthoritativeUsernameMessages.Pipeline();
 		pipeline.setPrepare(prepare);

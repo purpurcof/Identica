@@ -11,7 +11,6 @@ import me.whereareiam.identica.engine.pipeline.scenario.type.migration.group.ide
 import me.whereareiam.identica.engine.pipeline.scenario.type.migration.group.identity.phase.ApplyProviderLinkPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.type.migration.group.identity.phase.ResolveAccountPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.type.migration.group.identity.phase.ValidateProviderPhase;
-import me.whereareiam.identica.engine.pipeline.scenario.type.migration.group.identity.phase.ValidateTargetPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.type.migration.group.session.SessionGroup;
 import me.whereareiam.identica.engine.pipeline.scenario.type.migration.group.session.phase.BuildSessionPhase;
 import me.whereareiam.identica.engine.pipeline.scenario.type.migration.group.session.phase.OpenSessionPhase;
@@ -34,7 +33,6 @@ public class MigrationPipelineRegistry extends AbstractPipelineGroupRegistry imp
 			ApplyRulesPhase applyRulesPhase,
 			ExecutePlanPhase executePlanPhase,
 			ResolveAccountPhase resolveAccountPhase,
-			ValidateTargetPhase validateTargetPhase,
 			ValidateProviderPhase validateProviderPhase,
 			ApplyProviderLinkPhase applyProviderLinkPhase,
 			BuildSessionPhase buildSessionPhase,
@@ -53,8 +51,7 @@ public class MigrationPipelineRegistry extends AbstractPipelineGroupRegistry imp
 		registerPhase(journeyGroup.id(), executePlanPhase, PhasePlacement.last());
 
 		registerPhase(identityGroup.id(), resolveAccountPhase, PhasePlacement.first());
-		registerPhase(identityGroup.id(), validateTargetPhase, PhasePlacement.after(resolveAccountPhase.id()));
-		registerPhase(identityGroup.id(), validateProviderPhase, PhasePlacement.after(validateTargetPhase.id()));
+		registerPhase(identityGroup.id(), validateProviderPhase, PhasePlacement.after(resolveAccountPhase.id()));
 		registerPhase(identityGroup.id(), applyProviderLinkPhase, PhasePlacement.after(validateProviderPhase.id()));
 
 		registerPhase(sessionGroup.id(), buildSessionPhase, PhasePlacement.first());

@@ -173,6 +173,7 @@ public class Messages extends ConfigDocument {
 				private @NotNull String pendingExists;
 				private @NotNull String started;
 				private @NotNull String providerUnsupported;
+				private @NotNull String providerUnavailable;
 			}
 
 			@Getter

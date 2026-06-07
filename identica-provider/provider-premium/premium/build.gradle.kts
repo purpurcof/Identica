@@ -10,7 +10,6 @@ dependencies {
     compileOnly(projects.capabilityRestrictionJoin)
     compileOnly(projects.capabilityRecognition)
     compileOnly(projects.capabilityAuthoritativeUsername)
-    compileOnly(projects.capabilityMigration)
     compileOnly(projects.capabilityVerification)
 
     // general
@@ -23,7 +22,6 @@ dependencies {
     testImplementation(projects.capabilityRestrictionJoin)
     testImplementation(projects.capabilityRecognition)
     testImplementation(projects.capabilityAuthoritativeUsername)
-    testImplementation(projects.capabilityMigration)
     testImplementation(projects.capabilityVerification)
 
     // general

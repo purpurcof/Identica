@@ -2,7 +2,7 @@ package me.whereareiam.identica.provider.capability.restriction.join.bootstrap;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDescriptor;
+import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDeclaration;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityGlobalInstallContext;
@@ -16,6 +16,7 @@ import me.whereareiam.identica.provider.capability.restriction.registry.Restrict
 import me.whereareiam.identica.provider.capability.restriction.registry.type.RestrictionTypeRegistry;
 import me.whereareiam.identica.provider.capability.restriction.registry.type.RestrictionTypeResolverRegistry;
 import me.whereareiam.identica.provider.capability.restriction.type.RestrictionSignal;
+import me.whereareiam.identica.type.provider.capability.ProviderCapabilityKind;
 import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,9 +30,10 @@ public final class JoinRestrictionCapabilityBootstrap implements ProviderCapabil
 	public static final @NotNull JoinRestrictionCapabilityBootstrap INSTANCE = new JoinRestrictionCapabilityBootstrap();
 
 	@Override
-	public @NotNull ProviderCapabilityDescriptor descriptor() {
-		return ProviderCapabilityDescriptor.builder()
+	public @NotNull ProviderCapabilityDeclaration declaration() {
+		return ProviderCapabilityDeclaration.builder()
 				.capability(JoinRestrictionCapability.CAPABILITY)
+				.kind(ProviderCapabilityKind.RUNTIME)
 				.scopes(Set.of(ProviderCapabilityScope.GLOBAL, ProviderCapabilityScope.LOCAL))
 				.build();
 	}

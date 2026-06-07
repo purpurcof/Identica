@@ -16,8 +16,6 @@ import me.whereareiam.identica.model.migration.operation.MigrationCancel;
 import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.model.migration.operation.MigrationRequest;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
-import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.provider.capability.migration.type.MigrationCapability;
 import me.whereareiam.identica.provider.credential.CredentialConstants;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.service.MigrationService;
@@ -36,7 +34,6 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 	private final Provider<CredentialMessages> messagesProvider;
 	private final Provider<Messages> coreMessagesProvider;
 	private final MigrationService migrationService;
-	private final ProviderManager providerManager;
 	private final SessionService sessionService;
 
 	@Inject
@@ -44,7 +41,6 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 			Provider<CredentialMessages> messagesProvider,
 			Provider<Messages> coreMessagesProvider,
 			MigrationService migrationService,
-			ProviderManager providerManager,
 			VerificationService verificationService,
 			SessionService sessionService
 	) {
@@ -52,7 +48,6 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 		this.messagesProvider = messagesProvider;
 		this.coreMessagesProvider = coreMessagesProvider;
 		this.migrationService = migrationService;
-		this.providerManager = providerManager;
 		this.sessionService = sessionService;
 	}
 
@@ -74,7 +69,6 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 
 		Session session = requireCurrentSession(identity);
 		if (session == null) return;
-		if (!supportsMigration()) return;
 		UUID accountUniqueId = requireAccountUniqueId(identity);
 		if (accountUniqueId == null) return;
 
@@ -117,9 +111,8 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 	@Command("credential confirm [input]")
 	public void confirm(@NotNull Actor sender, @Argument("input") @Nullable String input) {
 		Identity identity = requireIdentity(sender, null);
-		if (identity == null) return;
+		if (identity == null || requireCurrentSession(identity) == null) return;
 
-		if (requireCurrentSession(identity) == null) return;
 		UUID accountUniqueId = requireAccountUniqueId(identity);
 		if (accountUniqueId == null) return;
 
@@ -184,8 +177,7 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 	@Command("credential cancel")
 	public void cancel(@NotNull Actor sender) {
 		Identity identity = requireIdentity(sender, null);
-		if (identity == null) return;
-		if (requireCurrentSession(identity) == null) return;
+		if (identity == null || requireCurrentSession(identity) == null) return;
 
 		var result = migrationService.cancel(MigrationCancel.builder()
 				.connectionUniqueId(identity.getConnectionUniqueId())
@@ -199,13 +191,6 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 		}
 
 		sendMessage(identity, messages.getNoPending());
-	}
-
-	private boolean supportsMigration() {
-		return providerManager.findProviders(MigrationCapability.CAPABILITY).stream()
-				.anyMatch(provider -> provider != null
-						&& provider.getDescriptor() != null
-						&& CredentialConstants.PROVIDER_ID.equalsIgnoreCase(provider.getDescriptor().getId()));
 	}
 
 	private void sendMessage(@NotNull Identity identity, String message) {

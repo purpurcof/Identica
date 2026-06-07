@@ -16,8 +16,6 @@ import me.whereareiam.identica.model.migration.operation.MigrationCancel;
 import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.model.migration.operation.MigrationRequest;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
-import me.whereareiam.identica.provider.ProviderManager;
-import me.whereareiam.identica.provider.capability.migration.type.MigrationCapability;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.service.MigrationService;
@@ -34,7 +32,6 @@ import java.util.UUID;
 
 public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 	private final MigrationService migrationService;
-	private final ProviderManager providerManager;
 	private final Provider<PremiumMessages> messagesProvider;
 	private final Provider<Messages> coreMessagesProvider;
 	private final SessionService sessionService;
@@ -42,7 +39,6 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 	@Inject
 	public PremiumCommand(
 			MigrationService migrationService,
-			ProviderManager providerManager,
 			Provider<PremiumMessages> messagesProvider,
 			Provider<Messages> coreMessagesProvider,
 			VerificationService verificationService,
@@ -50,7 +46,6 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 	) {
 		super(verificationService);
 		this.migrationService = migrationService;
-		this.providerManager = providerManager;
 		this.messagesProvider = messagesProvider;
 		this.coreMessagesProvider = coreMessagesProvider;
 		this.sessionService = sessionService;
@@ -73,7 +68,6 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 		if (identity == null) return;
 		Session session = requireCurrentSession(identity);
 		if (session == null) return;
-		if (!supportsMigration()) return;
 		UUID accountUniqueId = requireAccountUniqueId(identity);
 		if (accountUniqueId == null) return;
 
@@ -198,13 +192,6 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 		}
 
 		sendMessage(identity, messages.getNoPending());
-	}
-
-	private boolean supportsMigration() {
-		return providerManager.findProviders(MigrationCapability.CAPABILITY).stream()
-				.anyMatch(provider -> provider != null
-						&& provider.getDescriptor() != null
-						&& PremiumConstants.PROVIDER_ID.equalsIgnoreCase(provider.getDescriptor().getId()));
 	}
 
 	private List<String> resolveKickMessage() {

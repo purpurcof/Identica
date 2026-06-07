@@ -87,7 +87,7 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 		RecognitionCapabilities.Recognition recognition = new RecognitionCapabilities.Recognition();
 		recognition.setAllowOnUntrustedIps(allowOnUntrustedIp);
 		capabilities.setRecognition(recognition);
-		premium.setCapabilities(capabilities);
+		premium.setDeclaredCapabilityIds(capabilities);
 		providers.setProviders(List.of(premium));
 		when(provider.get()).thenReturn(providers);
 		return provider;

@@ -9,7 +9,6 @@ import me.whereareiam.identica.model.migration.PendingMigration;
 import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
 import me.whereareiam.identica.model.verification.VerificationResolutionResult;
-import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.config.defaults.PremiumMessagesDefaults;
 import me.whereareiam.identica.service.MigrationService;
@@ -71,8 +70,6 @@ class PremiumCommandTest {
 	@Mock
 	private MigrationService migrationService;
 	@Mock
-	private ProviderManager providerManager;
-	@Mock
 	private VerificationService verificationService;
 	@Mock
 	private SessionService sessionService;
@@ -90,7 +87,6 @@ class PremiumCommandTest {
 		PremiumMessages premiumMessages = new PremiumMessagesDefaults().supply(new PremiumMessages());
 		PremiumCommand command = new PremiumCommand(
 				migrationService,
-				providerManager,
 				() -> premiumMessages,
 				Messages::new,
 				verificationService,
@@ -122,7 +118,6 @@ class PremiumCommandTest {
 
 		PremiumCommand command = new PremiumCommand(
 				migrationService,
-				providerManager,
 				() -> new PremiumMessagesDefaults().supply(new PremiumMessages()),
 				Messages::new,
 				verificationService,

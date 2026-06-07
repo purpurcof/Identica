@@ -18,7 +18,7 @@ import java.util.Set;
 public interface ProviderCapabilityCoordinator {
 	/**
 	 * Resolves provider-supplied capability bootstraps and updates the
-	 * descriptor's runtime capability ids.
+	 * descriptor's declared capability ids.
 	 *
 	 * @param descriptor provider descriptor
 	 * @param bootstraps provider bootstraps

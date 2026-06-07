@@ -113,6 +113,7 @@ public class MessagesCommandDefaults {
 		migrationStart.setPendingExists("{prefix}<white>Migration already pending for <gray>{target}</gray>.</white>");
 		migrationStart.setStarted("{prefix}<white>Migration started for <gray>{target}</gray> to <gold>{provider}</gold>.</white>");
 		migrationStart.setProviderUnsupported("{prefix}<white><gold>{provider}</gold> does not support migration.</white>");
+		migrationStart.setProviderUnavailable("{prefix}<white><gold>{provider}</gold> is currently unavailable for migration.</white>");
 		migration.setStart(migrationStart);
 
 		Messages.Commands.Migration.Cancel migrationCancel = new Messages.Commands.Migration.Cancel();

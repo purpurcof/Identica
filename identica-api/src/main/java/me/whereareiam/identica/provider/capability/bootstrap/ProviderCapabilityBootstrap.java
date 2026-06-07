@@ -1,7 +1,7 @@
 package me.whereareiam.identica.provider.capability.bootstrap;
 
 import com.google.inject.Module;
-import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDescriptor;
+import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDeclaration;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -11,11 +11,11 @@ import java.util.List;
  */
 public interface ProviderCapabilityBootstrap {
 	/**
-	 * Returns the capability descriptor exposed by this bootstrap.
+	 * Returns the capability declaration exposed by this bootstrap.
 	 *
-	 * @return capability descriptor
+	 * @return capability declaration
 	 */
-	@NotNull ProviderCapabilityDescriptor descriptor();
+	@NotNull ProviderCapabilityDeclaration declaration();
 
 	/**
 	 * Initializes capability runtime state after the global injector is created.

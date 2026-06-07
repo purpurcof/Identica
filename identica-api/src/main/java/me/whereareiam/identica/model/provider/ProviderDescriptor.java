@@ -29,9 +29,9 @@ public class ProviderDescriptor {
 	private @NotNull List<String> supportedPlatforms;
 
 	/**
-	 * Runtime capability ids resolved from provider-supplied bootstraps.
+	 * Declared capability ids resolved from provider-supplied bootstraps.
 	 */
-	private @NotNull List<String> capabilities = new ArrayList<>();
+	private @NotNull List<String> declaredCapabilityIds = new ArrayList<>();
 
 	private int priority = 0;
 
@@ -45,7 +45,7 @@ public class ProviderDescriptor {
 	 */
 	public boolean hasCapability(@Nullable ProviderCapability capability) {
 		if (capability == null) return false;
-		for (String entry : capabilities)
+		for (String entry : declaredCapabilityIds)
 			if (capability.matches(entry))
 				return true;
 
@@ -59,10 +59,10 @@ public class ProviderDescriptor {
 	 * @return {@code true} when the id is listed
 	 */
 	public boolean hasCapabilityId(@Nullable String capabilityId) {
-		if (capabilityId == null || capabilityId.isBlank() || capabilities.isEmpty()) return false;
+		if (capabilityId == null || capabilityId.isBlank() || declaredCapabilityIds.isEmpty()) return false;
 
 		String normalized = capabilityId.trim().toLowerCase(Locale.ROOT);
-		for (String entry : capabilities) {
+		for (String entry : declaredCapabilityIds) {
 			if (entry == null || entry.isBlank()) continue;
 			if (normalized.equals(entry.trim().toLowerCase(Locale.ROOT)))
 				return true;

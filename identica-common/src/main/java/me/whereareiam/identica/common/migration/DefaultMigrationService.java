@@ -18,6 +18,7 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Commands;
 import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.delivery.DeliveryPayload;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
 import me.whereareiam.identica.model.delivery.DeliveryTarget;
@@ -26,9 +27,11 @@ import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.migration.PendingMigration;
 import me.whereareiam.identica.model.migration.operation.*;
+import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
 import me.whereareiam.identica.model.provider.InternalProvider;
+import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRegistry;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -60,14 +63,20 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class DefaultMigrationService implements MigrationService {
 	private final ProviderManager providerManager;
+	private final MigrationJourneyRegistry migrationJourneyRegistry;
+
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final AccountPersistenceService accountPersistenceService;
 	private final PipelineStateStore pipelineStateStore;
+
 	private final SessionService sessionService;
 	private final IdentityService identityService;
+
 	private final DeliveryService deliveryService;
 	private final EventManager eventManager;
+
 	private final Provider<Engine> engineProvider;
+	private final Provider<Providers> providersProvider;
 	private final Provider<Commands> commandsProvider;
 	private final Provider<Messages> messagesProvider;
 
@@ -108,6 +117,8 @@ public class DefaultMigrationService implements MigrationService {
 				request.getInitiatorUniqueId(),
 				System.currentTimeMillis()
 		);
+		MigrationResult targetValidation = validateTargetProvider(pendingMigration);
+		if (targetValidation != null) return targetValidation;
 		pending.put(connectionUniqueId, pendingMigration);
 
 		return result(MigrationResultStatus.PENDING_CONFIRMATION, null);
@@ -130,6 +141,11 @@ public class DefaultMigrationService implements MigrationService {
 		if (hasPendingMigration(connectionUniqueId)) {
 			pending.remove(connectionUniqueId);
 			return result(MigrationResultStatus.PENDING_EXISTS, null);
+		}
+		MigrationResult targetValidation = validateTargetProvider(pendingMigration);
+		if (targetValidation != null) {
+			pending.remove(connectionUniqueId);
+			return targetValidation;
 		}
 
 		if (!isUsernameFree(pendingMigration.username(), pendingMigration.uniqueId())) {
@@ -190,6 +206,8 @@ public class DefaultMigrationService implements MigrationService {
 				start.getInitiatorUniqueId(),
 				System.currentTimeMillis()
 		);
+		MigrationResult targetValidation = validateTargetProvider(pendingMigration);
+		if (targetValidation != null) return targetValidation;
 
 		if (!isUsernameFree(pendingMigration.username(), pendingMigration.uniqueId())) {
 			return result(MigrationResultStatus.PRECHECK_DENIED, migrationLockedMessage());
@@ -295,12 +313,30 @@ public class DefaultMigrationService implements MigrationService {
 		return true;
 	}
 
+	private @Nullable MigrationResult validateTargetProvider(@NotNull PendingConfirmationMigration pendingMigration) {
+		String targetProviderId = pendingMigration.targetProviderId();
+		if (targetProviderId == null || targetProviderId.isBlank())
+			return result(MigrationResultStatus.FAILED, null);
+
+		InternalProvider provider = resolveActiveProvider(targetProviderId);
+		if (provider == null) {
+			return isConfiguredProvider(targetProviderId)
+					? result(MigrationResultStatus.PROVIDER_UNAVAILABLE, null)
+					: result(MigrationResultStatus.TARGET_UNSUPPORTED, null);
+		}
+		
+		if (!supportsMigrationJourney(targetProviderId, pendingMigration))
+			return result(MigrationResultStatus.TARGET_UNSUPPORTED, null);
+
+		return null;
+	}
+
 	private boolean hasPendingMigration(@NotNull UUID connectionUniqueId) {
 		return findStartedPendingMigration(connectionUniqueId) != null;
 	}
 
 	private MigrationPrecheckResult runPrechecks(@NotNull PendingConfirmationMigration pendingMigration) {
-		InternalProvider provider = resolveProvider(pendingMigration.targetProviderId());
+		InternalProvider provider = resolveActiveProvider(pendingMigration.targetProviderId());
 		Set<ProviderMigrationPrecheck> prechecks = provider != null ? provider.getMigrationPrechecks() : null;
 		if (prechecks == null || prechecks.isEmpty())
 			return MigrationPrecheckResult.allow();
@@ -329,7 +365,7 @@ public class DefaultMigrationService implements MigrationService {
 		return MigrationPrecheckResult.allow(kickMessage);
 	}
 
-	private @Nullable InternalProvider resolveProvider(@Nullable String providerId) {
+	private @Nullable InternalProvider resolveActiveProvider(@Nullable String providerId) {
 		if (providerId == null || providerId.isBlank()) return null;
 
 		for (InternalProvider provider : providerManager.getProviders()) {
@@ -341,6 +377,46 @@ public class DefaultMigrationService implements MigrationService {
 				return provider;
 		}
 		return null;
+	}
+
+	private boolean isConfiguredProvider(@Nullable String providerId) {
+		if (providerId == null || providerId.isBlank()) return false;
+
+		Providers providers = providersProvider.get();
+		if (providers == null || providers.getProviders().isEmpty()) return false;
+
+		for (Providers.ProviderEntry entry : providers.getProviders()) {
+			if (entry == null || entry.getId().isBlank()) continue;
+			if (entry.getId().equalsIgnoreCase(providerId))
+				return true;
+		}
+		return false;
+	}
+
+	private boolean supportsMigrationJourney(
+			@NotNull String providerId,
+			@NotNull PendingConfirmationMigration pendingMigration
+	) {
+		JourneyPlan plan = migrationJourneyRegistry.resolvePlan(
+				MigrationContext.builder()
+						.connectionUniqueId(pendingMigration.connectionUniqueId())
+						.identity(new ConnectionIdentity(
+								resolveIdenticaUniqueId(pendingMigration.uniqueId(), pendingMigration.connectionUniqueId()),
+								nonNull(pendingMigration.username()),
+								pendingMigration.ip()
+						))
+						.targetProviderId(providerId)
+						.build(),
+				PipelineType.MIGRATION,
+				engineProvider.get().getScenarios().getMigration().getJourneyMode(),
+				providerId
+		);
+
+		for (JourneyPlan.StageEntry stage : plan.providerStages()) {
+			if (!stage.steps().isEmpty())
+				return true;
+		}
+		return false;
 	}
 
 	private void closeSession(@Nullable UUID accountUniqueId) {

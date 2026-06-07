@@ -4,7 +4,7 @@ import com.google.inject.ConfigurationException;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDescriptor;
+import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDeclaration;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityGlobalInstallContext;
@@ -24,6 +24,7 @@ import me.whereareiam.identica.provider.capability.restriction.join.JoinRestrict
 import me.whereareiam.identica.provider.capability.restriction.model.RestrictionSignalDescriptor;
 import me.whereareiam.identica.provider.capability.restriction.registry.RestrictionSignalRegistry;
 import me.whereareiam.identica.provider.capability.restriction.type.RestrictionSignal;
+import me.whereareiam.identica.type.provider.capability.ProviderCapabilityKind;
 import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,9 +38,10 @@ public final class RecognitionCapabilityBootstrap implements ProviderCapabilityB
 	public static final @NotNull RecognitionCapabilityBootstrap INSTANCE = new RecognitionCapabilityBootstrap();
 
 	@Override
-	public @NotNull ProviderCapabilityDescriptor descriptor() {
-		return ProviderCapabilityDescriptor.builder()
+	public @NotNull ProviderCapabilityDeclaration declaration() {
+		return ProviderCapabilityDeclaration.builder()
 				.capability(RecognitionCapability.CAPABILITY)
+				.kind(ProviderCapabilityKind.RUNTIME)
 				.scopes(Set.of(ProviderCapabilityScope.GLOBAL, ProviderCapabilityScope.LOCAL))
 				.build();
 	}

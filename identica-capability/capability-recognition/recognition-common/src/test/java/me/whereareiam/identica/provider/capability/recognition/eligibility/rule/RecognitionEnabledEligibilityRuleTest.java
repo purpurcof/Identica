@@ -68,7 +68,7 @@ class RecognitionEnabledEligibilityRuleTest {
 			RecognitionCapabilities.Recognition recognition = new RecognitionCapabilities.Recognition();
 			recognition.setEnabled(enabledOverride);
 			capabilities.setRecognition(recognition);
-			premium.setCapabilities(capabilities);
+			premium.setDeclaredCapabilityIds(capabilities);
 		}
 		providers.setProviders(java.util.List.of(premium));
 		when(provider.get()).thenReturn(providers);

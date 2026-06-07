@@ -123,7 +123,7 @@ class DefaultSessionRecognitionServiceTest {
 		recognition.setEnabled(true);
 		recognition.setAllowOnUntrustedIps(allowOnUntrustedIps);
 		capabilities.setRecognition(recognition);
-		credential.setCapabilities(capabilities);
+		credential.setDeclaredCapabilityIds(capabilities);
 		providers.setProviders(List.of(credential));
 		when(provider.get()).thenReturn(providers);
 		return provider;

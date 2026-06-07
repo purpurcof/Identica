@@ -22,7 +22,7 @@ public class DefaultProviderCapabilityRegistry implements ProviderCapabilityRegi
 
 	@Override
 	public @NotNull ProviderCapabilityInstallation registerInstallation(@NotNull ProviderCapabilityInstallation installation) {
-		installations.put(installation.getBootstrap().descriptor().getCapability(), installation);
+		installations.put(installation.getBootstrap().declaration().getCapability(), installation);
 		return installation;
 	}
 

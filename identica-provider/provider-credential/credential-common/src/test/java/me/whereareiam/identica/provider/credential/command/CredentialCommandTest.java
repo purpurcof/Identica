@@ -9,7 +9,6 @@ import me.whereareiam.identica.model.migration.PendingMigration;
 import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
 import me.whereareiam.identica.model.verification.VerificationResolutionResult;
-import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.provider.credential.config.defaults.CredentialMessagesDefaults;
 import me.whereareiam.identica.service.MigrationService;
@@ -71,8 +70,6 @@ class CredentialCommandTest {
 	@Mock
 	private MigrationService migrationService;
 	@Mock
-	private ProviderManager providerManager;
-	@Mock
 	private VerificationService verificationService;
 	@Mock
 	private SessionService sessionService;
@@ -92,7 +89,6 @@ class CredentialCommandTest {
 				() -> passwordMessages,
 				Messages::new,
 				migrationService,
-				providerManager,
 				verificationService,
 				sessionService
 		);
@@ -124,7 +120,6 @@ class CredentialCommandTest {
 				() -> new CredentialMessagesDefaults().supply(new CredentialMessages()),
 				Messages::new,
 				migrationService,
-				providerManager,
 				verificationService,
 				sessionService
 		);

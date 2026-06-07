@@ -4,7 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import me.whereareiam.identica.conflict.ConflictService;
 import me.whereareiam.identica.database.schema.SchemaBootstrap;
-import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDescriptor;
+import me.whereareiam.identica.model.provider.capability.ProviderCapabilityDeclaration;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.capability.authoritative.username.AuthoritativeUsernameGlobalModule;
 import me.whereareiam.identica.provider.capability.authoritative.username.conflict.UsernameConflictType;
@@ -15,6 +15,7 @@ import me.whereareiam.identica.provider.capability.authoritative.username.type.A
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityGlobalInstallContext;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityInitializationContext;
+import me.whereareiam.identica.type.provider.capability.ProviderCapabilityKind;
 import me.whereareiam.identica.type.provider.capability.ProviderCapabilityScope;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,9 +30,10 @@ public final class AuthoritativeUsernameCapabilityBootstrap implements ProviderC
 			new AuthoritativeUsernameCapabilityBootstrap();
 
 	@Override
-	public @NotNull ProviderCapabilityDescriptor descriptor() {
-		return ProviderCapabilityDescriptor.builder()
+	public @NotNull ProviderCapabilityDeclaration declaration() {
+		return ProviderCapabilityDeclaration.builder()
 				.capability(AuthoritativeUsernameCapability.CAPABILITY)
+				.kind(ProviderCapabilityKind.RUNTIME)
 				.scopes(Set.of(ProviderCapabilityScope.GLOBAL, ProviderCapabilityScope.LOCAL))
 				.build();
 	}

@@ -13,7 +13,6 @@ import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
 import me.whereareiam.identica.provider.capability.authoritative.username.bootstrap.AuthoritativeUsernameCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
-import me.whereareiam.identica.provider.capability.migration.bootstrap.MigrationCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.recognition.bootstrap.RecognitionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.bootstrap.RestrictionCapabilityBootstrap;
 import me.whereareiam.identica.provider.capability.restriction.join.bootstrap.JoinRestrictionCapabilityBootstrap;
@@ -114,19 +113,6 @@ public class PremiumProvider extends IdenticaProvider {
 						.build(),
 				ProviderLibrary.builder()
 						.groupId("me.whereareiam.identica.capability")
-						.artifactId("migration-api")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
-						.loader("shared")
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
-						.artifactId("migration")
-						.version(Constants.VERSION)
-						.resolveTransitiveDependencies(false)
-						.build(),
-				ProviderLibrary.builder()
-						.groupId("me.whereareiam.identica.capability")
 						.artifactId("verification-api")
 						.version(Constants.VERSION)
 						.resolveTransitiveDependencies(false)
@@ -143,13 +129,12 @@ public class PremiumProvider extends IdenticaProvider {
 	}
 
 	@Override
-	public @NotNull List<ProviderCapabilityBootstrap> capabilities() {
+	public @NotNull List<ProviderCapabilityBootstrap> declaredCapabilities() {
 		return List.of(
 				RestrictionCapabilityBootstrap.INSTANCE,
 				JoinRestrictionCapabilityBootstrap.INSTANCE,
 				RecognitionCapabilityBootstrap.INSTANCE,
 				AuthoritativeUsernameCapabilityBootstrap.INSTANCE,
-				MigrationCapabilityBootstrap.INSTANCE,
 				VerificationCapabilityBootstrap.INSTANCE
 		);
 	}

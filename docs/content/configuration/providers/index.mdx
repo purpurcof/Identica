@@ -4,7 +4,7 @@ description: Field-by-field explanation of Identica's provider configuration are
 ---
 
 The providers configuration controls which identity providers are enabled and how provider-specific behavior is applied.
-Use this file to enable providers, set priority and entrypoints, configure verification, and tune provider-specific session and recognition behavior.
+Use this file to enable providers, set priority and entrypoints, configure restrictions and verification, and tune provider-specific session and recognition behavior.
 
 ## behavior
 
@@ -79,10 +79,11 @@ providers:
           - "USERNAME"
           - "VIRTUAL_HOST"
         allowOnUntrustedIps: false
-    joinRestriction:
-      enabled: false
-      allow:
-        - "RECOGNIZED"
+    restriction:
+      join:
+        enabled: false
+        allow:
+          - "RECOGNIZED"
     verification:
       enabled: true
       required: false
@@ -111,9 +112,11 @@ providers:
           "allowOnUntrustedIps": false
         }
       },
-      "joinRestriction": {
-        "enabled": false,
-        "allow": ["RECOGNIZED"]
+      "restriction": {
+        "join": {
+          "enabled": false,
+          "allow": ["RECOGNIZED"]
+        }
       },
       "verification": {
         "enabled": true,
@@ -222,11 +225,16 @@ When this field is absent or empty, the provider inherits `settings.sessions.rec
 Leave this `false` for the normal safety posture.
 Set it to `true` only when this specific provider should remain recognition-eligible on client IPs that are otherwise blocked.
 
-### joinRestriction
+### restriction
 
-Use `joinRestriction` when a provider should support runtime join restriction toggles through the admin provider restriction commands.
+Use `restriction` for provider-specific restriction policies.
+Right now it contains `restriction.join`, and the extra nesting leaves room for more restriction types later without flattening the provider entry further.
 
-#### joinRestriction.enabled
+#### restriction.join
+
+Use `restriction.join` when a provider should support runtime join restriction toggles through the admin provider restriction commands.
+
+##### restriction.join.enabled
 
 <Badge type="warning">Advanced</Badge>
 
@@ -237,7 +245,7 @@ Use `joinRestriction` when a provider should support runtime join restriction to
 When this is `false`, `/identica admin provider restriction enable <provider>` will fail for that provider.
 When this is `true`, the configured allow-list can be activated at runtime by command.
 
-#### joinRestriction.allow
+##### restriction.join.allow
 
 <Badge type="warning">Advanced</Badge>
 

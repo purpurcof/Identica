@@ -3,7 +3,10 @@ package me.whereareiam.identica.common.event;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.event.base.*;
+import me.whereareiam.identica.event.base.CancellableEvent;
+import me.whereareiam.identica.event.base.Event;
+import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.event.base.SynchronousEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.type.event.EventOrder;
 
@@ -17,11 +20,19 @@ import java.util.concurrent.Executors;
 
 @Singleton
 public class EventController implements EventManager {
-	private final Map<Class<?>, List<RegisteredListener>> listeners = new HashMap<>();
+	private static final Comparator<RegisteredListener> ORDER_COMPARATOR =
+			Comparator.comparing(RegisteredListener::getOrder);
+	private static final RegisteredListener[] EMPTY_LISTENERS = new RegisteredListener[0];
+
 	private final ExecutorService executor = Executors.newCachedThreadPool();
+	private volatile Map<Class<?>, List<RegisteredListener>> listeners = Map.of();
+	private volatile Map<Class<?>, RegisteredListener[]> dispatchPlans = Map.of();
+	private final Object mutationLock = new Object();
 
 	@Override
 	public void register(EventListener listener) {
+		List<ListenerRegistration> registrations = new ArrayList<>();
+
 		for (Method method : listener.getClass().getDeclaredMethods()) {
 			if (!method.isAnnotationPresent(IdenticEvent.class)) continue;
 			if (method.getParameterCount() != 1 || !Event.class.isAssignableFrom(method.getParameterTypes()[0])) {
@@ -34,23 +45,49 @@ public class EventController implements EventManager {
 			Class<?> eventType = method.getParameterTypes()[0];
 			EventOrder order = method.getAnnotation(IdenticEvent.class).value();
 			method.setAccessible(true);
+			registrations.add(new ListenerRegistration(eventType, new RegisteredListener(listener, method, order)));
+		}
 
-			listeners.computeIfAbsent(eventType, ignored -> new ArrayList<>())
-					.add(new RegisteredListener(listener, method, order));
-			listeners.get(eventType).sort(Comparator.comparing(RegisteredListener::getOrder));
+		if (registrations.isEmpty()) return;
+
+		synchronized (mutationLock) {
+			Map<Class<?>, List<RegisteredListener>> updated = new HashMap<>(listeners);
+			for (ListenerRegistration registration : registrations)
+				appendListener(updated, registration.eventType(), registration.listener());
+
+			publishListeners(updated);
 		}
 	}
 
 	@Override
 	public <T extends Event> void registerListener(Class<T> event, Object listener, Method method, EventOrder order) {
-		listeners.computeIfAbsent(event, ignored -> new ArrayList<>())
-				.add(new RegisteredListener((EventListener) listener, method, order));
-		listeners.get(event).sort(Comparator.comparing(RegisteredListener::getOrder));
+		synchronized (mutationLock) {
+			Map<Class<?>, List<RegisteredListener>> updated = new HashMap<>(listeners);
+			appendListener(updated, event, new RegisteredListener((EventListener) listener, method, order));
+			publishListeners(updated);
+		}
 	}
 
 	@Override
 	public void unregister(EventListener eventListener) {
-		listeners.values().forEach(list -> list.removeIf(listener -> listener.getListener().equals(eventListener)));
+		synchronized (mutationLock) {
+			boolean changed = false;
+			Map<Class<?>, List<RegisteredListener>> updated = new HashMap<>();
+
+			for (Map.Entry<Class<?>, List<RegisteredListener>> entry : listeners.entrySet()) {
+				List<RegisteredListener> retained = entry.getValue().stream()
+						.filter(listener -> !listener.getListener().equals(eventListener))
+						.toList();
+				if (retained.size() != entry.getValue().size())
+					changed = true;
+				if (!retained.isEmpty())
+					updated.put(entry.getKey(), retained);
+			}
+
+			if (!changed) return;
+
+			publishListeners(updated);
+		}
 	}
 
 	private void collectEventTypes(Class<?> clazz, Set<Class<?>> types) {
@@ -65,15 +102,8 @@ public class EventController implements EventManager {
 
 	@Override
 	public void call(Event event) {
-		Set<Class<?>> eventTypes = new HashSet<>();
-		collectEventTypes(event.getClass(), eventTypes);
-
-		List<RegisteredListener> eventListeners = eventTypes.stream()
-				.flatMap(type -> listeners.getOrDefault(type, Collections.emptyList()).stream())
-				.sorted(Comparator.comparing(RegisteredListener::getOrder))
-				.toList();
-
-		if (eventListeners.isEmpty()) return;
+		RegisteredListener[] eventListeners = resolveDispatchPlan(event.getClass());
+		if (eventListeners.length == 0) return;
 
 		boolean synchronous = event instanceof SynchronousEvent;
 
@@ -140,5 +170,57 @@ public class EventController implements EventManager {
 			throwable.printStackTrace(printWriter);
 		}
 		return writer.toString();
+	}
+
+	private RegisteredListener[] resolveDispatchPlan(Class<?> eventType) {
+		RegisteredListener[] cached = dispatchPlans.get(eventType);
+		if (cached != null) return cached;
+
+		synchronized (mutationLock) {
+			cached = dispatchPlans.get(eventType);
+			if (cached != null) return cached;
+
+			RegisteredListener[] resolved = buildDispatchPlan(eventType, listeners);
+			Map<Class<?>, RegisteredListener[]> updated = new HashMap<>(dispatchPlans);
+			updated.put(eventType, resolved);
+			dispatchPlans = Map.copyOf(updated);
+			return resolved;
+		}
+	}
+
+	private RegisteredListener[] buildDispatchPlan(
+			Class<?> eventType,
+			Map<Class<?>, List<RegisteredListener>> listenerIndex
+	) {
+		Set<Class<?>> eventTypes = new LinkedHashSet<>();
+		collectEventTypes(eventType, eventTypes);
+
+		List<RegisteredListener> resolved = new ArrayList<>();
+		for (Class<?> type : eventTypes)
+			resolved.addAll(listenerIndex.getOrDefault(type, List.of()));
+
+		if (resolved.isEmpty()) return EMPTY_LISTENERS;
+
+		resolved.sort(ORDER_COMPARATOR);
+		return resolved.toArray(RegisteredListener[]::new);
+	}
+
+	private void appendListener(
+			Map<Class<?>, List<RegisteredListener>> listenerIndex,
+			Class<?> eventType,
+			RegisteredListener listener
+	) {
+		List<RegisteredListener> updated = new ArrayList<>(listenerIndex.getOrDefault(eventType, List.of()));
+		updated.add(listener);
+		updated.sort(ORDER_COMPARATOR);
+		listenerIndex.put(eventType, List.copyOf(updated));
+	}
+
+	private void publishListeners(Map<Class<?>, List<RegisteredListener>> updated) {
+		listeners = Map.copyOf(updated);
+		dispatchPlans = Map.of();
+	}
+
+	private record ListenerRegistration(Class<?> eventType, RegisteredListener listener) {
 	}
 }

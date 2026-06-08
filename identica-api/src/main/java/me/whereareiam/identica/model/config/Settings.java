@@ -12,12 +12,9 @@ import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.sentinel.SentinelPolicy;
 import me.whereareiam.identica.type.identity.UniqueIdMode;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
-import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -82,11 +79,6 @@ public class Settings extends ConfigDocument {
 		 */
 		private @NotNull Duration activeTtl;
 		/**
-		 * Recognition policy for reconnecting players.
-		 */
-		private @NotNull Recognition recognition = new Recognition();
-
-		/**
 		 * Returns active session TTL in milliseconds with validation.
 		 *
 		 * @return active session TTL in milliseconds
@@ -97,71 +89,6 @@ public class Settings extends ConfigDocument {
 			}
 
 			return activeTtl.toMillis();
-		}
-
-		/**
-		 * Recognition behavior settings.
-		 */
-		@Getter
-		@Setter
-		@ToString
-		public static class Recognition {
-			/**
-			 * Enables reconnect recognition for eligible providers.
-			 */
-			private boolean enabled;
-			/**
-			 * Amount of time a stored recognition snapshot remains valid.
-			 */
-			private @NotNull Duration validity;
-			/**
-			 * Default signal set used when providers do not override reconnect recognition signals.
-			 */
-			private @NotNull List<RecognitionSignal> defaultSignals = new ArrayList<>();
-			/**
-			 * Eligibility rules for whether recognition may be attempted.
-			 */
-			private @NotNull Eligibility eligibility = new Eligibility();
-
-			/**
-			 * Returns recognition validity in milliseconds with validation.
-			 *
-			 * @return recognition validity in milliseconds
-			 */
-			public long validityMillis() {
-				if (validity.isZero() || validity.isNegative()) {
-					throw new IllegalStateException("settings.sessions.recognition.validity must be positive");
-				}
-
-				return validity.toMillis();
-			}
-
-			/**
-			 * Eligibility rules for automatic reconnect recognition.
-			 */
-			@Getter
-			@Setter
-			@ToString
-			public static class Eligibility {
-				private @NotNull UntrustedIps untrustedIps = new UntrustedIps();
-
-				/**
-				 * Untrusted-IP rules for whether automatic recognition may run.
-				 */
-				@Getter
-				@Setter
-				@ToString
-				public static class UntrustedIps {
-					/**
-					 * Enables the untrusted-IP eligibility rule.
-					 */
-					private boolean enabled;
-					/**
-					 * Exact IPs or CIDR ranges that suppress recognition eligibility.
-					 */
-					private @NotNull List<String> entries = new ArrayList<>();
-				}
-			}
 		}
 	}
 

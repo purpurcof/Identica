@@ -27,7 +27,6 @@ import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationCancelScope;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
-import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.util.UniqueIdUtil;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
@@ -84,13 +83,7 @@ public class MigrationCommand {
 	) {
 		Messages.Commands.Migration messages = messagesProvider.get().getCommands().getMigration();
 		ResolvedTarget resolved = resolveTarget(sender, target, messages);
-		if (resolved == null)
-			return;
-
-		if (!supportsMigration(providerId)) {
-			sendMessage(sender, messages.getStart().getProviderUnsupported(), Map.of("provider", providerId));
-			return;
-		}
+		if (resolved == null) return;
 
 		MigrationResult result = migrationService.start(MigrationStart.builder()
 				.connectionUniqueId(resolved.uniqueId())
@@ -128,6 +121,14 @@ public class MigrationCommand {
 				sendMessage(sender, message, Map.of());
 				return;
 			}
+		}
+		if (result.getStatus() == MigrationResultStatus.TARGET_UNSUPPORTED) {
+			sendMessage(sender, messages.getStart().getProviderUnsupported(), Map.of("provider", providerId));
+			return;
+		}
+		if (result.getStatus() == MigrationResultStatus.PROVIDER_UNAVAILABLE) {
+			sendMessage(sender, messages.getStart().getProviderUnavailable(), Map.of("provider", providerId));
+			return;
 		}
 
 		if (result.getStatus() == MigrationResultStatus.STARTED) {
@@ -278,17 +279,6 @@ public class MigrationCommand {
 
 		Account account = matches.getFirst();
 		return new ResolvedTarget(account.getUniqueId(), account.getUsername());
-	}
-
-	private boolean supportsMigration(@NotNull String providerId) {
-		for (InternalProvider provider : providerManager.findProviders(ProviderCapability.MIGRATION)) {
-			if (provider == null || provider.getDescriptor() == null)
-				continue;
-			String id = provider.getDescriptor().getId();
-			if (id.equalsIgnoreCase(providerId))
-				return true;
-		}
-		return false;
 	}
 
 	private Map<String, String> resolveProviderNames() {

@@ -1,7 +1,7 @@
 package me.whereareiam.identica.engine.completion;
 
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
+import me.whereareiam.identica.engine.pipeline.completion.lifecycle.CompletionPendingLifecycle;
+import me.whereareiam.identica.engine.pipeline.completion.runtime.CompletionPipeline;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.delivery.DeliveryCheckpointReachedEvent;
 import me.whereareiam.identica.event.routing.completion.CompletionRoutingReachedEvent;
@@ -70,14 +70,12 @@ class CompletionPendingLifecycleTest {
 		lifecycle.onSessionOpened(new SessionOpenedEvent(
 				connectionUniqueId,
 				PipelineType.MIGRATION,
-				session,
-				true
+				session
 		));
 
 		verify(deliveryService).queue(argThat((DeliveryRequest request) ->
 				request != null
 						&& request.getPayload().getCompletion() != null
-						&& request.getPayload().getCompletion().isAuthenticationRecognized()
 						&& request.getCheckpoint() == DeliveryCheckpoint.PLATFORM_READY_INITIAL
 						&& "migration-limbo".equals(request.getRequiredServer())
 		));
@@ -112,8 +110,7 @@ class CompletionPendingLifecycleTest {
 		lifecycle.onSessionOpened(new SessionOpenedEvent(
 				connectionUniqueId,
 				PipelineType.AUTHENTICATION,
-				session,
-				true
+				session
 		));
 
 		verify(deliveryService).queue(argThat((DeliveryRequest request) ->
@@ -200,7 +197,6 @@ class CompletionPendingLifecycleTest {
 								.connectionUniqueId(connectionUniqueId)
 								.accountUniqueId(accountUniqueId)
 								.pipelineType(PipelineType.MIGRATION)
-								.authenticationRecognized(true)
 								.build())
 						.build())
 				.checkpoint(DeliveryCheckpoint.PLATFORM_READY_INITIAL)
@@ -227,7 +223,6 @@ class CompletionPendingLifecycleTest {
 						&& pendingState.getPipelineType() == PipelineType.MIGRATION
 						&& connectionUniqueId.equals(pendingState.getConnectionUniqueId())
 						&& accountUniqueId.equals(pendingState.getAccountUniqueId())
-						&& pendingState.isAuthenticationRecognized()
 		));
 		verify(deliveryService).acknowledge(deliveryId, "completion-dispatched");
 	}

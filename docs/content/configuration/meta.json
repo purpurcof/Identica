@@ -4,13 +4,12 @@
     "index",
     "settings",
     "providers",
+    "features",
     "engine",
     "routing",
     "commands",
-    "conflicts",
     "messages",
     "persistence",
-    "replication",
-    "verification"
+    "replication"
   ]
 }

@@ -3,8 +3,6 @@ package me.whereareiam.identica.common.config.defaults.provider;
 import com.google.inject.Singleton;
 import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.config.provider.Providers;
-import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
-import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 
 import java.time.Duration;
 import java.util.List;
@@ -15,7 +13,6 @@ public class ProvidersDefaults implements DefaultsProvider<Providers> {
 	public Providers supply(Providers config) {
 		Providers.Behavior behavior = new Providers.Behavior();
 		behavior.setAttemptTtl(Duration.ofMinutes(10));
-		behavior.setJoinRestrictionToggleTtl(Duration.ofDays(365));
 		config.setBehavior(behavior);
 
 		Providers.ProviderEntry credential = new Providers.ProviderEntry();
@@ -24,11 +21,6 @@ public class ProvidersDefaults implements DefaultsProvider<Providers> {
 		credential.setEnabled(true);
 		credential.setPriority(50);
 		credential.setEntrypoints(List.of("credential.arcadeya.com"));
-		credential.setRestriction(restriction(
-				ProviderJoinRestrictionCondition.RECOGNIZED,
-				ProviderJoinRestrictionCondition.LINKED
-		));
-		credential.setVerification(credentialVerification());
 
 		Providers.ProviderEntry premium = new Providers.ProviderEntry();
 		premium.setId("premium");
@@ -36,56 +28,8 @@ public class ProvidersDefaults implements DefaultsProvider<Providers> {
 		premium.setEnabled(true);
 		premium.setPriority(100);
 		premium.setEntrypoints(List.of("premium.arcadeya.com"));
-		premium.setRestriction(restriction(ProviderJoinRestrictionCondition.RECOGNIZED));
-		premium.setVerification(premiumVerification());
 
 		config.setProviders(List.of(credential, premium));
 		return config;
-	}
-	private Providers.ProviderEntry.Verification credentialVerification() {
-		Providers.ProviderEntry.Verification verification = new Providers.ProviderEntry.Verification();
-		verification.setEnabled(true);
-		verification.setRequired(false);
-		verification.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.KEEP_LOCKED);
-
-		Providers.ProviderEntry.Verification.MethodEntry totp =
-				new Providers.ProviderEntry.Verification.MethodEntry();
-		totp.setId("totp");
-		totp.setEnabled(true);
-		totp.setPriority(100);
-		totp.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.KEEP_LOCKED);
-		verification.setMethods(List.of(totp));
-
-		return verification;
-	}
-
-	private Providers.ProviderEntry.Verification premiumVerification() {
-		Providers.ProviderEntry.Verification verification = new Providers.ProviderEntry.Verification();
-		verification.setEnabled(true);
-		verification.setRequired(false);
-		verification.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.KEEP_LOCKED);
-
-		Providers.ProviderEntry.Verification.MethodEntry totp =
-				new Providers.ProviderEntry.Verification.MethodEntry();
-		totp.setId("totp");
-		totp.setEnabled(true);
-		totp.setPriority(100);
-		totp.setUnavailableSelectionPolicy(UnavailableSelectionPolicy.KEEP_LOCKED);
-		verification.setMethods(List.of(totp));
-
-		return verification;
-	}
-
-	private Providers.ProviderEntry.Restriction restriction(ProviderJoinRestrictionCondition... allow) {
-		Providers.ProviderEntry.Restriction restriction = new Providers.ProviderEntry.Restriction();
-		restriction.setJoin(joinRestriction(allow));
-		return restriction;
-	}
-
-	private Providers.ProviderEntry.Restriction.Join joinRestriction(ProviderJoinRestrictionCondition... allow) {
-		Providers.ProviderEntry.Restriction.Join restriction = new Providers.ProviderEntry.Restriction.Join();
-		restriction.setEnabled(false);
-		restriction.setAllow(List.of(allow));
-		return restriction;
 	}
 }

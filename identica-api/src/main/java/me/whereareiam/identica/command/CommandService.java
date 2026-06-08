@@ -15,6 +15,8 @@ public interface CommandService {
 
 	void registerCommandInstances(@NotNull Map<String, CommandDefinition> definitions, @NotNull Object... commandInstances);
 
+	void registerSuggestionProvider(@NotNull String key, @NotNull Object suggestionProvider);
+
 	int getCommandCount();
 
 	@NotNull

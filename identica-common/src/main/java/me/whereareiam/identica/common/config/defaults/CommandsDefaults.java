@@ -5,7 +5,6 @@ import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.common.config.defaults.commands.AdminCommandDefinitions;
 import me.whereareiam.identica.common.config.defaults.commands.CoreCommandDefinitions;
 import me.whereareiam.identica.common.config.defaults.commands.MigrationCommandDefinitions;
-import me.whereareiam.identica.common.config.defaults.commands.VerificationCommandDefinitions;
 import me.whereareiam.identica.common.config.defaults.commands.base.CommandDefinitions;
 import me.whereareiam.identica.model.config.Commands;
 
@@ -17,8 +16,7 @@ public class CommandsDefaults implements DefaultsProvider<Commands> {
 	private final List<CommandDefinitions> definitions = List.of(
 			new CoreCommandDefinitions(),
 			new AdminCommandDefinitions(),
-			new MigrationCommandDefinitions(),
-			new VerificationCommandDefinitions()
+			new MigrationCommandDefinitions()
 	);
 
 	@Override

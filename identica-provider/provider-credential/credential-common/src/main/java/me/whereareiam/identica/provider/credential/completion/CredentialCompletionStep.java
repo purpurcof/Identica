@@ -5,21 +5,28 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
 import me.whereareiam.identica.pipeline.completion.step.AbstractMessageCompletionStep;
+import me.whereareiam.identica.provider.capability.recognition.store.RecognizedConnectionStore;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 
 @Singleton
 public class CredentialCompletionStep extends AbstractMessageCompletionStep {
 	private final Provider<CredentialMessages> messagesProvider;
+	private final RecognizedConnectionStore recognizedConnectionStore;
 
 	@Inject
-	public CredentialCompletionStep(Provider<CredentialMessages> messagesProvider) {
+	public CredentialCompletionStep(
+			Provider<CredentialMessages> messagesProvider,
+			RecognizedConnectionStore recognizedConnectionStore
+	) {
 		super("password-completion");
 		this.messagesProvider = messagesProvider;
+		this.recognizedConnectionStore = recognizedConnectionStore;
 	}
 
 	@Override
@@ -49,9 +56,14 @@ public class CredentialCompletionStep extends AbstractMessageCompletionStep {
 			return completion.getMigration();
 		if (context.getPipelineType() == PipelineType.REGISTRATION)
 			return completion.getRegistration();
-		if (context.isAuthenticationRecognized())
-			return completion.getSession();
+		if (isRecognized(context))
+			return completion.getRecognition();
 
 		return completion.getAuthentication();
+	}
+
+	private boolean isRecognized(@NotNull CompletionContext context) {
+		UUID connectionUniqueId = context.getIdentity().getConnectionUniqueId();
+		return connectionUniqueId != null && recognizedConnectionStore.isRecognized(connectionUniqueId);
 	}
 }

@@ -50,7 +50,6 @@ public abstract class AbstractDatabaseFixture implements DatabaseFixture {
 			handle.execute("DELETE FROM identica_provider_profiles");
 			handle.execute("DELETE FROM identica_provider_links");
 			handle.execute("DELETE FROM identica_accounts");
-			handle.execute("DELETE FROM identica_username_history");
 		});
 	}
 

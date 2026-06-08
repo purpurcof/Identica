@@ -67,7 +67,6 @@ public class Messages extends ConfigDocument {
 		private @NotNull Migration migration;
 		private @NotNull Reload reload;
 		private @NotNull Admin admin;
-		private @NotNull Verification verification;
 
 		/**
 		 * Configuration for enroll command messages.
@@ -173,6 +172,7 @@ public class Messages extends ConfigDocument {
 				private @NotNull String pendingExists;
 				private @NotNull String started;
 				private @NotNull String providerUnsupported;
+				private @NotNull String providerUnavailable;
 			}
 
 			@Getter
@@ -207,10 +207,8 @@ public class Messages extends ConfigDocument {
 		public static class Admin {
 			private @NotNull Clear clear;
 			private @NotNull Delete delete;
-			private @NotNull ProviderRestriction providerRestriction;
 			private @NotNull Reservation reservation;
 			private @NotNull Sessions sessions;
-			private @NotNull Verification verification;
 
 			@Getter
 			@Setter
@@ -349,79 +347,6 @@ public class Messages extends ConfigDocument {
 			@Getter
 			@Setter
 			@ToString
-			public static class ProviderRestriction {
-				private @NotNull String enabled;
-				private @NotNull String disabled;
-				private @NotNull String enableFailed;
-				private @NotNull String providerNotFound;
-				private @NotNull Status status;
-
-				@Getter
-				@Setter
-				@ToString
-				public static class Status {
-					/**
-					 * Detailed provider restriction info.
-					 * Placeholders:
-					 * - {providerId}
-					 * - {providerName}
-					 * - {active}
-					 * - {allow}
-					 */
-					private @NotNull List<String> body;
-					private @NotNull String notFound;
-					@JsonProperty("list")
-					private @NotNull Listing list;
-					private @NotNull Labels labels;
-
-					@Getter
-					@Setter
-					@ToString
-					public static class Labels {
-						private @NotNull String enabled;
-						private @NotNull String disabled;
-					}
-
-					@Getter
-					@Setter
-					@ToString
-					public static class Listing {
-						/**
-						 * Lines shown before listing provider restriction statuses.
-						 * Placeholders:
-						 * - {entries}
-						 */
-						private @NotNull List<String> body;
-						private @NotNull Entries entries;
-						private @NotNull String empty;
-
-						@Getter
-						@Setter
-						@ToString
-						public static class Entries {
-							/**
-							 * Entry format for a single provider restriction status with populated allow entries.
-							 * Placeholders:
-							 * - {providerName}
-							 * - {status}
-							 * - {allow}
-							 */
-							private @NotNull String populated;
-							/**
-							 * Entry format for a single provider restriction status with empty allow entries.
-							 * Placeholders:
-							 * - {providerName}
-							 * - {status}
-							 */
-							private @NotNull String empty;
-						}
-					}
-				}
-			}
-
-			@Getter
-			@Setter
-			@ToString
 			public static class Reservation {
 				private @NotNull String set;
 				private @NotNull String info;
@@ -550,20 +475,6 @@ public class Messages extends ConfigDocument {
 				}
 			}
 
-			@Getter
-			@Setter
-			@ToString
-			public static class Verification {
-				private @NotNull Reset reset;
-
-				@Getter
-				@Setter
-				@ToString
-				public static class Reset {
-					private @NotNull String targetNotFound;
-					private @NotNull String completed;
-				}
-			}
 		}
 		/**
 		 * Configuration for reload command messages.
@@ -588,114 +499,6 @@ public class Messages extends ConfigDocument {
 			private @NotNull String error;
 		}
 
-		@Getter
-		@Setter
-		@ToString
-		public static class Verification {
-			private @NotNull String playerOnly;
-			private @NotNull String notAllowed;
-			private @NotNull Methods methods;
-			private @NotNull Status status;
-			private @NotNull Enroll enroll;
-			private @NotNull Confirm confirm;
-			private @NotNull Use use;
-			private @NotNull Disable disable;
-			private @NotNull Cancel cancel;
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Status {
-				private @NotNull List<String> body;
-				private @NotNull EntryFormat enrollmentEntry;
-				private @NotNull EntryFormat selectionEntry;
-				private @NotNull String emptyEnrollments;
-				private @NotNull String emptySelections;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Enroll {
-				private @NotNull String unknownMethod;
-				private @NotNull String alreadyEnrolled;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Confirm {
-				private @NotNull String noPending;
-				private @NotNull String invalidCode;
-				private @NotNull String protectedActionSelectionRequired;
-				private @NotNull String protectedActionSessionRequired;
-				private @NotNull String methodUnavailable;
-				private @NotNull String enabled;
-				private @NotNull String autoSelected;
-				private @NotNull RecoveryCodes recoveryCodes;
-
-				@Getter
-				@Setter
-				@ToString
-				public static class RecoveryCodes {
-					private @NotNull Layout layout = Layout.TWO_COLUMN;
-					private @NotNull List<String> body;
-					private @NotNull EntryFormat singleColumnEntry;
-					private @NotNull EntryFormat twoColumnEntry;
-					private @NotNull String empty;
-
-					public enum Layout {
-						SINGLE_COLUMN,
-						TWO_COLUMN
-					}
-				}
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Use {
-				private @NotNull String providerNotFound;
-				private @NotNull String providerUnsupported;
-				private @NotNull String providerVerificationDisabled;
-				private @NotNull String methodNotEnrolled;
-				private @NotNull String methodDisabledForProvider;
-				private @NotNull String alreadySelected;
-				private @NotNull String updated;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Disable {
-				private @NotNull String methodNotEnrolled;
-				private @NotNull String protectedPrompt;
-				private @NotNull String disabled;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Cancel {
-				private @NotNull String noPending;
-				private @NotNull String cancelled;
-				private @NotNull String cancelledProtectedAction;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Methods {
-				private @NotNull Totp totp;
-
-				@Getter
-				@Setter
-				@ToString
-				public static class Totp {
-					private @NotNull List<String> pending;
-				}
-			}
-		}
 
 		/**
 		 * Format definitions for command entry rendering.
@@ -721,21 +524,6 @@ public class Messages extends ConfigDocument {
 	public static class Providers {
 		private @NotNull List<String> noProvidersAvailable;
 		private @NotNull List<String> noProvidersMatched;
-		private @NotNull ProviderRestriction providerRestriction;
-
-		@Getter
-		@Setter
-		@ToString
-		public static class ProviderRestriction {
-			/**
-			 * Shared message sent when an active provider restriction denies a join.
-			 * Placeholders:
-			 * - {providerId}
-			 * - {providerName}
-			 * - {allow}
-			 */
-			private @NotNull List<String> denied;
-		}
 	}
 
 	@Getter
@@ -758,10 +546,6 @@ public class Messages extends ConfigDocument {
 		@ToString
 		public static class Prepare {
 			private @NotNull List<String> handshakeDenied;
-			/**
-			 * Message shown when prepare can deny immediately due to an active provider restriction.
-			 */
-			private @NotNull List<String> providerRestricted;
 			private @NotNull Errors errors;
 
 			@Getter

@@ -45,10 +45,6 @@ public class Replication extends ConfigDocument {
 	public static class Cache {
 		private @NotNull String reservations;
 		private @NotNull String instructions;
-		/**
-		 * Cache namespace for provider join restriction runtime toggles.
-		 */
-		private @NotNull String providerJoinRestrictions;
 		private @NotNull Delivery delivery;
 		private @NotNull Sessions sessions;
 		/**
@@ -84,14 +80,6 @@ public class Replication extends ConfigDocument {
 		private @NotNull String user;
 		private @NotNull String session;
 		private @NotNull String subject;
-		private @NotNull Recognition recognition;
-
-		@Getter
-		@Setter
-		@ToString
-		public static class Recognition {
-			private @NotNull String snapshot;
-		}
 	}
 
 	/**

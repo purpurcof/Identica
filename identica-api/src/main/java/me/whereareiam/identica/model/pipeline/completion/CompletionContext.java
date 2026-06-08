@@ -20,11 +20,6 @@ public class CompletionContext {
 	private @NotNull PipelineType pipelineType;
 	private @NotNull Session session;
 	private @Nullable InternalProvider provider;
-	/**
-	 * Whether the authentication journey completed through framework
-	 * recognition before this completion context was built.
-	 */
-	private boolean authenticationRecognized;
 
 	public @Nullable UUID getAccountUniqueId() {
 		return session.getUniqueId();

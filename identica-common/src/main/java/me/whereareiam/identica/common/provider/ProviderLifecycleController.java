@@ -1,15 +1,14 @@
 package me.whereareiam.identica.common.provider;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
+import com.google.inject.Module;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.common.config.ConfigInitializer;
-import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
-import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
+import me.whereareiam.identica.common.provider.classloader.ProviderRuntimeClassLoaderFactory;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
 import me.whereareiam.identica.common.provider.injector.ProviderInjectorFactory;
+import me.whereareiam.identica.common.provider.library.ProviderLibraryInstaller;
+import me.whereareiam.identica.common.provider.library.ProviderLibraryPlanner;
 import me.whereareiam.identica.common.provider.resolver.ProviderPlatformExtensionResolver;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
@@ -26,18 +25,23 @@ import me.whereareiam.identica.handshake.policy.HandshakePolicy;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
+import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.ProviderPlatformBinding;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
+import me.whereareiam.identica.provider.capability.ProviderCapabilityCoordinator;
+import me.whereareiam.identica.provider.capability.bootstrap.ProviderCapabilityBootstrap;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
 import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
+import me.whereareiam.identica.type.provider.ProviderFeature;
 import me.whereareiam.identica.type.provider.ProviderState;
 
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,12 +56,14 @@ public class ProviderLifecycleController {
 	private static final TypeLiteral<Set<ProviderPlatformBinding>> PLATFORM_BINDINGS = new TypeLiteral<>() {};
 
 	private final ProviderWorkingPathResolver workingPathResolver;
-	private final ProviderClassLoaderFactory classLoaderFactory;
-	private final ProviderDependencyResolver dependencyResolver;
+	private final ProviderRuntimeClassLoaderFactory providerRuntimeClassLoaderFactory;
+	private final ProviderLibraryPlanner providerLibraryPlanner;
+	private final ProviderLibraryInstaller providerLibraryInstaller;
 	private final ProviderInjectorFactory injectorFactory;
 	private final ProviderInstanceFactory instanceFactory;
 	private final ProviderPlatformExtensionResolver platformExtensionResolver;
 	private final ProviderResolverRegistry resolverRegistry;
+	private final ProviderCapabilityCoordinator capabilityCoordinator;
 	private final ConflictService conflictService;
 	private final SchemaBootstrap schemaBootstrap;
 	private final EventManager eventManager;
@@ -70,18 +76,17 @@ public class ProviderLifecycleController {
 		if (internal == null || internal.getState() != ProviderState.DISCOVERED) return;
 		Logger.debug("Loading provider %s", safeId(internal));
 
+		URLClassLoader classLoader = null;
 		try {
 			ProviderDescriptor descriptor = internal.getDescriptor();
 			Path workingPath = workingPathResolver.resolve(descriptor);
-			URLClassLoader classLoader = classLoaderFactory.create(internal.getPath());
-
-			dependencyResolver.loadDescriptorLibraries(descriptor, classLoader);
+			classLoader = providerRuntimeClassLoaderFactory.create(internal.getPath());
 
 			Class<?> providerClass = classLoader.loadClass(descriptor.getMain());
 			if (!IdenticaProvider.class.isAssignableFrom(providerClass)) {
 				Logger.warn("Provider main class does not extend IdenticaProvider: %s", descriptor.getId());
 				internal.setState(ProviderState.FAILED);
-				classLoaderFactory.close(classLoader);
+				providerRuntimeClassLoaderFactory.close(classLoader);
 
 				return;
 			}
@@ -92,18 +97,40 @@ public class ProviderLifecycleController {
 				probeProvider.setWorkingPath(workingPath);
 			}
 
+			ProviderLibraries libraries = probeProvider != null
+					? probeProvider.libraries()
+					: ProviderLibraries.empty();
+
+			ProviderLibraryPlanner.ProviderLibraryPlan libraryPlan = providerLibraryPlanner.plan(libraries);
+			providerLibraryInstaller.installSharedCapabilityApis(libraryPlan.sharedCapabilityApis());
+			providerLibraryInstaller.installProviderRuntime(descriptor, libraryPlan.providerRuntimeLibraries(), classLoader);
 			Class<? extends ProviderPlatformExtension> platformExtensionClass = platformExtensionResolver.resolve(probeProvider);
 			ProviderPlatformExtension probePlatformExtension = platformExtensionClass != null
 					? instanceFactory.instantiatePlatformExtension(platformExtensionClass)
 					: null;
 
-			dependencyResolver.loadProviderLibraries(descriptor, probeProvider, classLoader);
+			List<ProviderCapabilityBootstrap> capabilityBootstraps = capabilityCoordinator.resolveBootstraps(
+					descriptor,
+					probeProvider != null ? probeProvider.declaredCapabilities() : List.of()
+			);
+			descriptor.setDeclaredFeatureIds(probeProvider != null
+					? probeProvider.declaredFeatures().stream()
+							.filter(feature -> feature != null && !feature.getId().isBlank())
+							.map(ProviderFeature::getId)
+							.map(id -> id.trim().toLowerCase(Locale.ROOT))
+							.distinct()
+							.toList()
+					: List.of());
+			internal.setWorkingPath(workingPath);
+			capabilityCoordinator.installGlobalCapabilities(internal, capabilityBootstraps);
+			List<Module> capabilityModules = capabilityCoordinator.resolveLocalModules(internal, capabilityBootstraps);
 
 			Injector providerInjector = injectorFactory.create(
 					workingPath,
 					descriptor,
 					probeProvider,
-					probePlatformExtension
+					probePlatformExtension,
+					capabilityModules
 			);
 
 			applySchemaContributors(providerInjector);
@@ -114,7 +141,7 @@ public class ProviderLifecycleController {
 			);
 			if (provider == null) {
 				internal.setState(ProviderState.FAILED);
-				classLoaderFactory.close(classLoader);
+				providerRuntimeClassLoaderFactory.close(classLoader);
 				return;
 			}
 
@@ -134,6 +161,11 @@ public class ProviderLifecycleController {
 			internal.setClassLoader(classLoader);
 			prewarmProviderConfigs(providerInjector, internal);
 			storeBindings(internal, providerInjector);
+			capabilityCoordinator.validateCapabilityContributions(
+					descriptor,
+					capabilityBootstraps,
+					internal.getCapabilityContributions() != null ? internal.getCapabilityContributions() : Set.of()
+			);
 			internal.setState(ProviderState.LOADED);
 			if (checkRequirements(internal))
 				return;
@@ -141,6 +173,9 @@ public class ProviderLifecycleController {
 			provider.onLoad();
 			fireProviderLoaded(internal);
 		} catch (Exception e) {
+			if (classLoader != null && internal.getClassLoader() != classLoader)
+				providerRuntimeClassLoaderFactory.close(classLoader);
+
 			internal.setState(ProviderState.FAILED);
 			Logger.warn("Failed to load provider %s: %s", safeId(internal), e.getMessage());
 		}
@@ -196,7 +231,7 @@ public class ProviderLifecycleController {
 			Logger.warn("Failed to unload provider %s: %s", safeId(internal), e.getMessage());
 			fireProviderUnloaded(internal);
 		} finally {
-			classLoaderFactory.close(internal.getClassLoader());
+			providerRuntimeClassLoaderFactory.close(internal.getClassLoader());
 		}
 	}
 
@@ -237,6 +272,7 @@ public class ProviderLifecycleController {
 		internal.setEligibilityResolvers(copySet(resolveSet(injector, ELIGIBILITY_RESOLVERS)));
 		internal.setProfileSubjectResolvers(copySet(resolveSet(injector, PROFILE_RESOLVERS)));
 		internal.setMigrationPrechecks(copySet(resolveSet(injector, MIGRATION_PRECHECKS)));
+		internal.setCapabilityContributions(copySet(capabilityCoordinator.resolveCapabilityContributions(injector)));
 	}
 
 	private void registerProviderBindings(InternalProvider internal) {

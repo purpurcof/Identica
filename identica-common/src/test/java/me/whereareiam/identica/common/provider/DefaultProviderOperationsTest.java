@@ -19,12 +19,16 @@ import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourne
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
+import me.whereareiam.identica.provider.profile.ProfileResolution;
+import me.whereareiam.identica.provider.profile.ProfileResolveContext;
+import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.pipeline.journey.step.StepContextRequirement;
 import me.whereareiam.identica.type.provider.ProviderState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -144,6 +148,41 @@ class DefaultProviderOperationsTest {
 		assertTrue(operations(providers).isEligible(autoContext(), provider, PipelineType.AUTHENTICATION, JourneyMode.INTERACTIVE));
 	}
 
+	@DisplayName("Returns no profile resolution when no provider resolver applies")
+	@Test
+	void resolveProfileReturnsNullWithoutProviderResolvers() {
+		when(providerManager.getProviders()).thenReturn(List.of());
+
+		ProfileResolution resolution = operations(new Providers()).resolveProfile(ProfileResolveContext.builder()
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "PlayerOne", "127.0.0.1"))
+				.build());
+
+		assertNull(resolution);
+	}
+
+	@DisplayName("Uses provider-registered profile resolvers to resolve subjects")
+	@Test
+	void resolveProfileUsesProviderResolvers() {
+		ProviderDescriptor descriptor = new ProviderDescriptor();
+		descriptor.setId("credential");
+
+		InternalProvider provider = InternalProvider.builder()
+				.descriptor(descriptor)
+				.priority(10)
+				.state(ProviderState.ENABLED)
+				.profileSubjectResolvers(Set.of(new StaticProfileResolver()))
+				.build();
+		when(providerManager.getProviders()).thenReturn(List.of(provider));
+
+		ProfileResolution resolution = operations(new Providers()).resolveProfile(ProfileResolveContext.builder()
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "PlayerOne", "127.0.0.1"))
+				.build());
+
+		assertNotNull(resolution);
+		assertEquals("credential", resolution.getProviderId());
+		assertEquals("credential-subject", resolution.getProviderSubject());
+	}
+
 	private ProviderOperations operations(Providers providers) {
 		return new DefaultProviderOperations(
 				providerManager,
@@ -247,6 +286,21 @@ class DefaultProviderOperationsTest {
 		@Override
 		public @NotNull CompletableFuture<StepResult> execute(@NotNull ScenarioContext context) {
 			return CompletableFuture.completedFuture(StepResult.proceed(context));
+		}
+	}
+
+	private static final class StaticProfileResolver implements ProfileSubjectResolver {
+		@Override
+		public boolean supports(@NotNull ProfileResolveContext context) {
+			return true;
+		}
+
+		@Override
+		public @Nullable ProfileResolution resolve(@NotNull ProfileResolveContext context) {
+			return ProfileResolution.builder()
+					.providerId("credential")
+					.providerSubject("credential-subject")
+					.build();
 		}
 	}
 }

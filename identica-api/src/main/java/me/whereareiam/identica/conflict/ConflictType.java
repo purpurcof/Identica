@@ -1,10 +1,9 @@
 package me.whereareiam.identica.conflict;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
-import me.whereareiam.identica.event.account.AccountPrepareEvent;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.type.ConflictHook;
-import me.whereareiam.identica.model.conflict.ConflictResolution;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,7 +12,7 @@ import java.util.List;
 /**
  * Describes a conflict that can occur and how it should be handled.
  */
-public interface ConflictType {
+public interface ConflictType<S extends ConflictSubject> {
 	/**
 	 * Conflict key used in configuration and context.
 	 *
@@ -65,32 +64,32 @@ public interface ConflictType {
 	}
 
 	/**
-	 * Build a conflict context during account preparation.
+	 * Build a conflict context for the provided subject.
 	 *
 	 * <pre>{@code
-	 * ConflictContext context = type.createContext(event);
+	 * ConflictContext context = type.createContext(subject);
 	 * if (context != null) {
 	 *     ConflictResolution resolution = conflictService.resolve(context);
-	 *     if (resolution != null) type.apply(event, context, resolution);
+	 *     if (resolution != null) {
+	 *         // interpret the resolution inside the owning conflict type module
+	 *     }
 	 * }
 	 * }</pre>
 	 *
-	 * @param event account prepare event
+	 * @param subject conflict subject
 	 * @return conflict context or {@code null} if no conflict applies
 	 */
 	@Nullable
-	ConflictContext createContext(@NotNull AccountPrepareEvent event);
+	ConflictContext createContext(@NotNull S subject);
 
 	/**
-	 * Apply the resolved conflict decision to the event.
+	 * Returns {@code true} when the provided rule selector applies to the current context.
 	 *
-	 * @param event account prepare event
 	 * @param context conflict context
-	 * @param resolution conflict resolution
+	 * @param when opaque rule selector owned by the conflict type
+	 * @return whether the rule should be selected
 	 */
-	void apply(
-			@NotNull AccountPrepareEvent event,
-			@NotNull ConflictContext context,
-			@NotNull ConflictResolution resolution
-	);
+	default boolean matchesRule(@NotNull ConflictContext context, @NotNull JsonNode when) {
+		return false;
+	}
 }

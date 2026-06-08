@@ -1,28 +1,29 @@
 package me.whereareiam.identica.common.conflict;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import me.whereareiam.identica.common.conflict.resolver.defaults.KickActiveConflictResolver;
-import me.whereareiam.identica.common.conflict.resolver.defaults.KickBothConflictResolver;
-import me.whereareiam.identica.common.conflict.resolver.defaults.KickJoinerConflictResolver;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import me.whereareiam.identica.conflict.ConflictGuard;
+import me.whereareiam.identica.conflict.ConflictSubject;
+import me.whereareiam.identica.conflict.ConflictType;
 import me.whereareiam.identica.conflict.resolver.ConflictResolver;
 import me.whereareiam.identica.model.config.provider.Conflicts;
+import me.whereareiam.identica.model.conflict.ConflictAttributeKey;
 import me.whereareiam.identica.model.conflict.ConflictContext;
 import me.whereareiam.identica.model.conflict.ConflictResolution;
-import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Default Conflict Service")
 class DefaultConflictServiceTest {
+	private static final ConflictAttributeKey<String> SELECTOR = ConflictAttributeKey.string("selector");
+
 	@DisplayName("Conflict guards run before resolvers and can short-circuit resolution")
 	@Test
 	void guardRunsBeforeResolver() {
@@ -30,97 +31,85 @@ class DefaultConflictServiceTest {
 		conflicts.getRules().put("username", rules(defaultRule(entry("test"))));
 
 		AtomicBoolean resolverCalled = new AtomicBoolean(false);
-		ConflictResolver resolver = new ConflictResolver() {
-			@Override
-			public @NotNull String getId() {
-				return "test";
-			}
-
-			@Override
-			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull JsonNode params) {
-				resolverCalled.set(true);
-				return ConflictResolution.allow();
-			}
-		};
-
+		ConflictResolver resolver = resolver("test", resolverCalled, ConflictResolution.allow());
 		ConflictGuard guard = context -> ConflictResolution.deny("guarded");
 
-		DefaultConflictService service = new DefaultConflictService(
-				() -> conflicts,
-				Set.of(guard),
-				new KickJoinerConflictResolver(),
-				new KickActiveConflictResolver(),
-				new KickBothConflictResolver()
-		);
+		DefaultConflictService service = new DefaultConflictService(() -> conflicts, Set.of(guard));
 		service.register(resolver);
 
 		ConflictResolution resolution = service.resolve(context("username"));
-
-		assertEquals(ConflictResolution.Action.DENY, resolution.getAction());
+		assertEquals(ConflictResolution.Decision.DENY, resolution.getDecision());
 		assertFalse(resolverCalled.get());
 	}
 
-	@DisplayName("Falls back to the default rule after pair-specific resolvers pass")
+	@DisplayName("Falls back to the default rule after case-specific resolvers pass")
 	@Test
-	void fallsBackToDefaultRuleWhenPairResolversPass() {
+	void fallsBackToDefaultRuleWhenCaseResolversPass() {
 		Conflicts conflicts = new Conflicts();
 		Conflicts.ConflictRules rules = new Conflicts.ConflictRules();
 		rules.setDefaultRule(defaultRule(entry("allow")));
 
-		Conflicts.ConflictRules.ConflictRule pairRule = new Conflicts.ConflictRules.ConflictRule();
-		pairRule.setProviders(List.of("premium", "credential"));
-		pairRule.setResolvers(List.of(entry("pass")));
-		rules.setPairs(List.of(pairRule));
+		Conflicts.ConflictRules.ConflictRule caseRule = new Conflicts.ConflictRules.ConflictRule();
+		caseRule.setWhen(JsonNodeFactory.instance.objectNode().put("selector", "preferred"));
+		caseRule.setResolvers(List.of(entry("pass")));
+		rules.setCases(List.of(caseRule));
 
 		conflicts.getRules().put("username", rules);
 
 		AtomicBoolean passCalled = new AtomicBoolean(false);
 		AtomicBoolean allowCalled = new AtomicBoolean(false);
-		ConflictResolver passResolver = new ConflictResolver() {
-			@Override
-			public @NotNull String getId() {
-				return "pass";
-			}
+		ConflictResolver passResolver = resolver("pass", passCalled, ConflictResolution.pass());
+		ConflictResolver allowResolver = resolver("allow", allowCalled, ConflictResolution.allow());
 
-			@Override
-			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull JsonNode params) {
-				passCalled.set(true);
-				return ConflictResolution.pass();
-			}
-		};
-		ConflictResolver allowResolver = new ConflictResolver() {
-			@Override
-			public @NotNull String getId() {
-				return "allow";
-			}
-
-			@Override
-			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull JsonNode params) {
-				allowCalled.set(true);
-				return ConflictResolution.allow();
-			}
-		};
-
-		DefaultConflictService service = new DefaultConflictService(
-				() -> conflicts,
-				Set.of(),
-				new KickJoinerConflictResolver(),
-				new KickActiveConflictResolver(),
-				new KickBothConflictResolver()
-		);
+		DefaultConflictService service = new DefaultConflictService(() -> conflicts, Set.of());
+		service.register(new TestConflictType());
 		service.register(passResolver);
 		service.register(allowResolver);
 
-		ConflictContext context = context("username")
-				.toBuilder()
-				.incomingLink(link("premium"))
-				.existingLink(link("credential"))
-				.build();
+		ConflictContext context = context("username");
+		context.putAttribute(SELECTOR, "preferred");
 
 		ConflictResolution resolution = service.resolve(context);
-		assertEquals(ConflictResolution.Action.ALLOW, resolution.getAction());
+		assertEquals(ConflictResolution.Decision.ALLOW, resolution.getDecision());
 		assertTrue(passCalled.get());
 		assertTrue(allowCalled.get());
+	}
+
+	@DisplayName("The first matching case wins")
+	@Test
+	void firstMatchingCaseWins() {
+		Conflicts conflicts = new Conflicts();
+		Conflicts.ConflictRules rules = new Conflicts.ConflictRules();
+		rules.setDefaultRule(defaultRule(entry("default")));
+
+		Conflicts.ConflictRules.ConflictRule first = new Conflicts.ConflictRules.ConflictRule();
+		first.setWhen(JsonNodeFactory.instance.objectNode().put("selector", "preferred"));
+		first.setResolvers(List.of(entry("first")));
+
+		Conflicts.ConflictRules.ConflictRule second = new Conflicts.ConflictRules.ConflictRule();
+		second.setWhen(JsonNodeFactory.instance.objectNode().put("selector", "preferred"));
+		second.setResolvers(List.of(entry("second")));
+
+		rules.setCases(List.of(first, second));
+		conflicts.getRules().put("username", rules);
+
+		AtomicBoolean firstCalled = new AtomicBoolean(false);
+		AtomicBoolean secondCalled = new AtomicBoolean(false);
+		ConflictResolver firstResolver = resolver("first", firstCalled, ConflictResolution.allow());
+		ConflictResolver secondResolver = resolver("second", secondCalled, ConflictResolution.deny("denied"));
+
+		DefaultConflictService service = new DefaultConflictService(() -> conflicts, Set.of());
+		service.register(new TestConflictType());
+		service.register(firstResolver);
+		service.register(secondResolver);
+
+		ConflictContext context = context("username");
+		context.putAttribute(SELECTOR, "preferred");
+
+		ConflictResolution resolution = service.resolve(context);
+		assertEquals(ConflictResolution.Decision.ALLOW, resolution.getDecision());
+		assertTrue(firstCalled.get());
+		assertFalse(secondCalled.get());
 	}
 
 	private Conflicts.ConflictRules rules(Conflicts.ConflictRules.ConflictRule defaultRule) {
@@ -147,16 +136,40 @@ class DefaultConflictServiceTest {
 	private ConflictContext context(String key) {
 		return ConflictContext.builder()
 				.key(key)
-				.candidate("Player")
+				.hook("prepare")
 				.build();
 	}
 
-	private AccountProviderLink link(String providerId) {
-		return AccountProviderLink.builder()
-				.uniqueId(UUID.randomUUID())
-				.providerId(providerId)
-				.providerSubject("subject-" + providerId)
-				.primaryLink(true)
-				.build();
+	private ConflictResolver resolver(String id, AtomicBoolean called, ConflictResolution resolution) {
+		return new ConflictResolver() {
+			@Override
+			public @NotNull String getId() {
+				return id;
+			}
+
+			@Override
+			public @NotNull ConflictResolution resolve(@NotNull ConflictContext context, @NotNull JsonNode params) {
+				called.set(true);
+				return resolution;
+			}
+		};
+	}
+
+	private static final class TestConflictType implements ConflictType<ConflictSubject> {
+		@Override
+		public @NotNull String getKey() {
+			return "username";
+		}
+
+		@Override
+		public ConflictContext createContext(@NotNull ConflictSubject subject) {
+			return null;
+		}
+
+		@Override
+		public boolean matchesRule(@NotNull ConflictContext context, @NotNull JsonNode when) {
+			String selector = context.getAttribute(SELECTOR);
+			return selector != null && selector.equalsIgnoreCase(when.path("selector").asText());
+		}
 	}
 }

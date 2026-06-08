@@ -12,10 +12,7 @@ import me.whereareiam.configura.merge.strategy.DeclaredObjectDefaults;
 import me.whereareiam.configura.type.merge.tree.list.ListMode;
 import me.whereareiam.configura.type.merge.tree.list.ListPresence;
 import me.whereareiam.configura.type.merge.tree.list.ListUnknownEntries;
-import me.whereareiam.identica.type.provider.ProviderJoinRestrictionCondition;
 import me.whereareiam.identica.type.session.SessionConcurrencyPolicy;
-import me.whereareiam.identica.type.session.recognition.RecognitionSignal;
-import me.whereareiam.identica.type.verification.UnavailableSelectionPolicy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -51,10 +48,6 @@ public class Providers extends ConfigDocument {
 		 * Time-to-live for provider attempt markers.
 		 */
 		private @NotNull Duration attemptTtl;
-		/**
-		 * Time-to-live for provider join restriction runtime toggles.
-		 */
-		private @NotNull Duration joinRestrictionToggleTtl;
 
 		/**
 		 * Returns attempt TTL in milliseconds with validation.
@@ -69,18 +62,6 @@ public class Providers extends ConfigDocument {
 			return attemptTtl.toMillis();
 		}
 
-		/**
-		 * Returns join restriction toggle TTL in milliseconds with validation.
-		 *
-		 * @return join restriction toggle TTL in milliseconds
-		 */
-		public long joinRestrictionToggleTtlMillis() {
-			if (joinRestrictionToggleTtl.isZero() || joinRestrictionToggleTtl.isNegative()) {
-				throw new IllegalStateException("providers.behavior.joinRestrictionToggleTtl must be positive");
-			}
-
-			return joinRestrictionToggleTtl.toMillis();
-		}
 	}
 
 	/**
@@ -106,15 +87,15 @@ public class Providers extends ConfigDocument {
 		@Merge(DeclaredObjectDefaults.class)
 		@ExtendableDocument
 		private @Nullable Session session;
+		@Merge(DeclaredObjectDefaults.class)
+		@ExtendableDocument
+		private @Nullable Capabilities capabilities;
 		/**
-		 * Provider-specific restriction settings.
+		 * Feature-specific provider settings.
 		 */
 		@Merge(DeclaredObjectDefaults.class)
 		@ExtendableDocument
-		private @Nullable Restriction restriction;
-		@Merge(DeclaredObjectDefaults.class)
-		@ExtendableDocument
-		private @Nullable Verification verification;
+		private @Nullable Features features;
 		/**
 		 * Hostnames (optionally with port) that map to this provider.
 		 * Entries must use the format {@code host} or {@code host:port}.
@@ -130,86 +111,28 @@ public class Providers extends ConfigDocument {
 		@ExtendableDocument
 		public static class Session {
 			private @Nullable SessionConcurrencyPolicy concurrencyPolicy;
-			@Merge(DeclaredObjectDefaults.class)
-			@ExtendableDocument
-			private @Nullable Recognition recognition;
-
-			/**
-			 * Provider-specific reconnect recognition settings.
-			 */
-			@Getter
-			@Setter
-			@ToString
-			@ExtendableDocument
-			public static class Recognition {
-				private @Nullable Boolean enabled;
-				private @NotNull List<RecognitionSignal> signals = new ArrayList<>();
-				private boolean allowOnUntrustedIps;
-			}
 		}
 
 		/**
-		 * Provider-specific restriction settings.
+		 * Capability-specific provider settings.
 		 */
 		@Getter
 		@Setter
 		@ToString
 		@ExtendableDocument
-		public static class Restriction {
-			/**
-			 * Runtime-toggleable provider join restriction settings.
-			 */
-			@Merge(DeclaredObjectDefaults.class)
-			@ExtendableDocument
-			private @Nullable Join join;
-
-			/**
-			 * Runtime-toggleable provider join restriction settings.
-			 */
-			@Getter
-			@Setter
-			@ToString
-			@ExtendableDocument
-			public static class Join {
-				private boolean enabled;
-				private @Nullable List<ProviderJoinRestrictionCondition> allow;
-			}
+		@PreserveUnknownFields
+		public static class Capabilities {
 		}
 
 		/**
-		 * Shared verification settings for a provider.
+		 * Feature-specific provider settings.
 		 */
 		@Getter
 		@Setter
 		@ToString
 		@ExtendableDocument
-		public static class Verification {
-			private boolean enabled;
-			private boolean required;
-			private @Nullable UnavailableSelectionPolicy unavailableSelectionPolicy;
-			@Merge
-			@MergeList(
-					mode = ListMode.KEYED,
-					key = "id",
-					presence = ListPresence.DECLARED_ONLY,
-					unknownEntries = ListUnknownEntries.ALLOW
-			)
-			private @NotNull List<MethodEntry> methods = new ArrayList<>();
-
-			/**
-			 * Verification method entry for a provider.
-			 */
-			@Getter
-			@Setter
-			@ToString
-			@ExtendableDocument
-			public static class MethodEntry {
-				private @NotNull String id = "";
-				private boolean enabled;
-				private int priority;
-				private @Nullable Boolean required;
-				private @Nullable UnavailableSelectionPolicy unavailableSelectionPolicy;
-			}
+		@PreserveUnknownFields
+		public static class Features {
 		}
 	}
 }

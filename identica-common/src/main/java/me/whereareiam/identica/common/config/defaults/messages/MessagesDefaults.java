@@ -55,7 +55,6 @@ public class MessagesDefaults implements DefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		providers.setProviderRestriction(buildProviderRestriction());
 		messages.setProviders(providers);
 	}
 
@@ -113,14 +112,6 @@ public class MessagesDefaults implements DefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		prepare.setProviderRestricted(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>{providerName} is not accepting joins right now.</white>",
-				"<white>Please contact a server administrator.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
 		Messages.Engine.Prepare.Errors errors = new Messages.Engine.Prepare.Errors();
 		errors.setPreparePolicyMissing(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
@@ -132,20 +123,6 @@ public class MessagesDefaults implements DefaultsProvider<Messages> {
 		));
 		prepare.setErrors(errors);
 		return prepare;
-	}
-
-	private Messages.Providers.ProviderRestriction buildProviderRestriction() {
-		Messages.Providers.ProviderRestriction providerRestriction = new Messages.Providers.ProviderRestriction();
-		providerRestriction.setDenied(List.of(
-				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
-				"",
-				"<white>{providerName} is temporarily unavailable.</white>",
-				"<white>Allowed joins currently require: <green>{allow}</green>.</white>",
-				"<white>If you think this is a mistake, contact a server administrator.</white>",
-				"",
-				"<dark_gray>discord.arcadeya.com"
-		));
-		return providerRestriction;
 	}
 
 	private Messages.Scenarios.Authentication buildAuthentication() {

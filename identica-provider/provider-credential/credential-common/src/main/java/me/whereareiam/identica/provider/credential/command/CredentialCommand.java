@@ -6,7 +6,9 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.command.ProtectedActionCommand;
+import me.whereareiam.identica.feature.verification.VerificationService;
+import me.whereareiam.identica.feature.verification.command.ProtectedActionCommand;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
@@ -16,15 +18,12 @@ import me.whereareiam.identica.model.migration.operation.MigrationCancel;
 import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.model.migration.operation.MigrationRequest;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
-import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.credential.CredentialConstants;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationCancelScope;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
-import me.whereareiam.identica.type.provider.ProviderCapability;
-import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,24 +34,24 @@ import java.util.UUID;
 public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> {
 	private final Provider<CredentialMessages> messagesProvider;
 	private final Provider<Messages> coreMessagesProvider;
+	private final Provider<VerificationMessages> verificationMessagesProvider;
 	private final MigrationService migrationService;
-	private final ProviderManager providerManager;
 	private final SessionService sessionService;
 
 	@Inject
 	public CredentialCommand(
 			Provider<CredentialMessages> messagesProvider,
 			Provider<Messages> coreMessagesProvider,
+			Provider<VerificationMessages> verificationMessagesProvider,
 			MigrationService migrationService,
-			ProviderManager providerManager,
 			VerificationService verificationService,
 			SessionService sessionService
 	) {
 		super(verificationService);
 		this.messagesProvider = messagesProvider;
 		this.coreMessagesProvider = coreMessagesProvider;
+		this.verificationMessagesProvider = verificationMessagesProvider;
 		this.migrationService = migrationService;
-		this.providerManager = providerManager;
 		this.sessionService = sessionService;
 	}
 
@@ -74,7 +73,6 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 
 		Session session = requireCurrentSession(identity);
 		if (session == null) return;
-		if (!supportsMigration()) return;
 		UUID accountUniqueId = requireAccountUniqueId(identity);
 		if (accountUniqueId == null) return;
 
@@ -100,7 +98,7 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 
 				StepUpPreparation preparation = prepareStepUp(accountUniqueId, "migration-confirm");
 				if (preparation.getStatus() == StepUpPreparation.Status.SELECTION_REQUIRED) {
-					sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSelectionRequired());
 					return;
 				}
 				sendMessage(identity, messages.getVerificationRequired());
@@ -117,9 +115,8 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 	@Command("credential confirm [input]")
 	public void confirm(@NotNull Actor sender, @Argument("input") @Nullable String input) {
 		Identity identity = requireIdentity(sender, null);
-		if (identity == null) return;
+		if (identity == null || requireCurrentSession(identity) == null) return;
 
-		if (requireCurrentSession(identity) == null) return;
 		UUID accountUniqueId = requireAccountUniqueId(identity);
 		if (accountUniqueId == null) return;
 
@@ -131,8 +128,8 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 			StepUpPreparation preparation = prepareStepUp(accountUniqueId, "migration-confirm");
 			if (preparation.getStatus() != StepUpPreparation.Status.READY) {
 				switch (preparation.getStatus()) {
-					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
-					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSessionRequired());
+					case SELECTION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSelectionRequired());
 					default -> sendMessage(identity, messagesProvider.get().getCommands().getCredential().getNoPending());
 				}
 				return;
@@ -146,9 +143,9 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 			StepUpResult result = confirmStepUp(accountUniqueId, input, "migration-confirm");
 			if (result.getStatus() != StepUpResult.Status.VERIFIED) {
 				switch (result.getStatus()) {
-					case INVALID_CODE -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getInvalidCode());
-					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
-					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					case INVALID_CODE -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getInvalidCode());
+					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSessionRequired());
+					case SELECTION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSelectionRequired());
 					default -> sendMessage(identity, messagesProvider.get().getCommands().getCredential().getNoPending());
 				}
 				return;
@@ -184,8 +181,7 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 	@Command("credential cancel")
 	public void cancel(@NotNull Actor sender) {
 		Identity identity = requireIdentity(sender, null);
-		if (identity == null) return;
-		if (requireCurrentSession(identity) == null) return;
+		if (identity == null || requireCurrentSession(identity) == null) return;
 
 		var result = migrationService.cancel(MigrationCancel.builder()
 				.connectionUniqueId(identity.getConnectionUniqueId())
@@ -199,13 +195,6 @@ public class CredentialCommand extends ProtectedActionCommand<MigrationRequest> 
 		}
 
 		sendMessage(identity, messages.getNoPending());
-	}
-
-	private boolean supportsMigration() {
-		return providerManager.findProviders(ProviderCapability.MIGRATION).stream()
-				.anyMatch(provider -> provider != null
-						&& provider.getDescriptor() != null
-						&& CredentialConstants.PROVIDER_ID.equalsIgnoreCase(provider.getDescriptor().getId()));
 	}
 
 	private void sendMessage(@NotNull Identity identity, String message) {

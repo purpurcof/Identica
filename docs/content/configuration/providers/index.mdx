@@ -4,7 +4,10 @@ description: Field-by-field explanation of Identica's provider configuration are
 ---
 
 The providers configuration controls which identity providers are enabled and how provider-specific behavior is applied.
-Use this file to enable providers, set priority and entrypoints, configure restrictions and verification, and tune provider-specific session and recognition behavior.
+Use this file to enable providers, set priority and entrypoints, tune provider-specific session behavior, and apply capability-owned and feature-owned provider fields.
+
+Capability-specific shared fields and provider-scoped capability overrides are documented under [Capabilities](./capabilities/index.md).
+Conflict configuration for provider-owned conflicts is documented under [Conflicts](./conflicts.mdx).
 
 ## behavior
 
@@ -22,32 +25,18 @@ Identica uses this when it marks that a provider attempt already happened for a 
 Longer values make repeated attempts stay blocked longer.
 Shorter values let retries happen sooner.
 
-### joinRestrictionToggleTtl
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"365d"`
-- Affects: how long provider join restriction runtime toggles stay active in the replicated toggle store
-
-This TTL is used when join restrictions are enabled at runtime.
-Longer values make administrative toggles persist for longer without needing to be reapplied.
-Shorter values let temporary restrictions expire automatically sooner.
-
 <Tabs items={["YAML", "JSON"]}>
   <Tab value="YAML">
 ```yaml
 behavior:
   attemptTtl: "10m"
-  joinRestrictionToggleTtl: "365d"
 ```
   </Tab>
   <Tab value="JSON">
 ```json
 {
   "behavior": {
-    "attemptTtl": "10m",
-    "joinRestrictionToggleTtl": "365d"
+    "attemptTtl": "10m"
   }
 }
 ```
@@ -57,7 +46,7 @@ behavior:
 ## providers
 
 - Takes: a list of provider entries
-- Affects: provider enablement, ordering, entrypoint routing, verification policy, and provider-specific session and recognition behavior
+- Affects: provider enablement, ordering, entrypoint routing, provider-specific session behavior, capability and feature-owned provider overrides
 
 Provider ids should match installed provider descriptors, such as `premium` or `credential`.
 
@@ -73,25 +62,6 @@ providers:
       - "premium.example.com"
     session:
       concurrencyPolicy: "REJECT_NEW"
-      recognition:
-        enabled: true
-        signals:
-          - "USERNAME"
-          - "VIRTUAL_HOST"
-        allowOnUntrustedIps: false
-    restriction:
-      join:
-        enabled: false
-        allow:
-          - "RECOGNIZED"
-    verification:
-      enabled: true
-      required: false
-      unavailableSelectionPolicy: "KEEP_LOCKED"
-      methods:
-        - id: "totp"
-          enabled: true
-          priority: 100
 ```
   </Tab>
   <Tab value="JSON">
@@ -105,30 +75,7 @@ providers:
       "priority": 100,
       "entrypoints": ["premium.example.com"],
       "session": {
-        "concurrencyPolicy": "REJECT_NEW",
-        "recognition": {
-          "enabled": true,
-          "signals": ["USERNAME", "VIRTUAL_HOST"],
-          "allowOnUntrustedIps": false
-        }
-      },
-      "restriction": {
-        "join": {
-          "enabled": false,
-          "allow": ["RECOGNIZED"]
-        }
-      },
-      "verification": {
-        "enabled": true,
-        "required": false,
-        "unavailableSelectionPolicy": "KEEP_LOCKED",
-        "methods": [
-          {
-            "id": "totp",
-            "enabled": true,
-            "priority": 100
-          }
-        ]
+        "concurrencyPolicy": "REJECT_NEW"
       }
     }
   ]
@@ -186,114 +133,31 @@ Use `session` when one provider should behave differently from the global live-s
 
 If this is absent, Identica uses `settings.sessions.concurrencyPolicy`.
 
-#### session.recognition
+### capabilities
 
-- Takes: an object
-- Current default: `{}` for providers without recognition-specific changes
-- Affects: provider-specific reconnect recognition behavior
+Use `capabilities` for provider-scoped fields owned by installed capabilities.
+Only providers that advertise a capability can use that capability's fields.
 
-Use `session.recognition` when one provider should evaluate reconnect recognition differently from the global defaults.
-
-##### session.recognition.enabled
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: `true` or `false`
+- Takes: an object keyed by capability id
 - Current default: absent
-- Affects: whether this provider inherits or overrides `settings.sessions.recognition.enabled`
+- Affects: provider-scoped overrides contributed by capabilities
 
-When this field is absent, the provider inherits `settings.sessions.recognition.enabled`.
+The shape inside `capabilities` is not global.
+Each installed capability defines its own nested fields.
 
-##### session.recognition.signals
+<Include src="./capabilities/_partials/provider-overrides.mdx" />
 
-<Badge type="warning">Warning</Badge>
+### features
 
-- Takes: a list containing any of `"USERNAME"`, `"IP"`, `"VIRTUAL_HOST"`
+Use `features` for provider-scoped fields owned by installed features.
+Only installed features that extend provider configuration can use nested fields here.
+
+- Takes: an object keyed by feature id
 - Current default: absent
-- Affects: the signal set used when this provider evaluates reconnect recognition
+- Affects: provider-scoped overrides contributed by features
 
-When this field is absent or empty, the provider inherits `settings.sessions.recognition.defaultSignals`.
+The shape inside `features` is not global.
+Each installed feature defines its own nested fields.
 
-##### session.recognition.allowOnUntrustedIps
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether this provider stays recognition-eligible from client IPs blocked by `settings.sessions.recognition.eligibility.untrustedIps`
-
-Leave this `false` for the normal safety posture.
-Set it to `true` only when this specific provider should remain recognition-eligible on client IPs that are otherwise blocked.
-
-### restriction
-
-Use `restriction` for provider-specific restriction policies.
-Right now it contains `restriction.join`, and the extra nesting leaves room for more restriction types later without flattening the provider entry further.
-
-#### restriction.join
-
-Use `restriction.join` when a provider should support runtime join restriction toggles through the admin provider restriction commands.
-
-##### restriction.join.enabled
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether this provider exposes a runtime-toggleable join restriction policy
-
-When this is `false`, `/identica admin provider restriction enable <provider>` will fail for that provider.
-When this is `true`, the configured allow-list can be activated at runtime by command.
-
-##### restriction.join.allow
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a list containing `"RECOGNIZED"` and/or `"LINKED"`
-- Current default: absent unless explicitly configured
-- Affects: what the runtime provider restriction does when it is active
-
-Available conditions:
-
-- `RECOGNIZED`: only reconnect-recognized players may continue through this provider
-- `LINKED`: already-linked players may continue through this provider
-
-When the list contains both values, players may continue when either condition matches.
-When the list is empty, all new joins through the provider are denied.
-
-### verification
-
-Use `verification` when a provider should participate in the shared verification system or override its provider-level verification behavior.
-
-#### verification.enabled
-
-- Takes: `true` or `false`
-- Current default: `false` unless the provider entry explicitly enables it
-- Affects: whether this provider participates in the shared verification system
-
-#### verification.required
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether verification becomes mandatory for this provider instead of optional
-
-#### verification.unavailableSelectionPolicy
-
-- Takes: `"CLEAR_SELECTION"` or `"KEEP_LOCKED"`
-- Current default: `CLEAR_SELECTION` when unset in current source
-- Affects: what happens when the selected verification method is unavailable
-
-#### verification.methods
-
-- Takes: a list of method entries
-- Affects: which verification methods can be used for this provider and in what order
-
-Each method entry supports:
-
-- `id`: the verification method id, such as `totp`
-- `enabled`: whether that method can be used
-- `priority`: ordering when more than one method is available
-- `required`: optional method-level override for provider-wide `verification.required`
-- `unavailableSelectionPolicy`: optional method-level override for provider-wide `verification.unavailableSelectionPolicy`
-
-When a method entry leaves `required` or `unavailableSelectionPolicy` unset, the current resolver falls back to the provider-level verification settings.
+The official verification feature contributes `verification` here.
+See [Verification settings](../features/verification/settings/index.mdx#provider-overrides).

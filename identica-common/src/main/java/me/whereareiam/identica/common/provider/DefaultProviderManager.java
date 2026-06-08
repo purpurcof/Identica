@@ -11,16 +11,13 @@ import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.resolver.ProviderResolver;
-import me.whereareiam.identica.type.provider.ProviderCapability;
+import me.whereareiam.identica.type.provider.ProviderFeature;
 import me.whereareiam.identica.type.provider.ProviderState;
+import me.whereareiam.identica.type.provider.capability.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -113,6 +110,36 @@ public class DefaultProviderManager implements ProviderManager {
 	}
 
 	@Override
+	public @NotNull List<InternalProvider> findProvidersByFeatures(@NotNull ProviderFeature... features) {
+		if (providers.isEmpty()) return List.of();
+
+		List<InternalProvider> matches = new ArrayList<>();
+		for (InternalProvider provider : providers) {
+			if (provider == null || provider.getState() != ProviderState.ENABLED) continue;
+
+			ProviderDescriptor descriptor = provider.getDescriptor();
+			if (descriptor == null || descriptor.getId().isBlank()) continue;
+			if (!supportsAll(descriptor, features)) continue;
+
+			matches.add(provider);
+		}
+
+		matches.sort(Comparator.comparingInt(InternalProvider::getPriority)
+				.reversed()
+				.thenComparing(left -> left.getDescriptor().getId(), String.CASE_INSENSITIVE_ORDER));
+
+		return Collections.unmodifiableList(matches);
+	}
+
+	@Override
+	public @Nullable InternalProvider findProviderByFeatures(@NotNull ProviderFeature... features) {
+		List<InternalProvider> matches = findProvidersByFeatures(features);
+		if (matches.isEmpty()) return null;
+
+		return matches.getFirst();
+	}
+
+	@Override
 	public void registerResolver(ProviderResolver resolver) {
 		resolverRegistry.register(resolver);
 	}
@@ -164,6 +191,17 @@ public class DefaultProviderManager implements ProviderManager {
 			if (capability == null) continue;
 			if (!descriptor.hasCapability(capability))
 				return false;
+		}
+
+		return true;
+	}
+
+	private boolean supportsAll(ProviderDescriptor descriptor, ProviderFeature[] features) {
+		if (features == null) return true;
+
+		for (ProviderFeature feature : features) {
+			if (feature == null) continue;
+			if (!descriptor.hasFeature(feature)) return false;
 		}
 
 		return true;

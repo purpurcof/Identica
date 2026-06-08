@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
-import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.request.ProfileRequest;
@@ -17,10 +16,10 @@ import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateItem;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.type.UsernameSource;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -115,7 +114,6 @@ public class LoadPrepareAccountPhase implements PipelinePhase<PrepareGroupState>
 				: Account.builder()
 						.uniqueId(accountUniqueId)
 						.username(requestedUsername)
-						.source(UsernameSource.PROVIDER)
 						.build();
 		AccountProviderProfile profile = providerProfilePersistenceService.findBySubject(
 				provider.getProviderId(),

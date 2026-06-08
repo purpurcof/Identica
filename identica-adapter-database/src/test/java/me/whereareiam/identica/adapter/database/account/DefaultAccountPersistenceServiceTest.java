@@ -9,7 +9,6 @@ import me.whereareiam.identica.event.account.AccountDeleteEvent;
 import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.identity.Account;
-import me.whereareiam.identica.type.UsernameSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,14 +20,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Default Account Persistence Service")
@@ -52,7 +45,6 @@ class DefaultAccountPersistenceServiceTest {
 		AccountEntity entity = AccountEntity.builder()
 				.uniqueId(uniqueId)
 				.username("PlayerOne")
-				.usernameSource("manual")
 				.createdAt(TestDataFactory.CREATED_AT)
 				.lastSeenAt(TestDataFactory.LAST_SEEN_AT)
 				.build();
@@ -63,7 +55,6 @@ class DefaultAccountPersistenceServiceTest {
 		assertTrue(result.isPresent());
 		assertEquals(uniqueId, result.get().getUniqueId());
 		assertEquals("PlayerOne", result.get().getUsername());
-		assertEquals(UsernameSource.MANUAL, result.get().getSource());
 		assertEquals(TestDataFactory.CREATED_AT, result.get().getCreatedAt());
 		assertEquals(TestDataFactory.LAST_SEEN_AT, result.get().getLastSeenAt());
 	}
@@ -107,7 +98,6 @@ class DefaultAccountPersistenceServiceTest {
 		verify(accountRepository).insert(
 				uniqueId,
 				"PlayerOne",
-				UsernameSource.MANUAL.getId(),
 				TestDataFactory.CREATED_AT,
 				TestDataFactory.LAST_SEEN_AT
 		);
@@ -139,16 +129,6 @@ class DefaultAccountPersistenceServiceTest {
 		service.updateUsername(uniqueId, "PlayerTwo");
 
 		verify(accountRepository).updateUsername(uniqueId, "PlayerTwo");
-	}
-
-	@DisplayName("Stores the username source as its configured identifier")
-	@Test
-	void updateUsernameSourceDelegatesId() {
-		UUID uniqueId = UUID.randomUUID();
-
-		service.updateUsernameSource(uniqueId, UsernameSource.SYSTEM);
-
-		verify(accountRepository).updateUsernameSource(uniqueId, UsernameSource.SYSTEM.getId());
 	}
 
 	@DisplayName("Swallows repository errors when deleting an account")

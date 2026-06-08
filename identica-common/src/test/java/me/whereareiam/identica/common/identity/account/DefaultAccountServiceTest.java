@@ -11,7 +11,6 @@ import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.AccountOperationRequest;
-import me.whereareiam.identica.type.UsernameSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -105,7 +104,6 @@ class DefaultAccountServiceTest {
 		return Account.builder()
 				.uniqueId(UUID.randomUUID())
 				.username("Player")
-				.source(UsernameSource.PROVIDER)
 				.build();
 	}
 

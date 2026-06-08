@@ -28,7 +28,6 @@ public class ReplicationDefaults implements DefaultsProvider<Replication> {
 		Replication.Cache cache = new Replication.Cache();
 		cache.setReservations("identica:reservation");
 		cache.setInstructions("identica:handshake-instructions");
-		cache.setProviderJoinRestrictions("identica:provider-join-restrictions");
 		cache.setAttempts("identica:provider-attempts");
 		cache.setSentinels("identica:sentinels");
 		Replication.Delivery delivery = new Replication.Delivery();
@@ -41,9 +40,6 @@ public class ReplicationDefaults implements DefaultsProvider<Replication> {
 		sessions.setUser("identica:sessions:user");
 		sessions.setSession("identica:sessions:session");
 		sessions.setSubject("identica:sessions:subject");
-		Replication.Sessions.Recognition recognition = new Replication.Sessions.Recognition();
-		recognition.setSnapshot("identica:session-recognition:snapshot");
-		sessions.setRecognition(recognition);
 		cache.setSessions(sessions);
 
 		cache.setPipelineState("identica:pipeline-state");

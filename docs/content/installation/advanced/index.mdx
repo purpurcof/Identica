@@ -25,7 +25,9 @@ Replication is still useful on a single runtime when restart continuity matters.
 
 If multiple runtimes will share the same replicated state, keep them on the same Identica version and give each one its own unique `serverId`.
 
-## 1. Download the artifacts
+## Installation steps
+
+### Download the artifacts [step]
 
 <ContentTabs items={["GitHub Releases", "GitHub Development Builds", "Modrinth Releases"]}>
   <ContentTab value="GitHub Releases">
@@ -79,11 +81,11 @@ If multiple runtimes will share the same replicated state, keep them on the same
   </ContentTab>
 </ContentTabs>
 
-## 2. Place the runtime and provider jars
+### Place the runtime and provider jars [step]
 
 <Include src="../_partials/platform-placement.mdx" />
 
-## 3. Start the runtime once and stop it again
+### Start the runtime once and stop it again [step]
 
 Start the platform once so Identica can create its initial files and folders.
 This first boot is only meant to let the plugin prepare its default configuration layout before you begin the shared-state setup.
@@ -96,17 +98,17 @@ Once that first boot has completed and the files were created, stop the proxy cl
 
 <Include src="../_partials/platform-first-boot.mdx" />
 
-## 4. Enable and order the providers
+### Enable and order the providers [step]
 
 <Include src="../_partials/provider-ordering.mdx" />
 
 If hostname-based routing is not part of this rollout yet, leave `entrypoints` empty or replace the default values later when you know the real hostnames.
 
-## 5. Understand journey mode and journey policy
+### Understand journey mode and journey policy [step]
 
 <Include src="../_partials/journey-mode.mdx" />
 
-## 6. Turn shared state into an intentional environment contract
+### Turn shared state into an intentional environment contract [step]
 
 Open the generated `replication` config and change it from generated defaults into a stable environment definition.
 
@@ -131,7 +133,7 @@ redis:
 
 If a second runtime should share this replicated environment, keep the same Redis connection details, channel names, and cache namespaces, but give that runtime a different `serverId`, for example `velocity-fallback`.
 
-## 7. Keep channels and cache namespaces stable
+### Keep channels and cache namespaces stable [step]
 
 Once an environment starts using replicated state, treat these names as part of its contract:
 
@@ -143,7 +145,7 @@ That stability is what lets sessions, reservations, attempts, and pending pipeli
 Do not casually rename those keys after the environment is live.
 If you need environment-specific naming, decide it before the rollout and then keep it stable.
 
-## 8. Replace default routing targets with real ones
+### Replace default routing targets with real ones [step]
 
 Open `routing` and align targets with the backend names that actually exist.
 The default values are examples only.
@@ -356,7 +358,7 @@ In most cases, step targets should point to an authentication or transition dest
   </ContentTab>
 </ContentTabs>
 
-## 9. Review security and refine the setup
+### Review security and refine the setup [step]
 
 Do not stop at the first successful startup.
 After the baseline works, walk through the generated configuration and the rest of the docs so you understand what the plugin will do in your network.
@@ -376,7 +378,7 @@ For example, credential requirements may be stronger than what your players are 
   Many networks handle that with a separate blocker or filter plugin. Identica does not treat that as core identity-plugin functionality.
 </Callout>
 
-## 10. Get help or report issues
+### Get help or report issues [step]
 
 If you find a bug, need support, or want a feature, we are happy to help:
 

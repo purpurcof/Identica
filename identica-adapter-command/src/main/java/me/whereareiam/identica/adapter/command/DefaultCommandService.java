@@ -16,14 +16,10 @@ import me.whereareiam.identica.adapter.command.annotation.IdenticaAnnotationPars
 import me.whereareiam.identica.adapter.command.definition.CommandDefinitionAdapter;
 import me.whereareiam.identica.adapter.command.executor.*;
 import me.whereareiam.identica.adapter.command.executor.admin.*;
-import me.whereareiam.identica.adapter.command.executor.verification.VerificationConfirmCommand;
-import me.whereareiam.identica.adapter.command.executor.verification.VerificationEnrollmentCommand;
-import me.whereareiam.identica.adapter.command.executor.verification.VerificationSelectionCommand;
 import me.whereareiam.identica.adapter.command.parser.PasswordParser;
 import me.whereareiam.identica.adapter.command.serializer.ScopedSerializerEngine;
 import me.whereareiam.identica.adapter.command.suggestion.CrossPlayerSuggestions;
 import me.whereareiam.identica.adapter.command.suggestion.ProviderIdSuggestions;
-import me.whereareiam.identica.adapter.command.suggestion.VerificationMethodSuggestions;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.model.config.Commands;
@@ -33,6 +29,7 @@ import me.whereareiam.keystone.serializer.SerializerEngine;
 import org.incendo.cloud.Command;
 import org.incendo.cloud.CommandManager;
 import org.incendo.cloud.permission.Permission;
+import org.incendo.cloud.suggestion.SuggestionProvider;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +43,6 @@ public class DefaultCommandService implements CommandService {
 	private final SerializerEngine serializer;
 	private final Injector injector;
 	private final CrossPlayerSuggestions crossPlayerSuggestions;
-	private final VerificationMethodSuggestions verificationMethodSuggestions;
 	private final ProviderIdSuggestions providerIdSuggestions;
 
 	private final Map<String, CommandDefinition> registeredDefinitions = new HashMap<>();
@@ -60,7 +56,6 @@ public class DefaultCommandService implements CommandService {
 			SerializerEngine serializer,
 			Injector injector,
 			CrossPlayerSuggestions crossPlayerSuggestions,
-			VerificationMethodSuggestions verificationMethodSuggestions,
 			ProviderIdSuggestions providerIdSuggestions
 	) {
 		this.commandsProvider = commandsProvider;
@@ -69,7 +64,6 @@ public class DefaultCommandService implements CommandService {
 		this.serializer = serializer;
 		this.injector = injector;
 		this.crossPlayerSuggestions = crossPlayerSuggestions;
-		this.verificationMethodSuggestions = verificationMethodSuggestions;
 		this.providerIdSuggestions = providerIdSuggestions;
 
 		initialize();
@@ -87,17 +81,11 @@ public class DefaultCommandService implements CommandService {
 				injector.getInstance(AdminRootCommand.class),
 				injector.getInstance(ClearCommand.class),
 				injector.getInstance(DeleteCommand.class),
-				injector.getInstance(ProviderRestrictionCommand.class),
 				injector.getInstance(ReservationCommand.class),
 				injector.getInstance(SessionsCommand.class),
 				injector.getInstance(EnrollCommand.class),
 				injector.getInstance(MigrationCommand.class),
-				injector.getInstance(AvailabilityCommand.class),
-				injector.getInstance(me.whereareiam.identica.adapter.command.executor.verification.VerificationCommand.class),
-				injector.getInstance(VerificationEnrollmentCommand.class),
-				injector.getInstance(VerificationConfirmCommand.class),
-				injector.getInstance(VerificationSelectionCommand.class),
-				injector.getInstance(VerificationResetCommand.class)
+				injector.getInstance(AvailabilityCommand.class)
 		);
 
 		registerExceptionHandlers(commandManager);
@@ -131,6 +119,14 @@ public class DefaultCommandService implements CommandService {
 	}
 
 	@Override
+	public void registerSuggestionProvider(@NotNull String key, @NotNull Object suggestionProvider) {
+		commandManagerProvider.get().parserRegistry().registerSuggestionProvider(
+				key,
+				(SuggestionProvider<Actor>) suggestionProvider
+		);
+	}
+
+	@Override
 	public int getCommandCount() {
 		return commandManagerProvider.get().commands().size();
 	}
@@ -160,8 +156,6 @@ public class DefaultCommandService implements CommandService {
 	private void registerSuggestions(@NotNull CommandManager<Actor> commandManager) {
 		commandManager.parserRegistry()
 				.registerSuggestionProvider(CrossPlayerSuggestions.KEY, crossPlayerSuggestions);
-		commandManager.parserRegistry()
-				.registerSuggestionProvider(VerificationMethodSuggestions.KEY, verificationMethodSuggestions);
 		commandManager.parserRegistry()
 				.registerSuggestionProvider(ProviderIdSuggestions.KEY, providerIdSuggestions);
 	}

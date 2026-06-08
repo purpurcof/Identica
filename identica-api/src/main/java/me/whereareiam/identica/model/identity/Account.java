@@ -1,12 +1,6 @@
 package me.whereareiam.identica.model.identity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import me.whereareiam.identica.type.UsernameSource;
+import lombok.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
@@ -29,11 +23,6 @@ public class Account {
 	 * Identica-controlled username visible to the server.
 	 */
 	private @NotNull String username;
-
-	/**
-	 * Source of the currently active username ("eligibility", "manual", "system").
-	 */
-	private @NotNull UsernameSource source;
 
 	private long createdAt;
 	private long lastSeenAt;

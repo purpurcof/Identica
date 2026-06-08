@@ -119,13 +119,11 @@ identity:
 
 ## sessions
 
-`sessions` controls live-session behavior and optional reconnect recognition.
+`sessions` controls live-session behavior for currently connected players.
 
 - live session behavior for currently connected players
-- optional reconnect recognition for known players
 
 A session exists while a player is online.
-Recognition is a separate optional shortcut that can let a reconnecting player skip full provider authentication when the configured signals match a previously saved recognition state that is still valid.
 
 ### concurrencyPolicy
 
@@ -156,94 +154,12 @@ Identica closes the logical session immediately on disconnect.
 This is not an offline remember-me duration.
 It only controls the backing cache survival time for active sessions.
 
-### recognition.enabled
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: the default reconnect-recognition policy inherited by providers that do not override it
-
-Recognition is disabled by default.
-It can make reconnects easier, but it relies on matching signals such as username, IP, and virtual host after the provider subject is already known.
-
-This is risky in environments where several players can appear to share the same network identity.
-That includes NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, reverse proxies, and hosting setups where different users can present the same IP path.
-
-Enable recognition only if you understand that tradeoff and accept the risk for your environment.
-
-### recognition.validity
-
-<Badge type="warning">Advanced</Badge>
-
-- Takes: a positive duration
-- Current default: `"12h"`
-- Affects: how long a previously authenticated player can still be recognized on reconnect
-
-This duration belongs to recognition, not to the live-session lifetime.
-Once it expires, the player simply goes through normal provider authentication on the next reconnect.
-
-### recognition.defaultSignals
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: a list containing any of `"USERNAME"`, `"IP"`, `"VIRTUAL_HOST"`
-- Current default: `["USERNAME", "IP", "VIRTUAL_HOST"]`
-- Affects: the signal set inherited by providers that do not override their own recognition signals
-
-### recognition.eligibility.untrustedIps.enabled
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: `true` or `false`
-- Current default: `true`
-- Affects: whether recognition remains eligible for configured client IPs and CIDR ranges
-
-This rule controls whether recognition may run at all, including reconnect recognition and provider-scoped handshake recognition.
-
-Use this when reconnect recognition is generally acceptable, but there are client networks you do not trust for automatic recognition decisions.
-The generated defaults target the common “proxy forwarded a loopback/private proxy IP instead of the real client IP” failure mode.
-
-### recognition.eligibility.untrustedIps.entries
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: a list of exact IP literals or IPv4/IPv6 CIDR ranges
-- Current default: `["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]`
-- Affects: which client IPs make recognition ineligible
-
-The generated defaults cover loopback and RFC1918 private ranges, which are often a sign that Identica is behind a proxy that is forwarding the wrong source IP.
-
-Entries must be one of:
-
-- an exact IP such as `127.0.0.1`
-- an IPv4 CIDR such as `192.168.0.0/16`
-- an IPv6 CIDR such as `2001:db8::/32`
-
-Malformed entries fail loudly during config use with a settings-path error that points to the bad list index.
-
 <Tabs items={["YAML", "JSON"]}>
   <Tab value="YAML">
 ```yaml
 sessions:
   concurrencyPolicy: "REPLACE_EXISTING"
   activeTtl: "12h"
-  recognition:
-    enabled: false
-    validity: "12h"
-    defaultSignals:
-      - "USERNAME"
-      - "IP"
-      - "VIRTUAL_HOST"
-    eligibility:
-      untrustedIps:
-        enabled: true
-        entries:
-          - "127.0.0.1"
-          - "::1"
-          - "10.0.0.0/8"
-          - "172.16.0.0/12"
-          - "192.168.0.0/16"
 ```
   </Tab>
   <Tab value="JSON">
@@ -251,18 +167,7 @@ sessions:
 {
   "sessions": {
     "concurrencyPolicy": "REPLACE_EXISTING",
-    "activeTtl": "12h",
-    "recognition": {
-      "enabled": false,
-      "validity": "12h",
-      "defaultSignals": ["USERNAME", "IP", "VIRTUAL_HOST"],
-      "eligibility": {
-        "untrustedIps": {
-          "enabled": true,
-          "entries": ["127.0.0.1", "::1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
-        }
-      }
-    }
+    "activeTtl": "12h"
   }
 }
 ```

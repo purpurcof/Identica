@@ -1,0 +1,17 @@
+providers:
+  - id: premium
+    capabilities:
+      restriction:
+        join:
+          enabled: true
+          allow:
+            - linked
+            - recognized
+  - id: credential
+    capabilities:
+      restriction:
+        join:
+          enabled: true
+          allow:
+            - linked
+            - recognized

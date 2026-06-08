@@ -2,6 +2,7 @@ package me.whereareiam.identica.common.provider;
 
 import com.google.inject.*;
 import com.google.inject.Module;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,9 +11,16 @@ import me.whereareiam.configura.Configura;
 import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
-import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
-import me.whereareiam.identica.common.provider.factory.ProviderClassLoaderFactory;
+import me.whereareiam.identica.common.provider.capability.DefaultProviderCapabilityCoordinator;
+import me.whereareiam.identica.common.provider.capability.DefaultProviderCapabilityRegistry;
+import me.whereareiam.identica.common.provider.classloader.ProviderRuntimeClassLoaderFactory;
+import me.whereareiam.identica.common.provider.classloader.SharedCapabilityClassLoaderFactory;
+import me.whereareiam.identica.common.provider.dependency.ProviderDependencyLoggingAdapter;
 import me.whereareiam.identica.common.provider.factory.ProviderInstanceFactory;
+import me.whereareiam.identica.common.provider.injector.ProviderInjectorFactory;
+import me.whereareiam.identica.common.provider.library.ProviderLibraryInstaller;
+import me.whereareiam.identica.common.provider.library.ProviderLibraryPlanner;
+import me.whereareiam.identica.common.provider.library.SharedLibraryConflictTracker;
 import me.whereareiam.identica.common.provider.resolver.ProviderResolverRegistry;
 import me.whereareiam.identica.common.provider.resolver.ProviderWorkingPathResolver;
 import me.whereareiam.identica.common.registry.ReloadableRegistry;
@@ -35,6 +43,8 @@ import me.whereareiam.identica.model.provider.dependency.ProviderLibraries;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.ProviderPlatformBinding;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
+import me.whereareiam.identica.provider.capability.ProviderCapabilityCoordinator;
+import me.whereareiam.identica.provider.capability.ProviderCapabilityRegistry;
 import me.whereareiam.identica.type.event.EventOrder;
 import me.whereareiam.identica.type.provider.ProviderState;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +53,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -96,15 +105,15 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 	private static InternalProvider discoveredProvider() {
 		return InternalProvider.builder()
 				.path(Path.of("ignored.jar"))
-				.descriptor(descriptor("test-provider", "Test Provider"))
+				.descriptor(descriptor())
 				.state(ProviderState.DISCOVERED)
 				.build();
 	}
 
-	private static ProviderDescriptor descriptor(String id, String name) {
+	private static ProviderDescriptor descriptor() {
 		ProviderDescriptor descriptor = new ProviderDescriptor();
-		descriptor.setId(id);
-		descriptor.setName(name);
+		descriptor.setId("test-provider");
+		descriptor.setName("Test Provider");
 		descriptor.setVersion("1.0.0");
 		descriptor.setMain(TestProvider.class.getName());
 		descriptor.setSupportedPlatforms(List.of("any"));
@@ -124,7 +133,9 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 			bind(ProviderWorkingPathResolver.class).asEagerSingleton();
 			bind(ProviderInstanceFactory.class).asEagerSingleton();
 			bind(ProviderLifecycleController.class).asEagerSingleton();
-			bind(new com.google.inject.TypeLiteral<Registry<Reloadable>>() {}).to(ReloadableRegistry.class).asEagerSingleton();
+			bind(ProviderCapabilityCoordinator.class).to(DefaultProviderCapabilityCoordinator.class).asEagerSingleton();
+			bind(ProviderCapabilityRegistry.class).to(DefaultProviderCapabilityRegistry.class).asEagerSingleton();
+			bind(new TypeLiteral<Registry<Reloadable>>() {}).to(ReloadableRegistry.class).asEagerSingleton();
 			bind(ConflictService.class).toInstance(new NoopConflictService());
 			bind(EventManager.class).toInstance(new NoopEventManager());
 			bind(HandshakeStore.class).toInstance(new NoopHandshakeStore());
@@ -132,7 +143,7 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 			bind(ProviderResolverRegistry.class).toInstance(new ProviderResolverRegistry());
 		}
 
-		@com.google.inject.Provides
+		@Provides
 		@Singleton
 		@Named("providersPath")
 		Path provideProvidersPath() throws Exception {
@@ -141,41 +152,54 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 			return providersPath;
 		}
 
-		@com.google.inject.Provides
+		@Provides
 		@Singleton
-		ProviderClassLoaderFactory provideClassLoaderFactory() {
-			return new ProviderClassLoaderFactory() {
+		ProviderRuntimeClassLoaderFactory provideProviderRuntimeClassLoaderFactory() {
+			return new ProviderRuntimeClassLoaderFactory(new SharedCapabilityClassLoaderFactory()) {
 				@Override
 				public URLClassLoader create(Path jarPath) {
-					return new URLClassLoader(new URL[0], getClass().getClassLoader());
+					return new URLClassLoader(new java.net.URL[0], getClass().getClassLoader());
 				}
 			};
 		}
 
-		@com.google.inject.Provides
+		@Provides
 		@Singleton
-		ProviderDependencyResolver provideDependencyResolver(@Named("providersPath") Path providersPath) {
-			return new ProviderDependencyResolver(providersPath, null) {
+		ProviderLibraryInstaller provideProviderLibraryInstaller() {
+			return new ProviderLibraryInstaller(
+					tempDir.resolve("providers"),
+					tempDir.resolve("capabilities"),
+					org.mockito.Mockito.mock(ProviderDependencyLoggingAdapter.class),
+					new SharedCapabilityClassLoaderFactory()
+			) {
 				@Override
-				public void loadDescriptorLibraries(ProviderDescriptor descriptor, ClassLoader classLoader) {
-				}
-
-				@Override
-				public void loadProviderLibraries(ProviderDescriptor descriptor, IdenticaProvider provider, ClassLoader classLoader) {
+				protected void install(
+						@NotNull Path basePath,
+						@NotNull String cacheNamespace,
+						ProviderLibraries libraries,
+						@NotNull URLClassLoader classLoader
+				) {
 				}
 			};
 		}
 
-		@com.google.inject.Provides
+		@Provides
 		@Singleton
-		me.whereareiam.identica.common.provider.injector.ProviderInjectorFactory provideInjectorFactory() {
-			return new me.whereareiam.identica.common.provider.injector.ProviderInjectorFactory(null) {
+		ProviderLibraryPlanner provideProviderLibraryPlanner() {
+			return new ProviderLibraryPlanner(new SharedLibraryConflictTracker());
+		}
+
+		@Provides
+		@Singleton
+        ProviderInjectorFactory provideInjectorFactory() {
+			return new ProviderInjectorFactory(null) {
 				@Override
-				public com.google.inject.Injector create(
+				public Injector create(
 						Path workingPath,
 						ProviderDescriptor descriptor,
 						IdenticaProvider probeProvider,
-						ProviderPlatformExtension probePlatformExtension
+						ProviderPlatformExtension probePlatformExtension,
+						@NotNull List<Module> capabilityModules
 				) {
 					return Guice.createInjector(new ProviderRootModule(), new ProviderRuntimeModule(workingPath, probeProvider));
 				}
@@ -186,7 +210,7 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 	private static final class ProviderRootModule extends AbstractModule {
 		@Override
 		protected void configure() {
-			bind(new com.google.inject.TypeLiteral<Registry<Reloadable>>() {}).to(ReloadableRegistry.class).asEagerSingleton();
+			bind(new TypeLiteral<Registry<Reloadable>>() {}).to(ReloadableRegistry.class).asEagerSingleton();
 		}
 	}
 
@@ -206,14 +230,14 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 					install(module);
 		}
 
-		@com.google.inject.Provides
+		@Provides
 		@Singleton
 		@Named("workingPath")
 		Path provideWorkingPath() {
 			return workingPath;
 		}
 
-		@com.google.inject.Provides
+		@Provides
 		@Singleton
 		ProviderDescriptor provideDescriptor() {
 			ProviderDescriptor descriptor = new ProviderDescriptor();
@@ -240,7 +264,7 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 			bind(TestSettingsProvider.class).asEagerSingleton();
 			bind(TestMessagesProvider.class).asEagerSingleton();
 			bind(TestCommandsProvider.class).asEagerSingleton();
-			com.google.inject.multibindings.Multibinder.newSetBinder(binder(), ProviderPlatformBinding.class)
+			Multibinder.newSetBinder(binder(), ProviderPlatformBinding.class)
 					.addBinding()
 					.to(ProbePlatformBinding.class);
 		}
@@ -343,20 +367,20 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 		}
 
 		@Override
-		public void register(@NotNull ConflictType type) {
+		public void register(@NotNull ConflictType<?> type) {
 		}
 
 		@Override
-		public void unregister(@NotNull ConflictType type) {
+		public void unregister(@NotNull ConflictType<?> type) {
 		}
 
 		@Override
-		public ConflictType getType(@NotNull String key) {
+		public ConflictType<?> getType(@NotNull String key) {
 			return null;
 		}
 
 		@Override
-		public @NotNull Set<ConflictType> getTypes() {
+		public @NotNull Set<ConflictType<?>> getTypes() {
 			return Set.of();
 		}
 

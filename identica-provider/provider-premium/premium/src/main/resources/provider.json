@@ -5,11 +5,5 @@
   "main": "me.whereareiam.identica.provider.premium.PremiumProvider",
   "authors": ["whereareiam"],
   "supportedPlatforms": ["VELOCITY", "BUNGEECORD"],
-  "priority": 100,
-  "capabilities": [
-    "online",
-    "authoritative_username",
-    "migration",
-    "verification"
-  ]
+  "priority": 100
 }

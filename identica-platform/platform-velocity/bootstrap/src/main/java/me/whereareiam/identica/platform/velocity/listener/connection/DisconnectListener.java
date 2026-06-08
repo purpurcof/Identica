@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.proxy.Player;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.feature.verification.VerificationService;
 import me.whereareiam.identica.identity.IdentityAttachment;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -12,7 +13,6 @@ import me.whereareiam.identica.listener.DynamicListener;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
-import me.whereareiam.identica.verification.VerificationService;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)

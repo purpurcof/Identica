@@ -3,17 +3,17 @@ package me.whereareiam.identica.engine.pipeline.prepare.group.context.phase;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.migration.MigrationPendingState;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.provider.ProviderOrigin;
 import org.jetbrains.annotations.NotNull;
@@ -82,13 +82,6 @@ public class ResolvePendingMigrationContextPhase implements PipelinePhase<Prepar
 	}
 
 	private ProviderContext resolveProviderContext(@NotNull MigrationContext migration, @NotNull PrepareGroupState state) {
-		ProviderContext provider = migration.getProvider();
-		if (provider != null)
-			return provider.toBuilder()
-					.providerUsername(state.getRequest().getIdentity().getUsername())
-					.source(ProviderOrigin.MANUAL)
-					.build();
-
 		return ProviderContext.of(
 				migration.getTargetProviderId(),
 				null,

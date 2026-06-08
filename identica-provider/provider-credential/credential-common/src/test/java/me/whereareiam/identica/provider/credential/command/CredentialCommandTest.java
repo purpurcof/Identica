@@ -1,6 +1,10 @@
 package me.whereareiam.identica.provider.credential.command;
 
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.feature.verification.VerificationService;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
+import me.whereareiam.identica.feature.verification.model.resolution.VerificationResolutionResult;
+import me.whereareiam.identica.feature.verification.type.status.VerificationResolutionStatus;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
@@ -8,14 +12,10 @@ import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.migration.PendingMigration;
 import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
-import me.whereareiam.identica.model.verification.VerificationResolutionResult;
-import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.provider.credential.config.defaults.CredentialMessagesDefaults;
 import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
-import me.whereareiam.identica.type.verification.VerificationResolutionStatus;
-import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
 import me.whereareiam.keystone.serializer.SerializerEngine;
@@ -71,8 +71,6 @@ class CredentialCommandTest {
 	@Mock
 	private MigrationService migrationService;
 	@Mock
-	private ProviderManager providerManager;
-	@Mock
 	private VerificationService verificationService;
 	@Mock
 	private SessionService sessionService;
@@ -91,8 +89,8 @@ class CredentialCommandTest {
 		CredentialCommand command = new CredentialCommand(
 				() -> passwordMessages,
 				Messages::new,
+				this::verificationMessages,
 				migrationService,
-				providerManager,
 				verificationService,
 				sessionService
 		);
@@ -116,15 +114,15 @@ class CredentialCommandTest {
 		when(verificationService.resolveVerification(any()))
 				.thenReturn(VerificationResolutionResult.of(VerificationResolutionStatus.WAITING, "challenge", "totp", true, false));
 		when(verificationService.submitChallenge(eq(identity.getUniqueId()), eq("credential"), eq("migration-confirm"), any()))
-				.thenReturn(me.whereareiam.identica.model.verification.challenge.VerificationChallengeResult.verified(null));
+				.thenReturn(me.whereareiam.identica.feature.verification.model.challenge.VerificationChallengeResult.verified(null));
 		when(migrationService.confirm(any(MigrationConfirm.class)))
 				.thenReturn(MigrationResult.builder().status(MigrationResultStatus.STARTED).build());
 
 		CredentialCommand command = new CredentialCommand(
 				() -> new CredentialMessagesDefaults().supply(new CredentialMessages()),
 				Messages::new,
+				this::verificationMessages,
 				migrationService,
-				providerManager,
 				verificationService,
 				sessionService
 		);
@@ -150,10 +148,22 @@ class CredentialCommandTest {
 				.build();
 	}
 
-	private me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment mockEnrollment() {
-		return me.whereareiam.identica.model.verification.enrollment.VerificationEnrollment.builder()
+	private me.whereareiam.identica.feature.verification.model.enrollment.VerificationEnrollment mockEnrollment() {
+		return me.whereareiam.identica.feature.verification.model.enrollment.VerificationEnrollment.builder()
 				.methodId("totp")
 				.build();
+	}
+
+	private VerificationMessages verificationMessages() {
+		VerificationMessages messages = new VerificationMessages();
+		VerificationMessages.Commands commands = new VerificationMessages.Commands();
+		VerificationMessages.Commands.Confirm confirm = new VerificationMessages.Commands.Confirm();
+		confirm.setProtectedActionSelectionRequired("selection-required");
+		confirm.setProtectedActionSessionRequired("session-required");
+		confirm.setInvalidCode("invalid-code");
+		commands.setConfirm(confirm);
+		messages.setCommands(commands);
+		return messages;
 	}
 
 	private static final class TestIdentity extends Identity {

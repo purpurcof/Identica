@@ -11,8 +11,8 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.common.config.ConfigBindings;
 import me.whereareiam.identica.common.config.IdenticaModule;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
-import me.whereareiam.identica.common.connection.ConnectionStateConfiguration;
 import me.whereareiam.identica.common.conflict.ConflictConfiguration;
+import me.whereareiam.identica.common.connection.ConnectionStateConfiguration;
 import me.whereareiam.identica.common.event.EventController;
 import me.whereareiam.identica.common.identity.IdentityConfiguration;
 import me.whereareiam.identica.common.identity.session.SessionConfiguration;
@@ -25,7 +25,6 @@ import me.whereareiam.identica.common.registry.RegistryConfiguration;
 import me.whereareiam.identica.common.replication.ReplicationConfiguration;
 import me.whereareiam.identica.common.routing.RoutingConfiguration;
 import me.whereareiam.identica.common.sentinel.SentinelConfiguration;
-import me.whereareiam.identica.common.verification.VerificationConfiguration;
 import me.whereareiam.identica.config.ConfigurationTypeResolver;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.logging.BannerContributor;
@@ -35,6 +34,7 @@ import me.whereareiam.keystone.serializer.SerializerEngine;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 @RequiredArgsConstructor
 public class CommonConfiguration extends AbstractModule {
 	private final Path dataPath;
@@ -57,7 +57,6 @@ public class CommonConfiguration extends AbstractModule {
 		install(new ReplicationConfiguration());
 		install(new IdentityConfiguration());
 		install(new SessionConfiguration());
-		install(new VerificationConfiguration());
 		install(new RoutingConfiguration());
 		install(new ConflictConfiguration());
 		install(new ProviderConfiguration());
@@ -107,6 +106,20 @@ public class CommonConfiguration extends AbstractModule {
 	@Named("providersPath")
 	Path provideProvidersPath(@Named("dataPath") Path dataPath) {
 		return ensureDirectory(dataPath.resolve("providers"), "providers");
+	}
+
+	@Provides
+	@Singleton
+	@Named("capabilitiesPath")
+	Path provideCapabilitiesPath(@Named("providersPath") Path providersPath) {
+		return ensureDirectory(providersPath.resolve("capabilities"), "capabilities");
+	}
+
+	@Provides
+	@Singleton
+	@Named("featuresPath")
+	Path provideFeaturesPath(@Named("dataPath") Path dataPath) {
+		return ensureDirectory(dataPath.resolve("features"), "features");
 	}
 
 	private Path ensureDirectory(Path path, String label) {

@@ -13,7 +13,6 @@ import me.whereareiam.identica.event.account.AccountLifecycleEvent;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.identity.Account;
-import me.whereareiam.identica.type.UsernameSource;
 import me.whereareiam.identica.type.event.EventOrder;
 import org.jetbrains.annotations.NotNull;
 
@@ -74,7 +73,6 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 			accountRepository.insert(
 					entity.getUniqueId(),
 					entity.getUsername(),
-					entity.getUsernameSource(),
 					entity.getCreatedAt(),
 					entity.getLastSeenAt()
 			);
@@ -103,15 +101,6 @@ public class DefaultAccountPersistenceService implements AccountPersistenceServi
 			accountRepository.updateUsername(uniqueId, username);
 		} catch (Exception e) {
 			Logger.warn("Failed to update username for %s: %s", uniqueId, e.getMessage());
-		}
-	}
-
-	@Override
-	public void updateUsernameSource(@NotNull UUID uniqueId, @NotNull UsernameSource source) {
-		try {
-			accountRepository.updateUsernameSource(uniqueId, source.getId());
-		} catch (Exception e) {
-			Logger.warn("Failed to update username source for %s: %s", uniqueId, e.getMessage());
 		}
 	}
 

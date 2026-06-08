@@ -52,7 +52,7 @@ public class SessionGroup implements PipelineGroup<SessionState> {
 
 	private @NotNull String sessionGroupMissingResultMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getRegistration()
 				.getErrors()
 				.getSession().getGroupMissingResult());

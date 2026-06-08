@@ -5,8 +5,8 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.engine.pipeline.scenario.registration.group.identity.IdentityState;
 import me.whereareiam.identica.engine.pipeline.scenario.base.identity.phase.base.AbstractEnforceProviderJoinRestrictionPhase;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.registration.RegistrationContext;
@@ -23,9 +23,9 @@ public class EnforceProviderJoinRestrictionPhase
 			ProviderJoinRestrictionService restrictionService,
 			ProviderOperations providerOperations,
 			Provider<Messages> messagesProvider,
-			Provider<Settings> settingsProvider
+			Provider<Engine> engineProvider
 	) {
-		super(restrictionService, providerOperations, messagesProvider, settingsProvider);
+		super(restrictionService, providerOperations, messagesProvider, engineProvider);
 	}
 
 	@Override
@@ -49,8 +49,8 @@ public class EnforceProviderJoinRestrictionPhase
 	}
 
 	@Override
-	protected boolean allowResumeBypass(@NotNull Settings settings, @NotNull PipelineState pipelineState) {
-		if (!settings.getConnection().getScenarios().getRegistration().isAllowProviderRestrictionResumeBypass())
+	protected boolean allowResumeBypass(@NotNull Engine settings, @NotNull PipelineState pipelineState) {
+		if (!settings.getScenarios().getRegistration().isAllowProviderRestrictionResumeBypass())
 			return false;
 
 		var meta = identityMeta(pipelineState);

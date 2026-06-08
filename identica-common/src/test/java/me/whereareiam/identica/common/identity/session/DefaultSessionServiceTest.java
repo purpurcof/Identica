@@ -149,9 +149,9 @@ class DefaultSessionServiceTest {
 		assertTrue(adapter.putCalls >= 2);
 	}
 
-	@DisplayName("Provider session concurrency overrides the global setting")
+	@DisplayName("Provider session settings override the global concurrency setting")
 	@Test
-	void providerSessionConcurrencyOverridesGlobalSetting() {
+	void providerSessionSettingsOverrideGlobalConcurrencySetting() {
 		ReplicationTestFixtures.TestReplicationAdapter adapter = new ReplicationTestFixtures.TestReplicationAdapter();
 		DefaultReplicationSystem replicationSystem = new DefaultReplicationSystem(adapter);
 		EventController eventController = new EventController();
@@ -238,21 +238,21 @@ class DefaultSessionServiceTest {
 		Providers.ProviderEntry provider = new Providers.ProviderEntry();
 		provider.setId(id);
 		provider.setEnabled(true);
-		provider.getOverrides().setSessionConcurrencyPolicy(sessionConcurrencyPolicy);
+		Providers.ProviderEntry.Session session = new Providers.ProviderEntry.Session();
+		session.setConcurrencyPolicy(sessionConcurrencyPolicy);
+		provider.setSession(session);
 		return provider;
 	}
 
 	private Settings settings() {
 		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
 		Settings.Sessions sessions = new Settings.Sessions();
 		sessions.setConcurrencyPolicy(SessionConcurrencyPolicy.REPLACE_EXISTING);
 		sessions.setActiveTtl(java.time.Duration.ofHours(12));
 		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
 		recognition.setValidity(java.time.Duration.ofHours(12));
 		sessions.setRecognition(recognition);
-		connection.setSessions(sessions);
-		settings.setConnection(connection);
+		settings.setSessions(sessions);
 		return settings;
 	}
 

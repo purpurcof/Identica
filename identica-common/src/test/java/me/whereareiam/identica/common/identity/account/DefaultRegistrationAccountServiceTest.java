@@ -192,10 +192,10 @@ class DefaultRegistrationAccountServiceTest {
 			UniqueIdMode uniqueIdMode
 	) {
 		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
-		connection.setReservationTtl(Duration.ofMinutes(1));
-		connection.setUniqueIdMode(uniqueIdMode);
-		settings.setConnection(connection);
+		Settings.Identity identity = new Settings.Identity();
+		identity.setReservationTtl(Duration.ofMinutes(1));
+		identity.setUniqueIdMode(uniqueIdMode);
+		settings.setIdentity(identity);
 
 		return new DefaultRegistrationAccountService(
 				accountReservationPersistenceService,

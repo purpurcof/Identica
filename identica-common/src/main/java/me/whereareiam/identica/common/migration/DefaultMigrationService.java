@@ -17,6 +17,7 @@ import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.delivery.DeliveryPayload;
@@ -72,6 +73,7 @@ public class DefaultMigrationService implements MigrationService {
 	private final DeliveryService deliveryService;
 	private final EventManager eventManager;
 	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 	private final Provider<Commands> commandsProvider;
 	private final Provider<Messages> messagesProvider;
 
@@ -255,10 +257,10 @@ public class DefaultMigrationService implements MigrationService {
 	}
 
 	private boolean storePendingMigration(@NotNull PendingConfirmationMigration pendingMigration, @NotNull UUID accountUniqueId) {
-		long ttlMs = settingsProvider.get().getConnection().getScenarios().getMigration().pipelineTtlMillis();
+		long ttlMs = engineProvider.get().getScenarios().getMigration().pipelineTtlMillis();
 		if (ttlMs <= 0) return false;
 
-		JourneyMode journeyMode = settingsProvider.get().getConnection().getScenarios().getMigration().getJourneyMode();
+		JourneyMode journeyMode = engineProvider.get().getScenarios().getMigration().getJourneyMode();
 		MigrationContext context = MigrationContext.builder()
 				.connectionUniqueId(pendingMigration.connectionUniqueId())
 				.identity(new ConnectionIdentity(
@@ -571,7 +573,7 @@ public class DefaultMigrationService implements MigrationService {
 	}
 
 	private @NotNull String resolveMigrationCancelledMessage() {
-		return String.join("\n", messagesProvider.get().getConnection().getMigration().getCancelled());
+		return String.join("\n", messagesProvider.get().getScenarios().getMigration().getCancelled());
 	}
 
 	private record PendingConfirmationMigration(

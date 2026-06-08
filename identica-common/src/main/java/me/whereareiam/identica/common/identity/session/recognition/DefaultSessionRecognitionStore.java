@@ -27,7 +27,7 @@ public class DefaultSessionRecognitionStore implements SessionRecognitionStore {
 			@NotNull ReplicationSystem replicationSystem
 	) {
 		Replication.Sessions.Recognition recognition = replicationProvider.get().getCache().getSessions().getRecognition();
-		long ttlMs = settingsProvider.get().getConnection().getSessions().getRecognition().validityMillis();
+		long ttlMs = settingsProvider.get().getSessions().getRecognition().validityMillis();
 		ReplicationType<SessionRecognitionSnapshot, SessionRecognitionSnapshot> type =
 				ReplicationType.identity(SessionRecognitionSnapshot.class);
 		this.cache = replicationSystem.cache(resolveNamespace(recognition))

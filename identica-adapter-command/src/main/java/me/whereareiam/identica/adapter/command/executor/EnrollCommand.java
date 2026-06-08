@@ -11,8 +11,8 @@ import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
@@ -33,7 +33,7 @@ import java.util.UUID;
 public class EnrollCommand {
 	private final ConnectionCoordinator connectionCoordinator;
 	private final PipelineStateStore pipelineStateStore;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 	private final Provider<Messages> messagesProvider;
 
 	@Definition("enroll")
@@ -123,7 +123,7 @@ public class EnrollCommand {
 			stored.setPipelineType(PipelineType.REGISTRATION);
 		}
 
-		long ttlMs = settingsProvider.get().getConnection().getScenarios().getRegistration().pipelineTtlMillis();
+		long ttlMs = engineProvider.get().getScenarios().getRegistration().pipelineTtlMillis();
 		if (ttlMs > 0) {
 			stored.putItem(new JourneyStateItem(
 					pending.getJourneyMode(),

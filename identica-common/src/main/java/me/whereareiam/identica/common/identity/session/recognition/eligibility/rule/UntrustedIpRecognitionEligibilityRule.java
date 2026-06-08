@@ -38,7 +38,6 @@ public class UntrustedIpRecognitionEligibilityRule implements RecognitionEligibi
 	@Override
 	public @NotNull RecognitionEligibilityRuleDecision evaluate(@NotNull RecognitionEligibilityContext context) {
 		Settings.Sessions.Recognition.Eligibility.UntrustedIps untrustedIps = settingsProvider.get()
-				.getConnection()
 				.getSessions()
 				.getRecognition()
 				.getEligibility()
@@ -67,7 +66,12 @@ public class UntrustedIpRecognitionEligibilityRule implements RecognitionEligibi
 		for (Providers.ProviderEntry entry : providersProvider.get().getProviders()) {
 			if (entry == null) continue;
 			if (!entry.getId().equalsIgnoreCase(providerId)) continue;
-			return entry.getOverrides().getRecognition().getEligibility().isAllowOnUntrustedIp();
+			Providers.ProviderEntry.Session session = entry.getSession();
+			Providers.ProviderEntry.Session.Recognition recognition = session != null
+					? session.getRecognition()
+					: null;
+
+			return recognition != null && recognition.isAllowOnUntrustedIps();
 		}
 
 		return false;
@@ -160,7 +164,7 @@ public class UntrustedIpRecognitionEligibilityRule implements RecognitionEligibi
 
 	private @NotNull IllegalStateException invalidEntry(int index, @Nullable String entry, @NotNull String reason) {
 		return new IllegalStateException(
-				"settings.connection.sessions.recognition.eligibility.untrustedIps.entries[" + index + "]="
+				"settings.sessions.recognition.eligibility.untrustedIps.entries[" + index + "]="
 						+ entry
 						+ " is invalid: "
 						+ reason

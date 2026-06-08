@@ -3,6 +3,7 @@ package me.whereareiam.identica;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import lombok.Getter;
+import me.whereareiam.configura.Configura;
 import me.whereareiam.identica.identity.account.RegistrationAccountService;
 import me.whereareiam.identica.identity.account.AccountService;
 import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
@@ -249,6 +250,21 @@ public final class IdenticaAPI {
 	@NotNull
 	public static PipelineExtensionRegistry getPipelineExtensionRegistry() {
 		return getService(PipelineExtensionRegistry.class);
+	}
+
+	/**
+	 * Gets the configured base Configura instance used by Identica.
+	 *
+	 * <p>External addons can derive their own configuration copies from this instance
+	 * with methods such as {@code withDefaults(...)} or {@code withVersioned(...)}
+	 * while keeping Identica's configured format and modules.</p>
+	 *
+	 * @return the configured base Configura instance
+	 * @throws IllegalStateException if the API is not initialized
+	 */
+	@NotNull
+	public static Configura getConfigura() {
+		return getService(Configura.class);
 	}
 
 	/**

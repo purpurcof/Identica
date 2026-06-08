@@ -3,6 +3,7 @@ package me.whereareiam.identica.conflict.resolver.typed;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import me.whereareiam.configura.Config;
+import me.whereareiam.configura.Configura;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +32,7 @@ public final class ConflictParameters {
 			@NotNull Class<T> type
 	) {
 		JsonNode safe = node != null ? node : JsonNodeFactory.instance.objectNode();
-		Config config = Config.yaml();
+		Configura config = Config.yaml();
 		return config.read(config.writeNodeBytes(safe), type);
 	}
 }

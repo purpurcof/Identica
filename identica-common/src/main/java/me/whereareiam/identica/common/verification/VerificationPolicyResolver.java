@@ -24,6 +24,14 @@ public class VerificationPolicyResolver {
 			if (!providerId.equalsIgnoreCase(entry.getId())) continue;
 
 			Providers.ProviderEntry.Verification verification = entry.getVerification();
+			if (verification == null) {
+				return new ResolvedProviderPolicy(
+						false,
+						false,
+						UnavailableSelectionPolicy.CLEAR_SELECTION
+				);
+			}
+
 			return new ResolvedProviderPolicy(
 					verification.isEnabled(),
 					verification.isRequired(),
@@ -61,6 +69,7 @@ public class VerificationPolicyResolver {
 			if (entry == null || !providerId.equalsIgnoreCase(entry.getId())) continue;
 
 			Providers.ProviderEntry.Verification verification = entry.getVerification();
+			if (verification == null) return null;
 			for (Providers.ProviderEntry.Verification.MethodEntry method : verification.getMethods()) {
 				if (method == null || !methodId.equalsIgnoreCase(method.getId())) continue;
 

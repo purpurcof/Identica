@@ -5,10 +5,11 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.configura.Config;
+import me.whereareiam.configura.Configura;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.Serializer;
+import me.whereareiam.identica.common.config.ConfigBindings;
 import me.whereareiam.identica.common.config.IdenticaModule;
-import me.whereareiam.identica.common.config.ConfigBindingsConfiguration;
 import me.whereareiam.identica.common.config.resolver.FileSystemConfigurationTypeResolver;
 import me.whereareiam.identica.common.connection.ConnectionStateConfiguration;
 import me.whereareiam.identica.common.conflict.ConflictConfiguration;
@@ -47,7 +48,7 @@ public class CommonConfiguration extends AbstractModule {
 				.to(FileSystemConfigurationTypeResolver.class)
 				.asEagerSingleton();
 
-		install(new ConfigBindingsConfiguration());
+		install(new ConfigBindings());
 		install(new RegistryConfiguration());
 		install(new ConnectionStateConfiguration());
 		install(new PipelineStateConfiguration());
@@ -80,14 +81,8 @@ public class CommonConfiguration extends AbstractModule {
 	}
 
 	@Inject
-	void initializeConfigura() {
-		Path configuredDataPath = ensureDirectory(dataPath, "data");
-		Format format = new FileSystemConfigurationTypeResolver(configuredDataPath).getConfigurationType();
-		Config config = Config.builder()
-				.format(format)
-				.module(new IdenticaModule())
-				.build();
-		Config.setDefaults(config);
+	void initializeConfigura(Configura configura) {
+		Config.setConfigured(configura);
 	}
 
 	@Provides
@@ -95,6 +90,16 @@ public class CommonConfiguration extends AbstractModule {
 	@Named("dataPath")
 	Path provideDataPath() {
 		return ensureDirectory(dataPath, "data");
+	}
+
+	@Provides
+	@Singleton
+	Configura provideConfigura(@Named("dataPath") Path dataPath) {
+		Format format = new FileSystemConfigurationTypeResolver(dataPath).getConfigurationType();
+		return Config.builder()
+				.format(format)
+				.module(new IdenticaModule())
+				.build();
 	}
 
 	@Provides

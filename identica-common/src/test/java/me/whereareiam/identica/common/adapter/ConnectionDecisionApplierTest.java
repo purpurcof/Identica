@@ -100,11 +100,11 @@ class ConnectionDecisionApplierTest {
 
 	private Messages messages() {
 		Messages messages = new Messages();
-		Messages.Connection connection = new Messages.Connection();
-		Messages.Connection.Authentication authentication = new Messages.Connection.Authentication();
+		Messages.Scenarios scenarios = new Messages.Scenarios();
+		Messages.Scenarios.Authentication authentication = new Messages.Scenarios.Authentication();
 		authentication.setAuthenticationFailed(List.of("fallback"));
-		connection.setAuthentication(authentication);
-		messages.setConnection(connection);
+		scenarios.setAuthentication(authentication);
+		messages.setScenarios(scenarios);
 		return messages;
 	}
 

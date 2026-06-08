@@ -60,12 +60,10 @@ public class LoadContextPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private @NotNull String failureMessage(@Nullable PipelineType pipelineType) {
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return String.join("\n", connection.getRegistration().getRegistrationFailed());
-		if (pipelineType == PipelineType.MIGRATION)
-			return String.join("\n", connection.getMigration().getMigrationFailed());
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return String.join("\n", scenarios.getRegistration().getRegistrationFailed());
+		if (pipelineType == PipelineType.MIGRATION) return String.join("\n", scenarios.getMigration().getMigrationFailed());
 
-		return String.join("\n", connection.getAuthentication().getAuthenticationFailed());
+		return String.join("\n", scenarios.getAuthentication().getAuthenticationFailed());
 	}
 }

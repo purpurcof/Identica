@@ -90,7 +90,7 @@ public class UsernameReplicationPhase implements PipelinePhase<IdentityState> {
 
 	private @NotNull String identityReplicationMissingMessage() {
 		return joinMessage(messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getAuthentication()
 				.getErrors()
 				.getIdentity().getReplicationMissing());

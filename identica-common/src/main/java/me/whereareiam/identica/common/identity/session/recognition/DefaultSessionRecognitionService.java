@@ -88,30 +88,38 @@ public class DefaultSessionRecognitionService implements SessionRecognitionServi
 
 	private boolean isRecognitionEnabled(@NotNull String providerId) {
 		Providers.ProviderEntry provider = findProvider(providerId);
-		Providers.ProviderEntry.Overrides.Recognition overrides = provider != null
-				? provider.getOverrides().getRecognition()
+		Providers.ProviderEntry.Session session = provider != null
+				? provider.getSession()
+				: null;
+		Providers.ProviderEntry.Session.Recognition recognition = session != null
+				? session.getRecognition()
 				: null;
 
-		Boolean override = overrides != null ? overrides.getEnabled() : null;
+		Boolean override = recognition != null ? recognition.getEnabled() : null;
 		if (override != null) return override;
 
-		return settingsProvider.get().getConnection().getSessions().getRecognition().isEnabled();
+		return settingsProvider.get().getSessions().getRecognition().isEnabled();
 	}
 
 	private @NotNull Set<RecognitionSignal> effectiveSignals(@NotNull String providerId) {
 		LinkedHashSet<RecognitionSignal> resolved = new LinkedHashSet<>();
 		Providers.ProviderEntry provider = findProvider(providerId);
-		List<RecognitionSignal> overrides = provider != null
-				? provider.getOverrides().getRecognition().getSignals()
+		Providers.ProviderEntry.Session session = provider != null
+				? provider.getSession()
+				: null;
+		Providers.ProviderEntry.Session.Recognition recognition = session != null
+				? session.getRecognition()
+				: null;
+		List<RecognitionSignal> signals = recognition != null
+				? recognition.getSignals()
 				: List.of();
 
-		if (!overrides.isEmpty()) {
-			resolved.addAll(overrides);
+		if (!signals.isEmpty()) {
+			resolved.addAll(signals);
 			return resolved;
 		}
 
 		List<RecognitionSignal> defaults = settingsProvider.get()
-				.getConnection()
 				.getSessions()
 				.getRecognition()
 				.getDefaultSignals();

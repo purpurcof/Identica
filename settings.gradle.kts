@@ -16,6 +16,7 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
 
     repositories {
+        mavenLocal()
         mavenCentral()
         maven("https://maven.whereareiam.me/release")
         maven("https://maven.whereareiam.me/development")

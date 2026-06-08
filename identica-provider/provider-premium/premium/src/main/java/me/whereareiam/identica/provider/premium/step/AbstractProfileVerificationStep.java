@@ -2,7 +2,7 @@ package me.whereareiam.identica.provider.premium.step;
 
 import com.google.inject.Provider;
 import me.whereareiam.identica.handshake.HandshakeStore;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.type.SeamlessStep;
@@ -22,7 +22,7 @@ public abstract class AbstractProfileVerificationStep extends SeamlessStep {
 	protected final PipelineStateStore pipelineStateStore;
 	protected final PremiumProfileStore profileStore;
 	protected final HandshakeStore handshakeStore;
-	protected final Provider<Settings> settingsProvider;
+	protected final Provider<Engine> engineProvider;
 
 	protected AbstractProfileVerificationStep(
 			String name,
@@ -30,14 +30,14 @@ public abstract class AbstractProfileVerificationStep extends SeamlessStep {
 			PipelineStateStore pipelineStateStore,
 			PremiumProfileStore profileStore,
 			HandshakeStore handshakeStore,
-			Provider<Settings> settingsProvider
+			Provider<Engine> engineProvider
 	) {
 		super(name);
 		this.messagesProvider = messagesProvider;
 		this.pipelineStateStore = pipelineStateStore;
 		this.profileStore = profileStore;
 		this.handshakeStore = handshakeStore;
-		this.settingsProvider = settingsProvider;
+		this.engineProvider = engineProvider;
 	}
 
 	protected @NotNull PremiumMessages.Verification verification() {
@@ -70,8 +70,8 @@ public abstract class AbstractProfileVerificationStep extends SeamlessStep {
 	}
 
 	protected long ttlMillis() {
-		return settingsProvider.get()
-				.getConnection()
+		return engineProvider.get()
+				.getBehavior()
 				.handshakeInstructionTtlMillis();
 	}
 

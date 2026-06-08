@@ -1,16 +1,23 @@
 package me.whereareiam.identica.model;
 
 import lombok.*;
+import me.whereareiam.configura.annotation.PreserveUnknownFields;
+import me.whereareiam.configura.feature.extension.api.annotation.ExtendableDocument;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Configurable definition for one command entry in Identica's command documents.
+ */
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@ExtendableDocument
+@PreserveUnknownFields
 @Builder(toBuilder = true)
 public class CommandDefinition {
 	@Builder.Default
@@ -29,10 +36,14 @@ public class CommandDefinition {
 	@Builder.Default
 	private boolean hide = false;
 
+	/**
+	 * Cooldown settings for a command definition.
+	 */
 	@Getter
 	@ToString
 	@NoArgsConstructor
 	@AllArgsConstructor
+	@ExtendableDocument
 	@Builder(toBuilder = true)
 	public static class Cooldown {
 		@Builder.Default

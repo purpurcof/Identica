@@ -129,7 +129,7 @@ public class PendingPipelineKickCoordinator implements EventListener {
 						.accountUniqueId(accountUniqueId)
 						.build())
 				.payload(DeliveryPayload.builder()
-						.chatMessage(String.join("\n", messagesProvider.get().getConnection().getMigration().getCancelled()))
+						.chatMessage(String.join("\n", messagesProvider.get().getScenarios().getMigration().getCancelled()))
 						.build())
 				.checkpoint(DeliveryCheckpoint.PLATFORM_READY_INITIAL)
 				.semantics(DeliverySemantics.ONCE)
@@ -148,21 +148,19 @@ public class PendingPipelineKickCoordinator implements EventListener {
 	}
 
 	private @NotNull String resolveExpiredMessage(@NotNull PipelineType pipelineType) {
-		Messages.Connection.Scenario scenario = resolveScenarioMessages(pipelineType);
+		Messages.Scenarios.Scenario scenario = resolveScenarioMessages(pipelineType);
 		List<String> lines = scenario.getPipelineExpired();
 		if (lines.isEmpty()) return "";
 		return String.join("\n", lines);
 	}
 
-	private @NotNull Messages.Connection.Scenario resolveScenarioMessages(@NotNull PipelineType type) {
-		Messages.Connection connection = messagesProvider.get().getConnection();
+	private @NotNull Messages.Scenarios.Scenario resolveScenarioMessages(@NotNull PipelineType type) {
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
 
-		if (type == PipelineType.REGISTRATION)
-			return connection.getRegistration();
-		if (type == PipelineType.MIGRATION)
-			return connection.getMigration();
+		if (type == PipelineType.REGISTRATION) return scenarios.getRegistration();
+		if (type == PipelineType.MIGRATION) return scenarios.getMigration();
 
-		return connection.getAuthentication();
+		return scenarios.getAuthentication();
 	}
 
 	private @Nullable PipelineType resolvePipelineType(@NotNull ScenarioContext context) {

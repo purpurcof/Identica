@@ -110,7 +110,7 @@ Keep the generated verification blocks unless verification setup is intentionall
 
 ## 6. Replace default routing targets with a simple real route
 
-The generated `settings` defaults use example routing targets.
+The generated `routing` defaults use example routing targets.
 Do not leave them unchanged unless those names really exist in your environment.
 
 It is usually not a good idea to use the same target for both step routing and completion routing.
@@ -129,16 +129,14 @@ In most cases, step targets should point to an authentication or transition dest
     For a simple setup, a single shared target is a good baseline:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: lobby
-          complete:
-            target: lobby
+    defaults:
+      step:
+        target: lobby
+      complete:
+        target: lobby
     ```
 
-    Generated settings keep `scenarios` empty by default.
+    Generated routing config keeps `scenarios` empty by default.
     If your setup already separates authentication, registration, or migration across different backends, add only the scenario entries that differ from these defaults.
     Otherwise, keep the routing simple and use one shared target.
 
@@ -155,22 +153,20 @@ In most cases, step targets should point to an authentication or transition dest
     For a simple setup, a single shared target is still a good baseline:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: lobby
-          complete:
-            target: lobby
+    defaults:
+      step:
+        target: lobby
+      complete:
+        target: lobby
     ```
 
-    Generated settings keep `scenarios` empty by default.
+    Generated routing config keeps `scenarios` empty by default.
     If your setup already separates authentication, registration, or migration across different backends, add only the scenario entries that differ from these defaults.
     Otherwise, keep the routing simple and use one shared target.
   </ContentTab>
 </ContentTabs>
 
-## 8. Review security and refine the setup
+## 7. Review security and refine the setup
 
 Do not stop at the first successful startup.
 After the baseline works, walk through the generated configuration and the rest of the docs so you understand what the plugin will do in your network.
@@ -190,7 +186,7 @@ For example, credential requirements may be stronger than what your players are 
   Many networks handle that with a separate blocker or filter plugin. Identica does not treat that as core identity-plugin functionality.
 </Callout>
 
-## 9. Get help or report issues
+## 8. Get help or report issues
 
 If you find a bug, need support, or want a feature, we are happy to help:
 

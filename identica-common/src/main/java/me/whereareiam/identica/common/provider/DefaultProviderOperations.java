@@ -117,6 +117,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 		String configured = streamEntries(providersProvider.get())
 				.filter(entry -> normalizedProviderId.equalsIgnoreCase(normalizeProviderId(entry.getId())))
 				.map(Providers.ProviderEntry::getDisplayName)
+				.filter(Objects::nonNull)
 				.map(String::trim)
 				.filter(value -> !value.isBlank())
 				.findFirst()

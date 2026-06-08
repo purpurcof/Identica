@@ -99,9 +99,10 @@ public class DefaultAccountService implements AccountService {
 	}
 
 	private @NotNull Duration reservationTtl() {
-		Duration configured = settingsProvider.get().getConnection().getReservationTtl();
-		if (configured == null || configured.isZero() || configured.isNegative())
-			throw new IllegalStateException("settings.connection.reservationTtl must be positive");
+		Duration configured = settingsProvider.get().getIdentity().getReservationTtl();
+		if (configured.isZero() || configured.isNegative()) {
+			throw new IllegalStateException("settings.identity.reservationTtl must be positive");
+		}
 
 		return configured;
 	}

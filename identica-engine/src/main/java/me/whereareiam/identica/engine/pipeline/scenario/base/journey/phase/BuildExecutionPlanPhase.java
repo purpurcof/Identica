@@ -79,18 +79,16 @@ public class BuildExecutionPlanPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private @NotNull String journeyMissingContextMessage(@NotNull PipelineState pipelineState) {
-		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
+		Messages.Scenarios.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
 		return String.join("\n", errors.getJourney().getMissingContext());
 	}
 
-	private @NotNull Messages.Connection.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
+	private @NotNull Messages.Scenarios.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
 		PipelineType pipelineType = pipelineState.getPipelineType();
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return connection.getRegistration().getErrors();
-		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getMigration().getErrors();
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return scenarios.getRegistration().getErrors();
+		if (pipelineType == PipelineType.MIGRATION) return scenarios.getMigration().getErrors();
 
-		return connection.getAuthentication().getErrors();
+		return scenarios.getAuthentication().getErrors();
 	}
 }

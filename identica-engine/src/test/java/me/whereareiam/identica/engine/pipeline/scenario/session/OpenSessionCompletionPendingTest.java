@@ -75,11 +75,11 @@ class OpenSessionCompletionPendingTest {
 
 	private Messages messages() {
 		Messages messages = new Messages();
-		Messages.Connection connection = new Messages.Connection();
-		Messages.Connection.Authentication authentication = new Messages.Connection.Authentication();
+		Messages.Scenarios connection = new Messages.Scenarios();
+		Messages.Scenarios.Authentication authentication = new Messages.Scenarios.Authentication();
 		authentication.setAuthenticationFailed(List.of("failed"));
 		connection.setAuthentication(authentication);
-		messages.setConnection(connection);
+		messages.setScenarios(connection);
 		return messages;
 	}
 }

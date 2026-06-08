@@ -3,7 +3,7 @@ package me.whereareiam.identica.provider.premium.step;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.ProviderContext;
@@ -42,7 +42,7 @@ class FinalizeProfileStepTest {
 				pipelineStateStore,
 				profileStore,
 				handshakeStore,
-				Settings::new
+				Engine::new
 		);
 	}
 

@@ -98,7 +98,7 @@ public class RefreshProviderProfilePhase implements PipelinePhase<IdentityState>
 
 	private @NotNull String identityProfileMissingMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getAuthentication()
 				.getErrors()
 				.getIdentity().getProfileMissing());

@@ -52,7 +52,7 @@ public class IdentityGroup implements PipelineGroup<IdentityState> {
 
 	private @NotNull String identityGroupMissingResultMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getAuthentication()
 				.getErrors()
 				.getIdentity().getGroupMissingResult());

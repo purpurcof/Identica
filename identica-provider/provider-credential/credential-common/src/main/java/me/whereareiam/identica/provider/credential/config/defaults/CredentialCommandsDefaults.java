@@ -1,7 +1,7 @@
 package me.whereareiam.identica.provider.credential.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.provider.credential.config.CredentialCommands;
 
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class CredentialCommandsDefaults implements MergeDefaultsProvider<CredentialCommands> {
+public class CredentialCommandsDefaults implements DefaultsProvider<CredentialCommands> {
 	@Override
 	public CredentialCommands supply(CredentialCommands commands) {
 		CommandDefinition register = CommandDefinition.builder()

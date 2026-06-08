@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.jvm.tasks.Jar
 
 plugins {
-    id("common")
+    id("shared")
     id("com.gradleup.shadow")
 }
 

@@ -122,7 +122,7 @@ public class ApplyPreparePolicyPhase implements PipelinePhase<PrepareGroupState>
 
 	private @NotNull String preparePolicyMissingMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getEngine()
 				.getPrepare()
 				.getErrors()
 				.getPreparePolicyMissing());

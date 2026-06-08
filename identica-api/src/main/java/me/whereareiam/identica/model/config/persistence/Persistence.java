@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import me.whereareiam.configura.ConfigDocument;
-import me.whereareiam.configura.annotation.Polymorphic;
+import me.whereareiam.configura.feature.polymorphic.api.annotation.Polymorphic;
 import me.whereareiam.identica.model.config.persistence.external.MysqlPersistence;
 import me.whereareiam.identica.model.config.persistence.external.PostgresPersistence;
 import me.whereareiam.identica.type.DatabaseType;

@@ -49,12 +49,12 @@ public class AccountReviewPhase extends AbstractAccountReviewPhase<AuthContext, 
 
 	@Override
 	protected @NotNull String failedMessage(@NotNull Messages messages) {
-		return joinMessage(messages.getConnection().getAuthentication().getAuthenticationFailed());
+		return joinMessage(messages.getScenarios().getAuthentication().getAuthenticationFailed());
 	}
 
 	@Override
 	protected @NotNull String accountReviewMissingMessage(@NotNull Messages messages) {
-		return joinMessage(messages.getConnection()
+		return joinMessage(messages.getScenarios()
 				.getAuthentication()
 				.getErrors()
 				.getPolicy().getAccountReviewMissing());

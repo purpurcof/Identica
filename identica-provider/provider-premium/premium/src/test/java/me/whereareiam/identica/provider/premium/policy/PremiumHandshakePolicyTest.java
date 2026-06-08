@@ -6,7 +6,7 @@ import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderContext;
@@ -160,16 +160,19 @@ class PremiumHandshakePolicyTest {
 		return new HandshakeRequest(new ConnectionIdentity(username, "127.0.0.1"), provider);
 	}
 
-	private Settings settings() {
-		Settings.AuthenticationScenario authentication = new Settings.AuthenticationScenario();
+	private Engine settings() {
+		Engine.Authentication authentication = new Engine.Authentication();
 		authentication.setJourneyMode(JourneyMode.SEAMLESS);
 
-		Settings.Connection connection = new Settings.Connection();
-		connection.setHandshakeInstructionTtl(Duration.ofSeconds(30));
-		connection.getScenarios().setAuthentication(authentication);
+		Engine.Behavior behavior = new Engine.Behavior();
+		behavior.setHandshakeInstructionTtl(Duration.ofSeconds(30));
 
-		Settings settings = new Settings();
-		settings.setConnection(connection);
+		Engine.Scenarios scenarios = new Engine.Scenarios();
+		scenarios.setAuthentication(authentication);
+
+		Engine settings = new Engine();
+		settings.setBehavior(behavior);
+		settings.setScenarios(scenarios);
 		return settings;
 	}
 

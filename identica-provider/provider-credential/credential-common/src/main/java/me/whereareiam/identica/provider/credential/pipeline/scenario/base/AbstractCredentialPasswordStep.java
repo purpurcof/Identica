@@ -2,7 +2,7 @@ package me.whereareiam.identica.provider.credential.pipeline.scenario.base;
 
 import com.google.inject.Provider;
 import me.whereareiam.identica.event.EventManager;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
@@ -23,7 +23,7 @@ public abstract class AbstractCredentialPasswordStep extends AbstractCredentialA
 	protected AbstractCredentialPasswordStep(
 			@NotNull String name,
 			@NotNull Provider<CredentialMessages> messagesProvider,
-			@NotNull Provider<Settings> coreSettingsProvider,
+			@NotNull Provider<Engine> coreSettingsProvider,
 			@NotNull CredentialAccountService credentialService,
 			@NotNull CryptographyService cryptographyService,
 			@NotNull PipelineStateStore pipelineStateStore,

@@ -1,6 +1,7 @@
 package me.whereareiam.identica.common.migration;
 
 import me.whereareiam.identica.common.config.defaults.SettingsDefaults;
+import me.whereareiam.identica.common.config.defaults.EngineDefaults;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.event.EventManager;
@@ -11,6 +12,7 @@ import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.config.Commands;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.identity.Account;
@@ -109,6 +111,7 @@ class DefaultMigrationServiceTest {
 				deliveryService,
 				eventManager,
 				Settings::new,
+				this::engine,
 				() -> commands,
 				() -> messages
 		);
@@ -142,6 +145,7 @@ class DefaultMigrationServiceTest {
 				deliveryService,
 				eventManager,
 				Settings::new,
+				this::engine,
 				this::commands,
 				this::messages
 		);
@@ -200,6 +204,7 @@ class DefaultMigrationServiceTest {
 				deliveryService,
 				eventManager,
 				Settings::new,
+				this::engine,
 				this::commands,
 				this::messages
 		);
@@ -242,6 +247,7 @@ class DefaultMigrationServiceTest {
 				deliveryService,
 				eventManager,
 				() -> settings,
+				this::engine,
 				this::commands,
 				Messages::new
 		);
@@ -304,6 +310,7 @@ class DefaultMigrationServiceTest {
 				deliveryService,
 				eventManager,
 				Settings::new,
+				this::engine,
 				this::commands,
 				this::messages
 		);
@@ -339,13 +346,17 @@ class DefaultMigrationServiceTest {
 		return commands;
 	}
 
+	private Engine engine() {
+		return new EngineDefaults().supply(new Engine());
+	}
+
 	private Messages messages() {
 		Messages messages = new Messages();
-		Messages.Connection connection = new Messages.Connection();
-		Messages.Connection.Migration migration = new Messages.Connection.Migration();
+		Messages.Scenarios scenarios = new Messages.Scenarios();
+		Messages.Scenarios.Migration migration = new Messages.Scenarios.Migration();
 		migration.setCancelled(List.of("cancelled"));
-		connection.setMigration(migration);
-		messages.setConnection(connection);
+		scenarios.setMigration(migration);
+		messages.setScenarios(scenarios);
 		return messages;
 	}
 }

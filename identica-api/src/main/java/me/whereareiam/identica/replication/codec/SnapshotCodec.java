@@ -1,6 +1,7 @@
 package me.whereareiam.identica.replication.codec;
 
 import me.whereareiam.configura.Config;
+import me.whereareiam.configura.Configura;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -37,7 +38,7 @@ public interface SnapshotCodec<S> {
 	 */
 	static <S> @NotNull SnapshotCodec<S> json(@NotNull Class<S> type) {
 		return new SnapshotCodec<>() {
-			private final Config configura = Config.json();
+			private final Configura configura = Config.json();
 
 			@Override
 			public byte @NotNull [] encode(@Nullable S snapshot) {

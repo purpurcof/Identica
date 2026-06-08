@@ -111,9 +111,9 @@ class DefaultAccountServiceTest {
 
 	private Settings settings() {
 		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
-		connection.setReservationTtl(Duration.ofMinutes(1));
-		settings.setConnection(connection);
+		Settings.Identity identity = new Settings.Identity();
+		identity.setReservationTtl(Duration.ofMinutes(1));
+		settings.setIdentity(identity);
 		return settings;
 	}
 }

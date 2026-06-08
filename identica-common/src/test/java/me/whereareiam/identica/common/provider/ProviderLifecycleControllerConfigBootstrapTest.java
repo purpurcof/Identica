@@ -5,7 +5,9 @@ import com.google.inject.Module;
 import com.google.inject.name.Named;
 import lombok.Getter;
 import lombok.Setter;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.Config;
+import me.whereareiam.configura.Configura;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.Registry;
 import me.whereareiam.identica.Reloadable;
 import me.whereareiam.identica.common.provider.dependency.ProviderDependencyResolver;
@@ -59,7 +61,7 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 	void loadingAProviderPrewarmsProviderLocalConfigs(@TempDir Path tempDir) {
 		Injector injector = Guice.createInjector(new ProviderLifecycleTestModule(tempDir));
 		ProviderLifecycleController controller = injector.getInstance(ProviderLifecycleController.class);
-		InternalProvider provider = discoveredProvider("test-provider", "Test Provider");
+		InternalProvider provider = discoveredProvider();
 
 		controller.loadProvider(provider);
 
@@ -81,7 +83,7 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 		ProbePlatformBinding.reset();
 		Injector injector = Guice.createInjector(new ProviderLifecycleTestModule(tempDir));
 		ProviderLifecycleController controller = injector.getInstance(ProviderLifecycleController.class);
-		InternalProvider provider = discoveredProvider("test-provider", "Test Provider");
+		InternalProvider provider = discoveredProvider();
 
 		controller.loadProvider(provider);
 		controller.enableProvider(provider);
@@ -91,10 +93,10 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 		assertEquals(1, ProbePlatformBinding.unregisterCount());
 	}
 
-	private static InternalProvider discoveredProvider(String id, String name) {
+	private static InternalProvider discoveredProvider() {
 		return InternalProvider.builder()
 				.path(Path.of("ignored.jar"))
-				.descriptor(descriptor(id, name))
+				.descriptor(descriptor("test-provider", "Test Provider"))
 				.state(ProviderState.DISCOVERED)
 				.build();
 	}
@@ -276,7 +278,12 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 	private static final class TestSettingsProvider extends ConfigProvider<TestDocument> {
 		@Inject
 		private TestSettingsProvider(@Named("workingPath") Path workingPath, Registry<Reloadable> registry) {
-			super(workingPath, "settings", TestDocument.class, registry, configure(TestDefaults.class, TestDocument.class));
+			super(workingPath, "settings", TestDocument.class, registry);
+		}
+
+		@Override
+		protected Configura configura() {
+			return versioned(Config.configured().withDefaults(TestDefaults.class), TestDocument.class);
 		}
 	}
 
@@ -284,7 +291,12 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 	private static final class TestMessagesProvider extends ConfigProvider<TestDocument> {
 		@Inject
 		private TestMessagesProvider(@Named("workingPath") Path workingPath, Registry<Reloadable> registry) {
-			super(workingPath, "messages", TestDocument.class, registry, configure(TestDefaults.class, TestDocument.class));
+			super(workingPath, "messages", TestDocument.class, registry);
+		}
+
+		@Override
+		protected Configura configura() {
+			return versioned(Config.configured().withDefaults(TestDefaults.class), TestDocument.class);
 		}
 	}
 
@@ -292,7 +304,12 @@ class ProviderLifecycleControllerConfigBootstrapTest {
 	private static final class TestCommandsProvider extends ConfigProvider<TestDocument> {
 		@Inject
 		private TestCommandsProvider(@Named("workingPath") Path workingPath, Registry<Reloadable> registry) {
-			super(workingPath, "commands", TestDocument.class, registry, configure(TestDefaults.class, TestDocument.class));
+			super(workingPath, "commands", TestDocument.class, registry);
+		}
+
+		@Override
+		protected Configura configura() {
+			return versioned(Config.configured().withDefaults(TestDefaults.class), TestDocument.class);
 		}
 	}
 
@@ -303,7 +320,7 @@ class ProviderLifecycleControllerConfigBootstrapTest {
     }
 
 	@Singleton
-	public static class TestDefaults implements MergeDefaultsProvider<TestDocument> {
+	public static class TestDefaults implements DefaultsProvider<TestDocument> {
 		@Override
 		public TestDocument supply(TestDocument config) {
 			config.setValue("prepared");

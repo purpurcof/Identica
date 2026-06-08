@@ -47,7 +47,7 @@ public class ReservationCommand {
 		}
 
 		long now = System.currentTimeMillis();
-		long expiresAt = now + settingsProvider.get().getConnection().getReservationTtl().toMillis();
+		long expiresAt = now + settingsProvider.get().getIdentity().reservationTtlMillis();
 		reservationPersistenceService.reserve(reservationKey, uniqueId, now, expiresAt);
 		sendMessage(sender, messages().getSet(), Map.of(
 				"key", reservationKey,

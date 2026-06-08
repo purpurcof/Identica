@@ -145,7 +145,7 @@ If you need environment-specific naming, decide it before the rollout and then k
 
 ## 8. Replace default routing targets with real ones
 
-Open `settings` and align routing with the backend targets that actually exist.
+Open `routing` and align targets with the backend names that actually exist.
 The default values are examples only.
 
 It is usually not a good idea to use the same target for both step routing and completion routing.
@@ -164,35 +164,31 @@ In most cases, step targets should point to an authentication or transition dest
     For a segmented topology, a good baseline looks like this:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: auth
-          complete:
-            target: lobby
-        scenarios:
-          registration:
-            step:
-              target: registration
-          migration:
-            step:
-              target: migration
+    defaults:
+      step:
+        target: auth
+      complete:
+        target: lobby
+    scenarios:
+      registration:
+        step:
+          target: registration
+      migration:
+        step:
+          target: migration
     ```
 
     Use your real server names, not the names shown here.
-    Generated settings leave `scenarios` empty; add scenario entries only when a scenario needs to differ from `routing.defaults`.
+    Generated routing config leaves `scenarios` empty; add scenario entries only when a scenario needs to differ from `defaults`.
     If one step needs exceptional routing, use a step override instead of changing the whole scenario:
 
     ```yaml
-    connection:
-      routing:
-        scenarios:
-          registration:
-            overrides:
-              steps:
-                your-step-id:
-                  target: auth
+    scenarios:
+      registration:
+        overrides:
+          steps:
+            your-step-id:
+              target: auth
     ```
 
     That keeps the normal scenario route stable while still letting one specific step land somewhere else.
@@ -201,52 +197,50 @@ In most cases, step targets should point to an authentication or transition dest
     A practical example looks like this:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: auth
-            attempts:
-              mode: RETRY_ONCE
-              maxAttempts: 2
-              retryDelay: 1s
-              consumeOnReached: false
-              consumeOnExhausted: true
-          complete:
-            target: lobby
-            attempts:
-              mode: NONE
-              maxAttempts: 1
-              retryDelay: 0s
-              consumeOnReached: true
-              consumeOnExhausted: true
-        scenarios:
-          registration:
-            step:
-              target: register
-              attempts:
-                mode: RETRY_ONCE
-                maxAttempts: 2
-                retryDelay: 1s
-                consumeOnReached: false
-                consumeOnExhausted: true
-            complete:
-              target: lobby
-            overrides:
-              steps:
-                provider-selection:
-                  target: register-fallback
-          migration:
-            step:
-              target: migrate
-              attempts:
-                mode: RETRY_ONCE
-                maxAttempts: 3
-                retryDelay: 2s
-                consumeOnReached: false
-                consumeOnExhausted: true
-            complete:
-              target: survival
+    defaults:
+      step:
+        target: auth
+        attempts:
+          mode: RETRY_ONCE
+          maxAttempts: 2
+          retryDelay: 1s
+          consumeOnReached: false
+          consumeOnExhausted: true
+      complete:
+        target: lobby
+        attempts:
+          mode: NONE
+          maxAttempts: 1
+          retryDelay: 0s
+          consumeOnReached: true
+          consumeOnExhausted: true
+    scenarios:
+      registration:
+        step:
+          target: register
+          attempts:
+            mode: RETRY_ONCE
+            maxAttempts: 2
+            retryDelay: 1s
+            consumeOnReached: false
+            consumeOnExhausted: true
+        complete:
+          target: lobby
+        overrides:
+          steps:
+            provider-selection:
+              target: register-fallback
+      migration:
+        step:
+          target: migrate
+          attempts:
+            mode: RETRY_ONCE
+            maxAttempts: 3
+            retryDelay: 2s
+            consumeOnReached: false
+            consumeOnExhausted: true
+        complete:
+          target: survival
     ```
 
     In that example:
@@ -271,35 +265,31 @@ In most cases, step targets should point to an authentication or transition dest
     For a segmented topology, a good baseline looks like this:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: auth
-          complete:
-            target: lobby
-        scenarios:
-          registration:
-            step:
-              target: registration
-          migration:
-            step:
-              target: migration
+    defaults:
+      step:
+        target: auth
+      complete:
+        target: lobby
+    scenarios:
+      registration:
+        step:
+          target: registration
+      migration:
+        step:
+          target: migration
     ```
 
     Use your real server names, not the names shown here.
-    Generated settings leave `scenarios` empty; add scenario entries only when a scenario needs to differ from `routing.defaults`.
+    Generated routing config leaves `scenarios` empty; add scenario entries only when a scenario needs to differ from `defaults`.
     If one step needs exceptional routing, use a step override instead of changing the whole scenario:
 
     ```yaml
-    connection:
-      routing:
-        scenarios:
-          registration:
-            overrides:
-              steps:
-                your-step-id:
-                  target: auth
+    scenarios:
+      registration:
+        overrides:
+          steps:
+            your-step-id:
+              target: auth
     ```
 
     That keeps the normal scenario route stable while still letting one specific step land somewhere else.
@@ -308,52 +298,50 @@ In most cases, step targets should point to an authentication or transition dest
     A practical example looks like this:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: auth
-            attempts:
-              mode: RETRY_ONCE
-              maxAttempts: 2
-              retryDelay: 1s
-              consumeOnReached: false
-              consumeOnExhausted: true
-          complete:
-            target: lobby
-            attempts:
-              mode: NONE
-              maxAttempts: 1
-              retryDelay: 0s
-              consumeOnReached: true
-              consumeOnExhausted: true
-        scenarios:
-          registration:
-            step:
-              target: register
-              attempts:
-                mode: RETRY_ONCE
-                maxAttempts: 2
-                retryDelay: 1s
-                consumeOnReached: false
-                consumeOnExhausted: true
-            complete:
-              target: lobby
-            overrides:
-              steps:
-                provider-selection:
-                  target: register-fallback
-          migration:
-            step:
-              target: migrate
-              attempts:
-                mode: RETRY_ONCE
-                maxAttempts: 3
-                retryDelay: 2s
-                consumeOnReached: false
-                consumeOnExhausted: true
-            complete:
-              target: survival
+    defaults:
+      step:
+        target: auth
+        attempts:
+          mode: RETRY_ONCE
+          maxAttempts: 2
+          retryDelay: 1s
+          consumeOnReached: false
+          consumeOnExhausted: true
+      complete:
+        target: lobby
+        attempts:
+          mode: NONE
+          maxAttempts: 1
+          retryDelay: 0s
+          consumeOnReached: true
+          consumeOnExhausted: true
+    scenarios:
+      registration:
+        step:
+          target: register
+          attempts:
+            mode: RETRY_ONCE
+            maxAttempts: 2
+            retryDelay: 1s
+            consumeOnReached: false
+            consumeOnExhausted: true
+        complete:
+          target: lobby
+        overrides:
+          steps:
+            provider-selection:
+              target: register-fallback
+      migration:
+        step:
+          target: migrate
+          attempts:
+            mode: RETRY_ONCE
+            maxAttempts: 3
+            retryDelay: 2s
+            consumeOnReached: false
+            consumeOnExhausted: true
+        complete:
+          target: survival
     ```
 
     In that example:

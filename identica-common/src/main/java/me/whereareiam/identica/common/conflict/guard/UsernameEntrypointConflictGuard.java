@@ -62,7 +62,7 @@ public class UsernameEntrypointConflictGuard implements ConflictGuard {
 			@Nullable String existingProvider
 	) {
 		List<String> lines = messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getAuthentication()
 				.getConflictEntrypointRequired();
 		if (lines.isEmpty()) return null;

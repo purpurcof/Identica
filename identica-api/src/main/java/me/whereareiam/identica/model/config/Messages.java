@@ -25,7 +25,9 @@ public class Messages extends ConfigDocument {
 	private @NotNull Format format;
 	private @NotNull Commands commands;
 	private @NotNull Providers providers;
-	private @NotNull Connection connection;
+	private @NotNull Engine engine;
+	private @NotNull Routing routing;
+	private @NotNull Scenarios scenarios;
 
 	@Getter
 	@Setter
@@ -719,12 +721,27 @@ public class Messages extends ConfigDocument {
 	public static class Providers {
 		private @NotNull List<String> noProvidersAvailable;
 		private @NotNull List<String> noProvidersMatched;
+		private @NotNull ProviderRestriction providerRestriction;
+
+		@Getter
+		@Setter
+		@ToString
+		public static class ProviderRestriction {
+			/**
+			 * Shared message sent when an active provider restriction denies a join.
+			 * Placeholders:
+			 * - {providerId}
+			 * - {providerName}
+			 * - {allow}
+			 */
+			private @NotNull List<String> denied;
+		}
 	}
 
 	@Getter
 	@Setter
 	@ToString
-	public static class Connection {
+	public static class Engine {
 		/**
 		 * Message shown when an existing session is kicked due to a new login.
 		 */
@@ -735,10 +752,6 @@ public class Messages extends ConfigDocument {
 		private @NotNull List<String> resumeSentineled;
 		private @NotNull Journey journey;
 		private @NotNull Prepare prepare;
-		private @NotNull ProviderRestriction providerRestriction;
-		private @NotNull Authentication authentication;
-		private @NotNull Registration registration;
-		private @NotNull Migration migration;
 
 		@Getter
 		@Setter
@@ -762,16 +775,74 @@ public class Messages extends ConfigDocument {
 		@Getter
 		@Setter
 		@ToString
-		public static class ProviderRestriction {
-			/**
-			 * Shared message sent when an active provider restriction denies a join.
-			 * Placeholders:
-			 * - {providerId}
-			 * - {providerName}
-			 * - {allow}
-			 */
-			private @NotNull List<String> denied;
+		public static class Journey {
+			private @NotNull Stage stage;
+			private @NotNull Step step;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Stage {
+				private @NotNull List<String> noCompletion;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Step {
+				private @NotNull List<String> noStatus;
+				private @NotNull Enrollment enrollment;
+
+				/**
+				 * Enrollment prompt messages.
+				 */
+				@Getter
+				@Setter
+				@ToString
+				public static class Enrollment {
+					private @NotNull List<String> body;
+					private @NotNull EntryFormat entryFormat;
+					private @NotNull List<String> empty;
+					private @NotNull Map<String, String> descriptions;
+
+					/**
+					 * Format definitions for enrollment entry rendering.
+					 */
+					@Getter
+					@Setter
+					@ToString
+					public static class EntryFormat {
+						/**
+						 * Format used when all required placeholders are present.
+						 */
+						private @NotNull String format;
+						/**
+						 * Format used when one or more placeholders are missing.
+						 */
+						private @NotNull String emptyFormat;
+					}
+				}
+			}
 		}
+	}
+
+	/**
+	 * Routing messages.
+	 */
+	@Getter
+	@Setter
+	@ToString
+	public static class Routing {
+		private @NotNull List<String> missingServer;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Scenarios {
+		private @NotNull Authentication authentication;
+		private @NotNull Registration registration;
+		private @NotNull Migration migration;
 
 		@Getter
 		@Setter
@@ -828,7 +899,7 @@ public class Messages extends ConfigDocument {
 			 * Message shown when the pipeline finishes without a completion result.
 			 */
 			private @NotNull List<String> noCompletionPipeline;
-			private @NotNull Routing routing;
+			private @NotNull ScenarioRouting routing;
 			private @NotNull Errors errors;
 
 			@Getter
@@ -902,69 +973,13 @@ public class Messages extends ConfigDocument {
 					private @NotNull List<String> missingPlan;
 				}
 			}
-		}
-
-		@Getter
-		@Setter
-		@ToString
-		public static class Journey {
-			private @NotNull Stage stage;
-			private @NotNull Step step;
 
 			@Getter
 			@Setter
 			@ToString
-			public static class Stage {
-				private @NotNull List<String> noCompletion;
+			public static class ScenarioRouting {
+				private @NotNull List<String> missingServer;
 			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Step {
-				private @NotNull List<String> noStatus;
-				private @NotNull Enrollment enrollment;
-
-				/**
-				 * Enrollment prompt messages.
-				 */
-				@Getter
-				@Setter
-				@ToString
-				public static class Enrollment {
-					private @NotNull List<String> body;
-					private @NotNull EntryFormat entryFormat;
-					private @NotNull List<String> empty;
-					private @NotNull Map<String, String> descriptions;
-
-					/**
-					 * Format definitions for enrollment entry rendering.
-					 */
-					@Getter
-					@Setter
-					@ToString
-					public static class EntryFormat {
-						/**
-						 * Format used when all required placeholders are present.
-						 */
-						private @NotNull String format;
-						/**
-						 * Format used when one or more placeholders are missing.
-						 */
-						private @NotNull String emptyFormat;
-					}
-				}
-			}
-		}
-
-		/**
-		 * Routing messages.
-		 */
-		@Getter
-		@Setter
-		@ToString
-		public static class Routing {
-			private @NotNull List<String> missingServer;
 		}
 	}
 }

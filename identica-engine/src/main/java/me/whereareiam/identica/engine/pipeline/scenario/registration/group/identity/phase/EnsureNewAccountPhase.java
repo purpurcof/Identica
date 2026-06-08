@@ -110,14 +110,14 @@ public class EnsureNewAccountPhase implements PipelinePhase<IdentityState> {
 
 	private @NotNull String ensureNewAccountMissingMessage() {
 		return joinMessage(messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getRegistration()
 				.getErrors()
 				.getPolicy().getEnsureNewAccountMissing());
 	}
 
 	private @NotNull String accountAlreadyExistsMessage() {
-		return joinMessage(messagesProvider.get().getConnection().getRegistration().getAccountAlreadyExists());
+		return joinMessage(messagesProvider.get().getScenarios().getRegistration().getAccountAlreadyExists());
 	}
 
 	private @NotNull String joinMessage(@NotNull List<String> lines) {

@@ -8,8 +8,8 @@ import me.whereareiam.identica.engine.pipeline.scenario.registration.Registratio
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
@@ -124,7 +124,7 @@ class ScenarioPipelineResumeContextTest {
 			super(
 					mock(PipelineRegistry.class),
 					Messages::new,
-					Settings::new,
+					Engine::new,
 					mock(PipelineStateStore.class),
 					mock(PipelineExecutor.class),
 					mock(ProviderLinkPersistenceService.class)
@@ -141,7 +141,7 @@ class ScenarioPipelineResumeContextTest {
 			super(
 					mock(PipelineRegistry.class),
 					Messages::new,
-					Settings::new,
+					Engine::new,
 					mock(PipelineStateStore.class),
 					mock(PipelineExecutor.class),
 					mock(ProviderLinkPersistenceService.class)
@@ -158,7 +158,7 @@ class ScenarioPipelineResumeContextTest {
 			super(
 					mock(PipelineRegistry.class),
 					Messages::new,
-					Settings::new,
+					Engine::new,
 					mock(PipelineStateStore.class),
 					mock(PipelineExecutor.class)
 			);

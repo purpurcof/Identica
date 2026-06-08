@@ -3,8 +3,8 @@ package me.whereareiam.identica.common.messaging;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
 import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.replication.ReplicationSystem;
@@ -22,13 +22,13 @@ public class DefaultDeliveryStore implements DeliveryStore {
 	private final ReplicatedCache<DeliveryRequest> requests;
 	private final ReplicatedCache<DeliveryRequestKeyIndex> connectionIndex;
 	private final ReplicatedCache<DeliveryRequestKeyIndex> accountIndex;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 
 	@Inject
 	public DefaultDeliveryStore(
 			@NotNull ReplicationSystem replicationSystem,
 			@NotNull Provider<Replication> replicationProvider,
-			@NotNull Provider<Settings> settingsProvider
+			@NotNull Provider<Engine> engineProvider
 	) {
 		Replication.Delivery delivery = replicationProvider.get().getCache().getDelivery();
 		var indexType = ReplicationType.identity(DeliveryRequestKeyIndex.class);
@@ -36,7 +36,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 		this.requests = replicationSystem.cache(delivery.getRequests()).replicated(ReplicationType.identity(DeliveryRequest.class));
 		this.connectionIndex = replicationSystem.cache(delivery.getConnectionIndex()).replicated(indexType);
 		this.accountIndex = replicationSystem.cache(delivery.getAccountIndex()).replicated(indexType);
-		this.settingsProvider = settingsProvider;
+		this.engineProvider = engineProvider;
 	}
 
 	@Override
@@ -143,7 +143,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 	}
 
 	private long ttlMs() {
-		return settingsProvider.get().getConnection().prepareStateTtlMillis();
+		return engineProvider.get().getBehavior().bridgeTtlMillis();
 	}
 
 	private record DeliveryRequestKeyIndex(@NotNull List<String> values) {

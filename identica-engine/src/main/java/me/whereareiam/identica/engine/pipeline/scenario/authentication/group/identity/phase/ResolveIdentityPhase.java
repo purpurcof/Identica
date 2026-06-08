@@ -104,7 +104,7 @@ public class ResolveIdentityPhase implements PipelinePhase<IdentityState> {
 	}
 
 	private @NotNull String authenticationFailedMessage() {
-		return String.join("\n", messagesProvider.get().getConnection().getAuthentication().getAuthenticationFailed());
+		return String.join("\n", messagesProvider.get().getScenarios().getAuthentication().getAuthenticationFailed());
 	}
 
 	private boolean isBlank(@Nullable String value) {

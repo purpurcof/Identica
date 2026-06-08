@@ -124,12 +124,12 @@ public class ValidateTargetPhase implements PipelinePhase<IdentityState> {
 	}
 
 	private @NotNull String migrationFailedMessage() {
-		return joinMessage(messagesProvider.get().getConnection().getMigration().getMigrationFailed());
+		return joinMessage(messagesProvider.get().getScenarios().getMigration().getMigrationFailed());
 	}
 
 	private @NotNull String providerValidationMissingMessage() {
 		return joinMessage(messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getMigration()
 				.getErrors()
 				.getIdentity().getProvider().getValidationMissing());
@@ -137,7 +137,7 @@ public class ValidateTargetPhase implements PipelinePhase<IdentityState> {
 
 	private @NotNull String accountMissingMessage() {
 		return joinMessage(messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getMigration()
 				.getErrors()
 				.getIdentity().getAccountMissing());

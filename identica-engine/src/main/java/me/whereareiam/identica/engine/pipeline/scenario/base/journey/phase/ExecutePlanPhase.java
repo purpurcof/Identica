@@ -12,8 +12,8 @@ import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.event.step.StepStartedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.logging.Logger;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
@@ -58,7 +58,7 @@ import java.util.concurrent.CompletionStage;
 public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	private final IdentityService identityService;
 	private final EventManager eventManager;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 	private final Provider<Messages> messagesProvider;
 	private final ProviderManager providerManager;
 	private final PipelineStateStore pipelineStateStore;
@@ -679,14 +679,12 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		return step.getStep().contextRequirement() == StepContextRequirement.ONLINE;
 	}
 
-	private @NotNull Settings.Scenario scenarioSettings(@Nullable PipelineType pipelineType) {
-		Settings.Connection connection = settingsProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return connection.getScenarios().getRegistration();
-		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getScenarios().getMigration();
+	private @NotNull Engine.Scenario scenarioSettings(@Nullable PipelineType pipelineType) {
+		Engine.Scenarios scenarios = engineProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return scenarios.getRegistration();
+		if (pipelineType == PipelineType.MIGRATION) return scenarios.getMigration();
 
-		return connection.getScenarios().getAuthentication();
+		return scenarios.getAuthentication();
 	}
 
 	private void applyProviderContext(@NotNull ScenarioContext context, @NotNull String providerId) {
@@ -759,7 +757,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 	private @NotNull String journeyNoCompletionMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getEngine()
 				.getJourney()
 				.getStage()
 				.getNoCompletion());
@@ -767,41 +765,37 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 	private @NotNull String journeyStepNoStatusMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getEngine()
 				.getJourney()
 				.getStep()
 				.getNoStatus());
 	}
 
 	private @NotNull String journeyMissingContextMessage(@NotNull PipelineState pipelineState) {
-		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
+		Messages.Scenarios.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
 		return String.join("\n", errors.getJourney().getMissingContext());
 	}
 
 	private @NotNull String journeyMissingPlanMessage(@NotNull PipelineState pipelineState) {
-		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
+		Messages.Scenarios.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
 		return String.join("\n", errors.getJourney().getMissingPlan());
 	}
 
-	private @NotNull Messages.Connection.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
+	private @NotNull Messages.Scenarios.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
 		PipelineType pipelineType = pipelineState.getPipelineType();
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return connection.getRegistration().getErrors();
-		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getMigration().getErrors();
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return scenarios.getRegistration().getErrors();
+		if (pipelineType == PipelineType.MIGRATION) return scenarios.getMigration().getErrors();
 
-		return connection.getAuthentication().getErrors();
+		return scenarios.getAuthentication().getErrors();
 	}
 
 	private @NotNull String failureMessage(@Nullable PipelineType pipelineType) {
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return String.join("\n", connection.getRegistration().getRegistrationFailed());
-		if (pipelineType == PipelineType.MIGRATION)
-			return String.join("\n", connection.getMigration().getMigrationFailed());
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return String.join("\n", scenarios.getRegistration().getRegistrationFailed());
+		if (pipelineType == PipelineType.MIGRATION) return String.join("\n", scenarios.getMigration().getMigrationFailed());
 
-		return String.join("\n", connection.getAuthentication().getAuthenticationFailed());
+		return String.join("\n", scenarios.getAuthentication().getAuthenticationFailed());
 	}
 
 	private @Nullable InternalProvider resolveProvider(@Nullable String providerId) {

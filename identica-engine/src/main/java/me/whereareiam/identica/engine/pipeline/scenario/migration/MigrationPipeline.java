@@ -14,8 +14,8 @@ import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
@@ -37,14 +37,14 @@ public class MigrationPipeline extends AbstractScenarioPipeline {
 	public MigrationPipeline(
 			@Named("migrationPipelineRegistry") PipelineRegistry registry,
 			Provider<Messages> messagesProvider,
-			Provider<Settings> settingsProvider,
+			Provider<Engine> engineProvider,
 			PipelineStateStore pipelineStateStore,
 			PipelineExecutor executor
 	) {
 		super(
 				registry,
 				messagesProvider,
-				settingsProvider,
+				engineProvider,
 				pipelineStateStore,
 				PipelineType.MIGRATION,
 				executor

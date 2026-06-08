@@ -17,8 +17,8 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.auth.request.ConnectionRequest;
 import me.whereareiam.identica.model.auth.request.ResumeRequest;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelineRegistry;
@@ -41,7 +41,7 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 	public AuthenticationPipeline(
 			@Named("authenticationPipelineRegistry") PipelineRegistry registry,
 			Provider<Messages> messagesProvider,
-			Provider<Settings> settingsProvider,
+			Provider<Engine> engineProvider,
 			PipelineStateStore pipelineStateStore,
 			PipelineExecutor executor,
 			ProviderLinkPersistenceService providerLinkPersistenceService
@@ -49,7 +49,7 @@ public class AuthenticationPipeline extends AbstractScenarioPipeline {
 		super(
 				registry,
 				messagesProvider,
-				settingsProvider,
+				engineProvider,
 				pipelineStateStore,
 				PipelineType.AUTHENTICATION,
 				executor

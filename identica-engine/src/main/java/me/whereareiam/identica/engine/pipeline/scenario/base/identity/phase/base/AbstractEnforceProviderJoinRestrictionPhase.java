@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.engine.pipeline.scenario.base.AbstractGroupState;
 import me.whereareiam.identica.engine.pipeline.scenario.base.identity.item.IdentityMetaItem;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.state.PipelineState;
@@ -33,7 +33,7 @@ public abstract class AbstractEnforceProviderJoinRestrictionPhase<C extends Scen
 	private final ProviderJoinRestrictionService restrictionService;
 	private final ProviderOperations providerOperations;
 	private final Provider<Messages> messagesProvider;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 
 	@Override
 	public @NotNull String id() {
@@ -53,7 +53,7 @@ public abstract class AbstractEnforceProviderJoinRestrictionPhase<C extends Scen
 		ProviderContext provider = resolveProvider(context, state);
 		if (context == null || provider == null)
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
-		if (allowResumeBypass(settingsProvider.get(), pipelineState))
+		if (allowResumeBypass(engineProvider.get(), pipelineState))
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		ProviderJoinRestrictionDecision decision = restrictionService.evaluate(
@@ -74,7 +74,7 @@ public abstract class AbstractEnforceProviderJoinRestrictionPhase<C extends Scen
 
 	protected abstract @Nullable ProviderContext resolveProvider(@Nullable C context, @NotNull S state);
 
-	protected abstract boolean allowResumeBypass(@NotNull Settings settings, @NotNull PipelineState pipelineState);
+	protected abstract boolean allowResumeBypass(@NotNull Engine settings, @NotNull PipelineState pipelineState);
 
 	protected final @Nullable IdentityMetaItem identityMeta(@NotNull PipelineState pipelineState) {
 		return pipelineState.item(IdentityMetaItem.class).orElse(null);
@@ -90,7 +90,7 @@ public abstract class AbstractEnforceProviderJoinRestrictionPhase<C extends Scen
 		placeholders.put("providerName", providerName != null ? providerName : providerId);
 		placeholders.put("allow", describeAllow(allow));
 
-		String resolved = String.join("\n", messagesProvider.get().getConnection().getProviderRestriction().getDenied());
+		String resolved = String.join("\n", messagesProvider.get().getProviders().getProviderRestriction().getDenied());
 		var format = Serializer.getEngine().getPlaceholderFormat();
 		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
 			resolved = resolved.replace(format.format(entry.getKey()), entry.getValue() == null ? "" : entry.getValue());

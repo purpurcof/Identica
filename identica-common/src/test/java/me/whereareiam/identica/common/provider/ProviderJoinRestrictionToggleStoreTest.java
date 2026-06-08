@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.provider;
 import me.whereareiam.identica.common.provider.restriction.ProviderJoinRestrictionToggleStore;
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.replication.ReplicationPage;
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import org.jetbrains.annotations.NotNull;
@@ -45,11 +45,11 @@ class ProviderJoinRestrictionToggleStoreTest {
 		return replication;
 	}
 
-	private Settings settings() {
-		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
-		connection.setProviderJoinRestrictionTtl(java.time.Duration.ofDays(365));
-		settings.setConnection(connection);
+	private Providers settings() {
+		Providers settings = new Providers();
+		Providers.Behavior behavior = new Providers.Behavior();
+		behavior.setJoinRestrictionToggleTtl(java.time.Duration.ofDays(365));
+		settings.setBehavior(behavior);
 		return settings;
 	}
 

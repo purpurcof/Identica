@@ -69,13 +69,11 @@ class DefaultSessionRecognitionStoreTest {
 
 	private Settings settings() {
 		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
 		Settings.Sessions sessions = new Settings.Sessions();
 		Settings.Sessions.Recognition recognition = new Settings.Sessions.Recognition();
 		recognition.setValidity(java.time.Duration.ofHours(12));
 		sessions.setRecognition(recognition);
-		connection.setSessions(sessions);
-		settings.setConnection(connection);
+		settings.setSessions(sessions);
 		return settings;
 	}
 }

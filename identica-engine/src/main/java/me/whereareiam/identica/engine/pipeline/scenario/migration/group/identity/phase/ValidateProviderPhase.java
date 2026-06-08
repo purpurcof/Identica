@@ -111,7 +111,7 @@ public class ValidateProviderPhase implements PipelinePhase<IdentityState> {
 
 	private @NotNull String providerValidationMissingMessage() {
 		return joinMessage(messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getMigration()
 				.getErrors()
 				.getIdentity().getProvider().getValidationMissing());

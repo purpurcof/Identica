@@ -50,7 +50,7 @@ public class BuildSessionPhase extends AbstractBuildSessionPhase<MigrationContex
 
 	@Override
 	protected @NotNull String sessionBuildMissingMessage(@NotNull Messages messages) {
-		return joinMessage(messages.getConnection()
+		return joinMessage(messages.getScenarios()
 				.getMigration()
 				.getErrors()
 				.getSession().getBuildMissing());

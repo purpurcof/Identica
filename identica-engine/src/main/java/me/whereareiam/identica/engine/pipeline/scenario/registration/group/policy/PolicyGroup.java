@@ -37,22 +37,23 @@ public class PolicyGroup implements PipelineGroup<PolicyState> {
 			@Nullable PipelineResult currentResult
 	) {
 		PolicyState state = new PolicyState();
-		if (currentResult != null)
-			state.setResult(currentResult);
+		if (currentResult != null) state.setResult(currentResult);
 		return state;
 	}
 
 	@Override
 	public @NotNull GroupOutcome complete(@NotNull PipelineState pipelineState, @NotNull PolicyState state) {
 		PipelineResult result = state.getResult();
-		if (result == null)
+		if (result == null) {
 			return GroupOutcome.result(PipelineResult.failed(policyGroupMissingResultMessage()));
+		}
+
 		return GroupOutcome.result(result);
 	}
 
 	private @NotNull String policyGroupMissingResultMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getScenarios()
 				.getRegistration()
 				.getErrors()
 				.getPolicy().getGroupMissingResult());

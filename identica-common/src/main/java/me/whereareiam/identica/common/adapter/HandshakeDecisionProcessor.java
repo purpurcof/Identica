@@ -69,7 +69,7 @@ public class HandshakeDecisionProcessor {
 
 	private @NotNull String resolveHandshakeMessage(@Nullable String message) {
 		if (message != null && !message.isBlank()) return message;
-		return String.join("\n", messagesProvider.get().getConnection().getPrepare().getHandshakeDenied());
+		return String.join("\n", messagesProvider.get().getEngine().getPrepare().getHandshakeDenied());
 	}
 
 	private void storePreparedState(@Nullable String connectionKey, @NotNull PrepareDecision prepared) {

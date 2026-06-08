@@ -1,22 +1,24 @@
 package me.whereareiam.identica.common.config.defaults.messages;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
-import me.whereareiam.identica.model.config.type.DateTimePattern;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.config.type.DateTimePattern;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
+public class MessagesDefaults implements DefaultsProvider<Messages> {
 	@Override
 	public Messages supply(@NotNull Messages messages) {
 		applyGeneral(messages);
 		applyCommands(messages);
 		applyProviders(messages);
-		applyConnection(messages);
+		applyEngine(messages);
+		applyRouting(messages);
+		applyScenarios(messages);
 		return messages;
 	}
 
@@ -53,12 +55,13 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
+		providers.setProviderRestriction(buildProviderRestriction());
 		messages.setProviders(providers);
 	}
 
-	private void applyConnection(Messages messages) {
-		Messages.Connection connection = new Messages.Connection();
-		connection.setConcurrentLoginKick(List.of(
+	private void applyEngine(Messages messages) {
+		Messages.Engine engine = new Messages.Engine();
+		engine.setConcurrentLoginKick(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Your session was interrupted.</white>",
@@ -66,7 +69,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		connection.setResumeSentineled(List.of(
+		engine.setResumeSentineled(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
 				"<white>Too many resume attempts.</white>",
@@ -74,17 +77,34 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		connection.setJourney(buildJourneyMessages());
-		connection.setPrepare(buildPrepare());
-		connection.setProviderRestriction(buildProviderRestriction());
-		connection.setAuthentication(buildAuthentication());
-		connection.setRegistration(buildRegistration());
-		connection.setMigration(buildMigration());
-		messages.setConnection(connection);
+		engine.setJourney(buildJourneyMessages());
+		engine.setPrepare(buildPrepare());
+		messages.setEngine(engine);
 	}
 
-	private Messages.Connection.Prepare buildPrepare() {
-		Messages.Connection.Prepare prepare = new Messages.Connection.Prepare();
+	private void applyRouting(Messages messages) {
+		Messages.Routing routing = new Messages.Routing();
+		routing.setMissingServer(List.of(
+				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
+				"",
+				"<white>No target server available for routing</white>",
+				"<white>Please contact a server administrator.</white>",
+				"",
+				"<dark_gray>discord.arcadeya.com"
+		));
+		messages.setRouting(routing);
+	}
+
+	private void applyScenarios(Messages messages) {
+		Messages.Scenarios scenarios = new Messages.Scenarios();
+		scenarios.setAuthentication(buildAuthentication());
+		scenarios.setRegistration(buildRegistration());
+		scenarios.setMigration(buildMigration());
+		messages.setScenarios(scenarios);
+	}
+
+	private Messages.Engine.Prepare buildPrepare() {
+		Messages.Engine.Prepare prepare = new Messages.Engine.Prepare();
 		prepare.setHandshakeDenied(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -101,7 +121,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		Messages.Connection.Prepare.Errors errors = new Messages.Connection.Prepare.Errors();
+		Messages.Engine.Prepare.Errors errors = new Messages.Engine.Prepare.Errors();
 		errors.setPreparePolicyMissing(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -114,8 +134,8 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		return prepare;
 	}
 
-	private Messages.Connection.ProviderRestriction buildProviderRestriction() {
-		Messages.Connection.ProviderRestriction providerRestriction = new Messages.Connection.ProviderRestriction();
+	private Messages.Providers.ProviderRestriction buildProviderRestriction() {
+		Messages.Providers.ProviderRestriction providerRestriction = new Messages.Providers.ProviderRestriction();
 		providerRestriction.setDenied(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -128,8 +148,8 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		return providerRestriction;
 	}
 
-	private Messages.Connection.Authentication buildAuthentication() {
-		Messages.Connection.Authentication authentication = new Messages.Connection.Authentication();
+	private Messages.Scenarios.Authentication buildAuthentication() {
+		Messages.Scenarios.Authentication authentication = new Messages.Scenarios.Authentication();
 		applyScenario(authentication, "Authentication");
 		authentication.setAuthenticationFailed(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
@@ -160,8 +180,8 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		return authentication;
 	}
 
-	private Messages.Connection.Registration buildRegistration() {
-		Messages.Connection.Registration registration = new Messages.Connection.Registration();
+	private Messages.Scenarios.Registration buildRegistration() {
+		Messages.Scenarios.Registration registration = new Messages.Scenarios.Registration();
 		applyScenario(registration, "Registration");
 		registration.setRegistrationFailed(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
@@ -182,8 +202,8 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		return registration;
 	}
 
-	private Messages.Connection.Migration buildMigration() {
-		Messages.Connection.Migration migration = new Messages.Connection.Migration();
+	private Messages.Scenarios.Migration buildMigration() {
+		Messages.Scenarios.Migration migration = new Messages.Scenarios.Migration();
 		applyScenario(migration, "Migration");
 		migration.setMigrationFailed(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
@@ -205,7 +225,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 	}
 
 	private void applyScenario(
-			Messages.Connection.Scenario scenario,
+			Messages.Scenarios.Scenario scenario,
 			String label
 	) {
 		scenario.setPipelineKick(List.of(
@@ -224,7 +244,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		Messages.Connection.Scenario.AdvanceBusy advanceBusy = new Messages.Connection.Scenario.AdvanceBusy();
+		Messages.Scenarios.Scenario.AdvanceBusy advanceBusy = new Messages.Scenarios.Scenario.AdvanceBusy();
 		advanceBusy.setChat("{prefix}<white>Please wait, processing your request.</white>");
 		advanceBusy.setKick(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
@@ -243,7 +263,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		Messages.Connection.Routing routingMessages = new Messages.Connection.Routing();
+		Messages.Scenarios.Scenario.ScenarioRouting routingMessages = new Messages.Scenarios.Scenario.ScenarioRouting();
 		routingMessages.setMissingServer(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -256,8 +276,8 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		scenario.setErrors(buildScenarioErrors(label));
 	}
 
-	private Messages.Connection.Scenario.Errors buildScenarioErrors(String label) {
-		Messages.Connection.Scenario.Errors errors = new Messages.Connection.Scenario.Errors();
+	private Messages.Scenarios.Scenario.Errors buildScenarioErrors(String label) {
+		Messages.Scenarios.Scenario.Errors errors = new Messages.Scenarios.Scenario.Errors();
 		errors.setPreparationMissingContext(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -266,7 +286,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		Messages.Connection.Scenario.Errors.Identity identity = new Messages.Connection.Scenario.Errors.Identity();
+		Messages.Scenarios.Scenario.Errors.Identity identity = new Messages.Scenarios.Scenario.Errors.Identity();
 		identity.setGroupMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -299,7 +319,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		Messages.Connection.Scenario.Errors.Identity.Provider identityProvider = new Messages.Connection.Scenario.Errors.Identity.Provider();
+		Messages.Scenarios.Scenario.Errors.Identity.Provider identityProvider = new Messages.Scenarios.Scenario.Errors.Identity.Provider();
 		identityProvider.setValidationMissing(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -319,7 +339,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		identity.setProvider(identityProvider);
 		errors.setIdentity(identity);
 
-		Messages.Connection.Scenario.Errors.Policy policy = new Messages.Connection.Scenario.Errors.Policy();
+		Messages.Scenarios.Scenario.Errors.Policy policy = new Messages.Scenarios.Scenario.Errors.Policy();
 		policy.setGroupMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -354,7 +374,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		));
 		errors.setPolicy(policy);
 
-		Messages.Connection.Scenario.Errors.Session session = new Messages.Connection.Scenario.Errors.Session();
+		Messages.Scenarios.Scenario.Errors.Session session = new Messages.Scenarios.Scenario.Errors.Session();
 		session.setGroupMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -373,7 +393,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		));
 		errors.setSession(session);
 
-		Messages.Connection.Scenario.Errors.Journey journey = new Messages.Connection.Scenario.Errors.Journey();
+		Messages.Scenarios.Scenario.Errors.Journey journey = new Messages.Scenarios.Scenario.Errors.Journey();
 		journey.setMissingResult(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -411,9 +431,9 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 		return errors;
 	}
 
-	private Messages.Connection.Journey buildJourneyMessages() {
-		Messages.Connection.Journey journey = new Messages.Connection.Journey();
-		Messages.Connection.Journey.Stage stage = new Messages.Connection.Journey.Stage();
+	private Messages.Engine.Journey buildJourneyMessages() {
+		Messages.Engine.Journey journey = new Messages.Engine.Journey();
+		Messages.Engine.Journey.Stage stage = new Messages.Engine.Journey.Stage();
 		stage.setNoCompletion(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -423,7 +443,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"<dark_gray>discord.arcadeya.com"
 		));
 
-		Messages.Connection.Journey.Step step = new Messages.Connection.Journey.Step();
+		Messages.Engine.Journey.Step step = new Messages.Engine.Journey.Step();
 		step.setNoStatus(List.of(
 				"<green>ɪᴅᴇɴᴛɪᴄᴀ",
 				"",
@@ -432,7 +452,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"",
 				"<dark_gray>discord.arcadeya.com"
 		));
-		Messages.Connection.Journey.Step.Enrollment enrollment = new Messages.Connection.Journey.Step.Enrollment();
+		Messages.Engine.Journey.Step.Enrollment enrollment = new Messages.Engine.Journey.Step.Enrollment();
 		enrollment.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
@@ -443,7 +463,7 @@ public class MessagesDefaults implements MergeDefaultsProvider<Messages> {
 				"{entries}",
 				" "
 		));
-		Messages.Connection.Journey.Step.Enrollment.EntryFormat enrollmentEntry = new Messages.Connection.Journey.Step.Enrollment.EntryFormat();
+		Messages.Engine.Journey.Step.Enrollment.EntryFormat enrollmentEntry = new Messages.Engine.Journey.Step.Enrollment.EntryFormat();
 		enrollmentEntry.setFormat("   <dark_gray><click:run_command:/identica enroll {providerId}>▪ <gray>[{providerName}]:</gray> <white>{description}</click>");
 		enrollmentEntry.setEmptyFormat("   <dark_gray><click:run_command:/identica enroll {providerId}>▪ <gray>[{providerName}]:</gray></click>");
 		enrollment.setEntryFormat(enrollmentEntry);

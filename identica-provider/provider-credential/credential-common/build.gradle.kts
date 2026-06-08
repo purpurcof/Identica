@@ -5,6 +5,9 @@ plugins {
 dependencies {
     // capabilities
     compileOnly(projects.capabilityRecognition)
+
+    // features
+    compileOnly(projects.featureSentinelApi)
     compileOnly(projects.featureVerificationApi)
 
     // general
@@ -12,6 +15,9 @@ dependencies {
 
     // capabilities
     testImplementation(projects.capabilityRecognition)
+
+    // features
+    testImplementation(projects.featureSentinelApi)
     testImplementation(projects.featureVerificationApi)
 
     // general

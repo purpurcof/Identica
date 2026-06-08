@@ -9,6 +9,9 @@ dependencies {
     compileOnly(projects.capabilityRestriction)
     compileOnly(projects.capabilityRestrictionJoin)
     compileOnly(projects.capabilityRecognition)
+
+    // features
+    compileOnly(projects.featureSentinelApi)
     compileOnly(projects.featureVerificationApi)
 
     // general
@@ -23,6 +26,9 @@ dependencies {
     testImplementation(projects.capabilityRestriction)
     testImplementation(projects.capabilityRestrictionJoin)
     testImplementation(projects.capabilityRecognition)
+
+    // features
+    testImplementation(projects.featureSentinelApi)
     testImplementation(projects.featureVerificationApi)
 
     // general

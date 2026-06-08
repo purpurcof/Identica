@@ -128,7 +128,7 @@ class AuthoritativeUsernameConflictPhasesTest {
 		pipelineState.setScenario(context);
 		pipelineState.putItem(snapshot(), 0L);
 
-		PolicyState state = new PolicyState();
+		var state = new me.whereareiam.identica.pipeline.state.scenario.type.authentication.PolicyState();
 		state.setResult(PipelineResult.complete());
 		phase.execute(pipelineState, state).toCompletableFuture().join();
 

@@ -60,9 +60,9 @@ bcrypt = "0.10.2"
 
 # compile time processing
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
-shadow-gradle-plugin = { group = "com.gradleup.shadow", name = "shadow-gradle-plugin", version.ref = "shadow" }
+lombok-plugin = { group = "io.freefair.gradle", name = "lombok-plugin", version.ref = "freefair" }
+shadow = { group = "com.gradleup.shadow", name = "shadow-gradle-plugin", version.ref = "shadow" }
 toolkit-publish-maven = { group = "me.whereareiam.toolkit", name = "publish-maven", version.ref = "toolkit" }
-freefair-lombok-gradle-plugin = { group = "io.freefair.lombok", name = "io.freefair.lombok.gradle.plugin", version.ref = "freefair" }
 
 # general
 attache-common = { group = "me.whereareiam", name = "attache-common", version.ref = "attache" }

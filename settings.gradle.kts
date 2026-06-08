@@ -95,6 +95,15 @@ project(":feature-verification-common").projectDir = file("identica-feature/feat
 include(":feature-verification-database")
 project(":feature-verification-database").projectDir = file("identica-feature/feature-verification/verification-database")
 
+include(":feature-sentinel")
+project(":feature-sentinel").projectDir = file("identica-feature/feature-sentinel/sentinel")
+
+include(":feature-sentinel-api")
+project(":feature-sentinel-api").projectDir = file("identica-feature/feature-sentinel/sentinel-api")
+
+include(":feature-sentinel-common")
+project(":feature-sentinel-common").projectDir = file("identica-feature/feature-sentinel/sentinel-common")
+
 include(":capability-authoritative-username")
 project(":capability-authoritative-username").projectDir =
     file("identica-capability/capability-authoritative-username/authoritative-username")

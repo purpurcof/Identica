@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    implementation(libs.freefair.lombok.gradle.plugin)
-    implementation(libs.shadow.gradle.plugin)
+    implementation(libs.shadow)
+    implementation(libs.lombok.plugin)
     implementation(libs.toolkit.publish.maven)
 }

@@ -83,6 +83,15 @@ class V2RenameCrackedProviderIdTest {
 						changed_at BIGINT NOT NULL
 					)
 					""");
+			handle.execute("""
+					CREATE TABLE identica_verification_selections (
+						unique_id UUID NOT NULL,
+						provider_id VARCHAR(64) NOT NULL,
+						method_id VARCHAR(64) NOT NULL,
+						selected_at BIGINT NOT NULL,
+						PRIMARY KEY (unique_id, provider_id)
+					)
+					""");
 			handle.execute(
 					"INSERT INTO identica_accounts (unique_id, username, created_at, last_seen_at) VALUES (?, ?, ?, ?)",
 					uniqueId, "PlayerOne", 100L, 200L

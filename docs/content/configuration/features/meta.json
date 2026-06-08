@@ -2,6 +2,7 @@
   "title": "Features",
   "pages": [
     "index",
+    "sentinel",
     "verification"
   ]
 }

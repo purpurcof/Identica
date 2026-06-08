@@ -23,7 +23,7 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 	@Test
 	void matchesExactIpv4Entries() {
 		RecognitionEligibilityRuleDecision decision = rule(settings(List.of("203.0.113.10")), providersProvider(false))
-				.evaluate(context("203.0.113.10"));
+				.evaluate(context());
 
 		assertEquals(RecognitionEligibilityRuleDecision.Status.BLOCK, decision.getStatus());
 	}
@@ -33,7 +33,7 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 	void providerRecognitionSettingsAllowRecognitionOnUntrustedIps() {
 		RecognitionSettings settings = settings(List.of("203.0.113.10"));
 		RecognitionEligibilityRuleDecision decision = rule(settings, providersProvider(true))
-				.evaluate(context("203.0.113.10"));
+				.evaluate(context());
 
 		assertEquals(RecognitionEligibilityRuleDecision.Status.ALLOW, decision.getStatus());
 	}
@@ -43,7 +43,7 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 	void invalidEntriesFailWithEligibilityConfigPath() {
 		IllegalStateException exception = assertThrows(
 				IllegalStateException.class,
-				() -> rule(settings(List.of("not-an-ip")), providersProvider(false)).evaluate(context("203.0.113.10"))
+				() -> rule(settings(List.of("not-an-ip")), providersProvider(false)).evaluate(context())
 		);
 
 		assertTrue(exception.getMessage().contains("providers.capabilities.recognition.settings.eligibility.untrustedIps.entries[0]"));
@@ -56,10 +56,10 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 		return new UntrustedIpRecognitionEligibilityRule(() -> settings, providersProvider);
 	}
 
-	private RecognitionEligibilityContext context(String ip) {
+	private RecognitionEligibilityContext context() {
 		return RecognitionEligibilityContext.builder()
 				.providerId("premium")
-				.clientIp(ip)
+				.clientIp("203.0.113.10")
 				.attemptKind(RecognitionAttemptKind.SESSION_RECOGNITION)
 				.trigger(RecognitionTrigger.AUTOMATIC)
 				.build();
@@ -87,7 +87,7 @@ class UntrustedIpRecognitionEligibilityRuleTest {
 		RecognitionCapabilities.Recognition recognition = new RecognitionCapabilities.Recognition();
 		recognition.setAllowOnUntrustedIps(allowOnUntrustedIp);
 		capabilities.setRecognition(recognition);
-		premium.setDeclaredCapabilityIds(capabilities);
+		premium.setCapabilities(capabilities);
 		providers.setProviders(List.of(premium));
 		when(provider.get()).thenReturn(providers);
 		return provider;

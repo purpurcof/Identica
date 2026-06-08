@@ -5,6 +5,7 @@ shadow = "9.3.0"
 buildconfig = "6.0.7"
 spawner = "dev-8ca485d"
 toolkit = "dev-8c0271b"
+freefair = "9.5.0"
 
 # compile time processing
 lombok = "1.18.42"
@@ -61,6 +62,7 @@ bcrypt = "0.10.2"
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
 shadow-gradle-plugin = { group = "com.gradleup.shadow", name = "shadow-gradle-plugin", version.ref = "shadow" }
 toolkit-publish-maven = { group = "me.whereareiam.toolkit", name = "publish-maven", version.ref = "toolkit" }
+freefair-lombok-gradle-plugin = { group = "io.freefair.lombok", name = "io.freefair.lombok.gradle.plugin", version.ref = "freefair" }
 
 # general
 attache-common = { group = "me.whereareiam", name = "attache-common", version.ref = "attache" }
@@ -139,3 +141,4 @@ buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig
 spawner = { id = "me.whereareiam.spawner", version.ref = "spawner" }
 attache = { id = "me.whereareiam.attache", version.ref = "attache" }
 toolkit-versioning = { id = "me.whereareiam.toolkit.versioning", version.ref = "toolkit" }
+freefair-lombok = { id = "io.freefair.lombok", version.ref = "freefair" }

@@ -1,5 +1,6 @@
 plugins {
     `java-library`
+    id("io.freefair.lombok")
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -12,11 +13,6 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 dependencies {
-    add("compileOnly", libs.findLibrary("lombok").get())
-    add("annotationProcessor", libs.findLibrary("lombok").get())
-    add("testImplementation", libs.findLibrary("lombok").get())
-    add("testAnnotationProcessor", libs.findLibrary("lombok").get())
-
     add("compileOnly", libs.findLibrary("guice").get())
     add("compileOnly", libs.findLibrary("annotations").get())
     add("compileOnly", libs.findLibrary("configura").get())

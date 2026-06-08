@@ -313,8 +313,8 @@ public class DefaultSentinelService implements SentinelService {
 		SentinelSettings settings = settingsProvider.get();
 		if (settings == null) throw new IllegalStateException("sentinel settings are missing");
 
-		String namespace = settings.getCache().getSentinels();
-		if (namespace.isBlank()) throw new IllegalStateException("sentinel.settings.cache.sentinels is missing");
+		String namespace = settings.getReplication().getState();
+		if (namespace.isBlank()) throw new IllegalStateException("sentinel.settings.replication.state is missing");
 
 		return namespace;
 	}

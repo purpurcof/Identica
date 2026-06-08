@@ -23,9 +23,9 @@ class DefaultSentinelServiceTest {
 		when(cacheBuilder.replicated(any())).thenReturn(cache);
 
 		SentinelSettings settings = new SentinelSettings();
-		SentinelSettings.Cache cacheSettings = new SentinelSettings.Cache();
-		cacheSettings.setSentinels("identica:test:sentinels");
-		settings.setCache(cacheSettings);
+		SentinelSettings.Replication replicationSettings = new SentinelSettings.Replication();
+		replicationSettings.setState("identica:test:sentinels");
+		settings.setReplication(replicationSettings);
 
 		new DefaultSentinelService(new SentinelRegistry(), replicationSystem, () -> settings);
 

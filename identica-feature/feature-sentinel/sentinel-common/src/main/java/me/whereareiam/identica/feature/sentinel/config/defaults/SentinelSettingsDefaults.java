@@ -13,7 +13,7 @@ public class SentinelSettingsDefaults implements DefaultsProvider<SentinelSettin
 	@Override
 	public SentinelSettings supply(@NotNull SentinelSettings settings) {
 		settings.setSentinels(defaultSentinels());
-		settings.setCache(defaultCache());
+		settings.setReplication(defaultReplication());
 		return settings;
 	}
 
@@ -37,9 +37,9 @@ public class SentinelSettingsDefaults implements DefaultsProvider<SentinelSettin
 		return sentinels;
 	}
 
-	private SentinelSettings.Cache defaultCache() {
-		SentinelSettings.Cache cache = new SentinelSettings.Cache();
-		cache.setSentinels("identica:sentinels");
-		return cache;
+	private SentinelSettings.Replication defaultReplication() {
+		SentinelSettings.Replication replication = new SentinelSettings.Replication();
+		replication.setState("identica:sentinels");
+		return replication;
 	}
 }

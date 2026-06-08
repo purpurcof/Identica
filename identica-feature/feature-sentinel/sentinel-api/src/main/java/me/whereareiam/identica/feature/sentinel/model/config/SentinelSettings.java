@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 @ToString
 public class SentinelSettings extends ConfigDocument {
 	private @NotNull Sentinels sentinels = new Sentinels();
-	private @NotNull Cache cache = new Cache();
+	private @NotNull Replication replication = new Replication();
 
 	/**
 	 * Settings for built-in sentinels owned by the sentinel feature.
@@ -31,15 +31,15 @@ public class SentinelSettings extends ConfigDocument {
 	}
 
 	/**
-	 * Cache namespace settings used by the sentinel feature runtime.
+	 * Replication settings used by the sentinel feature runtime.
 	 */
 	@Getter
 	@Setter
 	@ToString
-	public static class Cache {
+	public static class Replication {
 		/**
 		 * Replication cache namespace used to store sentinel counters and lockouts.
 		 */
-		private @NotNull String sentinels = "identica:sentinels";
+		private @NotNull String state = "identica:sentinels";
 	}
 }

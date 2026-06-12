@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.conflict.ConflictGuard;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.conflict.ConflictContext;
@@ -67,21 +68,13 @@ public class UsernameEntrypointGuard implements ConflictGuard {
 		List<String> lines = messagesProvider.get().getPipeline().getPolicy().getEntrypointRequired();
 		if (lines.isEmpty()) return null;
 
-		String message = String.join("\n", lines);
-		Map<String, String> placeholders = Map.of(
+		return Serializer.render(String.join("\n", lines), Map.of(
 				"incomingProvider", Objects.toString(providerOperations.displayProviderName(incomingProvider), ""),
 				"existingProvider", Objects.toString(providerOperations.displayProviderName(existingProvider), ""),
 				"incomingProviderId", Objects.toString(incomingProvider, ""),
 				"existingProviderId", Objects.toString(existingProvider, ""),
 				"incomingHost", Objects.toString(providerOperations.displayEntrypoint(incomingProvider), ""),
 				"existingHost", Objects.toString(providerOperations.displayEntrypoint(existingProvider), "")
-		);
-
-		String resolved = message;
-		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-			resolved = resolved.replace("{" + entry.getKey() + "}", entry.getValue());
-		}
-
-		return resolved;
+		));
 	}
 }

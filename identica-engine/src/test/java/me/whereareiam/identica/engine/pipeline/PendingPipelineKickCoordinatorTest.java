@@ -58,6 +58,10 @@ class PendingPipelineKickCoordinatorTest {
 			return Component.text(content.getMessage());
 		}
 
+		public @NotNull String renderTemplate(@NotNull SerializerContent content) {
+			return content.getMessage();
+		}
+
 		@Override
 		public @NotNull SerializerOptions.PlaceholderFormat getPlaceholderFormat() {
 			return SerializerOptions.PlaceholderFormat.CURLY_BRACES;

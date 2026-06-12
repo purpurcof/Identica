@@ -22,7 +22,6 @@ import me.whereareiam.identica.provider.capability.restriction.model.Restriction
 import me.whereareiam.identica.provider.capability.restriction.type.RestrictionSignal;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -81,28 +80,18 @@ public class ApplyJoinRestrictionPhase implements PipelinePhase<PrepareGroupStat
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 
 		PrepareAccountCandidateItem candidate = pipelineState.item(PrepareAccountCandidateItem.class).orElse(null);
+		String providerName = providerOperations.displayProviderName(provider.getProviderId());
 		pipelineState.putItem(PrepareDecisionItem.deny(
-				restrictedMessage(provider.getProviderId(), decision.getAllow()),
+				Serializer.render(String.join("\n", messagesProvider.get().getDenied()), Map.of(
+						"providerId", provider.getProviderId(),
+						"providerName", providerName != null ? providerName : provider.getProviderId(),
+						"allow", describeAllow(decision.getAllow())
+				)),
 				context,
 				candidate != null ? candidate.getUniqueId() : null,
 				state.getRequest().getIdentity().getUsername()
 		), 0L);
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));
-	}
-
-	private @NotNull String restrictedMessage(@NotNull String providerId, @NotNull Set<RestrictionSignal> allow) {
-		String providerName = providerOperations.displayProviderName(providerId);
-		Map<String, String> placeholders = new HashMap<>();
-		placeholders.put("providerId", providerId);
-		placeholders.put("providerName", providerName != null ? providerName : providerId);
-		placeholders.put("allow", describeAllow(allow));
-
-		String resolved = String.join("\n", messagesProvider.get().getDenied());
-		var format = Serializer.getEngine().getPlaceholderFormat();
-		for (Map.Entry<String, String> entry : placeholders.entrySet())
-			resolved = resolved.replace(format.format(entry.getKey()), entry.getValue() == null ? "" : entry.getValue());
-
-		return resolved;
 	}
 
 	private @NotNull String describeAllow(@NotNull Set<RestrictionSignal> allow) {

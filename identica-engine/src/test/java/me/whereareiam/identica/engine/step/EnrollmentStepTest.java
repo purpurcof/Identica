@@ -56,6 +56,10 @@ class EnrollmentStepTest {
 			return Component.text(message);
 		}
 
+		public @NotNull String renderTemplate(@NotNull SerializerContent content) {
+			return content.getMessage();
+		}
+
 		@Override
 		public @NotNull SerializerOptions.PlaceholderFormat getPlaceholderFormat() {
 			return SerializerOptions.PlaceholderFormat.CURLY_BRACES;
@@ -77,7 +81,7 @@ class EnrollmentStepTest {
 				this::messages,
 				eventManager
 		);
-		RegistrationContext context = context("PlayerOne");
+		RegistrationContext context = context();
 
 		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyMode.INTERACTIVE)))
 				.thenReturn(List.of(provider("premium", "Premium")));
@@ -104,7 +108,7 @@ class EnrollmentStepTest {
 				this::messages,
 				eventManager
 		);
-		RegistrationContext context = context("PlayerOne");
+		RegistrationContext context = context();
 
 		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyMode.INTERACTIVE)))
 				.thenReturn(List.of(provider("premium", "Premium")));
@@ -128,7 +132,7 @@ class EnrollmentStepTest {
 				this::messages,
 				eventManager
 		);
-		RegistrationContext context = context("PlayerOne");
+		RegistrationContext context = context();
 
 		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyMode.INTERACTIVE)))
 				.thenReturn(List.of(
@@ -185,10 +189,10 @@ class EnrollmentStepTest {
 		return messages;
 	}
 
-	private RegistrationContext context(String username) {
+	private RegistrationContext context() {
 		return RegistrationContext.builder()
 				.connectionUniqueId(UUID.randomUUID())
-				.identity(new ConnectionIdentity(UUID.randomUUID(), username, "127.0.0.1"))
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "PlayerOne", "127.0.0.1"))
 				.build();
 	}
 

@@ -15,8 +15,7 @@ import me.whereareiam.identica.provider.capability.restriction.join.config.JoinR
 import me.whereareiam.identica.provider.capability.restriction.model.RestrictionStatus;
 import me.whereareiam.identica.provider.capability.restriction.type.RestrictionSignal;
 import me.whereareiam.keystone.Actor;
-import me.whereareiam.keystone.model.SerializerContent;
-import me.whereareiam.keystone.model.SerializerOptions;
+import me.whereareiam.keystone.template.message.TemplateSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,17 +37,17 @@ public class JoinRestrictionCommand {
 		JoinRestrictionMessages.Commands messages = messages();
 		Optional<RestrictionStatus> current = restrictionService.status(JoinRestrictionType.TYPE, providerId);
 		if (current.isEmpty()) {
-			sendMessage(sender, messages.getProviderNotFound(), Map.of("provider", providerId));
+			sender.sendMessage(Serializer.serialize(sender, messages.getProviderNotFound(), Map.of("provider", providerId)));
 			return;
 		}
 
 		RestrictionStatus status = restrictionService.enable(JoinRestrictionType.TYPE, providerId);
 		if (!status.isActive()) {
-			sendMessage(sender, messages.getEnableFailed(), Map.of("provider", status.getProviderId()));
+			sender.sendMessage(Serializer.serialize(sender, messages.getEnableFailed(), Map.of("provider", status.getProviderId())));
 			return;
 		}
 
-		sendMessage(sender, messages.getEnabled(), placeholders(status));
+		sender.sendMessage(Serializer.serialize(sender, messages.getEnabled(), placeholders(status)));
 	}
 
 	@Definition("admin-provider-restriction-join-disable")
@@ -60,12 +59,12 @@ public class JoinRestrictionCommand {
 		JoinRestrictionMessages.Commands messages = messages();
 		Optional<RestrictionStatus> current = restrictionService.status(JoinRestrictionType.TYPE, providerId);
 		if (current.isEmpty()) {
-			sendMessage(sender, messages.getProviderNotFound(), Map.of("provider", providerId));
+			sender.sendMessage(Serializer.serialize(sender, messages.getProviderNotFound(), Map.of("provider", providerId)));
 			return;
 		}
 
 		RestrictionStatus status = restrictionService.disable(JoinRestrictionType.TYPE, providerId);
-		sendMessage(sender, messages.getDisabled(), placeholders(status));
+		sender.sendMessage(Serializer.serialize(sender, messages.getDisabled(), placeholders(status)));
 	}
 
 	@Definition("admin-provider-restriction-join-status")
@@ -82,19 +81,21 @@ public class JoinRestrictionCommand {
 		JoinRestrictionMessages.Commands messages = messages();
 		RestrictionStatus status = restrictionService.status(JoinRestrictionType.TYPE, providerId).orElse(null);
 		if (status == null) {
-			sendMessage(sender, messages.getStatus().getNotFound(), Map.of("provider", providerId));
+			sender.sendMessage(Serializer.serialize(sender, messages.getStatus().getNotFound(), Map.of("provider", providerId)));
 			return;
 		}
 
-		String body = formatLines(messages.getStatus().getBody(), placeholders(status));
-		sender.sendMessage(Serializer.serialize(sender, body));
+		sender.sendMessage(Serializer.serialize(
+				sender,
+				Serializer.render(bodyTemplate(messages.getStatus().getBody()), placeholders(status))
+		));
 	}
 
 	private void list(@NotNull Actor sender) {
 		JoinRestrictionMessages.Commands.Status.Listing listing = messages().getStatus().getList();
 		List<RestrictionStatus> statuses = restrictionService.statuses(JoinRestrictionType.TYPE);
 		if (statuses.isEmpty()) {
-			sendMessage(sender, listing.getEmpty(), Map.of());
+			sender.sendMessage(Serializer.serialize(sender, listing.getEmpty(), Map.of()));
 			return;
 		}
 
@@ -103,17 +104,23 @@ public class JoinRestrictionCommand {
 			String template = !status.getAllow().isEmpty()
 					? listing.getEntries().getPopulated()
 					: listing.getEntries().getEmpty();
-			String entry = formatLine(template, placeholders(status));
+			String entry = Serializer.render(template, placeholders(status));
 			if (!entry.isBlank())
 				entries.add(entry);
 		}
 		if (entries.isEmpty()) {
-			sendMessage(sender, listing.getEmpty(), Map.of());
+			sender.sendMessage(Serializer.serialize(sender, listing.getEmpty(), Map.of()));
 			return;
 		}
 
-		String body = formatLines(listing.getBody(), Map.of("entries", String.join("\n", entries)));
-		sender.sendMessage(Serializer.serialize(sender, body));
+		sender.sendMessage(Serializer.serialize(
+				sender,
+				Serializer.template(bodyTemplate(listing.getBody()))
+						.section("entries", section -> section
+								.lines(entries)
+								.onMissing(TemplateSection.MissingSectionPolicy.APPEND))
+						.render()
+		));
 	}
 
 	private JoinRestrictionMessages.Commands messages() {
@@ -134,7 +141,9 @@ public class JoinRestrictionCommand {
 
 	private @NotNull String statusLabel(boolean active) {
 		JoinRestrictionMessages.Commands.Status.Labels labels = messages().getStatus().getLabels();
-		return active ? labels.getEnabled() : labels.getDisabled();
+		return active
+				? labels.getEnabled()
+				: labels.getDisabled();
 	}
 
 	private @NotNull String describeAllow(@NotNull Set<RestrictionSignal> allow) {
@@ -144,37 +153,9 @@ public class JoinRestrictionCommand {
 				.collect(Collectors.joining(", "));
 	}
 
-	private void sendMessage(@NotNull Actor sender, @NotNull String message, @NotNull Map<String, String> placeholders) {
-		SerializerContent content = SerializerContent.builder()
-				.receiver(sender)
-				.message(message)
-				.placeholders(placeholders)
-				.build();
-		sender.sendMessage(Serializer.serialize(content));
-	}
-
-	private String formatLines(@NotNull List<String> lines, @NotNull Map<String, String> placeholders) {
-		List<String> resolved = new ArrayList<>();
-		String entriesToken = Serializer.getEngine().getPlaceholderFormat().format("entries");
-		for (String line : lines) {
-			if (line.contains(entriesToken)) {
-				String entries = placeholders.getOrDefault("entries", "");
-				if (!entries.isBlank())
-					resolved.add(entries);
-				continue;
-			}
-			resolved.add(formatLine(line, placeholders));
-		}
-
-		return String.join("\n", resolved);
-	}
-
-	private String formatLine(@NotNull String line, @NotNull Map<String, String> placeholders) {
-		String resolved = line;
-		SerializerOptions.PlaceholderFormat format = Serializer.getEngine().getPlaceholderFormat();
-		for (Map.Entry<String, String> entry : placeholders.entrySet())
-			resolved = resolved.replace(format.format(entry.getKey()), entry.getValue() == null ? "" : entry.getValue());
-
-		return resolved;
+	private @NotNull String bodyTemplate(@NotNull List<String> lines) {
+		return String.join("\n", lines.stream()
+				.filter(Objects::nonNull)
+				.toList());
 	}
 }

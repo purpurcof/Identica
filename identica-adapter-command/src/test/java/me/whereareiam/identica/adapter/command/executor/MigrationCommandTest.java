@@ -54,6 +54,10 @@ class MigrationCommandTest {
 			return Component.text(content.getMessage());
 		}
 
+		public @NotNull String renderTemplate(@NotNull SerializerContent content) {
+			return content.getMessage();
+		}
+
 		@Override
 		public @NotNull SerializerOptions.PlaceholderFormat getPlaceholderFormat() {
 			return SerializerOptions.PlaceholderFormat.CURLY_BRACES;
@@ -147,32 +151,32 @@ class MigrationCommandTest {
 		private final AtomicReference<Component> lastMessage = new AtomicReference<>();
 
 		@Override
-		public UUID getUniqueId() {
+		public @NotNull UUID getUniqueId() {
 			return UUID.randomUUID();
 		}
 
 		@Override
-		public String getUsername() {
+		public @NotNull String getUsername() {
 			return "Admin";
 		}
 
 		@Override
-		public void sendMessage(Component message) {
+		public void sendMessage(@NotNull Component message) {
 			lastMessage.set(message);
 		}
 
 		@Override
-		public boolean hasPermission(String permission) {
+		public boolean hasPermission(@NotNull String permission) {
 			return true;
 		}
 
 		@Override
-		public Locale getLocale() {
+		public @NotNull Locale getLocale() {
 			return Locale.ENGLISH;
 		}
 
 		@Override
-		public Audience getAudience() {
+		public @NotNull Audience getAudience() {
 			return Audience.empty();
 		}
 

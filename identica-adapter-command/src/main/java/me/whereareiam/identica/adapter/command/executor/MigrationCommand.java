@@ -30,7 +30,7 @@ import me.whereareiam.identica.type.migration.MigrationResultStatus;
 import me.whereareiam.identica.util.UniqueIdUtil;
 import me.whereareiam.keystone.Actor;
 import me.whereareiam.keystone.model.SerializerContent;
-import me.whereareiam.keystone.model.SerializerOptions;
+import me.whereareiam.keystone.template.message.TemplateSection;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -66,12 +66,25 @@ public class MigrationCommand {
 		}
 
 		Map<String, String> providerNames = resolveProviderNames();
-		SerializerOptions.PlaceholderFormat format = placeholderFormat();
-		List<String> entries = buildEntries(listMessages.getEntry(), links, format, link -> buildLinkEntry(link, providerNames));
-		Map<String, String> placeholders = Map.of("target", resolved.display());
-		List<String> lines = insertEntries(listMessages.getBody(), entries, placeholders, format);
-		String content = String.join("\n", lines);
-		sendMessage(sender, content, Map.of());
+		List<String> entries = buildEntries(listMessages.getEntry(), links, link -> {
+			String providerId = link.getProviderId();
+			String providerName = providerNames.get(providerId);
+
+			Map<String, String> placeholders = new HashMap<>();
+			placeholders.put("providerId", providerId);
+			placeholders.put("providerName", providerName);
+			placeholders.put("primary", link.isPrimaryLink() ? "<green>primary</green>" : "");
+			return new EntryData(placeholders, providerName != null && !providerName.isBlank());
+		});
+		sender.sendMessage(Serializer.serialize(
+				sender,
+				Serializer.template(bodyTemplate(listMessages.getBody()))
+						.placeholders(Map.of("target", resolved.display()))
+						.section("entries", section -> section
+								.lines(entries)
+								.onMissing(TemplateSection.MissingSectionPolicy.APPEND))
+						.render()
+		));
 	}
 
 	@Definition("migration-start")
@@ -291,23 +304,6 @@ public class MigrationCommand {
 		return names;
 	}
 
-	private EntryData buildLinkEntry(
-			@NotNull AccountProviderLink link,
-			@NotNull Map<String, String> providerNames
-	) {
-		String providerId = link.getProviderId();
-		String providerName = providerNames.get(providerId);
-		String primary = link.isPrimaryLink() ? "<green>primary</green>" : "";
-
-		Map<String, String> placeholders = new HashMap<>();
-		placeholders.put("providerId", providerId);
-		placeholders.put("providerName", providerName);
-		placeholders.put("primary", primary);
-
-		boolean complete = providerName != null && !providerName.isBlank();
-		return new EntryData(placeholders, complete);
-	}
-
 	private AccountProviderLink findLink(@NotNull List<AccountProviderLink> links, @NotNull String providerId) {
 		for (AccountProviderLink link : links) {
 			if (link == null)
@@ -319,14 +315,9 @@ public class MigrationCommand {
 		return null;
 	}
 
-	private SerializerOptions.PlaceholderFormat placeholderFormat() {
-		return Serializer.getEngine().getPlaceholderFormat();
-	}
-
 	private <T> List<String> buildEntries(
 			Messages.Commands.EntryFormat entryFormat,
 			List<T> entriesSource,
-			SerializerOptions.PlaceholderFormat format,
 			Function<T, EntryData> entryResolver
 	) {
 		List<String> entries = new ArrayList<>();
@@ -344,61 +335,11 @@ public class MigrationCommand {
 			if (template.isBlank()) template = entryFormat.getFormat();
 			if (template.isBlank()) continue;
 
-			String entry = formatLine(template, data.placeholders(), format);
-			if (entry != null && !entry.isBlank())
+			String entry = Serializer.render(template, data.placeholders());
+			if (!entry.isBlank())
 				entries.add(entry);
 		}
 		return entries;
-	}
-
-	private List<String> insertEntries(
-			List<String> body,
-			List<String> entries,
-			Map<String, String> placeholders,
-			SerializerOptions.PlaceholderFormat format
-	) {
-		List<String> formatted = new ArrayList<>();
-		if (body == null || body.isEmpty()) {
-			formatted.addAll(entries);
-			return formatted;
-		}
-
-		String entriesToken = format.format("entries");
-		boolean inserted = false;
-		for (String line : body) {
-			if (line != null && line.contains(entriesToken)) {
-				formatted.addAll(entries);
-				inserted = true;
-				continue;
-			}
-			if (line != null && line.isBlank()) {
-				formatted.add(line);
-				continue;
-			}
-			String formattedLine = formatLine(line, placeholders, format);
-			if (formattedLine != null && !formattedLine.isBlank()) {
-				formatted.add(formattedLine);
-			}
-		}
-		if (!inserted) {
-			formatted.addAll(entries);
-		}
-		return formatted;
-	}
-
-	private String formatLine(
-			String line, Map<String, String> placeholders,
-			SerializerOptions.PlaceholderFormat format
-	) {
-		if (line == null || line.isBlank()) return "";
-		String result = line;
-		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-			String token = format.format(entry.getKey());
-			String value = entry.getValue() == null ? "" : entry.getValue();
-			result = result.replace(token, value);
-		}
-
-		return result;
 	}
 
 	private void sendMessage(@NotNull Actor sender, String message, Map<String, String> placeholders) {
@@ -416,6 +357,14 @@ public class MigrationCommand {
 		String display() {
 			return username != null && !username.isBlank() ? username : uniqueId.toString();
 		}
+	}
+
+	private @NotNull String bodyTemplate(List<String> lines) {
+		if (lines == null || lines.isEmpty()) return "";
+
+		return String.join("\n", lines.stream()
+				.filter(Objects::nonNull)
+				.toList());
 	}
 
 	private record EntryData(Map<String, String> placeholders, boolean complete) {

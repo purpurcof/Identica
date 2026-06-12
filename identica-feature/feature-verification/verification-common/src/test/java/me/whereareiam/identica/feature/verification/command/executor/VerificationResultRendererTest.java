@@ -50,6 +50,14 @@ class VerificationResultRendererTest {
 			return Component.text(message);
 		}
 
+		public @NotNull String renderTemplate(@NotNull SerializerContent content) {
+			String message = content.getMessage();
+			for (Map.Entry<String, String> entry : content.getPlaceholders().entrySet()) {
+				message = message.replace("{" + entry.getKey() + "}", entry.getValue() == null ? "" : entry.getValue());
+			}
+			return message;
+		}
+
 		@Override
 		public @NotNull SerializerOptions.PlaceholderFormat getPlaceholderFormat() {
 			return SerializerOptions.PlaceholderFormat.CURLY_BRACES;
@@ -193,12 +201,12 @@ class VerificationResultRendererTest {
 		private final AtomicReference<Component> lastMessage = new AtomicReference<>();
 
 		@Override
-		public UUID getUniqueId() {
+		public @NotNull UUID getUniqueId() {
 			return UUID.randomUUID();
 		}
 
 		@Override
-		public String getUsername() {
+		public @NotNull String getUsername() {
 			return "PlayerOne";
 		}
 

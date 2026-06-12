@@ -32,14 +32,18 @@ class ConnectionDecisionApplierTest {
 
 	private static final SerializerEngine TEST_SERIALIZER = new SerializerEngine() {
 		@Override
-		public String serialize(Component component) {
+		public @NotNull String serialize(Component component) {
 			return component.toString();
 		}
 
 		@Override
-		public Component serialize(SerializerContent content) {
-			String message = content.getMessage() == null ? "" : content.getMessage();
+		public @NotNull Component serialize(SerializerContent content) {
+			String message = content.getMessage();
 			return Component.text(message);
+		}
+
+		public @NotNull String renderTemplate(SerializerContent content) {
+			return content.getMessage();
 		}
 
 		@Override
@@ -127,12 +131,12 @@ class ConnectionDecisionApplierTest {
 		private final AtomicReference<Component> lastMessage = new AtomicReference<>();
 
 		@Override
-		public UUID getUniqueId() {
+		public @NotNull UUID getUniqueId() {
 			return UUID.randomUUID();
 		}
 
 		@Override
-		public String getUsername() {
+		public @NotNull String getUsername() {
 			return "PlayerOne";
 		}
 

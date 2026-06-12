@@ -149,7 +149,7 @@ jobs:
 
       - name: Resolve distribution plan
         id: resolve
-        uses: whereareiam/blockops/actions/publish/resolve-distribution-plan@dev
+        uses: whereareiam/blockops/actions/publish/resolve-distribution-plan@v2
         with:
           release-tag: ${{ needs.prepare.outputs.release-tag }}
           release-name: ${{ needs.prepare.outputs.release-name }}
@@ -179,7 +179,7 @@ jobs:
           path: output
 
       - name: Publish distribution
-        uses: whereareiam/blockops/actions/publish/publish-publication@dev
+        uses: whereareiam/blockops/actions/publish/publish-publication@v2
         with:
           provider-credentials: |
             modrinth: ${{ secrets.MODRINTH_TOKEN }}

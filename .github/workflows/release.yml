@@ -2,7 +2,7 @@ name: Release build
 
 on:
   release:
-    types: [ created ]
+    types: [ published ]
   workflow_dispatch:
     inputs:
       release-tag:
@@ -113,6 +113,13 @@ jobs:
           mv build/libs/Credential-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Credential-${{ needs.prepare.outputs.version }}.jar
           mv build/libs/Premium-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
 
+      - name: Format Spigot release notes
+        uses: whereareiam/blockops/actions/release/format-release-notes@v3
+        with:
+          format: bbcode
+          release-body: ${{ needs.prepare.outputs.release-body }}
+          output-file: output/release-notes-bbcode.txt
+
       - name: Release
         uses: softprops/action-gh-release@v3
         if: ${{ github.event_name == 'release' && startsWith(github.ref, 'refs/tags/') }}
@@ -123,6 +130,7 @@ jobs:
             output/${{ needs.prepare.outputs.name }}-PLATFORMS-${{ needs.prepare.outputs.version }}.zip
             output/${{ needs.prepare.outputs.name }}-Credential-${{ needs.prepare.outputs.version }}.jar
             output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
+            output/release-notes-bbcode.txt
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v6

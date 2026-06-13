@@ -1,6 +1,5 @@
 name-template: "$RESOLVED_VERSION"
 tag-template: "$RESOLVED_VERSION"
-filter-by-commitish: true
 change-template: "* $TITLE by @$AUTHOR in [#$NUMBER]($URL)"
 change-title-escapes: "\\<*_&"
 category-template: "## $TITLE"

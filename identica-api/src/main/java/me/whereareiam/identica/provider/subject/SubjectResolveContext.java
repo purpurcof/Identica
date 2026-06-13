@@ -1,4 +1,4 @@
-package me.whereareiam.identica.provider.profile;
+package me.whereareiam.identica.provider.subject;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -7,12 +7,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Context passed to resolver subject resolvers during resolver rewrite.
+ * Context passed to subject resolvers during provider-subject derivation.
  */
 @Getter
 @Builder
 @SuppressWarnings("unused")
-public class ProfileResolveContext {
+public class SubjectResolveContext {
 	private final @NotNull ConnectionIdentity identity;
 
 	/**

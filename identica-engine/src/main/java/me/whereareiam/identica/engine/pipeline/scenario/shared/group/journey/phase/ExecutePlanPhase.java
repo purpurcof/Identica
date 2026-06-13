@@ -34,6 +34,9 @@ import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.scenario.shared.JourneyState;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.provider.ProviderOperations;
+import me.whereareiam.identica.provider.subject.SubjectResolution;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -57,6 +60,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	private final Provider<Engine> engineProvider;
 	private final Provider<Messages> messagesProvider;
 	private final ProviderManager providerManager;
+	private final ProviderOperations providerOperations;
 	private final PipelineStateStore pipelineStateStore;
 	private final RoutingCoordinator routingCoordinator;
 
@@ -679,14 +683,44 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 					.providerUsername(username)
 					.source(ProviderOrigin.AUTO)
 					.build());
-			return;
+			provider = context.getProvider();
+		} else {
+			provider.setProviderId(providerId);
+			if (provider.getProviderUsername().isBlank())
+				provider.setProviderUsername(username);
+			if (provider.getSource() == null)
+				provider.setSource(ProviderOrigin.AUTO);
 		}
 
-		provider.setProviderId(providerId);
-		if (provider.getProviderUsername().isBlank())
-			provider.setProviderUsername(username);
-		if (provider.getSource() == null)
-			provider.setSource(ProviderOrigin.AUTO);
+		enrichProviderSubject(context, providerId, provider);
+	}
+
+	private void enrichProviderSubject(
+			@NotNull ScenarioContext context,
+			@NotNull String providerId,
+			@NotNull ProviderContext provider
+	) {
+		String currentSubject = provider.getProviderSubject();
+		if (currentSubject != null && !currentSubject.isBlank())
+			return;
+
+		if (context.getIdentity() == null)
+			return;
+
+		SubjectResolution resolution = providerOperations.resolveSelectedSubject(
+				providerId,
+				SubjectResolveContext.builder()
+						.identity(context.getIdentity())
+						.build()
+		);
+		if (resolution == null)
+			return;
+
+		String resolvedSubject = resolution.getProviderSubject();
+		if (resolvedSubject == null || resolvedSubject.isBlank())
+			return;
+
+		provider.setProviderSubject(resolvedSubject);
 	}
 
 	private boolean matchesProvider(@Nullable String expected, @Nullable String actual) {

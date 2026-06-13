@@ -19,9 +19,9 @@ import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourne
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
-import me.whereareiam.identica.provider.profile.ProfileResolution;
-import me.whereareiam.identica.provider.profile.ProfileResolveContext;
-import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
+import me.whereareiam.identica.provider.subject.SubjectResolution;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
+import me.whereareiam.identica.provider.subject.SubjectResolver;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
@@ -153,7 +153,7 @@ class DefaultProviderOperationsTest {
 	void resolveProfileReturnsNullWithoutProviderResolvers() {
 		when(providerManager.getProviders()).thenReturn(List.of());
 
-		ProfileResolution resolution = operations(new Providers()).resolveProfile(ProfileResolveContext.builder()
+		SubjectResolution resolution = operations(new Providers()).discoverSubject(SubjectResolveContext.builder()
 				.identity(new ConnectionIdentity(UUID.randomUUID(), "PlayerOne", "127.0.0.1"))
 				.build());
 
@@ -170,13 +170,47 @@ class DefaultProviderOperationsTest {
 				.descriptor(descriptor)
 				.priority(10)
 				.state(ProviderState.ENABLED)
-				.profileSubjectResolvers(Set.of(new StaticProfileResolver()))
+				.subjectResolvers(Set.of(new StaticSubjectResolver()))
 				.build();
 		when(providerManager.getProviders()).thenReturn(List.of(provider));
 
-		ProfileResolution resolution = operations(new Providers()).resolveProfile(ProfileResolveContext.builder()
+		SubjectResolution resolution = operations(new Providers()).discoverSubject(SubjectResolveContext.builder()
 				.identity(new ConnectionIdentity(UUID.randomUUID(), "PlayerOne", "127.0.0.1"))
 				.build());
+
+		assertNotNull(resolution);
+		assertEquals("credential", resolution.getProviderId());
+		assertEquals("credential-subject", resolution.getProviderSubject());
+	}
+
+	@DisplayName("Resolves a profile subject for the selected provider only")
+	@Test
+	void resolveProfileTargetsSelectedProvider() {
+		ProviderDescriptor credentialDescriptor = new ProviderDescriptor();
+		credentialDescriptor.setId("credential");
+		InternalProvider credential = InternalProvider.builder()
+				.descriptor(credentialDescriptor)
+				.priority(10)
+				.state(ProviderState.ENABLED)
+				.subjectResolvers(Set.of(new StaticSubjectResolver("credential", "credential-subject")))
+				.build();
+
+		ProviderDescriptor premiumDescriptor = new ProviderDescriptor();
+		premiumDescriptor.setId("premium");
+		InternalProvider premium = InternalProvider.builder()
+				.descriptor(premiumDescriptor)
+				.priority(100)
+				.state(ProviderState.ENABLED)
+				.subjectResolvers(Set.of(new StaticSubjectResolver("premium", "premium-subject")))
+				.build();
+		when(providerManager.getProviders()).thenReturn(List.of(premium, credential));
+
+		SubjectResolution resolution = operations(new Providers()).resolveSelectedSubject(
+				"credential",
+				SubjectResolveContext.builder()
+						.identity(new ConnectionIdentity(UUID.randomUUID(), "PlayerOne", "127.0.0.1"))
+						.build()
+		);
 
 		assertNotNull(resolution);
 		assertEquals("credential", resolution.getProviderId());
@@ -289,17 +323,29 @@ class DefaultProviderOperationsTest {
 		}
 	}
 
-	private static final class StaticProfileResolver implements ProfileSubjectResolver {
+	private static final class StaticSubjectResolver implements SubjectResolver {
+		private final String providerId;
+		private final String providerSubject;
+
+		private StaticSubjectResolver() {
+			this("credential", "credential-subject");
+		}
+
+		private StaticSubjectResolver(String providerId, String providerSubject) {
+			this.providerId = providerId;
+			this.providerSubject = providerSubject;
+		}
+
 		@Override
-		public boolean supports(@NotNull ProfileResolveContext context) {
+		public boolean supports(@NotNull SubjectResolveContext context) {
 			return true;
 		}
 
 		@Override
-		public @Nullable ProfileResolution resolve(@NotNull ProfileResolveContext context) {
-			return ProfileResolution.builder()
-					.providerId("credential")
-					.providerSubject("credential-subject")
+		public @Nullable SubjectResolution resolve(@NotNull SubjectResolveContext context) {
+			return SubjectResolution.builder()
+					.providerId(providerId)
+					.providerSubject(providerSubject)
 					.build();
 		}
 	}

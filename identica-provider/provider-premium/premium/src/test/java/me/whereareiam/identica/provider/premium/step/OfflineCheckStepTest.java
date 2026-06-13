@@ -52,9 +52,9 @@ class OfflineCheckStepTest {
 		);
 	}
 
-	@DisplayName("Clears pending premium verification when the stored session is still offline")
+	@DisplayName("Keeps the observed premium profile snapshot when the stored session is still offline")
 	@Test
-	void rejectedOfflineSessionClearsVerifyAttempt() {
+	void rejectedOfflineSessionKeepsProfileSnapshot() {
 		String username = "whereareiam";
 		String ip = "127.0.0.1";
 		String offlineSubject = UniqueIdGenerator.offlinePlayerUniqueId(username).toString();
@@ -68,7 +68,6 @@ class OfflineCheckStepTest {
 				.join();
 
 		assertEquals(StepResult.StepStatus.FAILED, result.getStatus());
-		verify(profileStore).clear(username);
 		verify(attemptStore).clearAttempt("premium", "verify", username, ip);
 		verify(handshakeStore).invalidateInstruction(username, ip);
 	}

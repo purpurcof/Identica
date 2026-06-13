@@ -119,6 +119,7 @@ public class DefaultCommandService implements CommandService {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void registerSuggestionProvider(@NotNull String key, @NotNull Object suggestionProvider) {
 		commandManagerProvider.get().parserRegistry().registerSuggestionProvider(
 				key,

@@ -2,22 +2,22 @@ package me.whereareiam.identica.provider.credential.resolver;
 
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.provider.credential.CredentialConstants;
-import me.whereareiam.identica.provider.profile.ProfileResolution;
-import me.whereareiam.identica.provider.profile.ProfileResolveContext;
+import me.whereareiam.identica.provider.subject.SubjectResolution;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("Credential Profile Subject Resolver")
-class CredentialProfileSubjectResolverTest {
-	private final CredentialProfileSubjectResolver resolver = new CredentialProfileSubjectResolver();
+@DisplayName("Credential Subject Resolver")
+class CredentialSubjectResolverTest {
+	private final CredentialSubjectResolver resolver = new CredentialSubjectResolver();
 
 	@DisplayName("Derives the credential provider subject from the username")
 	@Test
 	void resolvesCredentialSubjectFromUsername() {
-		ProfileResolution resolution = resolver.resolve(ProfileResolveContext.builder()
+		SubjectResolution resolution = resolver.resolve(SubjectResolveContext.builder()
 				.identity(new ConnectionIdentity("PlayerOne", "127.0.0.1"))
 				.build());
 
@@ -29,10 +29,10 @@ class CredentialProfileSubjectResolverTest {
 	@DisplayName("Rejects blank usernames")
 	@Test
 	void doesNotSupportBlankUsernames() {
-		assertFalse(resolver.supports(ProfileResolveContext.builder()
+		assertFalse(resolver.supports(SubjectResolveContext.builder()
 				.identity(new ConnectionIdentity("", "127.0.0.1"))
 				.build()));
-		assertNull(resolver.resolve(ProfileResolveContext.builder()
+		assertNull(resolver.resolve(SubjectResolveContext.builder()
 				.identity(new ConnectionIdentity("", "127.0.0.1"))
 				.build()));
 	}

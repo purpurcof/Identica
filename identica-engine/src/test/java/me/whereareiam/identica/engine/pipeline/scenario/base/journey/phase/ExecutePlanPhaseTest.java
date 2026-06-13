@@ -15,6 +15,7 @@ import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.step.Step;
 import me.whereareiam.identica.pipeline.state.PipelineState;
@@ -22,6 +23,9 @@ import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.pipeline.state.scenario.shared.JourneyState;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.provider.ProviderOperations;
+import me.whereareiam.identica.provider.subject.SubjectResolution;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -30,6 +34,7 @@ import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.JourneyPolicy;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
 import me.whereareiam.identica.type.pipeline.journey.step.StepContextRequirement;
+import me.whereareiam.identica.type.provider.ProviderOrigin;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,6 +70,7 @@ class ExecutePlanPhaseTest {
 				this::settings,
                 Messages::new,
 				providerManager,
+				providerOperations(),
 				pipelineStateStore,
 				routingCoordinator
 		);
@@ -165,6 +171,7 @@ class ExecutePlanPhaseTest {
 				this::settings,
 				Messages::new,
 				providerManager,
+				providerOperations(),
 				pipelineStateStore,
 				routingCoordinator
 		);
@@ -215,6 +222,78 @@ class ExecutePlanPhaseTest {
 		assertTrue(pipelineState.item(JourneyStateItem.class).isPresent());
 	}
 
+	@DisplayName("Provider blocks enrich a missing provider subject from the selected provider resolvers")
+	@Test
+	void providerBlocksResolveMissingProviderSubject() {
+		IdentityService identityService = mock(IdentityService.class);
+		EventManager eventManager = mock(EventManager.class);
+		ProviderManager providerManager = mock(ProviderManager.class);
+		PipelineStateStore pipelineStateStore = mock(PipelineStateStore.class);
+		RoutingCoordinator routingCoordinator = mock(RoutingCoordinator.class);
+		when(pipelineStateStore.find(any(PipelineStateReference.class))).thenReturn(Optional.empty());
+
+		ExecutePlanPhase phase = new ExecutePlanPhase(
+				identityService,
+				eventManager,
+				this::settings,
+				Messages::new,
+				providerManager,
+				providerOperations(),
+				pipelineStateStore,
+				routingCoordinator
+		);
+
+		AtomicBoolean subjectResolved = new AtomicBoolean();
+		Step providerStep = step("provider-step", context -> {
+			assertNotNull(context.getProvider());
+			assertEquals("credential", context.getProvider().getProviderId());
+			assertEquals("credential-subject", context.getProvider().getProviderSubject());
+			subjectResolved.set(true);
+			return StepResult.proceed(context);
+		});
+
+		JourneyStage providerStage = JourneyStage.builder()
+				.id(StageType.PROVIDER.id())
+				.type(StageType.PROVIDER)
+				.order(200)
+				.pipelineTypes(EnumSet.of(PipelineType.AUTHENTICATION))
+				.journeyModes(EnumSet.of(JourneyMode.INTERACTIVE))
+				.allowFallback(true)
+				.build();
+
+		JourneyExecutionPlan plan = new JourneyExecutionPlan(List.of(new JourneyExecutionBlock(
+				"group-provider",
+				JourneyExecutionPolicy.SEQUENTIAL,
+				"credential",
+				List.of(new JourneyExecutionStage(providerStage, List.of(journeyStep(StageType.PROVIDER, providerStep, 10))))
+		)));
+
+		AuthContext context = AuthContext.builder()
+				.connectionUniqueId(UUID.randomUUID())
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "PlayerOne", "127.0.0.1"))
+				.intendedServer("auth")
+				.build();
+		context.setProvider(ProviderContext.builder()
+				.providerId("credential")
+				.providerUsername("PlayerOne")
+				.source(ProviderOrigin.MANUAL)
+				.build());
+
+		PipelineState pipelineState = PipelineState.initial();
+		pipelineState.setPipelineType(PipelineType.AUTHENTICATION);
+		pipelineState.setScenario(context);
+
+		JourneyState state = new JourneyState();
+		state.setContext(context);
+		state.setJourneyMode(JourneyMode.INTERACTIVE);
+		state.setExecutionPlan(plan);
+
+		PhaseResult<JourneyState> result = phase.execute(pipelineState, state).toCompletableFuture().join();
+
+		assertTrue(subjectResolved.get());
+		assertEquals(PipelineStatus.COMPLETE, result.getState().getResult().getStatus());
+	}
+
 	private Engine settings() {
 		Engine settings = new Engine();
 		Engine.Scenarios scenarios = new Engine.Scenarios();
@@ -231,6 +310,62 @@ class ExecutePlanPhaseTest {
 		scenario.setAllowResume(true);
 		scenario.setJourneyMode(JourneyMode.INTERACTIVE);
 		scenario.setJourneyPolicy(JourneyPolicy.PREFER);
+	}
+
+	private ProviderOperations providerOperations() {
+		return new ProviderOperations() {
+			@Override
+			public me.whereareiam.identica.model.provider.ResolvedEntrypoint resolveEntrypoint(String host, int port) {
+				return null;
+			}
+
+			@Override
+			public String displayEntrypoint(String providerId) {
+				return null;
+			}
+
+			@Override
+			public String displayProviderName(String providerId) {
+				return null;
+			}
+
+			@Override
+			public boolean hasEntrypoints(String providerId) {
+				return false;
+			}
+
+			@Override
+			public @NotNull List<me.whereareiam.identica.model.provider.InternalProvider> eligibleProviders(
+					@NotNull ScenarioContext context,
+					@NotNull JourneyMode journeyMode
+			) {
+				return List.of();
+			}
+
+			@Override
+			public boolean isEligible(
+					@NotNull ScenarioContext context,
+					@NotNull me.whereareiam.identica.model.provider.InternalProvider provider,
+					@NotNull JourneyMode journeyMode
+			) {
+				return false;
+			}
+
+			@Override
+			public SubjectResolution discoverSubject(@NotNull SubjectResolveContext context) {
+				return null;
+			}
+
+			@Override
+			public SubjectResolution resolveSelectedSubject(String providerId, @NotNull SubjectResolveContext context) {
+				if (!"credential".equalsIgnoreCase(providerId))
+					return null;
+				return SubjectResolution.builder()
+						.providerId("credential")
+						.providerSubject("credential-subject")
+						.build();
+			}
+		};
 	}
 
 	private JourneyStep journeyStep(@NotNull StageType stageType, @NotNull Step step, int order) {

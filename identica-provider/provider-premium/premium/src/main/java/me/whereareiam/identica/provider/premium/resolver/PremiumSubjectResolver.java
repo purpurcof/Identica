@@ -6,9 +6,9 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
-import me.whereareiam.identica.provider.profile.ProfileResolution;
-import me.whereareiam.identica.provider.profile.ProfileResolveContext;
-import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
+import me.whereareiam.identica.provider.subject.SubjectResolution;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
+import me.whereareiam.identica.provider.subject.SubjectResolver;
 import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,20 +17,20 @@ import java.util.UUID;
 
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
-public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
+public class PremiumSubjectResolver implements SubjectResolver {
 	private final PremiumProfileStore profileStore;
 
 	@Override
-	public boolean supports(@NotNull ProfileResolveContext context) {
+	public boolean supports(@NotNull SubjectResolveContext context) {
 		return readObservation(context) != null;
 	}
 
 	@Override
-	public @Nullable ProfileResolution resolve(@NotNull ProfileResolveContext context) {
+	public @Nullable SubjectResolution resolve(@NotNull SubjectResolveContext context) {
 		String subject = readObservation(context);
 		if (subject == null) return null;
 
-		return ProfileResolution.builder()
+		return SubjectResolution.builder()
 				.providerId(PremiumConstants.PROVIDER_ID)
 				.providerSubject(subject)
 				.build();
@@ -41,7 +41,7 @@ public class PremiumProfileSubjectResolver implements ProfileSubjectResolver {
 		return 50;
 	}
 
-	private @Nullable String readObservation(@NotNull ProfileResolveContext context) {
+	private @Nullable String readObservation(@NotNull SubjectResolveContext context) {
 		String username = context.getUsername();
 		if (username == null || username.isBlank()) return null;
 

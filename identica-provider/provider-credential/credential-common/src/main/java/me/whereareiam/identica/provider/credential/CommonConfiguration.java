@@ -16,12 +16,12 @@ import me.whereareiam.identica.provider.credential.config.provider.CredentialMes
 import me.whereareiam.identica.provider.credential.config.provider.CredentialSettingsProvider;
 import me.whereareiam.identica.provider.credential.listener.CredentialAccountClearListener;
 import me.whereareiam.identica.provider.credential.migration.CredentialMigrationPrecheck;
-import me.whereareiam.identica.provider.credential.resolver.CredentialProfileSubjectResolver;
+import me.whereareiam.identica.provider.credential.resolver.CredentialSubjectResolver;
 import me.whereareiam.identica.provider.credential.sentinel.BruteForceSentinelDefinition;
 import me.whereareiam.identica.provider.credential.sentinel.BruteForceSentinelLifecycle;
 import me.whereareiam.identica.provider.credential.util.PasswordRules;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
-import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
+import me.whereareiam.identica.provider.subject.SubjectResolver;
 
 public class CommonConfiguration extends AbstractModule {
 	@Override
@@ -62,8 +62,8 @@ public class CommonConfiguration extends AbstractModule {
 		Multibinder.newSetBinder(binder(), ProviderMigrationPrecheck.class)
 				.addBinding()
 				.to(CredentialMigrationPrecheck.class);
-		Multibinder.newSetBinder(binder(), ProfileSubjectResolver.class)
+		Multibinder.newSetBinder(binder(), SubjectResolver.class)
 				.addBinding()
-				.to(CredentialProfileSubjectResolver.class);
+				.to(CredentialSubjectResolver.class);
 	}
 }

@@ -13,7 +13,7 @@ import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
 import me.whereareiam.identica.provider.ProviderOperations;
-import me.whereareiam.identica.provider.profile.ProfileResolveContext;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -68,7 +68,7 @@ public class ResolveProfilePhase implements PipelinePhase<PrepareGroupState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		var resolution = providerOperations.resolveProfile(ProfileResolveContext.builder()
+		var resolution = providerOperations.discoverSubject(SubjectResolveContext.builder()
 				.identity(request.getIdentity())
 				.build());
 		if (resolution == null) {

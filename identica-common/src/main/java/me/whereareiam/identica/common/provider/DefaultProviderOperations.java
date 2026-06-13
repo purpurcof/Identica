@@ -20,9 +20,9 @@ import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourne
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
-import me.whereareiam.identica.provider.profile.ProfileResolution;
-import me.whereareiam.identica.provider.profile.ProfileResolveContext;
-import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
+import me.whereareiam.identica.provider.subject.SubjectResolution;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
+import me.whereareiam.identica.provider.subject.SubjectResolver;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.provider.ProviderState;
@@ -47,29 +47,29 @@ public class DefaultProviderOperations implements ProviderOperations {
 	private final EventManager eventManager;
 
 	@Override
-	public @Nullable ProfileResolution resolveProfile(@NotNull ProfileResolveContext context) {
+	public @Nullable SubjectResolution discoverSubject(@NotNull SubjectResolveContext context) {
+		return resolveSelectedSubject(null, context);
+	}
+
+	@Override
+	public @Nullable SubjectResolution resolveSelectedSubject(
+			@Nullable String providerId,
+			@NotNull SubjectResolveContext context
+	) {
 		List<InternalProvider> sorted = sortedEnabledProviders();
 		if (sorted.isEmpty()) return null;
 
+		String normalizedProviderId = normalizeProviderId(providerId);
 		for (InternalProvider provider : sorted) {
-			Set<ProfileSubjectResolver> registered = provider.getProfileSubjectResolvers();
-			if (registered == null || registered.isEmpty()) continue;
+			if (provider == null) continue;
+			ProviderDescriptor descriptor = provider.getDescriptor();
+			if (descriptor == null) continue;
+			if (normalizedProviderId != null && !normalizedProviderId.equalsIgnoreCase(normalizeProviderId(descriptor.getId())))
+				continue;
 
-			List<ProfileSubjectResolver> ordered = new ArrayList<>(registered);
-			ordered.sort(Comparator.comparingInt(ProfileSubjectResolver::priority).reversed());
-
-			for (ProfileSubjectResolver resolver : ordered) {
-				if (resolver == null || !resolver.supports(context)) continue;
-
-				ProfileResolution resolution = resolver.resolve(context);
-				if (resolution == null) continue;
-
-				String providerId = resolution.getProviderId();
-				String providerSubject = resolution.getProviderSubject();
-				if (isBlank(providerId) || isBlank(providerSubject)) continue;
-
+			SubjectResolution resolution = resolveFromProvider(provider, context);
+			if (resolution != null)
 				return resolution;
-			}
 		}
 
 		return null;
@@ -250,6 +250,32 @@ public class DefaultProviderOperations implements ProviderOperations {
 		}
 
 		return true;
+	}
+
+	private @Nullable SubjectResolution resolveFromProvider(
+			@NotNull InternalProvider provider,
+			@NotNull SubjectResolveContext context
+	) {
+		Set<SubjectResolver> registered = provider.getSubjectResolvers();
+		if (registered == null || registered.isEmpty()) return null;
+
+		List<SubjectResolver> ordered = new ArrayList<>(registered);
+		ordered.sort(Comparator.comparingInt(SubjectResolver::priority).reversed());
+
+		for (SubjectResolver resolver : ordered) {
+			if (resolver == null || !resolver.supports(context)) continue;
+
+			SubjectResolution resolution = resolver.resolve(context);
+			if (resolution == null) continue;
+
+			String providerId = resolution.getProviderId();
+			String providerSubject = resolution.getProviderSubject();
+			if (isBlank(providerId) || isBlank(providerSubject)) continue;
+
+			return resolution;
+		}
+
+		return null;
 	}
 
 	private @NotNull List<InternalProvider> sortedEnabledProviders() {

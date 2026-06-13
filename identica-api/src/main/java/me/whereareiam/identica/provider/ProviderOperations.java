@@ -2,9 +2,9 @@ package me.whereareiam.identica.provider;
 
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ResolvedEntrypoint;
-import me.whereareiam.identica.provider.profile.ProfileResolution;
-import me.whereareiam.identica.provider.profile.ProfileResolveContext;
 import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.provider.subject.SubjectResolution;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.jetbrains.annotations.NotNull;
@@ -110,10 +110,32 @@ public interface ProviderOperations {
 	}
 
 	/**
-	 * Resolves resolver subject data using loaded providers.
+	 * Discovers provider-subject data using loaded providers.
 	 *
-	 * @param context resolver resolve context
-	 * @return resolution or {@code null} when no resolver applies
+	 * @param context subject resolve context
+	 * @return subject resolution or {@code null} when no resolver applies
 	 */
-	@Nullable ProfileResolution resolveProfile(@NotNull ProfileResolveContext context);
+	@Nullable SubjectResolution discoverSubject(@NotNull SubjectResolveContext context);
+
+	/**
+	 * Resolves subject data for the currently selected provider using only that
+	 * provider's registered subject resolvers.
+	 *
+	 * @param providerId provider id to resolve for
+	 * @param context subject resolve context
+	 * @return subject resolution or {@code null} when the provider cannot resolve one
+	 */
+	default @Nullable SubjectResolution resolveSelectedSubject(
+			@Nullable String providerId,
+			@NotNull SubjectResolveContext context
+	) {
+		SubjectResolution resolution = discoverSubject(context);
+		if (resolution == null)
+			return null;
+		if (providerId == null || providerId.isBlank())
+			return resolution;
+		return providerId.equalsIgnoreCase(resolution.getProviderId())
+				? resolution
+				: null;
+	}
 }

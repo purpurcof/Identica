@@ -72,7 +72,6 @@ public class OfflineCheckStep extends AbstractProfileVerificationStep {
 				return CompletableFuture.completedFuture(requireReconnect(verification, username, ip));
 			}
 
-			clearProfileItem(username);
 			clearHandshakeAttempt(username, ip);
 			handshakeStore.invalidateInstruction(username, ip);
 			Logger.debug(

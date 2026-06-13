@@ -22,23 +22,23 @@ template: |
 categories:
   - title: "What’s new"
     exclusive: true
-    when:
-      label: "feature"
+    labels:
+      - "feature"
 
   - title: "Enhancements"
     exclusive: true
-    when:
-      label: "change"
+    labels:
+      - "change"
 
   - title: "Fixes"
     exclusive: true
-    when:
-      label: "bug"
+    labels:
+      - "bug"
 
   - title: "Dependencies"
     exclusive: true
-    when:
-      label: "dependencies"
+    labels:
+      - "dependencies"
 
 exclude-labels:
   - "skip-changelog"

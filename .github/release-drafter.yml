@@ -22,33 +22,37 @@ template: |
 categories:
   - title: "What’s new"
     exclusive: true
-    semver-increment: "minor"
     when:
       label: "feature"
 
   - title: "Enhancements"
     exclusive: true
-    semver-increment: "patch"
     when:
       label: "change"
 
   - title: "Fixes"
     exclusive: true
-    semver-increment: "patch"
     when:
       label: "bug"
 
   - title: "Dependencies"
     exclusive: true
-    semver-increment: "patch"
     when:
       label: "dependencies"
 
-  - type: "pre-exclude"
-    when:
-      label: "skip-changelog"
+exclude-labels:
+  - "skip-changelog"
 
-  - type: "version-resolver"
-    semver-increment: "major"
-    when:
-      label: "major"
+version-resolver:
+  major:
+    labels:
+      - "major"
+  minor:
+    labels:
+      - "feature"
+  patch:
+    labels:
+      - "change"
+      - "bug"
+      - "dependencies"
+  default: patch

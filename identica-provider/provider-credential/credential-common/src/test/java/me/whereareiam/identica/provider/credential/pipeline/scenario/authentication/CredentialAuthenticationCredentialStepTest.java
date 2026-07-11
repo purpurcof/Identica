@@ -3,9 +3,9 @@ package me.whereareiam.identica.provider.credential.pipeline.scenario.authentica
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.credential.account.CredentialAccountService;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
@@ -13,6 +13,7 @@ import me.whereareiam.identica.provider.credential.config.defaults.CredentialMes
 import me.whereareiam.identica.provider.credential.cryptography.CryptographyService;
 import me.whereareiam.identica.provider.credential.model.CredentialAccount;
 import me.whereareiam.identica.provider.credential.pipeline.CredentialAuthenticationAttempt;
+import me.whereareiam.identica.provider.credential.pipeline.step.type.authentication.CredentialAuthenticationPasswordStep;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,7 +62,7 @@ class CredentialAuthenticationCredentialStepTest {
 				.provider(me.whereareiam.identica.model.provider.ProviderContext.of("credential", "subject", "whereareiam", null))
 				.build();
 		PipelineState state = PipelineState.initial();
-		state.putItem(new CredentialAuthenticationAttempt("credential"), settings().getConnection().getScenarios().getAuthentication().pipelineTtlMillis());
+		state.putItem(new CredentialAuthenticationAttempt("credential"), settings().getScenarios().getAuthentication().pipelineTtlMillis());
 		CredentialAccount account = CredentialAccount.builder()
 				.providerId("credential")
 				.providerSubject("subject")
@@ -70,7 +71,7 @@ class CredentialAuthenticationCredentialStepTest {
 				.build();
 
 		when(accountService.find("subject")).thenReturn(Optional.of(account));
-		when(pipelineStateStore.find(any(me.whereareiam.identica.model.pipeline.state.PipelineStateReference.class)))
+		when(pipelineStateStore.find(any(me.whereareiam.identica.pipeline.state.PipelineStateReference.class)))
 				.thenReturn(Optional.of(state));
 		when(cryptographyService.verify(account, "credential")).thenReturn(true);
 
@@ -83,14 +84,14 @@ class CredentialAuthenticationCredentialStepTest {
 		return new CredentialMessagesDefaults().supply(new CredentialMessages());
 	}
 
-	private Settings settings() {
-		Settings.Connection connection = new Settings.Connection();
-		Settings.AuthenticationScenario authentication = new Settings.AuthenticationScenario();
+	private Engine settings() {
+		Engine.Scenarios connection = new Engine.Scenarios();
+		Engine.Authentication authentication = new Engine.Authentication();
 		authentication.setPipelineTtl(Duration.ofMinutes(5));
-		connection.getScenarios().setAuthentication(authentication);
+		connection.setAuthentication(authentication);
 
-		Settings settings = new Settings();
-		settings.setConnection(connection);
+		Engine settings = new Engine();
+		settings.setScenarios(connection);
 		return settings;
 	}
 }

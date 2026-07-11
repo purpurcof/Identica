@@ -32,14 +32,18 @@ class ConnectionDecisionApplierTest {
 
 	private static final SerializerEngine TEST_SERIALIZER = new SerializerEngine() {
 		@Override
-		public String serialize(Component component) {
+		public @NotNull String serialize(Component component) {
 			return component.toString();
 		}
 
 		@Override
-		public Component serialize(SerializerContent content) {
-			String message = content.getMessage() == null ? "" : content.getMessage();
+		public @NotNull Component serialize(SerializerContent content) {
+			String message = content.getMessage();
 			return Component.text(message);
+		}
+
+		public @NotNull String renderTemplate(SerializerContent content) {
+			return content.getMessage();
 		}
 
 		@Override
@@ -100,11 +104,11 @@ class ConnectionDecisionApplierTest {
 
 	private Messages messages() {
 		Messages messages = new Messages();
-		Messages.Connection connection = new Messages.Connection();
-		Messages.Connection.Authentication authentication = new Messages.Connection.Authentication();
+		Messages.Scenarios scenarios = new Messages.Scenarios();
+		Messages.Scenarios.Authentication authentication = new Messages.Scenarios.Authentication();
 		authentication.setAuthenticationFailed(List.of("fallback"));
-		connection.setAuthentication(authentication);
-		messages.setConnection(connection);
+		scenarios.setAuthentication(authentication);
+		messages.setScenarios(scenarios);
 		return messages;
 	}
 
@@ -127,12 +131,12 @@ class ConnectionDecisionApplierTest {
 		private final AtomicReference<Component> lastMessage = new AtomicReference<>();
 
 		@Override
-		public UUID getUniqueId() {
+		public @NotNull UUID getUniqueId() {
 			return UUID.randomUUID();
 		}
 
 		@Override
-		public String getUsername() {
+		public @NotNull String getUsername() {
 			return "PlayerOne";
 		}
 

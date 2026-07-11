@@ -1,24 +1,92 @@
 package me.whereareiam.identica.common.config.defaults;
 
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.configura.Config;
+import me.whereareiam.configura.Configura;
+import me.whereareiam.configura.type.Format;
+import me.whereareiam.identica.common.config.defaults.provider.ProvidersDefaults;
+import me.whereareiam.identica.model.config.provider.Providers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Providers Defaults")
 class ProvidersDefaultsTest {
-	@DisplayName("Provider recognition overrides default to disabled")
+	@DisplayName("Provider session defaults stay absent until declared")
 	@Test
-	void providerRecognitionOverridesDefaultToDisabled() {
+	void providerSessionDefaultsStayAbsentUntilDeclared() {
 		Providers providers = new ProvidersDefaults().supply(new Providers());
 
-		assertFalse(provider(providers, "premium").getOverrides().isAllowRecognitionOnUntrustedIp());
-		assertTrue(provider(providers, "premium").getOverrides().getRecognition().getSignals().isEmpty());
-		assertNull(provider(providers, "premium").getOverrides().getRecognition().getEnabled());
-		assertFalse(provider(providers, "credential").getOverrides().isAllowRecognitionOnUntrustedIp());
-		assertTrue(provider(providers, "credential").getOverrides().getRecognition().getSignals().isEmpty());
-		assertNull(provider(providers, "credential").getOverrides().getRecognition().getEnabled());
+		assertNull(provider(providers, "premium").getSession());
+		assertNull(provider(providers, "credential").getSession());
+	}
+
+	@DisplayName("Generated providers file keeps optional subtrees absent by default")
+	@Test
+	void generatedProvidersFileKeepsOptionalSubtreesAbsentByDefault(@TempDir Path tempDir) throws Exception {
+		Path providersPath = tempDir.resolve("providers.yml");
+		Providers providers = yaml().update(providersPath, Providers.class);
+
+		Providers.ProviderEntry premium = provider(providers, "premium");
+		assertEquals("premium", premium.getId());
+		assertTrue(premium.isEnabled());
+		assertEquals(100, premium.getPriority());
+		assertEquals(List.of("premium.arcadeya.com"), premium.getEntrypoints());
+
+		String generated = Files.readString(providersPath);
+		assertTrue(generated.contains("providers:"));
+		assertTrue(generated.contains("entrypoints:"));
+		assertFalse(generated.contains("session:"), generated);
+		assertFalse(generated.contains("features:"), generated);
+
+		assertNull(premium.getSession());
+		assertNull(premium.getFeatures());
+	}
+
+	@DisplayName("Declared feature subtree stays generic in shared providers config")
+	@Test
+	void declaredFeatureSubtreeStaysGeneric(@TempDir Path tempDir) throws Exception {
+		Path providersPath = tempDir.resolve("providers.yml");
+		Files.writeString(providersPath, """
+				providers:
+				  - id: premium
+				    features:
+				      verification:
+				        enabled: false
+				""");
+
+		Providers providers = yaml().update(providersPath, Providers.class);
+
+		assertNotNull(provider(providers, "premium").getFeatures());
+	}
+
+	@DisplayName("Declared session stays minimal when no provider session fields are set")
+	@Test
+	void declaredSessionStaysMinimalWhenNoFieldsAreSet(@TempDir Path tempDir) throws Exception {
+		Path providersPath = tempDir.resolve("providers.yml");
+		Files.writeString(providersPath, """
+				providers:
+				  - id: premium
+				    session: {}
+				""");
+
+		Providers providers = yaml().update(providersPath, Providers.class);
+		Providers.ProviderEntry.Session session = provider(providers, "premium").getSession();
+
+		assertNotNull(session);
+		assertNull(session.getConcurrencyPolicy());
+	}
+
+	private Configura yaml() {
+		return Config.builder()
+				.format(Format.YAML)
+				.defaults(ProvidersDefaults.class)
+				.build();
 	}
 
 	private Providers.ProviderEntry provider(Providers providers, String id) {

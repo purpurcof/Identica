@@ -12,7 +12,7 @@ import me.whereareiam.identica.event.lifecycle.IdenticaShutdownEvent;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.SessionCloseRequest;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.config.Replication;
 import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.replication.ReplicationType;
@@ -67,7 +67,7 @@ public class DefaultSessionService implements SessionService, EventListener {
 		this.scheduler = scheduler;
 
 		Replication.Sessions sessions = resolveSessions(replicationProvider);
-		long defaultTtlMs = settingsProvider.get().getConnection().getSessions().activeTtlMillis();
+		long defaultTtlMs = settingsProvider.get().getSessions().activeTtlMillis();
 		ReplicationType<Session, Session> type = ReplicationType.identity(Session.class);
 		this.sessionCacheTtlMs = defaultTtlMs;
 		this.userCache = replicationSystem.cache(resolveNamespace(sessions.getUser(), "replication.cache.sessions.user"))
@@ -283,12 +283,16 @@ public class DefaultSessionService implements SessionService, EventListener {
 
 	private SessionConcurrencyPolicy resolveConcurrencyPolicy(@Nullable String providerId) {
 		Providers.ProviderEntry provider = findProvider(providerId);
-		SessionConcurrencyPolicy override = provider != null
-				? provider.getOverrides().getSessionConcurrencyPolicy()
+		Providers.ProviderEntry.Session session = provider != null
+				? provider.getSession()
 				: null;
+		SessionConcurrencyPolicy override = session != null
+				? session.getConcurrencyPolicy()
+				: null;
+
 		return override != null
 				? override
-				: settingsProvider.get().getConnection().getSessions().getConcurrencyPolicy();
+				: settingsProvider.get().getSessions().getConcurrencyPolicy();
 	}
 
 	private @Nullable Providers.ProviderEntry findProvider(@Nullable String rawId) {

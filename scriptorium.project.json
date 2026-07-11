@@ -3,9 +3,38 @@
   "description": "Provider-oriented Minecraft identity plugin.",
   "logo": "docs/assets/logo.png",
   "favicon": "docs/assets/favicon.ico",
+  "state": {
+    "bundling": {
+      "captions": [
+        "Linking identity to the right provider.",
+        "Asking the providers who you really are.",
+        "Aligning providers, pipelines, and poor life choices.",
+        "Checking whether this username has paperwork.",
+        "Waking the routing goblins.",
+        "Reversing the authentication polarity.",
+        "Negotiating with the verification gremlins."
+      ]
+    }
+  },
   "urls": {
     "github": "https://github.com/whereareiam/Identica"
   },
+  "links": [
+    {
+      "type": "icon",
+      "label": "GitHub",
+      "icon": "github",
+      "url": "https://github.com/whereareiam/Identica",
+      "external": true
+    },
+    {
+      "type": "icon",
+      "label": "Discord",
+      "icon": "discord",
+      "url": "https://discord.arcadeya.com",
+      "external": true
+    }
+  ],
   "versions": {
     "home": "dev",
     "include": [

@@ -1,4 +1,4 @@
-Open the generated `providers` config and keep the generated structure as your base.
+Open the generated `providers/providers` config and keep the generated structure as your base.
 In most cases, the defaults are already close to what you want.
 
 For typical mixed setups, it makes sense for `premium` to have a higher priority than `credential`.
@@ -14,13 +14,14 @@ For the first pass, the important decisions are:
 A practical starting point looks like this:
 
 ```yaml
+behavior:
+  attemptTtl: 10m
+
 providers:
   - id: premium
     displayName: "PR"
     enabled: true
     priority: 200
-    overrides:
-      sessionTtl: 12h
     entrypoints:
       - premium.example.com
 
@@ -28,7 +29,8 @@ providers:
     displayName: "CR"
     enabled: true
     priority: 100
-    overrides: {}
     entrypoints:
       - credential.example.com
 ```
+
+Most installations can leave the top-level `behavior` values alone on the first pass.

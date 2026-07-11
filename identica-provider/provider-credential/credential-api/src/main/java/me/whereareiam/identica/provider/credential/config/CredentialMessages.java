@@ -7,6 +7,9 @@ import me.whereareiam.configura.ConfigDocument;
 
 import java.util.List;
 
+/**
+ * Message configuration for the credential provider.
+ */
 @Getter
 @Setter
 @ToString
@@ -21,7 +24,7 @@ public class CredentialMessages extends ConfigDocument {
 	@Setter
 	@ToString
 	public static class Completion {
-		private Pipeline session;
+		private Pipeline recognition;
 		private Pipeline authentication;
 		private Pipeline registration;
 		private Pipeline migration;

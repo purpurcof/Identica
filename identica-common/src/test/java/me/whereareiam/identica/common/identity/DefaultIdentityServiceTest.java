@@ -53,8 +53,7 @@ class DefaultIdentityServiceTest {
 						.providerId("premium")
 						.originalUsername(identity.getUsername())
 						.effectiveUsername(identity.getUsername())
-						.build(),
-				false
+						.build()
 		));
 
 		assertEquals(accountUniqueId, identity.getAccountUniqueId());
@@ -73,8 +72,7 @@ class DefaultIdentityServiceTest {
 						.providerId("premium")
 						.originalUsername("PlayerOne")
 						.effectiveUsername("PlayerOne")
-						.build(),
-				false
+						.build()
 		));
 
 		assertTrue(service.list().isEmpty());

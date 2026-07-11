@@ -33,7 +33,6 @@ class DefaultDeliveryServiceTest {
 		DeliveryStore deliveryStore = mock(DeliveryStore.class);
 		DefaultDeliveryService service = new DefaultDeliveryService(
 				deliveryStore,
-				mock(me.whereareiam.identica.identity.IdentityService.class),
 				mock(PipelineStateStore.class)
 		);
 		TestIdentity identity = new TestIdentity(UUID.randomUUID(), UUID.randomUUID(), "PlayerOne");

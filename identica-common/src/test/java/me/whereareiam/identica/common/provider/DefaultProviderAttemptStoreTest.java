@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.provider;
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
 import me.whereareiam.identica.common.replication.ReplicationTestFixtures;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.provider.Providers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -45,11 +45,11 @@ class DefaultProviderAttemptStoreTest {
 		);
 	}
 
-	private Settings settings() {
-		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
-		connection.setAttemptTtl(Duration.ofMinutes(1));
-		settings.setConnection(connection);
+	private Providers settings() {
+		Providers settings = new Providers();
+		Providers.Behavior behavior = new Providers.Behavior();
+		behavior.setAttemptTtl(Duration.ofMinutes(1));
+		settings.setBehavior(behavior);
 		return settings;
 	}
 

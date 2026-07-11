@@ -5,11 +5,12 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.pipeline.GroupOutcome;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.GroupOutcome;
 import me.whereareiam.identica.pipeline.PipelineGroup;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.scenario.shared.JourneyState;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
@@ -61,18 +62,16 @@ public class JourneyGroup implements PipelineGroup<JourneyState> {
 	}
 
 	private @NotNull String journeyMissingResultMessage(@NotNull PipelineState pipelineState) {
-		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
+		Messages.Scenarios.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
 		return String.join("\n", errors.getJourney().getMissingResult());
 	}
 
-	private @NotNull Messages.Connection.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
+	private @NotNull Messages.Scenarios.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
 		PipelineType pipelineType = pipelineState.getPipelineType();
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return connection.getRegistration().getErrors();
-		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getMigration().getErrors();
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return scenarios.getRegistration().getErrors();
+		if (pipelineType == PipelineType.MIGRATION) return scenarios.getMigration().getErrors();
 
-		return connection.getAuthentication().getErrors();
+		return scenarios.getAuthentication().getErrors();
 	}
 }

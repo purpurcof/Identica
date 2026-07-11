@@ -11,10 +11,10 @@ import me.whereareiam.identica.annotation.Definition;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.auth.ConnectionDecision;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 import me.whereareiam.identica.provider.credential.pipeline.CredentialRegistrationAttempt;
@@ -28,7 +28,7 @@ public class PassCommand {
 	private final ConnectionCoordinator connectionCoordinator;
 	private final PipelineStateStore pipelineStateStore;
 	private final Provider<CredentialMessages> messagesProvider;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> settingsProvider;
 
 	@Definition("pass")
 	@Command("pass <password>")
@@ -109,16 +109,16 @@ public class PassCommand {
 	}
 
 	private long resolveTtl(@NotNull PipelineType pipelineType) {
-		Settings settings = settingsProvider.get();
+		Engine settings = settingsProvider.get();
 		if (settings == null) return 0L;
 
-		Settings.Connection connection = settings.getConnection();
+		Engine.Scenarios scenarios = settings.getScenarios();
 		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getScenarios().getMigration().pipelineTtlMillis();
+			return scenarios.getMigration().pipelineTtlMillis();
 		if (pipelineType == PipelineType.AUTHENTICATION)
-			return connection.getScenarios().getAuthentication().pipelineTtlMillis();
+			return scenarios.getAuthentication().pipelineTtlMillis();
 
-		return connection.getScenarios().getRegistration().pipelineTtlMillis();
+		return scenarios.getRegistration().pipelineTtlMillis();
 	}
 
 	private PipelineStateReference reference(@NotNull Identity identity) {

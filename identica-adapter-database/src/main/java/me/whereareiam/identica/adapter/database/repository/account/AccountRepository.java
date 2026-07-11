@@ -15,7 +15,6 @@ public interface AccountRepository {
 	@SqlQuery("""
 			SELECT unique_id AS uniqueId,
 			       username AS username,
-			       username_source AS usernameSource,
 			       created_at AS createdAt,
 			       last_seen_at AS lastSeenAt
 			  FROM identica_accounts
@@ -26,7 +25,6 @@ public interface AccountRepository {
 	@SqlQuery("""
 			SELECT unique_id AS uniqueId,
 			       username AS username,
-			       username_source AS usernameSource,
 			       created_at AS createdAt,
 			       last_seen_at AS lastSeenAt
 			  FROM identica_accounts
@@ -38,13 +36,12 @@ public interface AccountRepository {
 	long count();
 
 	@SqlUpdate("""
-			INSERT INTO identica_accounts (unique_id, username, username_source, created_at, last_seen_at)
-			VALUES (:uniqueId, :username, :usernameSource, :createdAt, :lastSeenAt)
+			INSERT INTO identica_accounts (unique_id, username, created_at, last_seen_at)
+			VALUES (:uniqueId, :username, :createdAt, :lastSeenAt)
 			""")
 	void insert(
 			@Bind("uniqueId") UUID uniqueId,
 			@Bind("username") String username,
-			@Bind("usernameSource") String usernameSource,
 			@Bind("createdAt") long createdAt,
 			@Bind("lastSeenAt") long lastSeenAt
 	);
@@ -67,16 +64,6 @@ public interface AccountRepository {
 	void updateUsername(
 			@Bind("uniqueId") UUID uniqueId,
 			@Bind("username") String username
-	);
-
-	@SqlUpdate("""
-			UPDATE identica_accounts
-			   SET username_source = :usernameSource
-			 WHERE unique_id = :uniqueId
-			""")
-	void updateUsernameSource(
-			@Bind("uniqueId") UUID uniqueId,
-			@Bind("usernameSource") String usernameSource
 	);
 
 	@SqlUpdate("DELETE FROM identica_accounts WHERE unique_id = :uniqueId")

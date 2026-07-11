@@ -1,7 +1,7 @@
 package me.whereareiam.identica.engine.completion;
 
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPendingLifecycle;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
+import me.whereareiam.identica.engine.pipeline.completion.lifecycle.CompletionPendingLifecycle;
+import me.whereareiam.identica.engine.pipeline.completion.runtime.CompletionPipeline;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.delivery.DeliveryCheckpointReachedEvent;
 import me.whereareiam.identica.event.routing.completion.CompletionRoutingReachedEvent;
@@ -9,7 +9,7 @@ import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Routing;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
 import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.model.routing.RoutingEndpoint;
@@ -47,12 +47,11 @@ class CompletionPendingLifecycleTest {
 		IdentityService identityService = mock(IdentityService.class);
 		PlatformDeliveryAdapter platformDeliveryAdapter = mock(PlatformDeliveryAdapter.class);
 		EventManager eventManager = mock(EventManager.class);
-		Settings settings = new Settings();
-		settings.setConnection(new Settings.Connection());
-		settings.getConnection().getRouting().getDefaults().getComplete().setTarget("limbo");
-		Settings.Routing.Targets migrationTargets = new Settings.Routing.Targets();
+		Routing settings = new Routing();
+		settings.getDefaults().getComplete().setTarget("limbo");
+		Routing.Targets migrationTargets = new Routing.Targets();
 		migrationTargets.getComplete().setTarget("migration-limbo");
-		settings.getConnection().getRouting().getScenarios().put("migration", migrationTargets);
+		settings.getScenarios().put("migration", migrationTargets);
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				deliveryService,
 				completionPipeline,
@@ -71,14 +70,12 @@ class CompletionPendingLifecycleTest {
 		lifecycle.onSessionOpened(new SessionOpenedEvent(
 				connectionUniqueId,
 				PipelineType.MIGRATION,
-				session,
-				true
+				session
 		));
 
 		verify(deliveryService).queue(argThat((DeliveryRequest request) ->
 				request != null
 						&& request.getPayload().getCompletion() != null
-						&& request.getPayload().getCompletion().isAuthenticationRecognized()
 						&& request.getCheckpoint() == DeliveryCheckpoint.PLATFORM_READY_INITIAL
 						&& "migration-limbo".equals(request.getRequiredServer())
 		));
@@ -93,9 +90,8 @@ class CompletionPendingLifecycleTest {
 		IdentityService identityService = mock(IdentityService.class);
 		PlatformDeliveryAdapter platformDeliveryAdapter = mock(PlatformDeliveryAdapter.class);
 		EventManager eventManager = mock(EventManager.class);
-		Settings settings = new Settings();
-		settings.setConnection(new Settings.Connection());
-		settings.getConnection().getRouting().getDefaults().getComplete().setTarget("survival");
+		Routing settings = new Routing();
+		settings.getDefaults().getComplete().setTarget("survival");
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				deliveryService,
 				completionPipeline,
@@ -114,8 +110,7 @@ class CompletionPendingLifecycleTest {
 		lifecycle.onSessionOpened(new SessionOpenedEvent(
 				connectionUniqueId,
 				PipelineType.AUTHENTICATION,
-				session,
-				true
+				session
 		));
 
 		verify(deliveryService).queue(argThat((DeliveryRequest request) ->
@@ -134,8 +129,7 @@ class CompletionPendingLifecycleTest {
 		IdentityService identityService = mock(IdentityService.class);
 		PlatformDeliveryAdapter platformDeliveryAdapter = mock(PlatformDeliveryAdapter.class);
 		EventManager eventManager = mock(EventManager.class);
-		Settings settings = new Settings();
-		settings.setConnection(new Settings.Connection());
+		Routing settings = new Routing();
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				deliveryService,
 				completionPipeline,
@@ -178,8 +172,7 @@ class CompletionPendingLifecycleTest {
 		IdentityService identityService = mock(IdentityService.class);
 		PlatformDeliveryAdapter platformDeliveryAdapter = mock(PlatformDeliveryAdapter.class);
 		EventManager eventManager = mock(EventManager.class);
-		Settings settings = new Settings();
-		settings.setConnection(new Settings.Connection());
+		Routing settings = new Routing();
 		CompletionPendingLifecycle lifecycle = new CompletionPendingLifecycle(
 				deliveryService,
 				completionPipeline,
@@ -204,7 +197,6 @@ class CompletionPendingLifecycleTest {
 								.connectionUniqueId(connectionUniqueId)
 								.accountUniqueId(accountUniqueId)
 								.pipelineType(PipelineType.MIGRATION)
-								.authenticationRecognized(true)
 								.build())
 						.build())
 				.checkpoint(DeliveryCheckpoint.PLATFORM_READY_INITIAL)
@@ -231,7 +223,6 @@ class CompletionPendingLifecycleTest {
 						&& pendingState.getPipelineType() == PipelineType.MIGRATION
 						&& connectionUniqueId.equals(pendingState.getConnectionUniqueId())
 						&& accountUniqueId.equals(pendingState.getAccountUniqueId())
-						&& pendingState.isAuthenticationRecognized()
 		));
 		verify(deliveryService).acknowledge(deliveryId, "completion-dispatched");
 	}

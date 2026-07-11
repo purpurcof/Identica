@@ -1,7 +1,7 @@
 package me.whereareiam.identica.provider.premium.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.CommandDefinition;
 import me.whereareiam.identica.provider.premium.config.PremiumCommands;
 
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class PremiumCommandsDefaults implements MergeDefaultsProvider<PremiumCommands> {
+public class PremiumCommandsDefaults implements DefaultsProvider<PremiumCommands> {
 	@Override
 	public PremiumCommands supply(PremiumCommands commands) {
 		CommandDefinition premium = CommandDefinition.builder()

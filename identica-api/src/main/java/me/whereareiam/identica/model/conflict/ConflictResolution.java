@@ -6,6 +6,9 @@ import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Result of conflict resolution.
  */
@@ -14,29 +17,17 @@ import org.jetbrains.annotations.Nullable;
 @RequiredArgsConstructor
 @SuppressWarnings("unused")
 public class ConflictResolution {
-	private final @NotNull Action action;
-	private final @Nullable String overrideValue;
-	private final @NotNull OverrideTarget overrideTarget;
+	private final @NotNull Decision decision;
 	private final @Nullable String message;
+	private final @NotNull Map<String, Object> effects;
 
 	/**
-	 * Resolution actions.
+	 * Resolution decisions.
 	 */
-	public enum Action {
+	public enum Decision {
 		ALLOW,
 		PASS,
-		DENY,
-		KICK_EXISTING,
-		KICK_BOTH
-	}
-
-	/**
-	 * Targets for override values.
-	 */
-	public enum OverrideTarget {
-		INCOMING,
-		EXISTING,
-		BOTH
+		DENY
 	}
 
 	/**
@@ -45,7 +36,7 @@ public class ConflictResolution {
 	 * @return allow resolution
 	 */
 	public static ConflictResolution allow() {
-		return new ConflictResolution(Action.ALLOW, null, OverrideTarget.INCOMING, null);
+		return new ConflictResolution(Decision.ALLOW, null, Map.of());
 	}
 
 	/**
@@ -54,31 +45,7 @@ public class ConflictResolution {
 	 * @return pass resolution
 	 */
 	public static ConflictResolution pass() {
-		return new ConflictResolution(Action.PASS, null, OverrideTarget.INCOMING, null);
-	}
-
-	/**
-	 * Allow the candidate value with an override.
-	 *
-	 * @param overrideValue replacement value to apply
-	 * @return allow resolution with override
-	 */
-	public static ConflictResolution allowWithOverride(@Nullable String overrideValue) {
-		return new ConflictResolution(Action.ALLOW, overrideValue, OverrideTarget.INCOMING, null);
-	}
-
-	/**
-	 * Allow the candidate value with an override.
-	 *
-	 * @param overrideValue replacement value to apply
-	 * @param target target to apply the override to
-	 * @return allow resolution with override
-	 */
-	public static ConflictResolution allowWithOverride(
-			@Nullable String overrideValue,
-			@NotNull OverrideTarget target
-	) {
-		return new ConflictResolution(Action.ALLOW, overrideValue, target, null);
+		return new ConflictResolution(Decision.PASS, null, Map.of());
 	}
 
 	/**
@@ -88,26 +55,44 @@ public class ConflictResolution {
 	 * @return deny resolution
 	 */
 	public static ConflictResolution deny(@Nullable String message) {
-		return new ConflictResolution(Action.DENY, null, OverrideTarget.INCOMING, message);
+		return new ConflictResolution(Decision.DENY, message, Map.of());
 	}
 
 	/**
-	 * Kick the existing session and allow the joiner.
+	 * Read a typed effect value.
 	 *
-	 * @param overrideValue optional override value
-	 * @return kick-existing resolution
+	 * @param key effect key
+	 * @param type expected type
+	 * @return typed effect or {@code null}
 	 */
-	public static ConflictResolution kickExisting(@Nullable String overrideValue) {
-		return new ConflictResolution(Action.KICK_EXISTING, overrideValue, OverrideTarget.INCOMING, null);
+	public @Nullable <T> T getEffect(@NotNull String key, @NotNull Class<T> type) {
+		Object value = effects.get(key);
+		if (type.isInstance(value)) return type.cast(value);
+		return null;
 	}
 
 	/**
-	 * Kick both sessions and deny the joiner.
+	 * Returns {@code true} when this resolution contains the given effect.
 	 *
-	 * @param message optional message
-	 * @return kick-both resolution
+	 * @param key effect key
+	 * @return whether the effect is present
 	 */
-	public static ConflictResolution kickBoth(@Nullable String message) {
-		return new ConflictResolution(Action.KICK_BOTH, null, OverrideTarget.INCOMING, message);
+	public boolean hasEffect(@NotNull String key) {
+		return effects.containsKey(key);
+	}
+
+	/**
+	 * Return a copy of this resolution with an additional effect.
+	 *
+	 * @param key effect key
+	 * @param value effect value
+	 * @return copied resolution
+	 */
+	public @NotNull ConflictResolution withEffect(@NotNull String key, @Nullable Object value) {
+		if (key.isBlank() || value == null) return this;
+
+		Map<String, Object> updated = new LinkedHashMap<>(effects);
+		updated.put(key, value);
+		return new ConflictResolution(decision, message, Map.copyOf(updated));
 	}
 }

@@ -1,0 +1,5 @@
+scenarios:
+  authentication:
+    journeyMode: "INTERACTIVE"
+  registration:
+    journeyMode: "INTERACTIVE"

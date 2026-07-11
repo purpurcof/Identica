@@ -1,0 +1,123 @@
+---
+title: Settings
+description: Field-by-field explanation of Identica's sentinel feature settings.
+---
+
+This page provides the settings for the built-in sentinel feature.
+
+## Settings
+
+### sentinels.resumeSpam.enabled
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: whether the built-in resume-spam sentinel is allowed to operate
+
+This sentinel watches process, resume, and advance attempts.
+
+### sentinels.resumeSpam.maxAttempts
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer greater than `0`
+- Current default: `10`
+- Affects: how many attempts are allowed before lockout logic applies
+
+### sentinels.resumeSpam.lockout.enabled
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Current default: `true`
+- Affects: whether the sentinel can actively lock out attempts after the threshold is exceeded
+
+### sentinels.resumeSpam.lockout.duration
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"30s"`
+- Affects: how long the lockout lasts
+
+### sentinels.resumeSpam.warning.enabled
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: whether pre-lockout warning logic can run
+
+### sentinels.resumeSpam.warning.thresholdPercentage
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: an integer percentage from `0` to `100`
+- Current default: `0`
+- Affects: when warning messages start relative to `maxAttempts`
+
+The current code clamps this into the `0..100` range and computes the warning threshold from `maxAttempts`.
+For example, with `maxAttempts: 10` and `thresholdPercentage: 70`, warnings begin on attempt `8`.
+
+### replication.state
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a string
+- Current default: `"identica:sentinels"`
+- Affects: the namespace used for replicated sentinel state
+
+This namespace stores shared sentinel counters and lockout state.
+
+## Messages
+
+### resumeSpam.denied
+
+- Takes: a list of lines
+- Current default: a built-in lockout message block
+- Affects: the denial message shown while the resume-spam lockout is active
+
+The `{seconds}` placeholder is replaced with the remaining lockout duration.
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+sentinels:
+  resumeSpam:
+    enabled: true
+    maxAttempts: 10
+    lockout:
+      enabled: true
+      duration: "30s"
+    warning:
+      enabled: true
+      thresholdPercentage: 70
+replication:
+  state: "identica:sentinels"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "sentinels": {
+    "resumeSpam": {
+      "enabled": true,
+      "maxAttempts": 10,
+      "lockout": {
+        "enabled": true,
+        "duration": "30s"
+      },
+      "warning": {
+        "enabled": true,
+        "thresholdPercentage": 70
+      }
+    }
+  },
+  "replication": {
+    "state": "identica:sentinels"
+  }
+}
+```
+  </Tab>
+</Tabs>

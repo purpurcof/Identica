@@ -1,13 +1,13 @@
 package me.whereareiam.identica.common.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.model.config.Replication;
 
 import java.util.UUID;
 
 @Singleton
-public class ReplicationDefaults implements MergeDefaultsProvider<Replication> {
+public class ReplicationDefaults implements DefaultsProvider<Replication> {
 	@Override
 	public Replication supply(Replication replication) {
 		replication.setEnabled(false);
@@ -40,9 +40,6 @@ public class ReplicationDefaults implements MergeDefaultsProvider<Replication> {
 		sessions.setUser("identica:sessions:user");
 		sessions.setSession("identica:sessions:session");
 		sessions.setSubject("identica:sessions:subject");
-		Replication.Sessions.Recognition recognition = new Replication.Sessions.Recognition();
-		recognition.setSnapshot("identica:session-recognition:snapshot");
-		sessions.setRecognition(recognition);
 		cache.setSessions(sessions);
 
 		cache.setPipelineState("identica:pipeline-state");

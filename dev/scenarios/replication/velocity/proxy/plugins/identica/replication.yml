@@ -1,0 +1,4 @@
+enabled: true
+serverId: "replication-velocity"
+redis:
+  password: "identica"

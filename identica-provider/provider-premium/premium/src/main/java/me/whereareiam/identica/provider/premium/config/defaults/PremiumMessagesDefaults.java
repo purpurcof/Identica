@@ -1,13 +1,13 @@
 package me.whereareiam.identica.provider.premium.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 
 import java.util.List;
 
 @Singleton
-public class PremiumMessagesDefaults implements MergeDefaultsProvider<PremiumMessages> {
+public class PremiumMessagesDefaults implements DefaultsProvider<PremiumMessages> {
 	@Override
 	public PremiumMessages supply(PremiumMessages messages) {
 		PremiumMessages.Verification verification = new PremiumMessages.Verification();
@@ -37,12 +37,12 @@ public class PremiumMessagesDefaults implements MergeDefaultsProvider<PremiumMes
 		messages.setVerification(verification);
 
 		PremiumMessages.Completion completion = new PremiumMessages.Completion();
-		PremiumMessages.Completion.Pipeline sessionCompletion = new PremiumMessages.Completion.Pipeline();
-		PremiumMessages.Completion.Pipeline.Title sessionTitle = new PremiumMessages.Completion.Pipeline.Title();
-		sessionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");
-		sessionTitle.setSubtitle("<dark_gray>Your premium session was reused.</dark_gray>");
-		sessionCompletion.setTitle(sessionTitle);
-		sessionCompletion.setBody(List.of(
+		PremiumMessages.Completion.Pipeline recognitionCompletion = new PremiumMessages.Completion.Pipeline();
+		PremiumMessages.Completion.Pipeline.Title recognitionTitle = new PremiumMessages.Completion.Pipeline.Title();
+		recognitionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");
+		recognitionTitle.setSubtitle("<dark_gray>Your premium session was reused.</dark_gray>");
+		recognitionCompletion.setTitle(recognitionTitle);
+		recognitionCompletion.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
 				" ",
@@ -52,7 +52,7 @@ public class PremiumMessagesDefaults implements MergeDefaultsProvider<PremiumMes
 				"  <gray>No new verification was required.</gray>",
 				" "
 		));
-		completion.setSession(sessionCompletion);
+		completion.setRecognition(recognitionCompletion);
 
 		PremiumMessages.Completion.Pipeline authenticationCompletion = new PremiumMessages.Completion.Pipeline();
 		PremiumMessages.Completion.Pipeline.Title authenticationTitle = new PremiumMessages.Completion.Pipeline.Title();

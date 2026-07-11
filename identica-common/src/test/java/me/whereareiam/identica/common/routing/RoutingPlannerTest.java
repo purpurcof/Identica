@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.routing;
 
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Routing;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
@@ -67,8 +67,8 @@ class RoutingPlannerTest {
 	@DisplayName("Missing scenario targets fall back to routing defaults")
 	@Test
 	void missingScenarioTargetsUseDefaults() {
-		Settings settings = settings();
-		settings.getConnection().getRouting().getScenarios().clear();
+		Routing settings = settings();
+		settings.getScenarios().clear();
 
 		RoutingPlanner planner = new RoutingPlanner(() -> settings);
 		RoutingPlan stepPlan = planner.plan(RoutingSignal.stepFinished(
@@ -91,9 +91,9 @@ class RoutingPlannerTest {
 	@DisplayName("Scenario completion targets inherit default attempts when omitted")
 	@Test
 	void completionTargetInheritsDefaultAttemptsWhenOmitted() {
-		Settings settings = settings();
-		settings.getConnection().getRouting().getDefaults().getComplete().getAttempts().setMode(RoutingRetryMode.UNTIL_REACHED);
-		settings.getConnection().getRouting().getScenarios().get("authentication").getComplete().setAttempts(null);
+		Routing settings = settings();
+		settings.getDefaults().getComplete().getAttempts().setMode(RoutingRetryMode.UNTIL_REACHED);
+		settings.getScenarios().get("authentication").getComplete().setAttempts(null);
 
 		RoutingPlanner planner = new RoutingPlanner(() -> settings);
 		RoutingPlan plan = planner.plan(RoutingSignal.pipelineFinished(
@@ -124,12 +124,12 @@ class RoutingPlannerTest {
 	@DisplayName("Step-specific overrides win over stage and scenario defaults")
 	@Test
 	void stepOverrideBeatsStageAndScenarioDefaults() {
-		Settings settings = settings();
-		Settings.Routing.Target stageTarget = Settings.Routing.Target.step();
+		Routing settings = settings();
+		Routing.Target stageTarget = Routing.Target.step();
 		stageTarget.setTarget("stage-server");
-		Settings.Routing.Target stepTarget = Settings.Routing.Target.step();
+		Routing.Target stepTarget = Routing.Target.step();
 		stepTarget.setTarget("step-server");
-		Settings.Routing.Targets targets = settings.getConnection().getRouting().getScenarios().get("authentication");
+		Routing.Targets targets = settings.getScenarios().get("authentication");
 		targets.getOverrides().getStages().put(StageType.PROVIDER.id(), stageTarget);
 		targets.getOverrides().getSteps().put("credential", stepTarget);
 
@@ -148,9 +148,9 @@ class RoutingPlannerTest {
 	@DisplayName("Blank routing targets clear the current intent")
 	@Test
 	void blankTargetClearsIntent() {
-		Settings settings = settings();
-		settings.getConnection().getRouting().getScenarios().get("authentication").getStep().setTarget("");
-		settings.getConnection().getRouting().getDefaults().getStep().setTarget("");
+		Routing settings = settings();
+		settings.getScenarios().get("authentication").getStep().setTarget("");
+		settings.getDefaults().getStep().setTarget("");
 
 		RoutingPlanner planner = new RoutingPlanner(() -> settings);
 		RoutingPlan plan = planner.plan(RoutingSignal.stepFinished(
@@ -165,33 +165,29 @@ class RoutingPlannerTest {
 		assertEquals(RoutingClearReason.NO_TARGET, plan.getClearReason());
 	}
 
-	private Settings settings() {
-		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
-		Settings.Routing routing = new Settings.Routing();
-		Settings.Routing.Defaults defaults = new Settings.Routing.Defaults();
-		Settings.Routing.Target defaultStep = Settings.Routing.Target.step();
+	private Routing settings() {
+		Routing settings = new Routing();
+		Routing.Defaults defaults = new Routing.Defaults();
+		Routing.Target defaultStep = Routing.Target.step();
 		defaultStep.setTarget("fallback-auth");
-		Settings.Routing.Target defaultComplete = Settings.Routing.Target.complete();
+		Routing.Target defaultComplete = Routing.Target.complete();
 		defaultComplete.setTarget("fallback-lobby");
 		defaults.setStep(defaultStep);
 		defaults.setComplete(defaultComplete);
 
-		Settings.Routing.Targets authentication = new Settings.Routing.Targets();
-		Settings.Routing.Target step = Settings.Routing.Target.step();
+		Routing.Targets authentication = new Routing.Targets();
+		Routing.Target step = Routing.Target.step();
 		step.setTarget("auth");
-		Settings.Routing.Target complete = Settings.Routing.Target.complete();
+		Routing.Target complete = Routing.Target.complete();
 		complete.setTarget("lobby");
 		authentication.setStep(step);
 		authentication.setComplete(complete);
-		authentication.setOverrides(new Settings.Routing.Targets.Overrides());
+		authentication.setOverrides(new Routing.Targets.Overrides());
 		authentication.getOverrides().setStages(new HashMap<>());
 		authentication.getOverrides().setSteps(new HashMap<>());
 
-		routing.setDefaults(defaults);
-		routing.getScenarios().put("authentication", authentication);
-		connection.setRouting(routing);
-		settings.setConnection(connection);
+		settings.setDefaults(defaults);
+		settings.getScenarios().put("authentication", authentication);
 		return settings;
 	}
 

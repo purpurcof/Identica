@@ -13,6 +13,8 @@ dependencies {
     testImplementation(libs.cloud.velocity)
 
     implementation(projects.platformVelocityApi)
+    implementation(projects.featureSentinel)
+    implementation(projects.featureVerification)
     implementation(libs.bundles.bStats.velocity)
     implementation(libs.attache.velocity)
 

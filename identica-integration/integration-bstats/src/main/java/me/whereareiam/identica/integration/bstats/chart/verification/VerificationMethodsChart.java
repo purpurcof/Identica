@@ -2,10 +2,10 @@ package me.whereareiam.identica.integration.bstats.chart.verification;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.feature.verification.VerificationMethod;
+import me.whereareiam.identica.feature.verification.VerificationRegistry;
+import me.whereareiam.identica.feature.verification.model.VerificationMethodDescriptor;
 import me.whereareiam.identica.integration.bstats.chart.type.NamedDrilldownPieChart;
-import me.whereareiam.identica.model.verification.VerificationMethodDescriptor;
-import me.whereareiam.identica.verification.VerificationMethod;
-import me.whereareiam.identica.verification.VerificationRegistry;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedHashMap;

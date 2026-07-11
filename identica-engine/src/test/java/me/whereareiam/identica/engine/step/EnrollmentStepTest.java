@@ -1,11 +1,11 @@
 package me.whereareiam.identica.engine.step;
 
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.common.config.defaults.SettingsDefaults;
+import me.whereareiam.identica.common.config.defaults.EngineDefaults;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
@@ -56,6 +56,10 @@ class EnrollmentStepTest {
 			return Component.text(message);
 		}
 
+		public @NotNull String renderTemplate(@NotNull SerializerContent content) {
+			return content.getMessage();
+		}
+
 		@Override
 		public @NotNull SerializerOptions.PlaceholderFormat getPlaceholderFormat() {
 			return SerializerOptions.PlaceholderFormat.CURLY_BRACES;
@@ -70,14 +74,14 @@ class EnrollmentStepTest {
 	@DisplayName("Automatically selects the only eligible provider when auto-selection is enabled")
 	@Test
 	void autoSelectsSingleProviderWhenEnabled() {
-		Settings settings = settings(true);
+		Engine settings = settings(true);
 		EnrollmentStep step = new EnrollmentStep(
 				providerOperations,
 				() -> settings,
 				this::messages,
 				eventManager
 		);
-		RegistrationContext context = context("PlayerOne");
+		RegistrationContext context = context();
 
 		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyMode.INTERACTIVE)))
 				.thenReturn(List.of(provider("premium", "Premium")));
@@ -97,14 +101,14 @@ class EnrollmentStepTest {
 	@DisplayName("Keeps the enrollment prompt open when auto-selection is disabled")
 	@Test
 	void keepsWaitingPromptWhenAutoSelectionDisabled() {
-		Settings settings = settings(false);
+		Engine settings = settings(false);
 		EnrollmentStep step = new EnrollmentStep(
 				providerOperations,
 				() -> settings,
 				this::messages,
 				eventManager
 		);
-		RegistrationContext context = context("PlayerOne");
+		RegistrationContext context = context();
 
 		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyMode.INTERACTIVE)))
 				.thenReturn(List.of(provider("premium", "Premium")));
@@ -121,14 +125,14 @@ class EnrollmentStepTest {
 	@DisplayName("Keeps the enrollment prompt open when more than one provider is available")
 	@Test
 	void keepsWaitingPromptWhenMultipleProvidersRemain() {
-		Settings settings = settings(true);
+		Engine settings = settings(true);
 		EnrollmentStep step = new EnrollmentStep(
 				providerOperations,
 				() -> settings,
 				this::messages,
 				eventManager
 		);
-		RegistrationContext context = context("PlayerOne");
+		RegistrationContext context = context();
 
 		when(providerOperations.eligibleProviders(any(), eq(PipelineType.REGISTRATION), eq(JourneyMode.INTERACTIVE)))
 				.thenReturn(List.of(
@@ -143,23 +147,23 @@ class EnrollmentStepTest {
 		verify(eventManager).call(any());
 	}
 
-	private Settings settings(boolean autoSelectSingleProvider) {
-		Settings settings = new SettingsDefaults().supply(new Settings());
-		settings.getConnection().getScenarios().getRegistration().setAutoSelectSingleProvider(autoSelectSingleProvider);
+	private Engine settings(boolean autoSelectSingleProvider) {
+		Engine settings = new EngineDefaults().supply(new Engine());
+		settings.getScenarios().getRegistration().setAutoSelectSingleProvider(autoSelectSingleProvider);
 		return settings;
 	}
 
 	private Messages messages() {
 		Messages messages = new Messages();
-		Messages.Connection connection = new Messages.Connection();
-		Messages.Connection.Journey journey = new Messages.Connection.Journey();
-		Messages.Connection.Journey.Stage stage = new Messages.Connection.Journey.Stage();
+		Messages.Engine connection = new Messages.Engine();
+		Messages.Engine.Journey journey = new Messages.Engine.Journey();
+		Messages.Engine.Journey.Stage stage = new Messages.Engine.Journey.Stage();
 		stage.setNoCompletion(List.of("no-completion"));
 		journey.setStage(stage);
 
-		Messages.Connection.Journey.Step step = new Messages.Connection.Journey.Step();
+		Messages.Engine.Journey.Step step = new Messages.Engine.Journey.Step();
 		step.setNoStatus(List.of("no-status"));
-		Messages.Connection.Journey.Step.Enrollment enrollment = new Messages.Connection.Journey.Step.Enrollment();
+		Messages.Engine.Journey.Step.Enrollment enrollment = new Messages.Engine.Journey.Step.Enrollment();
 		enrollment.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
@@ -171,8 +175,8 @@ class EnrollmentStepTest {
 				"{entries}",
 				" "
 		));
-		Messages.Connection.Journey.Step.Enrollment.EntryFormat entryFormat =
-				new Messages.Connection.Journey.Step.Enrollment.EntryFormat();
+		Messages.Engine.Journey.Step.Enrollment.EntryFormat entryFormat =
+				new Messages.Engine.Journey.Step.Enrollment.EntryFormat();
 		entryFormat.setFormat("   <dark_gray><click:run_command:/identica enroll {providerId}>▪ <gray>[{providerName}]:</gray> <white>{description}</click>");
 		entryFormat.setEmptyFormat("   <dark_gray><click:run_command:/identica enroll {providerId}>▪ <gray>[{providerName}]:</gray></click>");
 		enrollment.setEntryFormat(entryFormat);
@@ -181,14 +185,14 @@ class EnrollmentStepTest {
 		step.setEnrollment(enrollment);
 		journey.setStep(step);
 		connection.setJourney(journey);
-		messages.setConnection(connection);
+		messages.setEngine(connection);
 		return messages;
 	}
 
-	private RegistrationContext context(String username) {
+	private RegistrationContext context() {
 		return RegistrationContext.builder()
 				.connectionUniqueId(UUID.randomUUID())
-				.identity(new ConnectionIdentity(UUID.randomUUID(), username, "127.0.0.1"))
+				.identity(new ConnectionIdentity(UUID.randomUUID(), "PlayerOne", "127.0.0.1"))
 				.build();
 	}
 

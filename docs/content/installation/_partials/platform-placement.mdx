@@ -1,31 +1,46 @@
 <ContentTabs items={["Velocity", "BungeeCord"]}>
   <ContentTab value="Velocity">
-    Place the main Identica runtime jar directly in `plugins/`.
-    It should sit beside your other plugin jars, not inside the `identica/` folder.
+    You can install Velocity in either of these ways:
 
-    Place provider jars in:
+    1. Use `Identica-BUNDLE-<version>.jar` as the runtime jar.
+    2. Use the platform-specific runtime jar from `Identica-PLATFORMS-<version>.zip`.
 
-    ```text
-    plugins/identica/providers/
-    ```
+    Bundle placement flow:
 
-    If that folder does not exist yet, create it manually before the first boot.
-
-    Placement flow:
-
-    1. Copy `Identica-VELOCITY-<version>.jar` into `plugins/`.
+    1. Copy `Identica-BUNDLE-<version>.jar` into `plugins/`.
     2. Create `plugins/identica/` if it does not exist yet.
     3. Create `plugins/identica/providers/` if it does not exist yet.
     4. Copy `Identica-Credential-<version>.jar` into `plugins/identica/providers/`.
     5. Copy `Identica-Premium-<version>.jar` into `plugins/identica/providers/`.
 
+    Bundle layout:
+
+    ```text
+    plugins/
+    ├── Identica-BUNDLE-<version>.jar
+    └── identica/
+        └── providers/
+            ├── Identica-Credential-<version>.jar
+            └── Identica-Premium-<version>.jar
+    ```
+
+    Platform-specific placement flow:
+
+    1. Extract `Identica-PLATFORMS-<version>.zip`.
+    2. Copy `Identica-VELOCITY-<version>.jar` into `plugins/`.
+    3. Create `plugins/identica/` if it does not exist yet.
+    4. Create `plugins/identica/providers/` if it does not exist yet.
+    5. Copy `Identica-Credential-<version>.jar` into `plugins/identica/providers/`.
+    6. Copy `Identica-Premium-<version>.jar` into `plugins/identica/providers/`.
+
     Before starting the proxy, double-check these placement rules:
 
-    - the main Identica runtime jar belongs in `plugins/`
+    - the bundle jar belongs in `plugins/` and replaces the platform-specific runtime jar only
+    - the platform-specific runtime jar belongs in `plugins/`
     - provider jars belong in `plugins/identica/providers/`
     - provider jars should not be placed directly in the root `plugins/` folder
 
-    A minimal layout looks like this:
+    Platform-specific layout:
 
     ```text
     plugins/
@@ -37,32 +52,47 @@
     ```
   </ContentTab>
   <ContentTab value="BungeeCord">
-    Place the main Identica runtime jar directly in `plugins/`.
-    It should sit beside your other plugin jars, not inside the `identica/` folder.
+    You can install BungeeCord in either of these ways:
 
-    Place provider jars in:
+    1. Use `Identica-BUNDLE-<version>.jar` as the runtime jar.
+    2. Use the platform-specific runtime jar from `Identica-PLATFORMS-<version>.zip`.
 
-    ```text
-    plugins/identica/providers/
-    ```
+    Bundle placement flow:
 
-    If that folder does not exist yet, create it manually before the first boot.
-
-    Placement flow:
-
-    1. Copy `Identica-BUNGEECORD-<version>.jar` into `plugins/`.
+    1. Copy `Identica-BUNDLE-<version>.jar` into `plugins/`.
     2. Create `plugins/identica/` if it does not exist yet.
     3. Create `plugins/identica/providers/` if it does not exist yet.
     4. Copy `Identica-Credential-<version>.jar` into `plugins/identica/providers/`.
     5. Copy `Identica-Premium-<version>.jar` into `plugins/identica/providers/`.
 
+    Bundle layout:
+
+    ```text
+    plugins/
+    ├── Identica-BUNDLE-<version>.jar
+    └── identica/
+        └── providers/
+            ├── Identica-Credential-<version>.jar
+            └── Identica-Premium-<version>.jar
+    ```
+
+    Platform-specific placement flow:
+
+    1. Extract `Identica-PLATFORMS-<version>.zip`.
+    2. Copy `Identica-BUNGEECORD-<version>.jar` into `plugins/`.
+    3. Create `plugins/identica/` if it does not exist yet.
+    4. Create `plugins/identica/providers/` if it does not exist yet.
+    5. Copy `Identica-Credential-<version>.jar` into `plugins/identica/providers/`.
+    6. Copy `Identica-Premium-<version>.jar` into `plugins/identica/providers/`.
+
     Before starting the proxy, double-check these placement rules:
 
-    - the main Identica runtime jar belongs in `plugins/`
+    - the bundle jar belongs in `plugins/` and replaces the platform-specific runtime jar only
+    - the platform-specific runtime jar belongs in `plugins/`
     - provider jars belong in `plugins/identica/providers/`
     - provider jars should not be placed directly in the root `plugins/` folder
 
-    A minimal layout looks like this:
+    Platform-specific layout:
 
     ```text
     plugins/

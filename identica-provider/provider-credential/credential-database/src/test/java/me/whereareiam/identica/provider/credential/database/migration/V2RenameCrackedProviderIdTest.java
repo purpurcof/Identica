@@ -73,9 +73,28 @@ class V2RenameCrackedProviderIdTest {
 							ON DELETE CASCADE
 					)
 					""");
+			handle.execute("""
+					CREATE TABLE identica_username_history (
+						unique_id UUID NOT NULL,
+						provider_id VARCHAR(64),
+						old_username VARCHAR(64) NOT NULL,
+						new_username VARCHAR(64) NOT NULL,
+						source VARCHAR(32) NOT NULL,
+						changed_at BIGINT NOT NULL
+					)
+					""");
+			handle.execute("""
+					CREATE TABLE identica_verification_selections (
+						unique_id UUID NOT NULL,
+						provider_id VARCHAR(64) NOT NULL,
+						method_id VARCHAR(64) NOT NULL,
+						selected_at BIGINT NOT NULL,
+						PRIMARY KEY (unique_id, provider_id)
+					)
+					""");
 			handle.execute(
-					"INSERT INTO identica_accounts (unique_id, username, username_source, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)",
-					uniqueId, "PlayerOne", "MANUAL", 100L, 200L
+					"INSERT INTO identica_accounts (unique_id, username, created_at, last_seen_at) VALUES (?, ?, ?, ?)",
+					uniqueId, "PlayerOne", 100L, 200L
 			);
 			handle.execute(
 					"INSERT INTO identica_provider_links (unique_id, provider_id, provider_subject, is_primary, linked_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?)",

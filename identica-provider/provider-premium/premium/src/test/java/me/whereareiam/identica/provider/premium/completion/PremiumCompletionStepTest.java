@@ -4,6 +4,7 @@ import com.google.inject.Provider;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
+import me.whereareiam.identica.provider.capability.recognition.store.RecognizedConnectionStore;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.provider.premium.config.defaults.PremiumMessagesDefaults;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -19,6 +20,7 @@ import java.util.Locale;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @DisplayName("Premium Completion Step")
 class PremiumCompletionStepTest {
@@ -26,18 +28,18 @@ class PremiumCompletionStepTest {
 	@Test
 	void authenticationUsesRecognitionMessageWhenAuthenticationRecognized() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
-		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
+		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages, recognizedStore(true));
 
 		List<String> lines = step.lines(context(true, PipelineType.AUTHENTICATION));
 
-		assertEquals(messages.getCompletion().getSession().getBody(), lines);
+		assertEquals(messages.getCompletion().getRecognition().getBody(), lines);
 	}
 
 	@DisplayName("Keeps the migration completion message even when recognition was applied")
 	@Test
 	void migrationIgnoresReusedSessionMessageWhenAuthenticationRecognized() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
-		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
+		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages, recognizedStore(true));
 
 		List<String> lines = step.lines(context(true, PipelineType.MIGRATION));
 
@@ -48,7 +50,7 @@ class PremiumCompletionStepTest {
 	@Test
 	void migrationCompletionCopyAnnouncesPremiumMigrationCompletion() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
-		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
+		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages, recognizedStore(true));
 
 		List<String> lines = step.lines(context(true, PipelineType.MIGRATION));
 
@@ -60,7 +62,7 @@ class PremiumCompletionStepTest {
 	@Test
 	void registrationUsesRegistrationMessageWhenConfigured() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
-		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
+		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages, recognizedStore(false));
 
 		List<String> lines = step.lines(context(false, PipelineType.REGISTRATION));
 
@@ -71,16 +73,17 @@ class PremiumCompletionStepTest {
 	@Test
 	void registrationIgnoresReusedSessionMessageWhenAuthenticationRecognized() {
 		PremiumMessages messages = new PremiumMessagesDefaults().supply(new PremiumMessages());
-		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages);
+		InspectablePremiumCompletionStep step = new InspectablePremiumCompletionStep(() -> messages, recognizedStore(true));
 
 		List<String> lines = step.lines(context(true, PipelineType.REGISTRATION));
 
 		assertEquals(messages.getCompletion().getRegistration().getBody(), lines);
 	}
 
-	private CompletionContext context(boolean authenticationRecognized, PipelineType pipelineType) {
+	private CompletionContext context(boolean recognized, PipelineType pipelineType) {
+		TestIdentity identity = new TestIdentity();
 		return CompletionContext.builder()
-				.identity(new TestIdentity())
+				.identity(identity)
 				.pipelineType(pipelineType)
 				.session(Session.builder()
 						.uniqueId(UUID.randomUUID())
@@ -89,13 +92,21 @@ class PremiumCompletionStepTest {
 						.originalUsername("PlayerOne")
 						.effectiveUsername("PlayerOne")
 						.build())
-				.authenticationRecognized(authenticationRecognized)
 				.build();
 	}
 
+	private RecognizedConnectionStore recognizedStore(boolean recognized) {
+		RecognizedConnectionStore store = mock(RecognizedConnectionStore.class);
+		when(store.isRecognized(any())).thenReturn(recognized);
+		return store;
+	}
+
 	private static final class InspectablePremiumCompletionStep extends PremiumCompletionStep {
-		private InspectablePremiumCompletionStep(Provider<PremiumMessages> messagesProvider) {
-			super(messagesProvider);
+		private InspectablePremiumCompletionStep(
+				Provider<PremiumMessages> messagesProvider,
+				RecognizedConnectionStore recognizedConnectionStore
+		) {
+			super(messagesProvider, recognizedConnectionStore);
 		}
 
 		private List<String> lines(CompletionContext context) {
@@ -105,7 +116,7 @@ class PremiumCompletionStepTest {
 
 	private static final class TestIdentity extends Identity {
 		private TestIdentity() {
-			super(UUID.randomUUID(), "PlayerOne");
+			super(UUID.randomUUID(), UUID.randomUUID(), "PlayerOne", "127.0.0.1");
 		}
 
 		@Override

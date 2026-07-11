@@ -1,11 +1,11 @@
 package me.whereareiam.identica.engine.pipeline.completion.group.step;
 
 import com.google.inject.Singleton;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipelineState;
 import me.whereareiam.identica.model.pipeline.GroupOutcome;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelineGroup;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.completion.CompletionPipelineState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

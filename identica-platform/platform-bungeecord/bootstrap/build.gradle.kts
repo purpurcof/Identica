@@ -13,6 +13,8 @@ dependencies {
     testImplementation(libs.cloud.bungee)
 
     implementation(projects.platformBungeecordApi)
+    implementation(projects.featureSentinel)
+    implementation(projects.featureVerification)
     implementation(libs.bundles.bStats.bungeecord)
     implementation(libs.attache.bungeecord)
 

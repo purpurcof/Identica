@@ -1,14 +1,8 @@
 package me.whereareiam.identica.model.conflict;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-import me.whereareiam.identica.model.identity.Account;
-import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
-import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
+import lombok.*;
+import me.whereareiam.identica.model.conflict.participant.ConflictParticipant;
+import me.whereareiam.identica.model.conflict.participant.ConflictParticipantRole;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,49 +26,87 @@ public class ConflictContext {
 	private @NotNull String key;
 
 	/**
-	 * Candidate value that is in conflict.
+	 * Hook where the conflict is being evaluated.
 	 */
-	private @NotNull String candidate;
+	private @NotNull String hook;
 
-	private @Nullable Account incomingAccount;
-	private @Nullable AccountProviderLink incomingLink;
-	private @Nullable AccountProviderProfile incomingProfile;
-
-	private @Nullable Account existingAccount;
-	private @Nullable AccountProviderLink existingLink;
-	private @Nullable AccountProviderProfile existingProfile;
-
-	/**
-	 * Additional eligibility-specific attributes.
-	 */
 	@Builder.Default
-	private @NotNull Map<String, Object> extras = new HashMap<>();
+	private @NotNull Map<String, Object> attributes = new HashMap<>();
+
+	@Builder.Default
+	private @NotNull Map<ConflictParticipantRole, ConflictParticipant> participants = new HashMap<>();
 
 	/**
-	 * Read a typed extra value.
+	 * Read a typed context attribute.
 	 *
-	 * @param key extra key
+	 * @param key attribute key
 	 * @param type expected type
-	 * @return extra value or {@code null}
+	 * @return typed value or {@code null}
 	 */
-	public @Nullable <T> T getExtra(@NotNull String key, @NotNull Class<T> type) {
-		Object value = extras.get(key);
-		if (type.isInstance(value)) return type.cast(value);
+	public @Nullable <T> T getAttribute(@NotNull ConflictAttributeKey<T> key) {
+		Object value = attributes.get(key.getId());
+		if (key.getType().isInstance(value)) return key.getType().cast(value);
 		return null;
 	}
 
 	/**
-	 * Store an extra value.
+	 * Store a context attribute.
 	 *
-	 * @param key extra key
-	 * @param value extra value
+	 * @param key attribute key
+	 * @param value attribute value
 	 */
-	public void putExtra(@NotNull String key, @Nullable Object value) {
-		if (key.isBlank()) return;
+	public <T> void putAttribute(@NotNull ConflictAttributeKey<T> key, @Nullable T value) {
 		if (value == null) {
-			extras.remove(key);
+			attributes.remove(key.getId());
 			return;
 		}
-		extras.put(key, value);
+
+		attributes.put(key.getId(), value);
+	}
+
+	/**
+	 * Removes a context attribute.
+	 *
+	 * @param key attribute key
+	 * @return {@code true} when removed
+	 */
+	public boolean removeAttribute(@NotNull ConflictAttributeKey<?> key) {
+		return attributes.remove(key.getId()) != null;
+	}
+
+	/**
+	 * Returns a participant by role.
+	 *
+	 * @param role participant role
+	 * @return participant or {@code null}
+	 */
+	public @Nullable ConflictParticipant getParticipant(@NotNull ConflictParticipantRole role) {
+		return participants.get(role);
+	}
+
+	/**
+	 * Read a typed participant attribute.
+	 *
+	 * @param role participant role
+	 * @param key attribute key
+	 * @param type expected type
+	 * @return typed value or {@code null}
+	 */
+	public @Nullable <T> T getParticipantAttribute(
+			@NotNull ConflictParticipantRole role,
+			@NotNull ConflictAttributeKey<T> key
+	) {
+		ConflictParticipant participant = participants.get(role);
+		if (participant == null) return null;
+		return participant.getAttribute(key);
+	}
+
+	/**
+	 * Store or replace a participant.
+	 *
+	 * @param participant participant to store
+	 */
+	public void putParticipant(@NotNull ConflictParticipant participant) {
+		participants.put(participant.getRole(), participant);
 	}
 }

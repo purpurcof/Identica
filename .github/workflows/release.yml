@@ -2,7 +2,7 @@ name: Release build
 
 on:
   release:
-    types: [ created ]
+    types: [ published ]
   workflow_dispatch:
     inputs:
       release-tag:
@@ -94,12 +94,31 @@ jobs:
       - name: Move API
         run: mv identica-api/build/libs/identica-api-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-API-${{ needs.prepare.outputs.version }}.jar
 
-      - name: Move runtime jars
+      - name: Move bundle jar
+        run: mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-BUNDLE.jar output/${{ needs.prepare.outputs.name }}-BUNDLE-${{ needs.prepare.outputs.version }}.jar
+
+      - name: Package platform-specific jars
         run: |
-          mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-BUNGEECORD.jar output/${{ needs.prepare.outputs.name }}-BUNGEECORD-${{ needs.prepare.outputs.version }}.jar
-          mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-VELOCITY.jar output/${{ needs.prepare.outputs.name }}-VELOCITY-${{ needs.prepare.outputs.version }}.jar
+          mkdir output/platforms
+          mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-BUNGEECORD.jar output/platforms/${{ needs.prepare.outputs.name }}-BUNGEECORD-${{ needs.prepare.outputs.version }}.jar
+          mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-VELOCITY.jar output/platforms/${{ needs.prepare.outputs.name }}-VELOCITY-${{ needs.prepare.outputs.version }}.jar
+          (
+            cd output/platforms
+            zip -q -r ../${{ needs.prepare.outputs.name }}-PLATFORMS-${{ needs.prepare.outputs.version }}.zip .
+          )
+          rm -rf output/platforms
+
+      - name: Move provider jars
+        run: |
           mv build/libs/Credential-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Credential-${{ needs.prepare.outputs.version }}.jar
           mv build/libs/Premium-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
+
+      - name: Format Spigot release notes
+        uses: whereareiam/blockops/actions/release/format-release-notes@v3
+        with:
+          format: bbcode
+          release-body: ${{ needs.prepare.outputs.release-body }}
+          output-file: output/release-notes-bbcode.txt
 
       - name: Release
         uses: softprops/action-gh-release@v3
@@ -107,10 +126,11 @@ jobs:
         with:
           files: |
             output/${{ needs.prepare.outputs.name }}-API-${{ needs.prepare.outputs.version }}.jar
-            output/${{ needs.prepare.outputs.name }}-BUNGEECORD-${{ needs.prepare.outputs.version }}.jar
-            output/${{ needs.prepare.outputs.name }}-VELOCITY-${{ needs.prepare.outputs.version }}.jar
+            output/${{ needs.prepare.outputs.name }}-BUNDLE-${{ needs.prepare.outputs.version }}.jar
+            output/${{ needs.prepare.outputs.name }}-PLATFORMS-${{ needs.prepare.outputs.version }}.zip
             output/${{ needs.prepare.outputs.name }}-Credential-${{ needs.prepare.outputs.version }}.jar
             output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
+            output/release-notes-bbcode.txt
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v6
@@ -137,7 +157,7 @@ jobs:
 
       - name: Resolve distribution plan
         id: resolve
-        uses: whereareiam/blockops/actions/publish/resolve-distribution-plan@dev
+        uses: whereareiam/blockops/actions/publish/resolve-distribution-plan@v2
         with:
           release-tag: ${{ needs.prepare.outputs.release-tag }}
           release-name: ${{ needs.prepare.outputs.release-name }}
@@ -167,7 +187,7 @@ jobs:
           path: output
 
       - name: Publish distribution
-        uses: whereareiam/blockops/actions/publish/publish-publication@dev
+        uses: whereareiam/blockops/actions/publish/publish-publication@v2
         with:
           provider-credentials: |
             modrinth: ${{ secrets.MODRINTH_TOKEN }}

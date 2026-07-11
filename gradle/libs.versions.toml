@@ -5,15 +5,16 @@ shadow = "9.3.0"
 buildconfig = "6.0.7"
 spawner = "dev-8ca485d"
 toolkit = "dev-8c0271b"
+freefair = "9.5.0"
 
 # compile time processing
 lombok = "1.18.42"
 
 # general
-attache = "dev-5e11e1c"
-configura = "dev-6b221cb"
-commandant = "dev-866e0f7"
-keystone = "dev-90d39d2"
+attache = "dev-58f53b4"
+configura = "dev-8cde90a"
+commandant = "dev-642fe14"
+keystone = "dev-790a33e"
 dialectica = "dev-62409af"
 
 guice = "7.0.0"
@@ -59,7 +60,8 @@ bcrypt = "0.10.2"
 
 # compile time processing
 lombok = { group = "org.projectlombok", name = "lombok", version.ref = "lombok" }
-shadow-gradle-plugin = { group = "com.gradleup.shadow", name = "shadow-gradle-plugin", version.ref = "shadow" }
+lombok-plugin = { group = "io.freefair.gradle", name = "lombok-plugin", version.ref = "freefair" }
+shadow = { group = "com.gradleup.shadow", name = "shadow-gradle-plugin", version.ref = "shadow" }
 toolkit-publish-maven = { group = "me.whereareiam.toolkit", name = "publish-maven", version.ref = "toolkit" }
 
 # general
@@ -68,6 +70,9 @@ attache-bungeecord = { group = "me.whereareiam", name = "attache-bungeecord", ve
 attache-velocity = { group = "me.whereareiam", name = "attache-velocity", version.ref = "attache" }
 attache-standalone = { group = "me.whereareiam", name = "attache-standalone", version.ref = "attache" }
 configura = { group = "me.whereareiam", name = "configura", version.ref = "configura" }
+configura-feature-extension = { group = "me.whereareiam.configura.feature", name = "extension", version.ref = "configura" }
+configura-feature-polymorphic = { group = "me.whereareiam.configura.feature", name = "polymorphic", version.ref = "configura" }
+configura-feature-postprocess = { group = "me.whereareiam.configura.feature", name = "postprocess", version.ref = "configura" }
 commandant = { group = "me.whereareiam", name = "commandant", version.ref = "commandant" }
 keystone = { group = "me.whereareiam", name = "keystone", version.ref = "keystone" }
 dialectica = { group = "me.whereareiam", name = "dialectica", version.ref = "dialectica" }
@@ -136,3 +141,4 @@ buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig
 spawner = { id = "me.whereareiam.spawner", version.ref = "spawner" }
 attache = { id = "me.whereareiam.attache", version.ref = "attache" }
 toolkit-versioning = { id = "me.whereareiam.toolkit.versioning", version.ref = "toolkit" }
+freefair-lombok = { id = "io.freefair.lombok", version.ref = "freefair" }

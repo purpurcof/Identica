@@ -1,7 +1,7 @@
 package me.whereareiam.identica.common.completion;
 
 import me.whereareiam.identica.common.replication.DefaultReplicationSystem;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.completion.CompletionPendingState;
 import me.whereareiam.identica.replication.ReplicationAdapter;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -41,11 +41,11 @@ class DefaultCompletionPendingStoreTest {
 		assertTrue(store.peek(connectionUniqueId).isEmpty());
 	}
 
-	private Settings settings() {
-		Settings settings = new Settings();
-		Settings.Connection connection = new Settings.Connection();
-		connection.setPrepareStateTtl(Duration.ofSeconds(30));
-		settings.setConnection(connection);
+	private Engine settings() {
+		Engine settings = new Engine();
+		Engine.Behavior behavior = new Engine.Behavior();
+		behavior.setBridgeTtl(Duration.ofSeconds(30));
+		settings.setBehavior(behavior);
 		return settings;
 	}
 

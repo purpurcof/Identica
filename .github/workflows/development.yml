@@ -7,22 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  validate-ref:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Reject release refs for manual development publish
-        run: |
-          case "${GITHUB_REF_NAME}" in
-            release|release/*)
-              echo "Manual development publish is not allowed from ${GITHUB_REF_NAME}."
-              exit 1
-              ;;
-          esac
-
   prepare:
-    needs: validate-ref
-    if: always() && (github.event_name != 'workflow_dispatch' || needs.validate-ref.result == 'success')
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.details.outputs.name }}
@@ -67,10 +52,22 @@ jobs:
       - name: Move API
         run: mv identica-api/build/libs/identica-api-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-API-${{ needs.prepare.outputs.version }}.jar
 
-      - name: Move runtime jars
+      - name: Move bundle jar
+        run: mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-BUNDLE.jar output/${{ needs.prepare.outputs.name }}-BUNDLE-${{ needs.prepare.outputs.version }}.jar
+
+      - name: Package platform-specific jars
         run: |
-          mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-BUNGEECORD.jar output/${{ needs.prepare.outputs.name }}-BUNGEECORD-${{ needs.prepare.outputs.version }}.jar
-          mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-VELOCITY.jar output/${{ needs.prepare.outputs.name }}-VELOCITY-${{ needs.prepare.outputs.version }}.jar
+          mkdir output/platforms
+          mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-BUNGEECORD.jar output/platforms/${{ needs.prepare.outputs.name }}-BUNGEECORD-${{ needs.prepare.outputs.version }}.jar
+          mv build/libs/${{ needs.prepare.outputs.name }}-${{ needs.prepare.outputs.version }}-VELOCITY.jar output/platforms/${{ needs.prepare.outputs.name }}-VELOCITY-${{ needs.prepare.outputs.version }}.jar
+          (
+            cd output/platforms
+            zip -q -r ../${{ needs.prepare.outputs.name }}-PLATFORMS-${{ needs.prepare.outputs.version }}.zip .
+          )
+          rm -rf output/platforms
+
+      - name: Move provider jars
+        run: |
           mv build/libs/Credential-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Credential-${{ needs.prepare.outputs.version }}.jar
           mv build/libs/Premium-${{ needs.prepare.outputs.version }}.jar output/${{ needs.prepare.outputs.name }}-Premium-${{ needs.prepare.outputs.version }}.jar
 

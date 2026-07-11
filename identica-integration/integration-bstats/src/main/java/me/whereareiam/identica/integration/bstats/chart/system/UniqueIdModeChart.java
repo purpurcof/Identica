@@ -24,6 +24,6 @@ public final class UniqueIdModeChart implements Chart {
 	}
 
 	private @NotNull String value() {
-		return settingsProvider.get().getConnection().getUniqueIdMode().name();
+		return settingsProvider.get().getIdentity().getUniqueIdMode().name();
 	}
 }

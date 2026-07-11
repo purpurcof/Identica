@@ -19,13 +19,13 @@ To consume Identica events from an addon plugin:
 import me.whereareiam.identica.IdenticaAPI;
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.base.IdenticEvent;
-import me.whereareiam.identica.event.pipeline.scenario.registration.RegistrationScenarioStartedEvent;
+import me.whereareiam.identica.event.scenario.registration.RegistrationRequiredEvent;
 
 public final class ExampleRegistrationListener implements EventListener {
     @IdenticEvent
-    public void onRegistrationStarted(RegistrationScenarioStartedEvent event) {
+    public void onRegistrationRequired(RegistrationRequiredEvent event) {
         System.out.println(
-            "Registration started with journey mode: " + event.getJourneyMode()
+            "Registration is now required with journey mode: " + event.getJourneyMode()
         );
     }
 
@@ -46,7 +46,7 @@ If you need a specific execution order, pass it to `@IdenticEvent`.
 ```java
 import me.whereareiam.identica.event.EventListener;
 import me.whereareiam.identica.event.base.IdenticEvent;
-import me.whereareiam.identica.event.identity.session.SessionOpenedEvent;
+import me.whereareiam.identica.event.session.SessionOpenedEvent;
 import me.whereareiam.identica.type.event.EventOrder;
 
 public final class ExampleSessionListener implements EventListener {

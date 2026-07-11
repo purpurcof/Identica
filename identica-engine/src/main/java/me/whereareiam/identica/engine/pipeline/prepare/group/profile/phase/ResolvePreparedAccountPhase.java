@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.database.AccountPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderLinkPersistenceService;
 import me.whereareiam.identica.database.provider.ProviderProfilePersistenceService;
-import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.identity.provider.AccountProviderProfile;
@@ -15,11 +14,11 @@ import me.whereareiam.identica.model.pipeline.prepare.PrepareAccountCandidateIte
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecision;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
-import me.whereareiam.identica.type.UsernameSource;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -110,7 +109,6 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 				: Account.builder()
 						.uniqueId(accountUniqueId)
 						.username(requestedUsername)
-						.source(UsernameSource.PROVIDER)
 						.build();
 		AccountProviderProfile profile = providerProfilePersistenceService.findBySubject(
 				provider.getProviderId(),
@@ -121,14 +119,12 @@ public class ResolvePreparedAccountPhase implements PipelinePhase<PrepareGroupSt
 				.providerUsername(requestedUsername)
 				.build());
 
-		boolean created = storedLink.isEmpty() || storedAccount == null;
 		pipelineState.putItem(new PrepareAccountCandidateItem(
 				accountUniqueId,
 				null,
 				account,
 				link,
-				profile,
-				created
+				profile
 		), 0L);
 
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));

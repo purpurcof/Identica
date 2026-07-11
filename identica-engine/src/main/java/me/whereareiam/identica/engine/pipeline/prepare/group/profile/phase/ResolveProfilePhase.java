@@ -3,17 +3,17 @@ package me.whereareiam.identica.engine.pipeline.prepare.group.profile.phase;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.prepare.ConnectionProviderContextResolver;
-import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
+import me.whereareiam.identica.engine.pipeline.prepare.runtime.ConnectionProviderContextResolver;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.model.pipeline.prepare.PrepareContextItem;
 import me.whereareiam.identica.model.pipeline.prepare.decision.PrepareDecisionItem;
 import me.whereareiam.identica.model.provider.ProviderContext;
-import me.whereareiam.identica.provider.ProviderOperations;
-import me.whereareiam.identica.provider.profile.ProfileResolveContext;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
 import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
+import me.whereareiam.identica.provider.ProviderOperations;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -68,7 +68,7 @@ public class ResolveProfilePhase implements PipelinePhase<PrepareGroupState> {
 			return CompletableFuture.completedFuture(PhaseResult.pass(state));
 		}
 
-		var resolution = providerOperations.resolveProfile(ProfileResolveContext.builder()
+		var resolution = providerOperations.discoverSubject(SubjectResolveContext.builder()
 				.identity(request.getIdentity())
 				.build());
 		if (resolution == null) {

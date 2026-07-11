@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.provider.ProviderEligibilityEvent;
-import me.whereareiam.identica.model.config.Providers;
+import me.whereareiam.identica.model.config.provider.Providers;
 import me.whereareiam.identica.model.pipeline.journey.JourneyPlan;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.model.provider.InternalProvider;
@@ -20,15 +20,13 @@ import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourne
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
-import me.whereareiam.identica.provider.profile.ProfileResolution;
-import me.whereareiam.identica.provider.profile.ProfileResolveContext;
-import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
+import me.whereareiam.identica.provider.subject.SubjectResolution;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
+import me.whereareiam.identica.provider.subject.SubjectResolver;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
-import me.whereareiam.identica.type.provider.ProviderCapability;
 import me.whereareiam.identica.type.provider.ProviderState;
 import me.whereareiam.identica.util.NetworkUtil;
-import me.whereareiam.identica.util.UniqueIdGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,33 +47,32 @@ public class DefaultProviderOperations implements ProviderOperations {
 	private final EventManager eventManager;
 
 	@Override
-	public @Nullable ProfileResolution resolveProfile(@NotNull ProfileResolveContext context) {
+	public @Nullable SubjectResolution discoverSubject(@NotNull SubjectResolveContext context) {
+		return resolveSelectedSubject(null, context);
+	}
+
+	@Override
+	public @Nullable SubjectResolution resolveSelectedSubject(
+			@Nullable String providerId,
+			@NotNull SubjectResolveContext context
+	) {
 		List<InternalProvider> sorted = sortedEnabledProviders();
-		if (sorted.isEmpty())
-			return resolveOfflineProfileFallback(context);
+		if (sorted.isEmpty()) return null;
 
+		String normalizedProviderId = normalizeProviderId(providerId);
 		for (InternalProvider provider : sorted) {
-			Set<ProfileSubjectResolver> registered = provider.getProfileSubjectResolvers();
-			if (registered == null || registered.isEmpty()) continue;
+			if (provider == null) continue;
+			ProviderDescriptor descriptor = provider.getDescriptor();
+			if (descriptor == null) continue;
+			if (normalizedProviderId != null && !normalizedProviderId.equalsIgnoreCase(normalizeProviderId(descriptor.getId())))
+				continue;
 
-			List<ProfileSubjectResolver> ordered = new ArrayList<>(registered);
-			ordered.sort(Comparator.comparingInt(ProfileSubjectResolver::priority).reversed());
-
-			for (ProfileSubjectResolver resolver : ordered) {
-				if (resolver == null || !resolver.supports(context)) continue;
-
-				ProfileResolution resolution = resolver.resolve(context);
-				if (resolution == null) continue;
-
-				String providerId = resolution.getProviderId();
-				String providerSubject = resolution.getProviderSubject();
-				if (isBlank(providerId) || isBlank(providerSubject)) continue;
-
+			SubjectResolution resolution = resolveFromProvider(provider, context);
+			if (resolution != null)
 				return resolution;
-			}
 		}
 
-		return resolveOfflineProfileFallback(context);
+		return null;
 	}
 
 	@Override
@@ -117,6 +114,7 @@ public class DefaultProviderOperations implements ProviderOperations {
 		String configured = streamEntries(providersProvider.get())
 				.filter(entry -> normalizedProviderId.equalsIgnoreCase(normalizeProviderId(entry.getId())))
 				.map(Providers.ProviderEntry::getDisplayName)
+				.filter(Objects::nonNull)
 				.map(String::trim)
 				.filter(value -> !value.isBlank())
 				.findFirst()
@@ -254,6 +252,32 @@ public class DefaultProviderOperations implements ProviderOperations {
 		return true;
 	}
 
+	private @Nullable SubjectResolution resolveFromProvider(
+			@NotNull InternalProvider provider,
+			@NotNull SubjectResolveContext context
+	) {
+		Set<SubjectResolver> registered = provider.getSubjectResolvers();
+		if (registered == null || registered.isEmpty()) return null;
+
+		List<SubjectResolver> ordered = new ArrayList<>(registered);
+		ordered.sort(Comparator.comparingInt(SubjectResolver::priority).reversed());
+
+		for (SubjectResolver resolver : ordered) {
+			if (resolver == null || !resolver.supports(context)) continue;
+
+			SubjectResolution resolution = resolver.resolve(context);
+			if (resolution == null) continue;
+
+			String providerId = resolution.getProviderId();
+			String providerSubject = resolution.getProviderSubject();
+			if (isBlank(providerId) || isBlank(providerSubject)) continue;
+
+			return resolution;
+		}
+
+		return null;
+	}
+
 	private @NotNull List<InternalProvider> sortedEnabledProviders() {
 		List<InternalProvider> providers = providerManager.getProviders();
 		if (providers == null || providers.isEmpty()) return List.of();
@@ -269,22 +293,6 @@ public class DefaultProviderOperations implements ProviderOperations {
 						.reversed()
 						.thenComparing(provider -> provider.getDescriptor().getId(), String.CASE_INSENSITIVE_ORDER))
 				.toList();
-	}
-
-	private @Nullable ProfileResolution resolveOfflineProfileFallback(@NotNull ProfileResolveContext context) {
-		InternalProvider provider = providerManager.findProvider(ProviderCapability.OFFLINE_MODE);
-		if (provider == null || provider.getDescriptor() == null) return null;
-
-		String username = context.getUsername();
-		if (username == null || username.isBlank()) return null;
-
-		UUID offlineUuid = UniqueIdGenerator.offlinePlayerUniqueId(username);
-		if (offlineUuid == null) return null;
-
-		return ProfileResolution.builder()
-				.providerId(provider.getDescriptor().getId())
-				.providerSubject(offlineUuid.toString())
-				.build();
 	}
 
 	private boolean isBlank(@Nullable String value) {

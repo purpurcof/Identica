@@ -7,9 +7,9 @@ import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.base.IdenticEvent;
 import me.whereareiam.identica.event.delivery.DeliveryCheckpointReachedEvent;
 import me.whereareiam.identica.event.identity.IdentityAttachedEvent;
-import me.whereareiam.identica.event.pipeline.state.PipelineStateClearedEvent;
 import me.whereareiam.identica.event.routing.intent.RoutingIntentClearedEvent;
 import me.whereareiam.identica.event.routing.intent.RoutingIntentReachedEvent;
+import me.whereareiam.identica.event.scenario.ScenarioResolvedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.model.delivery.DeliveryDispatchContext;
@@ -65,16 +65,14 @@ public class DeliveryLifecycle implements EventListener {
 	}
 
 	@IdenticEvent
-	public void onPipelineStateCleared(@NotNull PipelineStateClearedEvent event) {
-		UUID connectionUniqueId = event.getReference().getConnectionUniqueId();
-		if (connectionUniqueId == null) return;
-
+	public void onScenarioResolved(@NotNull ScenarioResolvedEvent event) {
+		UUID connectionUniqueId = event.getConnectionUniqueId();
 		// Completion deliveries are queued just before successful pipelines clear their state.
 		for (DeliveryRequest request : deliveryService.pendingForConnection(connectionUniqueId)) {
 			if (request.getSource() != DeliverySource.INITIAL_PROMPT)
 				continue;
 
-			deliveryService.acknowledge(request.getId(), "pipeline-state-cleared");
+			deliveryService.acknowledge(request.getId(), "scenario-resolved");
 		}
 	}
 

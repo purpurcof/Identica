@@ -1,19 +1,20 @@
 package me.whereareiam.identica.pipeline.completion.step;
 
 import me.whereareiam.identica.Serializer;
-import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
 import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
 import me.whereareiam.keystone.model.SerializerContent;
-import me.whereareiam.keystone.model.SerializerOptions;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Base completion step that renders configured completion titles and messages through the shared serializer.
+ */
 public abstract class AbstractMessageCompletionStep extends AbstractCompletionStep {
 	protected AbstractMessageCompletionStep(@NotNull String name) {
 		super(name);
@@ -30,13 +31,16 @@ public abstract class AbstractMessageCompletionStep extends AbstractCompletionSt
 		return new TitleContent(title, subtitle);
 	}
 
+	@SuppressWarnings("unused")
 	protected @Nullable String message(@NotNull CompletionContext context) {
 		return null;
 	}
 
 	protected @Nullable List<String> messageLines(@NotNull CompletionContext context) {
 		String message = message(context);
-		return message != null ? List.of(message) : null;
+		return message != null
+				? List.of(message)
+				: null;
 	}
 
 	protected @NotNull Map<String, String> placeholders(@NotNull CompletionContext context) {
@@ -51,87 +55,66 @@ public abstract class AbstractMessageCompletionStep extends AbstractCompletionSt
 		return placeholders;
 	}
 
+	/**
+	 * Executes this completion step by rendering its optional title and message body for the active identity.
+	 *
+	 * @param context completion context containing the resolved identity and provider details
+	 */
 	@Override
 	public final void execute(@NotNull CompletionContext context) {
 		Identity identity = context.getIdentity();
 		Map<String, String> placeholders = placeholders(context);
 
-		SerializerOptions.PlaceholderFormat format = Serializer.getEngine().getPlaceholderFormat();
-
-		sendTitle(identity, title(context), placeholders, format);
-		sendBody(identity, messageLines(context), placeholders, format);
+		sendTitle(identity, title(context), placeholders);
+		sendBody(identity, messageLines(context), placeholders);
 	}
 
 	private void sendTitle(
 			@NotNull Identity identity,
 			@Nullable AbstractMessageCompletionStep.TitleContent titleContent,
-			@NotNull Map<String, String> placeholders,
-			@NotNull SerializerOptions.PlaceholderFormat format
+			@NotNull Map<String, String> placeholders
 	) {
 		if (titleContent == null) return;
 
-		String resolvedTitle = renderTitle(titleContent.title(), placeholders, format);
-		String resolvedSubtitle = renderTitle(titleContent.subtitle(), placeholders, format);
+		String resolvedTitle = renderTitle(titleContent.title(), placeholders);
+		String resolvedSubtitle = renderTitle(titleContent.subtitle(), placeholders);
 		if (resolvedTitle == null && resolvedSubtitle == null) return;
 
-		Component titleComponent = Serializer.serialize(identity, resolvedTitle == null ? "" : resolvedTitle);
-		Component subtitleComponent = Serializer.serialize(identity, resolvedSubtitle == null ? "" : resolvedSubtitle);
+		Component titleComponent = resolvedTitle == null
+				? Component.empty()
+				: Serializer.serialize(identity, resolvedTitle);
+		Component subtitleComponent = resolvedSubtitle == null
+				? Component.empty()
+				: Serializer.serialize(identity, resolvedSubtitle);
 		identity.sendTitle(net.kyori.adventure.title.Title.title(titleComponent, subtitleComponent));
 	}
 
 	private void sendBody(
 			@NotNull Identity identity,
 			@Nullable List<String> bodyLines,
-			@NotNull Map<String, String> placeholders,
-			@NotNull SerializerOptions.PlaceholderFormat format
+			@NotNull Map<String, String> placeholders
 	) {
-		String body = applyPlaceholders(joinLines(bodyLines), placeholders, format);
-		if (body == null)
-			return;
+		if (bodyLines == null || bodyLines.isEmpty()) return;
 
-		Map<String, String> resolvedPlaceholders = new LinkedHashMap<>(placeholders);
 		SerializerContent content = SerializerContent.builder()
 				.receiver(identity)
 				.scope(Serializer.SCOPE)
-				.placeholders(resolvedPlaceholders)
-				.message(body)
+				.placeholders(placeholders)
+				.message(String.join("\n", bodyLines.stream()
+						.map(line -> line == null ? "" : line)
+						.toList()))
 				.build();
 
 		identity.sendMessage(Serializer.serialize(content));
 	}
 
-	private static @Nullable String joinLines(@Nullable List<String> lines) {
-		if (lines == null || lines.isEmpty()) return null;
-
-		return String.join("\n", lines.stream()
-				.map(line -> line == null ? "" : line)
-				.toList());
-	}
-
-	private static @Nullable String applyPlaceholders(
-			@Nullable String value,
-			@NotNull Map<String, String> placeholders,
-			@NotNull SerializerOptions.PlaceholderFormat format
-	) {
-		if (value == null || placeholders.isEmpty()) return value;
-
-		String resolved = value;
-		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-			String key = entry.getKey();
-			if (key == null || key.isBlank()) continue;
-			resolved = resolved.replace(format.format(key), entry.getValue() == null ? "" : entry.getValue());
-		}
-
-		return resolved;
-	}
-
 	private static @Nullable String renderTitle(
 			@Nullable String value,
-			@NotNull Map<String, String> placeholders,
-			@NotNull SerializerOptions.PlaceholderFormat format
+			@NotNull Map<String, String> placeholders
 	) {
-		String resolved = applyPlaceholders(value, placeholders, format);
-		if (resolved == null) return null;
+		if (value == null) return null;
+
+		String resolved = Serializer.render(value, placeholders);
 
 		String trimmed = resolved.trim();
 		return trimmed.isEmpty() ? null : trimmed;

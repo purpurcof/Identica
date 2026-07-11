@@ -3,6 +3,7 @@ package me.whereareiam.identica.platform.bungeecord.listener.connection;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
+import me.whereareiam.identica.feature.verification.VerificationService;
 import me.whereareiam.identica.identity.IdentityAttachment;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.identity.session.SessionService;
@@ -11,7 +12,6 @@ import me.whereareiam.identica.pipeline.prepare.PrepareStateStore;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.service.PlatformDeliveryAdapter;
 import me.whereareiam.identica.type.routing.reason.RoutingClearReason;
-import me.whereareiam.identica.verification.VerificationService;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 

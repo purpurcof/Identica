@@ -25,7 +25,9 @@ Replication is still useful on a single runtime when restart continuity matters.
 
 If multiple runtimes will share the same replicated state, keep them on the same Identica version and give each one its own unique `serverId`.
 
-## 1. Download the artifacts
+## Installation steps
+
+### Download the artifacts [step]
 
 <ContentTabs items={["GitHub Releases", "GitHub Development Builds", "Modrinth Releases"]}>
   <ContentTab value="GitHub Releases">
@@ -36,12 +38,12 @@ If multiple runtimes will share the same replicated state, keep them on the same
     1. Open the [releases page](https://github.com/whereareiam/Identica/releases).
     2. Open the release version you want to install.
     3. Expand the release assets if they are collapsed.
-    4. Download these jars from the asset list:
+    4. Choose one installation style:
 
-    - `Identica-VELOCITY-<version>.jar` for Velocity
-    - `Identica-BUNGEECORD-<version>.jar` for BungeeCord
-    - `Identica-Credential-<version>.jar`
-    - `Identica-Premium-<version>.jar`
+    - download `Identica-BUNDLE-<version>.jar` if you want one runtime jar that can run on either supported proxy platform
+    - download `Identica-PLATFORMS-<version>.zip` if you want the platform-specific runtime jars instead
+    - also download `Identica-Credential-<version>.jar`
+    - also download `Identica-Premium-<version>.jar`
 
     You do not need the API jar for a normal installation.
   </ContentTab>
@@ -55,12 +57,12 @@ If multiple runtimes will share the same replicated state, keep them on the same
     3. Scroll to the artifacts section of that workflow run.
     4. Download the artifact named `Build artifacts`.
     5. Extract the downloaded archive.
-    6. Use these jars from the extracted files:
+    6. Choose one installation style from the extracted files:
 
-    - `Identica-VELOCITY-dev-<commit>.jar` for Velocity
-    - `Identica-BUNGEECORD-dev-<commit>.jar` for BungeeCord
-    - `Identica-Credential-dev-<commit>.jar`
-    - `Identica-Premium-dev-<commit>.jar`
+    - use `Identica-BUNDLE-dev-<commit>.jar` if you want one runtime jar that can run on either supported proxy platform
+    - extract `Identica-PLATFORMS-dev-<commit>.zip` if you want the platform-specific runtime jars instead
+    - use `Identica-Credential-dev-<commit>.jar`
+    - use `Identica-Premium-dev-<commit>.jar`
 
     You do not need the API jar for a normal installation.
   </ContentTab>
@@ -79,11 +81,11 @@ If multiple runtimes will share the same replicated state, keep them on the same
   </ContentTab>
 </ContentTabs>
 
-## 2. Place the runtime and provider jars
+### Place the runtime and provider jars [step]
 
 <Include src="../_partials/platform-placement.mdx" />
 
-## 3. Start the runtime once and stop it again
+### Start the runtime once and stop it again [step]
 
 Start the platform once so Identica can create its initial files and folders.
 This first boot is only meant to let the plugin prepare its default configuration layout before you begin the shared-state setup.
@@ -96,17 +98,17 @@ Once that first boot has completed and the files were created, stop the proxy cl
 
 <Include src="../_partials/platform-first-boot.mdx" />
 
-## 4. Enable and order the providers
+### Enable and order the providers [step]
 
 <Include src="../_partials/provider-ordering.mdx" />
 
 If hostname-based routing is not part of this rollout yet, leave `entrypoints` empty or replace the default values later when you know the real hostnames.
 
-## 5. Understand journey mode and journey policy
+### Understand journey mode and journey policy [step]
 
 <Include src="../_partials/journey-mode.mdx" />
 
-## 6. Turn shared state into an intentional environment contract
+### Turn shared state into an intentional environment contract [step]
 
 Open the generated `replication` config and change it from generated defaults into a stable environment definition.
 
@@ -131,7 +133,7 @@ redis:
 
 If a second runtime should share this replicated environment, keep the same Redis connection details, channel names, and cache namespaces, but give that runtime a different `serverId`, for example `velocity-fallback`.
 
-## 7. Keep channels and cache namespaces stable
+### Keep channels and cache namespaces stable [step]
 
 Once an environment starts using replicated state, treat these names as part of its contract:
 
@@ -143,9 +145,9 @@ That stability is what lets sessions, reservations, attempts, and pending pipeli
 Do not casually rename those keys after the environment is live.
 If you need environment-specific naming, decide it before the rollout and then keep it stable.
 
-## 8. Replace default routing targets with real ones
+### Replace default routing targets with real ones [step]
 
-Open `settings` and align routing with the backend targets that actually exist.
+Open `routing` and align targets with the backend names that actually exist.
 The default values are examples only.
 
 It is usually not a good idea to use the same target for both step routing and completion routing.
@@ -164,35 +166,31 @@ In most cases, step targets should point to an authentication or transition dest
     For a segmented topology, a good baseline looks like this:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: auth
-          complete:
-            target: lobby
-        scenarios:
-          registration:
-            step:
-              target: registration
-          migration:
-            step:
-              target: migration
+    defaults:
+      step:
+        target: auth
+      complete:
+        target: lobby
+    scenarios:
+      registration:
+        step:
+          target: registration
+      migration:
+        step:
+          target: migration
     ```
 
     Use your real server names, not the names shown here.
-    Generated settings leave `scenarios` empty; add scenario entries only when a scenario needs to differ from `routing.defaults`.
+    Generated routing config leaves `scenarios` empty; add scenario entries only when a scenario needs to differ from `defaults`.
     If one step needs exceptional routing, use a step override instead of changing the whole scenario:
 
     ```yaml
-    connection:
-      routing:
-        scenarios:
-          registration:
-            overrides:
-              steps:
-                your-step-id:
-                  target: auth
+    scenarios:
+      registration:
+        overrides:
+          steps:
+            your-step-id:
+              target: auth
     ```
 
     That keeps the normal scenario route stable while still letting one specific step land somewhere else.
@@ -201,52 +199,50 @@ In most cases, step targets should point to an authentication or transition dest
     A practical example looks like this:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: auth
-            attempts:
-              mode: RETRY_ONCE
-              maxAttempts: 2
-              retryDelay: 1s
-              consumeOnReached: false
-              consumeOnExhausted: true
-          complete:
-            target: lobby
-            attempts:
-              mode: NONE
-              maxAttempts: 1
-              retryDelay: 0s
-              consumeOnReached: true
-              consumeOnExhausted: true
-        scenarios:
-          registration:
-            step:
-              target: register
-              attempts:
-                mode: RETRY_ONCE
-                maxAttempts: 2
-                retryDelay: 1s
-                consumeOnReached: false
-                consumeOnExhausted: true
-            complete:
-              target: lobby
-            overrides:
-              steps:
-                provider-selection:
-                  target: register-fallback
-          migration:
-            step:
-              target: migrate
-              attempts:
-                mode: RETRY_ONCE
-                maxAttempts: 3
-                retryDelay: 2s
-                consumeOnReached: false
-                consumeOnExhausted: true
-            complete:
-              target: survival
+    defaults:
+      step:
+        target: auth
+        attempts:
+          mode: RETRY_ONCE
+          maxAttempts: 2
+          retryDelay: 1s
+          consumeOnReached: false
+          consumeOnExhausted: true
+      complete:
+        target: lobby
+        attempts:
+          mode: NONE
+          maxAttempts: 1
+          retryDelay: 0s
+          consumeOnReached: true
+          consumeOnExhausted: true
+    scenarios:
+      registration:
+        step:
+          target: register
+          attempts:
+            mode: RETRY_ONCE
+            maxAttempts: 2
+            retryDelay: 1s
+            consumeOnReached: false
+            consumeOnExhausted: true
+        complete:
+          target: lobby
+        overrides:
+          steps:
+            provider-selection:
+              target: register-fallback
+      migration:
+        step:
+          target: migrate
+          attempts:
+            mode: RETRY_ONCE
+            maxAttempts: 3
+            retryDelay: 2s
+            consumeOnReached: false
+            consumeOnExhausted: true
+        complete:
+          target: survival
     ```
 
     In that example:
@@ -271,35 +267,31 @@ In most cases, step targets should point to an authentication or transition dest
     For a segmented topology, a good baseline looks like this:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: auth
-          complete:
-            target: lobby
-        scenarios:
-          registration:
-            step:
-              target: registration
-          migration:
-            step:
-              target: migration
+    defaults:
+      step:
+        target: auth
+      complete:
+        target: lobby
+    scenarios:
+      registration:
+        step:
+          target: registration
+      migration:
+        step:
+          target: migration
     ```
 
     Use your real server names, not the names shown here.
-    Generated settings leave `scenarios` empty; add scenario entries only when a scenario needs to differ from `routing.defaults`.
+    Generated routing config leaves `scenarios` empty; add scenario entries only when a scenario needs to differ from `defaults`.
     If one step needs exceptional routing, use a step override instead of changing the whole scenario:
 
     ```yaml
-    connection:
-      routing:
-        scenarios:
-          registration:
-            overrides:
-              steps:
-                your-step-id:
-                  target: auth
+    scenarios:
+      registration:
+        overrides:
+          steps:
+            your-step-id:
+              target: auth
     ```
 
     That keeps the normal scenario route stable while still letting one specific step land somewhere else.
@@ -308,52 +300,50 @@ In most cases, step targets should point to an authentication or transition dest
     A practical example looks like this:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: auth
-            attempts:
-              mode: RETRY_ONCE
-              maxAttempts: 2
-              retryDelay: 1s
-              consumeOnReached: false
-              consumeOnExhausted: true
-          complete:
-            target: lobby
-            attempts:
-              mode: NONE
-              maxAttempts: 1
-              retryDelay: 0s
-              consumeOnReached: true
-              consumeOnExhausted: true
-        scenarios:
-          registration:
-            step:
-              target: register
-              attempts:
-                mode: RETRY_ONCE
-                maxAttempts: 2
-                retryDelay: 1s
-                consumeOnReached: false
-                consumeOnExhausted: true
-            complete:
-              target: lobby
-            overrides:
-              steps:
-                provider-selection:
-                  target: register-fallback
-          migration:
-            step:
-              target: migrate
-              attempts:
-                mode: RETRY_ONCE
-                maxAttempts: 3
-                retryDelay: 2s
-                consumeOnReached: false
-                consumeOnExhausted: true
-            complete:
-              target: survival
+    defaults:
+      step:
+        target: auth
+        attempts:
+          mode: RETRY_ONCE
+          maxAttempts: 2
+          retryDelay: 1s
+          consumeOnReached: false
+          consumeOnExhausted: true
+      complete:
+        target: lobby
+        attempts:
+          mode: NONE
+          maxAttempts: 1
+          retryDelay: 0s
+          consumeOnReached: true
+          consumeOnExhausted: true
+    scenarios:
+      registration:
+        step:
+          target: register
+          attempts:
+            mode: RETRY_ONCE
+            maxAttempts: 2
+            retryDelay: 1s
+            consumeOnReached: false
+            consumeOnExhausted: true
+        complete:
+          target: lobby
+        overrides:
+          steps:
+            provider-selection:
+              target: register-fallback
+      migration:
+        step:
+          target: migrate
+          attempts:
+            mode: RETRY_ONCE
+            maxAttempts: 3
+            retryDelay: 2s
+            consumeOnReached: false
+            consumeOnExhausted: true
+        complete:
+          target: survival
     ```
 
     In that example:
@@ -368,7 +358,7 @@ In most cases, step targets should point to an authentication or transition dest
   </ContentTab>
 </ContentTabs>
 
-## 9. Review security and refine the setup
+### Review security and refine the setup [step]
 
 Do not stop at the first successful startup.
 After the baseline works, walk through the generated configuration and the rest of the docs so you understand what the plugin will do in your network.
@@ -388,7 +378,7 @@ For example, credential requirements may be stronger than what your players are 
   Many networks handle that with a separate blocker or filter plugin. Identica does not treat that as core identity-plugin functionality.
 </Callout>
 
-## 10. Get help or report issues
+### Get help or report issues [step]
 
 If you find a bug, need support, or want a feature, we are happy to help:
 

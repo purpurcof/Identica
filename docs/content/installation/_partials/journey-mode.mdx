@@ -1,4 +1,4 @@
-The generated settings may also include `journeyMode` and `journeyPolicy`.
+The generated `engine` config also includes `journeyMode` and `journeyPolicy`.
 
 - `SEAMLESS` means a step is expected to continue without player interaction
 - `INTERACTIVE` means the step may prompt the player, wait for input, or otherwise require explicit interaction
@@ -11,7 +11,7 @@ If you leave the flow on `SEAMLESS`, a player who joins from an offline account 
 That can scare users away before they understand what happened, even if a second rejoin would work.
 
 With `INTERACTIVE`, the player can enter the enrollment step instead and choose the provider directly.
-If you want less manual selection in that flow, the generated settings also include `autoSelectSingleProvider`, which you can enable for scenarios where only one provider should be chosen automatically.
+If you want less manual selection in that flow, the generated `engine.scenarios.registration` settings also include `autoSelectSingleProvider`, which you can enable for scenarios where only one provider should be chosen automatically.
 
 `journeyPolicy` controls how strictly the selected mode should be applied:
 

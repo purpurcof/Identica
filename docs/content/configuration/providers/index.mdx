@@ -4,12 +4,49 @@ description: Field-by-field explanation of Identica's provider configuration are
 ---
 
 The providers configuration controls which identity providers are enabled and how provider-specific behavior is applied.
-Use this file to enable providers, set priority and entrypoints, configure verification, and apply provider-specific overrides.
+Use this file to enable providers, set priority and entrypoints, tune provider-specific session behavior, and apply capability-owned and feature-owned provider fields.
 
-### providers
+Capability-specific shared fields and provider-scoped capability overrides are documented under [Capabilities](./capabilities/index.md).
+Conflict configuration for provider-owned conflicts is documented under [Conflicts](./conflicts.mdx).
+
+## behavior
+
+`behavior` contains shared runtime timings for all providers.
+
+### attemptTtl
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"10m"`
+- Affects: how long provider-attempt markers stay in the replicated attempt store
+
+Identica uses this when it marks that a provider attempt already happened for a provider, scope, username, and IP combination.
+Longer values make repeated attempts stay blocked longer.
+Shorter values let retries happen sooner.
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+behavior:
+  attemptTtl: "10m"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "behavior": {
+    "attemptTtl": "10m"
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+## providers
 
 - Takes: a list of provider entries
-- Affects: provider enablement, ordering, entrypoint routing, verification policy, and provider-specific session overrides
+- Affects: provider enablement, ordering, entrypoint routing, provider-specific session behavior, capability and feature-owned provider overrides
 
 Provider ids should match installed provider descriptors, such as `premium` or `credential`.
 
@@ -21,14 +58,10 @@ providers:
     displayName: "PR"
     enabled: true
     priority: 100
-    overrides:
-      allowRecognitionOnUntrustedIp: false
-      sessionConcurrencyPolicy: "REJECT_NEW"
-      recognition:
-        enabled: true
-        signals:
-          - "USERNAME"
-          - "VIRTUAL_HOST"
+    entrypoints:
+      - "premium.example.com"
+    session:
+      concurrencyPolicy: "REJECT_NEW"
 ```
   </Tab>
   <Tab value="JSON">
@@ -40,13 +73,9 @@ providers:
       "displayName": "PR",
       "enabled": true,
       "priority": 100,
-      "overrides": {
-        "allowRecognitionOnUntrustedIp": false,
-        "sessionConcurrencyPolicy": "REJECT_NEW",
-        "recognition": {
-          "enabled": true,
-          "signals": ["USERNAME", "VIRTUAL_HOST"]
-        }
+      "entrypoints": ["premium.example.com"],
+      "session": {
+        "concurrencyPolicy": "REJECT_NEW"
       }
     }
   ]
@@ -55,16 +84,46 @@ providers:
   </Tab>
 </Tabs>
 
-#### overrides
+### id
 
-- Takes: an object
-- Current default: `{}` for providers without overrides
-- Affects: provider-specific behavior that differs from global defaults
+- Takes: a provider id string
+- Affects: which installed provider descriptor this entry configures
 
-The `overrides` object is kept in generated config as a stable place for provider-specific exceptions.
-Configura keeps the object structure without filling every possible child field.
+This should match the provider's descriptor id exactly enough for case-insensitive lookup.
 
-#### overrides.sessionConcurrencyPolicy
+### displayName
+
+- Takes: a string
+- Current default: `""`
+- Affects: the user-facing label used for this provider when one is needed
+
+If this is blank, Identica falls back to the provider descriptor name and then the raw id.
+
+### enabled
+
+- Takes: `true` or `false`
+- Affects: whether the provider is available for resolution and flow building
+
+### priority
+
+- Takes: an integer
+- Affects: ordering when multiple providers are eligible
+
+Higher values win before lower values.
+
+### entrypoints
+
+- Takes: a list of hostnames, optionally with `:port`
+- Affects: hostname-based provider selection before normal fallback ordering
+
+Entries must use the format `host` or `host:port`.
+Leave the list empty if hostname-based provider selection is not part of your setup.
+
+### session
+
+Use `session` when one provider should behave differently from the global live-session defaults.
+
+#### session.concurrencyPolicy
 
 <Badge type="warning">Advanced</Badge>
 
@@ -72,43 +131,33 @@ Configura keeps the object structure without filling every possible child field.
 - Current default: absent
 - Affects: how live-session replacement behaves for this specific provider
 
-If this is absent, Identica uses `settings.connection.sessions.concurrencyPolicy`.
+If this is absent, Identica uses `settings.sessions.concurrencyPolicy`.
 
-#### overrides.allowRecognitionOnUntrustedIp
+### capabilities
 
-<Badge type="warning">Advanced</Badge>
+Use `capabilities` for provider-scoped fields owned by installed capabilities.
+Only providers that advertise a capability can use that capability's fields.
 
-- Takes: `true` or `false`
-- Current default: `false`
-- Affects: whether this provider may use recognition-based authentication bypass from IPs blocked by `settings.connection.sessions.recognition.untrustedIps`
-
-Leave this `false` for the normal safety posture.
-Set it to `true` only when a specific provider may skip authentication from client IPs that are blocked for recognition by default.
-
-This override applies only to that provider.
-
-#### overrides.recognition.enabled
-
-<Badge type="warning">Warning</Badge>
-
-- Takes: `true` or `false`
+- Takes: an object keyed by capability id
 - Current default: absent
-- Affects: whether this provider inherits or overrides `settings.connection.sessions.recognition.enabled`
+- Affects: provider-scoped overrides contributed by capabilities
 
-When this field is absent, the provider inherits `settings.connection.sessions.recognition.enabled`.
-Use it when one provider should allow reconnect recognition while another should require full provider authentication every time.
+The shape inside `capabilities` is not global.
+Each installed capability defines its own nested fields.
 
-#### overrides.recognition.signals
+<Include src="./capabilities/_partials/provider-overrides.mdx" />
 
-<Badge type="warning">Warning</Badge>
+### features
 
-- Takes: a list containing any of `"USERNAME"`, `"IP"`, `"VIRTUAL_HOST"`
+Use `features` for provider-scoped fields owned by installed features.
+Only installed features that extend provider configuration can use nested fields here.
+
+- Takes: an object keyed by feature id
 - Current default: absent
-- Affects: the signal set used when this provider evaluates reconnect recognition
+- Affects: provider-scoped overrides contributed by features
 
-When this field is absent or empty, the provider inherits `settings.connection.sessions.recognition.defaultSignals`.
+The shape inside `features` is not global.
+Each installed feature defines its own nested fields.
 
-Recognition is intentionally disabled by default because signal matching can be unsafe in shared-network environments.
-IP-based matching in particular can be exploited behind NAT, carrier-grade NAT, shared Wi-Fi, VPN exits, hosting proxies, or other setups where several different players appear to come from the same address.
-
-Enable recognition only if you understand that tradeoff and accept the risk for your environment.
+The official verification feature contributes `verification` here.
+See [Verification settings](../features/verification/settings/index.mdx#provider-overrides).

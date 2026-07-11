@@ -1,13 +1,13 @@
 package me.whereareiam.identica.common.config.defaults;
 
 import me.whereareiam.configura.Config;
+import me.whereareiam.configura.Configura;
 import me.whereareiam.configura.type.Format;
 import me.whereareiam.identica.common.config.IdenticaModule;
 import me.whereareiam.identica.model.Event;
 import me.whereareiam.identica.model.config.Settings;
-import me.whereareiam.identica.type.PlatformType;
 import me.whereareiam.identica.type.event.EventPriority;
-import me.whereareiam.identica.type.session.RecognitionSignal;
+import me.whereareiam.identica.type.platform.PlatformType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -25,18 +25,9 @@ class SettingsDefaultsTest {
 	void generatedRoutingScenariosAreEmptyByDefault() {
 		Settings settings = new SettingsDefaults().supply(new Settings());
 
-		assertNotNull(settings.getConnection());
-		assertNotNull(settings.getConnection().getRouting());
-		assertNotNull(settings.getConnection().getScenarios());
-		assertNotNull(settings.getConnection().getSessions().getRecognition());
-		assertNotNull(settings.getConnection().getRouting().getScenarios());
-		assertTrue(settings.getConnection().getRouting().getScenarios().isEmpty());
-		assertEquals(
-				java.util.List.of(RecognitionSignal.USERNAME, RecognitionSignal.IP, RecognitionSignal.VIRTUAL_HOST),
-				settings.getConnection().getSessions().getRecognition().getDefaultSignals()
-		);
-		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getActiveTtl());
-		assertEquals(java.time.Duration.ofHours(12), settings.getConnection().getSessions().getRecognition().getValidity());
+		assertNotNull(settings.getIdentity());
+		assertEquals(java.time.Duration.ofHours(12), settings.getSessions().getActiveTtl());
+		assertEquals(java.time.Duration.ofMinutes(15), settings.getIdentity().getReservationTtl());
 	}
 
 	@DisplayName("Listener defaults match the active platform listener set")
@@ -57,23 +48,22 @@ class SettingsDefaultsTest {
 		assertEquals(EventPriority.HIGH, bungeeCordEvents.get("net.md_5.bungee.api.event.ServerConnectedEvent").getPriority());
 	}
 
-	@DisplayName("Generated settings file writes an empty scenarios map")
+	@DisplayName("Generated settings file writes the split settings shape")
 	@Test
-	void generatedSettingsFileWritesEmptyScenariosMap(@TempDir Path tempDir) throws Exception {
+	void generatedSettingsFileWritesExpectedShape(@TempDir Path tempDir) throws Exception {
 		Path settingsPath = tempDir.resolve("settings.yml");
-		Config config = Config.builder()
+		Configura yaml = Config.builder()
 				.format(Format.YAML)
 				.module(new IdenticaModule())
 				.defaults(SettingsDefaults.class)
 				.build();
 
-		Settings settings = config.update(settingsPath, Settings.class);
+		Settings settings = yaml.update(settingsPath, Settings.class);
 
-		assertTrue(settings.getConnection().getRouting().getScenarios().isEmpty());
+		assertNotNull(settings.getIdentity());
 		String generated = Files.readString(settingsPath);
-		assertTrue(generated.contains("scenarios: {}"));
-		assertFalse(generated.contains("authentication:\n        step:"));
-		assertFalse(generated.contains("registration:\n        step:"));
-		assertFalse(generated.contains("migration:\n        step:"));
+		assertTrue(generated.contains("identity:"));
+		assertTrue(generated.contains("sessions:"));
+		assertFalse(generated.contains("connection:"));
 	}
 }

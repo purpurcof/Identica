@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.model.provider.ProviderDescriptor;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -23,7 +24,8 @@ public class ProviderInjectorFactory {
 			Path workingPath,
 			ProviderDescriptor descriptor,
 			IdenticaProvider probeProvider,
-			@Nullable ProviderPlatformExtension probePlatformExtension
+			@Nullable ProviderPlatformExtension probePlatformExtension,
+			@NotNull List<Module> capabilityModules
 	) {
 		List<Module> modules = new ArrayList<>();
 		modules.add(new ProviderInjectorConfiguration(workingPath, descriptor));
@@ -34,6 +36,7 @@ public class ProviderInjectorFactory {
 
 		List<Module> platformModules = probePlatformExtension != null ? probePlatformExtension.modules() : List.of();
 		if (!platformModules.isEmpty()) modules.addAll(platformModules);
+		if (!capabilityModules.isEmpty()) modules.addAll(capabilityModules);
 
 		return injector.createChildInjector(modules);
 	}

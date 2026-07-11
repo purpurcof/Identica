@@ -123,6 +123,6 @@ public class UniqueIdGenerator {
 		Settings settings = settingsProvider.get();
 		if (settings == null) return UniqueIdMode.RANDOM;
 
-        return settings.getConnection().getUniqueIdMode();
+		return settings.getIdentity().getUniqueIdMode();
 	}
 }

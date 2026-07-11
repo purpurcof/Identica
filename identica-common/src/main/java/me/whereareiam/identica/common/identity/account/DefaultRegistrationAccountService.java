@@ -128,11 +128,12 @@ public class DefaultRegistrationAccountService implements RegistrationAccountSer
 	}
 
 	private long pendingTtlMillis() {
-		Settings.Connection connection = settingsProvider.get().getConnection();
+		Settings.Identity identity = settingsProvider.get().getIdentity();
 
-		Duration configured = connection.getReservationTtl();
-		if (configured.isZero() || configured.isNegative())
-			throw new IllegalStateException("settings.connection.reservationTtl must be positive");
+		Duration configured = identity.getReservationTtl();
+		if (configured.isZero() || configured.isNegative()) {
+			throw new IllegalStateException("settings.identity.reservationTtl must be positive");
+		}
 
 		return configured.toMillis();
 	}

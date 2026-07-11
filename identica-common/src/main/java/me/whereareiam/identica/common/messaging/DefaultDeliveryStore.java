@@ -3,8 +3,8 @@ package me.whereareiam.identica.common.messaging;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Replication;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.delivery.DeliveryRequest;
 import me.whereareiam.identica.model.replication.ReplicationType;
 import me.whereareiam.identica.replication.ReplicationSystem;
@@ -22,13 +22,13 @@ public class DefaultDeliveryStore implements DeliveryStore {
 	private final ReplicatedCache<DeliveryRequest> requests;
 	private final ReplicatedCache<DeliveryRequestKeyIndex> connectionIndex;
 	private final ReplicatedCache<DeliveryRequestKeyIndex> accountIndex;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 
 	@Inject
 	public DefaultDeliveryStore(
 			@NotNull ReplicationSystem replicationSystem,
 			@NotNull Provider<Replication> replicationProvider,
-			@NotNull Provider<Settings> settingsProvider
+			@NotNull Provider<Engine> engineProvider
 	) {
 		Replication.Delivery delivery = replicationProvider.get().getCache().getDelivery();
 		var indexType = ReplicationType.identity(DeliveryRequestKeyIndex.class);
@@ -36,7 +36,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 		this.requests = replicationSystem.cache(delivery.getRequests()).replicated(ReplicationType.identity(DeliveryRequest.class));
 		this.connectionIndex = replicationSystem.cache(delivery.getConnectionIndex()).replicated(indexType);
 		this.accountIndex = replicationSystem.cache(delivery.getAccountIndex()).replicated(indexType);
-		this.settingsProvider = settingsProvider;
+		this.engineProvider = engineProvider;
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 			@NotNull String indexKey
 	) {
 		List<String> requestKeys = index.get(indexKey).join()
-				.map(DeliveryRequestKeyIndex::getValues)
+				.map(DeliveryRequestKeyIndex::values)
 				.orElse(List.of());
 		if (requestKeys.isEmpty()) return List.of();
 
@@ -102,7 +102,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 		}
 
 		if (retained.size() != requestKeys.size())
-			index.put(indexKey, DeliveryRequestKeyIndex.builder().values(retained).build(), ttlMs()).join();
+			index.put(indexKey, new DeliveryRequestKeyIndex(retained), ttlMs()).join();
 
 		return List.copyOf(resolved);
 	}
@@ -113,11 +113,11 @@ public class DefaultDeliveryStore implements DeliveryStore {
 			@NotNull String requestKey
 	) {
 		List<String> values = new ArrayList<>(index.get(indexKey).join()
-				.map(DeliveryRequestKeyIndex::getValues)
+				.map(DeliveryRequestKeyIndex::values)
 				.orElse(List.of()));
 		if (!values.contains(requestKey)) values.add(requestKey);
 
-		index.put(indexKey, DeliveryRequestKeyIndex.builder().values(values).build(), ttlMs()).join();
+		index.put(indexKey, new DeliveryRequestKeyIndex(values), ttlMs()).join();
 	}
 
 	private void removeIndex(
@@ -126,7 +126,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 			@NotNull String requestKey
 	) {
 		List<String> values = new ArrayList<>(index.get(indexKey).join()
-				.map(DeliveryRequestKeyIndex::getValues)
+				.map(DeliveryRequestKeyIndex::values)
 				.orElse(List.of()));
 
 		values.removeIf(requestKey::equals);
@@ -135,7 +135,7 @@ public class DefaultDeliveryStore implements DeliveryStore {
 			return;
 		}
 
-		index.put(indexKey, DeliveryRequestKeyIndex.builder().values(values).build(), ttlMs()).join();
+		index.put(indexKey, new DeliveryRequestKeyIndex(values), ttlMs()).join();
 	}
 
 	private @NotNull String key(@NotNull UUID uniqueId) {
@@ -143,6 +143,12 @@ public class DefaultDeliveryStore implements DeliveryStore {
 	}
 
 	private long ttlMs() {
-		return settingsProvider.get().getConnection().prepareStateTtlMillis();
+		return engineProvider.get().getBehavior().bridgeTtlMillis();
+	}
+
+	private record DeliveryRequestKeyIndex(@NotNull List<String> values) {
+		private DeliveryRequestKeyIndex {
+			values = List.copyOf(values);
+		}
 	}
 }

@@ -6,7 +6,9 @@ import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.Argument;
 import me.whereareiam.identica.annotation.Command;
 import me.whereareiam.identica.annotation.Definition;
-import me.whereareiam.identica.command.ProtectedActionCommand;
+import me.whereareiam.identica.feature.verification.VerificationService;
+import me.whereareiam.identica.feature.verification.command.ProtectedActionCommand;
+import me.whereareiam.identica.feature.verification.config.VerificationMessages;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
@@ -16,15 +18,12 @@ import me.whereareiam.identica.model.migration.operation.MigrationCancel;
 import me.whereareiam.identica.model.migration.operation.MigrationConfirm;
 import me.whereareiam.identica.model.migration.operation.MigrationRequest;
 import me.whereareiam.identica.model.migration.operation.MigrationResult;
-import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.premium.PremiumConstants;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
 import me.whereareiam.identica.service.MigrationService;
 import me.whereareiam.identica.type.migration.MigrationCancelScope;
 import me.whereareiam.identica.type.migration.MigrationInitiator;
 import me.whereareiam.identica.type.migration.MigrationResultStatus;
-import me.whereareiam.identica.type.provider.ProviderCapability;
-import me.whereareiam.identica.verification.VerificationService;
 import me.whereareiam.keystone.Actor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,25 +33,25 @@ import java.util.UUID;
 
 public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 	private final MigrationService migrationService;
-	private final ProviderManager providerManager;
 	private final Provider<PremiumMessages> messagesProvider;
 	private final Provider<Messages> coreMessagesProvider;
+	private final Provider<VerificationMessages> verificationMessagesProvider;
 	private final SessionService sessionService;
 
 	@Inject
 	public PremiumCommand(
 			MigrationService migrationService,
-			ProviderManager providerManager,
 			Provider<PremiumMessages> messagesProvider,
 			Provider<Messages> coreMessagesProvider,
+			Provider<VerificationMessages> verificationMessagesProvider,
 			VerificationService verificationService,
 			SessionService sessionService
 	) {
 		super(verificationService);
 		this.migrationService = migrationService;
-		this.providerManager = providerManager;
 		this.messagesProvider = messagesProvider;
 		this.coreMessagesProvider = coreMessagesProvider;
+		this.verificationMessagesProvider = verificationMessagesProvider;
 		this.sessionService = sessionService;
 	}
 
@@ -73,7 +72,6 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 		if (identity == null) return;
 		Session session = requireCurrentSession(identity);
 		if (session == null) return;
-		if (!supportsMigration()) return;
 		UUID accountUniqueId = requireAccountUniqueId(identity);
 		if (accountUniqueId == null) return;
 
@@ -97,7 +95,7 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 
 			StepUpPreparation preparation = prepareStepUp(accountUniqueId, "migration-confirm");
 			if (preparation.getStatus() == StepUpPreparation.Status.SELECTION_REQUIRED) {
-				sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+				sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSelectionRequired());
 				return;
 			}
 			sendMessage(identity, messages.getVerificationRequired());
@@ -133,8 +131,8 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 			StepUpPreparation preparation = prepareStepUp(accountUniqueId, "migration-confirm");
 			if (preparation.getStatus() != StepUpPreparation.Status.READY) {
 				switch (preparation.getStatus()) {
-					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
-					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSessionRequired());
+					case SELECTION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSelectionRequired());
 					default -> sendMessage(identity, messagesProvider.get().getCommands().getPremium().getNoPending());
 				}
 				return;
@@ -148,9 +146,9 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 			StepUpResult result = confirmStepUp(accountUniqueId, input, "migration-confirm");
 			if (result.getStatus() != StepUpResult.Status.VERIFIED) {
 				switch (result.getStatus()) {
-					case INVALID_CODE -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getInvalidCode());
-					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSessionRequired());
-					case SELECTION_REQUIRED -> sendMessage(identity, coreMessagesProvider.get().getCommands().getVerification().getConfirm().getProtectedActionSelectionRequired());
+					case INVALID_CODE -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getInvalidCode());
+					case CURRENT_SESSION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSessionRequired());
+					case SELECTION_REQUIRED -> sendMessage(identity, verificationMessagesProvider.get().getCommands().getConfirm().getProtectedActionSelectionRequired());
 					default -> sendMessage(identity, messagesProvider.get().getCommands().getPremium().getNoPending());
 				}
 				return;
@@ -198,13 +196,6 @@ public class PremiumCommand extends ProtectedActionCommand<MigrationRequest> {
 		}
 
 		sendMessage(identity, messages.getNoPending());
-	}
-
-	private boolean supportsMigration() {
-		return providerManager.findProviders(ProviderCapability.MIGRATION).stream()
-				.anyMatch(provider -> provider != null
-						&& provider.getDescriptor() != null
-						&& PremiumConstants.PROVIDER_ID.equalsIgnoreCase(provider.getDescriptor().getId()));
 	}
 
 	private List<String> resolveKickMessage() {

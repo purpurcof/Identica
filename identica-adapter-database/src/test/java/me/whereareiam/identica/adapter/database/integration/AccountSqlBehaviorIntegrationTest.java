@@ -22,10 +22,9 @@ class AccountSqlBehaviorIntegrationTest extends DatabaseIntegrationTestBase {
 
 		List<UUID> results = fixture.withHandle(handle -> {
 			handle.execute(
-					"INSERT INTO identica_accounts (unique_id, username, username_source, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)",
+					"INSERT INTO identica_accounts (unique_id, username, created_at, last_seen_at) VALUES (?, ?, ?, ?)",
 					uniqueId,
 					username,
-					"manual",
 					1L,
 					2L
 			);

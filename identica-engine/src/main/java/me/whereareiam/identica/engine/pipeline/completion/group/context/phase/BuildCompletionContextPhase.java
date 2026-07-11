@@ -1,12 +1,12 @@
 package me.whereareiam.identica.engine.pipeline.completion.group.context.phase;
 
 import com.google.inject.Singleton;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipelineState;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.completion.CompletionPipelineState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -42,7 +42,6 @@ public class BuildCompletionContextPhase implements PipelinePhase<CompletionPipe
 				.pipelineType(state.getPipelineType())
 				.session(session)
 				.provider(state.getProvider())
-				.authenticationRecognized(state.isAuthenticationRecognized())
 				.build();
 		state.setContext(context);
 		return CompletableFuture.completedFuture(PhaseResult.pass(state));

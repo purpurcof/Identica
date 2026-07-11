@@ -8,6 +8,7 @@ import me.whereareiam.commandant.model.message.ExceptionMessages;
 import me.whereareiam.commandant.model.message.HelpMessages;
 import me.whereareiam.commandant.model.message.PaginationMessages;
 import me.whereareiam.configura.ConfigDocument;
+import me.whereareiam.identica.model.config.type.DateTimePattern;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -24,7 +25,9 @@ public class Messages extends ConfigDocument {
 	private @NotNull Format format;
 	private @NotNull Commands commands;
 	private @NotNull Providers providers;
-	private @NotNull Connection connection;
+	private @NotNull Engine engine;
+	private @NotNull Routing routing;
+	private @NotNull Scenarios scenarios;
 
 	@Getter
 	@Setter
@@ -64,7 +67,6 @@ public class Messages extends ConfigDocument {
 		private @NotNull Migration migration;
 		private @NotNull Reload reload;
 		private @NotNull Admin admin;
-		private @NotNull Verification verification;
 
 		/**
 		 * Configuration for enroll command messages.
@@ -170,6 +172,7 @@ public class Messages extends ConfigDocument {
 				private @NotNull String pendingExists;
 				private @NotNull String started;
 				private @NotNull String providerUnsupported;
+				private @NotNull String providerUnavailable;
 			}
 
 			@Getter
@@ -206,7 +209,6 @@ public class Messages extends ConfigDocument {
 			private @NotNull Delete delete;
 			private @NotNull Reservation reservation;
 			private @NotNull Sessions sessions;
-			private @NotNull Verification verification;
 
 			@Getter
 			@Setter
@@ -363,7 +365,7 @@ public class Messages extends ConfigDocument {
 				private @NotNull String unknown;
 				@JsonProperty("list")
 				private @NotNull Listing listing;
-				private @NotNull Info info;
+				private @NotNull Detail status;
 				private @NotNull End end;
 				private @NotNull Multiple multiple;
 
@@ -398,7 +400,7 @@ public class Messages extends ConfigDocument {
 				@Getter
 				@Setter
 				@ToString
-				public static class Info {
+				public static class Detail {
 					/**
 					 * Detailed session info lines.
 					 * Placeholders:
@@ -473,20 +475,6 @@ public class Messages extends ConfigDocument {
 				}
 			}
 
-			@Getter
-			@Setter
-			@ToString
-			public static class Verification {
-				private @NotNull Reset reset;
-
-				@Getter
-				@Setter
-				@ToString
-				public static class Reset {
-					private @NotNull String targetNotFound;
-					private @NotNull String completed;
-				}
-			}
 		}
 		/**
 		 * Configuration for reload command messages.
@@ -511,114 +499,6 @@ public class Messages extends ConfigDocument {
 			private @NotNull String error;
 		}
 
-		@Getter
-		@Setter
-		@ToString
-		public static class Verification {
-			private @NotNull String playerOnly;
-			private @NotNull String notAllowed;
-			private @NotNull Methods methods;
-			private @NotNull Status status;
-			private @NotNull Enroll enroll;
-			private @NotNull Confirm confirm;
-			private @NotNull Use use;
-			private @NotNull Disable disable;
-			private @NotNull Cancel cancel;
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Status {
-				private @NotNull List<String> body;
-				private @NotNull EntryFormat enrollmentEntry;
-				private @NotNull EntryFormat selectionEntry;
-				private @NotNull String emptyEnrollments;
-				private @NotNull String emptySelections;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Enroll {
-				private @NotNull String unknownMethod;
-				private @NotNull String alreadyEnrolled;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Confirm {
-				private @NotNull String noPending;
-				private @NotNull String invalidCode;
-				private @NotNull String protectedActionSelectionRequired;
-				private @NotNull String protectedActionSessionRequired;
-				private @NotNull String methodUnavailable;
-				private @NotNull String enabled;
-				private @NotNull String autoSelected;
-				private @NotNull RecoveryCodes recoveryCodes;
-
-				@Getter
-				@Setter
-				@ToString
-				public static class RecoveryCodes {
-					private @NotNull Layout layout = Layout.TWO_COLUMN;
-					private @NotNull List<String> body;
-					private @NotNull EntryFormat singleColumnEntry;
-					private @NotNull EntryFormat twoColumnEntry;
-					private @NotNull String empty;
-
-					public enum Layout {
-						SINGLE_COLUMN,
-						TWO_COLUMN
-					}
-				}
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Use {
-				private @NotNull String providerNotFound;
-				private @NotNull String providerUnsupported;
-				private @NotNull String providerVerificationDisabled;
-				private @NotNull String methodNotEnrolled;
-				private @NotNull String methodDisabledForProvider;
-				private @NotNull String alreadySelected;
-				private @NotNull String updated;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Disable {
-				private @NotNull String methodNotEnrolled;
-				private @NotNull String protectedPrompt;
-				private @NotNull String disabled;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Cancel {
-				private @NotNull String noPending;
-				private @NotNull String cancelled;
-				private @NotNull String cancelledProtectedAction;
-			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Methods {
-				private @NotNull Totp totp;
-
-				@Getter
-				@Setter
-				@ToString
-				public static class Totp {
-					private @NotNull List<String> pending;
-				}
-			}
-		}
 
 		/**
 		 * Format definitions for command entry rendering.
@@ -649,7 +529,7 @@ public class Messages extends ConfigDocument {
 	@Getter
 	@Setter
 	@ToString
-	public static class Connection {
+	public static class Engine {
 		/**
 		 * Message shown when an existing session is kicked due to a new login.
 		 */
@@ -660,9 +540,6 @@ public class Messages extends ConfigDocument {
 		private @NotNull List<String> resumeSentineled;
 		private @NotNull Journey journey;
 		private @NotNull Prepare prepare;
-		private @NotNull Authentication authentication;
-		private @NotNull Registration registration;
-		private @NotNull Migration migration;
 
 		@Getter
 		@Setter
@@ -678,6 +555,78 @@ public class Messages extends ConfigDocument {
 				private @NotNull List<String> preparePolicyMissing;
 			}
 		}
+
+		@Getter
+		@Setter
+		@ToString
+		public static class Journey {
+			private @NotNull Stage stage;
+			private @NotNull Step step;
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Stage {
+				private @NotNull List<String> noCompletion;
+			}
+
+			@Getter
+			@Setter
+			@ToString
+			public static class Step {
+				private @NotNull List<String> noStatus;
+				private @NotNull Enrollment enrollment;
+
+				/**
+				 * Enrollment prompt messages.
+				 */
+				@Getter
+				@Setter
+				@ToString
+				public static class Enrollment {
+					private @NotNull List<String> body;
+					private @NotNull EntryFormat entryFormat;
+					private @NotNull List<String> empty;
+					private @NotNull Map<String, String> descriptions;
+
+					/**
+					 * Format definitions for enrollment entry rendering.
+					 */
+					@Getter
+					@Setter
+					@ToString
+					public static class EntryFormat {
+						/**
+						 * Format used when all required placeholders are present.
+						 */
+						private @NotNull String format;
+						/**
+						 * Format used when one or more placeholders are missing.
+						 */
+						private @NotNull String emptyFormat;
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Routing messages.
+	 */
+	@Getter
+	@Setter
+	@ToString
+	public static class Routing {
+		private @NotNull List<String> missingServer;
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	public static class Scenarios {
+		private @NotNull Authentication authentication;
+		private @NotNull Registration registration;
+		private @NotNull Migration migration;
 
 		@Getter
 		@Setter
@@ -734,7 +683,7 @@ public class Messages extends ConfigDocument {
 			 * Message shown when the pipeline finishes without a completion result.
 			 */
 			private @NotNull List<String> noCompletionPipeline;
-			private @NotNull Routing routing;
+			private @NotNull ScenarioRouting routing;
 			private @NotNull Errors errors;
 
 			@Getter
@@ -808,69 +757,13 @@ public class Messages extends ConfigDocument {
 					private @NotNull List<String> missingPlan;
 				}
 			}
-		}
-
-		@Getter
-		@Setter
-		@ToString
-		public static class Journey {
-			private @NotNull Stage stage;
-			private @NotNull Step step;
 
 			@Getter
 			@Setter
 			@ToString
-			public static class Stage {
-				private @NotNull List<String> noCompletion;
+			public static class ScenarioRouting {
+				private @NotNull List<String> missingServer;
 			}
-
-			@Getter
-			@Setter
-			@ToString
-			public static class Step {
-				private @NotNull List<String> noStatus;
-				private @NotNull Enrollment enrollment;
-
-				/**
-				 * Enrollment prompt messages.
-				 */
-				@Getter
-				@Setter
-				@ToString
-				public static class Enrollment {
-					private @NotNull List<String> body;
-					private @NotNull EntryFormat entryFormat;
-					private @NotNull List<String> empty;
-					private @NotNull Map<String, String> descriptions;
-
-					/**
-					 * Format definitions for enrollment entry rendering.
-					 */
-					@Getter
-					@Setter
-					@ToString
-					public static class EntryFormat {
-						/**
-						 * Format used when all required placeholders are present.
-						 */
-						private @NotNull String format;
-						/**
-						 * Format used when one or more placeholders are missing.
-						 */
-						private @NotNull String emptyFormat;
-					}
-				}
-			}
-		}
-
-		/**
-		 * Routing messages.
-		 */
-		@Getter
-		@Setter
-		@ToString
-		public static class Routing {
-			private @NotNull List<String> missingServer;
 		}
 	}
 }

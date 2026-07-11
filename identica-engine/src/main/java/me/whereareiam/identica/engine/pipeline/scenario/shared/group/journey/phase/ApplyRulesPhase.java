@@ -4,33 +4,28 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
 import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.rule.SelectProvidersRule;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionStage;
-import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.model.pipeline.journey.JourneyRuleContext;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionPlan;
+import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionStage;
+import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.rule.JourneyRule;
-import me.whereareiam.identica.model.pipeline.journey.JourneyRuleContext;
 import me.whereareiam.identica.pipeline.journey.rule.JourneyRuleRegistry;
 import me.whereareiam.identica.pipeline.journey.rule.JourneyRuleScope;
-import me.whereareiam.identica.pipeline.PipelinePhase;
-import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.scenario.shared.JourneyState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -176,23 +171,21 @@ public class ApplyRulesPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private @NotNull String journeyMissingContextMessage(@NotNull PipelineState pipelineState) {
-		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
+		Messages.Scenarios.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
 		return String.join("\n", errors.getJourney().getMissingContext());
 	}
 
 	private @NotNull String journeyMissingPlanMessage(@NotNull PipelineState pipelineState) {
-		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
+		Messages.Scenarios.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
 		return String.join("\n", errors.getJourney().getMissingPlan());
 	}
 
-	private @NotNull Messages.Connection.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
+	private @NotNull Messages.Scenarios.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
 		PipelineType pipelineType = pipelineState.getPipelineType();
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return connection.getRegistration().getErrors();
-		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getMigration().getErrors();
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return scenarios.getRegistration().getErrors();
+		if (pipelineType == PipelineType.MIGRATION) return scenarios.getMigration().getErrors();
 
-		return connection.getAuthentication().getErrors();
+		return scenarios.getAuthentication().getErrors();
 	}
 }

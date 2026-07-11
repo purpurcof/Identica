@@ -22,7 +22,9 @@ Those broader provider choices are not covered by this installation page.
 If you do need sessions and pending state to survive plugin restarts, use [Advanced installation](../advanced/index.mdx).
 That requires replication to be enabled.
 
-## 1. Download the artifacts
+## Installation steps
+
+### Download the artifacts [step]
 
 <ContentTabs items={["GitHub Releases", "GitHub Development Builds", "Modrinth Releases"]}>
   <ContentTab value="GitHub Releases">
@@ -33,12 +35,12 @@ That requires replication to be enabled.
     1. Open the [releases page](https://github.com/whereareiam/Identica/releases).
     2. Open the release version you want to install.
     3. Expand the release assets if they are collapsed.
-    4. Download these jars from the asset list:
+    4. Choose one installation style:
 
-    - `Identica-VELOCITY-<version>.jar` for Velocity
-    - `Identica-BUNGEECORD-<version>.jar` for BungeeCord
-    - `Identica-Credential-<version>.jar`
-    - `Identica-Premium-<version>.jar`
+    - download `Identica-BUNDLE-<version>.jar` if you want one runtime jar that can run on either supported proxy platform
+    - download `Identica-PLATFORMS-<version>.zip` if you want the platform-specific runtime jars instead
+    - also download `Identica-Credential-<version>.jar`
+    - also download `Identica-Premium-<version>.jar`
 
     You do not need the API jar for a normal server installation.
   </ContentTab>
@@ -52,12 +54,12 @@ That requires replication to be enabled.
     3. Scroll to the artifacts section of that workflow run.
     4. Download the artifact named `Build artifacts`.
     5. Extract the downloaded archive.
-    6. Use these jars from the extracted files:
+    6. Choose one installation style from the extracted files:
 
-    - `Identica-VELOCITY-dev-<commit>.jar` for Velocity
-    - `Identica-BUNGEECORD-dev-<commit>.jar` for BungeeCord
-    - `Identica-Credential-dev-<commit>.jar`
-    - `Identica-Premium-dev-<commit>.jar`
+    - use `Identica-BUNDLE-dev-<commit>.jar` if you want one runtime jar that can run on either supported proxy platform
+    - extract `Identica-PLATFORMS-dev-<commit>.zip` if you want the platform-specific runtime jars instead
+    - use `Identica-Credential-dev-<commit>.jar`
+    - use `Identica-Premium-dev-<commit>.jar`
 
     You do not need the API jar for a normal server installation.
   </ContentTab>
@@ -76,11 +78,11 @@ That requires replication to be enabled.
   </ContentTab>
 </ContentTabs>
 
-## 2. Place the runtime and provider jars
+### Place the runtime and provider jars [step]
 
 <Include src="../_partials/platform-placement.mdx" />
 
-## 3. Start the runtime once and stop it again
+### Start the runtime once and stop it again [step]
 
 Start the platform once so Identica can create its initial files and folders.
 This first boot is only meant to let the plugin prepare its default configuration layout.
@@ -97,20 +99,20 @@ Once that first boot has completed and the files were created, stop the proxy cl
 This page stays procedural on purpose.
 The detailed meaning of each config area belongs in [Configuration](../../configuration/index.md).
 
-## 4. Enable and order the providers
+### Enable and order the providers [step]
 
 <Include src="../_partials/provider-ordering.mdx" />
 
 If you are not using hostname-based routing yet, leave `entrypoints` empty or replace the default values later when you know the real hostnames.
 Keep the generated verification blocks unless verification setup is intentionally part of this installation pass.
 
-## 5. Understand journey mode and journey policy
+### Understand journey mode and journey policy [step]
 
 <Include src="../_partials/journey-mode.mdx" />
 
-## 6. Replace default routing targets with a simple real route
+### Replace default routing targets with a simple real route [step]
 
-The generated `settings` defaults use example routing targets.
+The generated `routing` defaults use example routing targets.
 Do not leave them unchanged unless those names really exist in your environment.
 
 It is usually not a good idea to use the same target for both step routing and completion routing.
@@ -129,16 +131,14 @@ In most cases, step targets should point to an authentication or transition dest
     For a simple setup, a single shared target is a good baseline:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: lobby
-          complete:
-            target: lobby
+    defaults:
+      step:
+        target: lobby
+      complete:
+        target: lobby
     ```
 
-    Generated settings keep `scenarios` empty by default.
+    Generated routing config keeps `scenarios` empty by default.
     If your setup already separates authentication, registration, or migration across different backends, add only the scenario entries that differ from these defaults.
     Otherwise, keep the routing simple and use one shared target.
 
@@ -155,22 +155,20 @@ In most cases, step targets should point to an authentication or transition dest
     For a simple setup, a single shared target is still a good baseline:
 
     ```yaml
-    connection:
-      routing:
-        defaults:
-          step:
-            target: lobby
-          complete:
-            target: lobby
+    defaults:
+      step:
+        target: lobby
+      complete:
+        target: lobby
     ```
 
-    Generated settings keep `scenarios` empty by default.
+    Generated routing config keeps `scenarios` empty by default.
     If your setup already separates authentication, registration, or migration across different backends, add only the scenario entries that differ from these defaults.
     Otherwise, keep the routing simple and use one shared target.
   </ContentTab>
 </ContentTabs>
 
-## 8. Review security and refine the setup
+### Review security and refine the setup [step]
 
 Do not stop at the first successful startup.
 After the baseline works, walk through the generated configuration and the rest of the docs so you understand what the plugin will do in your network.
@@ -190,7 +188,7 @@ For example, credential requirements may be stronger than what your players are 
   Many networks handle that with a separate blocker or filter plugin. Identica does not treat that as core identity-plugin functionality.
 </Callout>
 
-## 9. Get help or report issues
+### Get help or report issues [step]
 
 If you find a bug, need support, or want a feature, we are happy to help:
 

@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import me.whereareiam.identica.event.base.Event;
 import me.whereareiam.identica.event.base.SynchronousEvent;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import org.jetbrains.annotations.NotNull;
 
 @Getter

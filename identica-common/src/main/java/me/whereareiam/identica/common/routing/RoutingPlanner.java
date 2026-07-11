@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.identica.logging.Logger;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Routing;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.routing.attempt.RoutingAttemptPolicy;
@@ -28,7 +28,7 @@ import java.util.UUID;
 @Singleton
 @RequiredArgsConstructor(onConstructor_ = @Inject)
 public class RoutingPlanner {
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Routing> routingProvider;
 
 	public @NotNull RoutingPlan plan(@NotNull RoutingSignal signal) {
 		UUID connectionId = signal.connectionUniqueId();
@@ -62,7 +62,7 @@ public class RoutingPlanner {
 			return RoutingPlan.clear(connectionId, RoutingClearReason.PIPELINE_FAILED);
 		}
 
-		Settings.Routing.Target target = resolveStepTarget(signal);
+		Routing.Target target = resolveStepTarget(signal);
 		if (isBlank(target.getTarget())) {
 			Logger.debug("Step routing clearing because target is missing connection=%s pipeline=%s stage=%s step=%s",
 					connectionId, signal.getPipelineType(), stageId(signal), stepName(signal));
@@ -92,7 +92,7 @@ public class RoutingPlanner {
 			return RoutingPlan.clear(connectionId, RoutingClearReason.PIPELINE_FAILED);
 		}
 
-		Settings.Routing.Target target = resolveCompletionTarget(signal);
+		Routing.Target target = resolveCompletionTarget(signal);
 		if (isBlank(target.getTarget())) {
 			Logger.debug("Completion routing clearing because target is missing connection=%s pipeline=%s",
 					connectionId, signal.getPipelineType());
@@ -107,7 +107,7 @@ public class RoutingPlanner {
 	private @NotNull RoutingIntent createIntent(
 			@NotNull RoutingSignal signal,
 			@NotNull UUID connectionId,
-			@NotNull Settings.Routing.Target target,
+			@NotNull Routing.Target target,
 			@NotNull RoutingReason reason
 	) {
 		String providerId = signal.getContext().getProvider() != null
@@ -130,34 +130,34 @@ public class RoutingPlanner {
 		);
 	}
 
-	private Settings.Routing.Target resolveCompletionTarget(@NotNull RoutingSignal signal) {
-		Settings.Routing routing = settingsProvider.get().getConnection().getRouting();
-		Settings.Routing.Target target = routing.getDefaults().getComplete();
-		Settings.Routing.Targets scenario = resolveScenarioTargets(routing, signal.getPipelineType());
+	private Routing.Target resolveCompletionTarget(@NotNull RoutingSignal signal) {
+		Routing routing = routingProvider.get();
+		Routing.Target target = routing.getDefaults().getComplete();
+		Routing.Targets scenario = resolveScenarioTargets(routing, signal.getPipelineType());
 		return mergeTarget(target, scenario != null ? scenario.getComplete() : null);
 	}
 
-	private Settings.Routing.Target resolveStepTarget(@NotNull RoutingSignal signal) {
-		Settings.Routing routing = settingsProvider.get().getConnection().getRouting();
-		Settings.Routing.Target target = routing.getDefaults().getStep();
-		Settings.Routing.Targets scenario = resolveScenarioTargets(routing, signal.getPipelineType());
+	private Routing.Target resolveStepTarget(@NotNull RoutingSignal signal) {
+		Routing routing = routingProvider.get();
+		Routing.Target target = routing.getDefaults().getStep();
+		Routing.Targets scenario = resolveScenarioTargets(routing, signal.getPipelineType());
 		target = mergeTarget(target, scenario != null ? scenario.getStep() : null);
 
-		Settings.Routing.Targets.Overrides overrides = scenario != null ? scenario.getOverrides() : null;
-		Settings.Routing.Target stageOverride = resolveStageOverride(overrides, signal.getStage() != null ? signal.getStage().id() : null);
+		Routing.Targets.Overrides overrides = scenario != null ? scenario.getOverrides() : null;
+		Routing.Target stageOverride = resolveStageOverride(overrides, signal.getStage() != null ? signal.getStage().id() : null);
 		target = mergeTarget(target, stageOverride);
 
-		Settings.Routing.Target stepOverride = resolveStepOverride(overrides, signal.getStep() != null ? signal.getStep().getName() : null);
+		Routing.Target stepOverride = resolveStepOverride(overrides, signal.getStep() != null ? signal.getStep().getName() : null);
 		target = mergeTarget(target, stepOverride);
 
 		return target;
 	}
 
-	private Settings.Routing.Targets resolveScenarioTargets(Settings.Routing routing, PipelineType pipelineType) {
+	private Routing.Targets resolveScenarioTargets(Routing routing, PipelineType pipelineType) {
 		if (routing == null || pipelineType == null) return null;
 
 		String scenarioId = pipelineType.name().toLowerCase(Locale.ROOT);
-		for (Map.Entry<String, Settings.Routing.Targets> entry : routing.getScenarios().entrySet()) {
+		for (Map.Entry<String, Routing.Targets> entry : routing.getScenarios().entrySet()) {
 			if (entry.getKey() == null || entry.getValue() == null) continue;
 			if (entry.getKey().equalsIgnoreCase(scenarioId))
 				return entry.getValue();
@@ -166,18 +166,18 @@ public class RoutingPlanner {
 		return null;
 	}
 
-	private Settings.Routing.Target resolveStageOverride(@Nullable Settings.Routing.Targets.Overrides overrides, @Nullable String stageId) {
+	private Routing.Target resolveStageOverride(@Nullable Routing.Targets.Overrides overrides, @Nullable String stageId) {
 		if (overrides == null || stageId == null) return null;
 		return resolveOverride(overrides.getStages(), stageId);
 	}
 
-	private Settings.Routing.Target resolveStepOverride(@Nullable Settings.Routing.Targets.Overrides overrides, @Nullable String stepName) {
+	private Routing.Target resolveStepOverride(@Nullable Routing.Targets.Overrides overrides, @Nullable String stepName) {
 		if (overrides == null || stepName == null) return null;
 		return resolveOverride(overrides.getSteps(), stepName);
 	}
 
-	private Settings.Routing.Target resolveOverride(Map<String, Settings.Routing.Target> overrides, String key) {
-		for (Map.Entry<String, Settings.Routing.Target> entry : overrides.entrySet()) {
+	private Routing.Target resolveOverride(Map<String, Routing.Target> overrides, String key) {
+		for (Map.Entry<String, Routing.Target> entry : overrides.entrySet()) {
 			if (entry.getKey() != null && entry.getKey().equalsIgnoreCase(key))
 				return entry.getValue();
 		}
@@ -199,11 +199,11 @@ public class RoutingPlanner {
 		return copy;
 	}
 
-	private @NotNull Settings.Routing.Target mergeTarget(
-			@Nullable Settings.Routing.Target base,
-			@Nullable Settings.Routing.Target override
+	private @NotNull Routing.Target mergeTarget(
+			@Nullable Routing.Target base,
+			@Nullable Routing.Target override
 	) {
-		Settings.Routing.Target merged = new Settings.Routing.Target();
+		Routing.Target merged = new Routing.Target();
 		String baseTarget = base != null ? base.getTarget() : "";
 		RoutingAttemptPolicy baseAttempts = base != null ? base.getAttempts() : null;
 		if (override == null) {

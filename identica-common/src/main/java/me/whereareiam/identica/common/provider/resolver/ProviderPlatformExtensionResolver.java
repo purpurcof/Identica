@@ -3,7 +3,7 @@ package me.whereareiam.identica.common.provider.resolver;
 import com.google.inject.Singleton;
 import me.whereareiam.identica.provider.IdenticaProvider;
 import me.whereareiam.identica.provider.ProviderPlatformExtension;
-import me.whereareiam.identica.type.PlatformType;
+import me.whereareiam.identica.type.platform.PlatformType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;

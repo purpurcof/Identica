@@ -3,21 +3,20 @@ package me.whereareiam.identica;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import lombok.Getter;
-import me.whereareiam.identica.identity.account.RegistrationAccountService;
-import me.whereareiam.identica.identity.account.AccountService;
-import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
+import me.whereareiam.configura.Configura;
 import me.whereareiam.identica.command.CommandService;
 import me.whereareiam.identica.database.DatabaseService;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.lifecycle.IdenticaReadyEvent;
 import me.whereareiam.identica.identity.IdentityService;
-import me.whereareiam.identica.service.MigrationService;
+import me.whereareiam.identica.identity.account.AccountService;
+import me.whereareiam.identica.identity.account.RegistrationAccountService;
+import me.whereareiam.identica.identity.session.SessionService;
+import me.whereareiam.identica.pipeline.extension.PipelineExtensionRegistry;
 import me.whereareiam.identica.provider.ProviderManager;
 import me.whereareiam.identica.provider.ProviderOperations;
-import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.replication.ReplicationSystem;
-import me.whereareiam.identica.verification.VerificationService;
-import me.whereareiam.identica.verification.VerificationRegistry;
+import me.whereareiam.identica.service.MigrationService;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -252,27 +251,18 @@ public final class IdenticaAPI {
 	}
 
 	/**
-	 * Gets the VerificationService for verification enrollment, selection,
-	 * reset, and challenge operations.
+	 * Gets the configured base Configura instance used by Identica.
 	 *
-	 * @return the VerificationService instance
+	 * <p>External addons can derive their own configuration copies from this instance
+	 * with methods such as {@code withDefaults(...)} or {@code withVersioned(...)}
+	 * while keeping Identica's configured format and modules.</p>
+	 *
+	 * @return the configured base Configura instance
 	 * @throws IllegalStateException if the API is not initialized
 	 */
 	@NotNull
-	public static VerificationService getVerificationService() {
-		return getService(VerificationService.class);
-	}
-
-	/**
-	 * Gets the VerificationRegistry for registering and resolving
-	 * verification methods.
-	 *
-	 * @return the VerificationRegistry instance
-	 * @throws IllegalStateException if the API is not initialized
-	 */
-	@NotNull
-	public static VerificationRegistry getVerificationRegistry() {
-		return getService(VerificationRegistry.class);
+	public static Configura getConfigura() {
+		return getService(Configura.class);
 	}
 
 }

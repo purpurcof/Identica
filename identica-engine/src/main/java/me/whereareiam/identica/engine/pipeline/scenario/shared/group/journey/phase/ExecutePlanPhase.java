@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
 import me.whereareiam.identica.event.EventManager;
 import me.whereareiam.identica.event.pipeline.scenario.shared.ProviderSelectedEvent;
 import me.whereareiam.identica.event.step.StepFinishedEvent;
@@ -12,12 +11,10 @@ import me.whereareiam.identica.event.step.StepPrepareEvent;
 import me.whereareiam.identica.event.step.StepStartedEvent;
 import me.whereareiam.identica.identity.IdentityService;
 import me.whereareiam.identica.logging.Logger;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.config.Settings;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
 import me.whereareiam.identica.model.pipeline.ScenarioTransitionItem;
-import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem;
-import me.whereareiam.identica.model.pipeline.authentication.AuthenticationOutcomeItem.AuthenticationOutcome;
 import me.whereareiam.identica.model.pipeline.journey.JourneyOverrideItem;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
@@ -27,17 +24,19 @@ import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.model.provider.ProviderContext;
 import me.whereareiam.identica.model.routing.RoutingSignal;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.ScenarioContext;
-import me.whereareiam.identica.pipeline.journey.step.Step;
-import me.whereareiam.identica.pipeline.journey.step.type.AuthenticationRecognitionStep;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
+import me.whereareiam.identica.pipeline.state.scenario.shared.JourneyState;
 import me.whereareiam.identica.provider.ProviderManager;
+import me.whereareiam.identica.provider.ProviderOperations;
+import me.whereareiam.identica.provider.subject.SubjectResolution;
+import me.whereareiam.identica.provider.subject.SubjectResolveContext;
 import me.whereareiam.identica.routing.RoutingCoordinator;
 import me.whereareiam.identica.type.pipeline.PipelineStatus;
 import me.whereareiam.identica.type.pipeline.PipelineType;
@@ -58,9 +57,10 @@ import java.util.concurrent.CompletionStage;
 public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 	private final IdentityService identityService;
 	private final EventManager eventManager;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 	private final Provider<Messages> messagesProvider;
 	private final ProviderManager providerManager;
+	private final ProviderOperations providerOperations;
 	private final PipelineStateStore pipelineStateStore;
 	private final RoutingCoordinator routingCoordinator;
 
@@ -472,7 +472,6 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				if (status == PipelineStatus.CONTINUE)
 					continue;
 				if (status == PipelineStatus.COMPLETE) {
-					applyAuthenticationOutcome(pipelineState, pipelineType, journeyStep.getStep());
 					completedStage = true;
 					break;
 				}
@@ -560,18 +559,6 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 				result
 		));
 		return result;
-	}
-
-	private void applyAuthenticationOutcome(
-			@NotNull PipelineState pipelineState,
-			@NotNull PipelineType pipelineType,
-			@NotNull Step step
-	) {
-		if (pipelineType != PipelineType.AUTHENTICATION) return;
-		if (!(step instanceof AuthenticationRecognitionStep))
-			return;
-
-		pipelineState.putItem(new AuthenticationOutcomeItem(AuthenticationOutcome.RECOGNIZED), 0L);
 	}
 
 	private int resolveStartIndex(
@@ -679,14 +666,12 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 		return step.getStep().contextRequirement() == StepContextRequirement.ONLINE;
 	}
 
-	private @NotNull Settings.Scenario scenarioSettings(@Nullable PipelineType pipelineType) {
-		Settings.Connection connection = settingsProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return connection.getScenarios().getRegistration();
-		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getScenarios().getMigration();
+	private @NotNull Engine.Scenario scenarioSettings(@Nullable PipelineType pipelineType) {
+		Engine.Scenarios scenarios = engineProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return scenarios.getRegistration();
+		if (pipelineType == PipelineType.MIGRATION) return scenarios.getMigration();
 
-		return connection.getScenarios().getAuthentication();
+		return scenarios.getAuthentication();
 	}
 
 	private void applyProviderContext(@NotNull ScenarioContext context, @NotNull String providerId) {
@@ -698,14 +683,44 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 					.providerUsername(username)
 					.source(ProviderOrigin.AUTO)
 					.build());
-			return;
+			provider = context.getProvider();
+		} else {
+			provider.setProviderId(providerId);
+			if (provider.getProviderUsername().isBlank())
+				provider.setProviderUsername(username);
+			if (provider.getSource() == null)
+				provider.setSource(ProviderOrigin.AUTO);
 		}
 
-		provider.setProviderId(providerId);
-		if (provider.getProviderUsername().isBlank())
-			provider.setProviderUsername(username);
-		if (provider.getSource() == null)
-			provider.setSource(ProviderOrigin.AUTO);
+		enrichProviderSubject(context, providerId, provider);
+	}
+
+	private void enrichProviderSubject(
+			@NotNull ScenarioContext context,
+			@NotNull String providerId,
+			@NotNull ProviderContext provider
+	) {
+		String currentSubject = provider.getProviderSubject();
+		if (currentSubject != null && !currentSubject.isBlank())
+			return;
+
+		if (context.getIdentity() == null)
+			return;
+
+		SubjectResolution resolution = providerOperations.resolveSelectedSubject(
+				providerId,
+				SubjectResolveContext.builder()
+						.identity(context.getIdentity())
+						.build()
+		);
+		if (resolution == null)
+			return;
+
+		String resolvedSubject = resolution.getProviderSubject();
+		if (resolvedSubject == null || resolvedSubject.isBlank())
+			return;
+
+		provider.setProviderSubject(resolvedSubject);
 	}
 
 	private boolean matchesProvider(@Nullable String expected, @Nullable String actual) {
@@ -759,7 +774,7 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 	private @NotNull String journeyNoCompletionMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getEngine()
 				.getJourney()
 				.getStage()
 				.getNoCompletion());
@@ -767,41 +782,37 @@ public class ExecutePlanPhase implements PipelinePhase<JourneyState> {
 
 	private @NotNull String journeyStepNoStatusMessage() {
 		return String.join("\n", messagesProvider.get()
-				.getConnection()
+				.getEngine()
 				.getJourney()
 				.getStep()
 				.getNoStatus());
 	}
 
 	private @NotNull String journeyMissingContextMessage(@NotNull PipelineState pipelineState) {
-		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
+		Messages.Scenarios.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
 		return String.join("\n", errors.getJourney().getMissingContext());
 	}
 
 	private @NotNull String journeyMissingPlanMessage(@NotNull PipelineState pipelineState) {
-		Messages.Connection.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
+		Messages.Scenarios.Scenario.Errors errors = resolveScenarioErrors(pipelineState);
 		return String.join("\n", errors.getJourney().getMissingPlan());
 	}
 
-	private @NotNull Messages.Connection.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
+	private @NotNull Messages.Scenarios.Scenario.Errors resolveScenarioErrors(@NotNull PipelineState pipelineState) {
 		PipelineType pipelineType = pipelineState.getPipelineType();
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return connection.getRegistration().getErrors();
-		if (pipelineType == PipelineType.MIGRATION)
-			return connection.getMigration().getErrors();
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return scenarios.getRegistration().getErrors();
+		if (pipelineType == PipelineType.MIGRATION) return scenarios.getMigration().getErrors();
 
-		return connection.getAuthentication().getErrors();
+		return scenarios.getAuthentication().getErrors();
 	}
 
 	private @NotNull String failureMessage(@Nullable PipelineType pipelineType) {
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return String.join("\n", connection.getRegistration().getRegistrationFailed());
-		if (pipelineType == PipelineType.MIGRATION)
-			return String.join("\n", connection.getMigration().getMigrationFailed());
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return String.join("\n", scenarios.getRegistration().getRegistrationFailed());
+		if (pipelineType == PipelineType.MIGRATION) return String.join("\n", scenarios.getMigration().getMigrationFailed());
 
-		return String.join("\n", connection.getAuthentication().getAuthenticationFailed());
+		return String.join("\n", scenarios.getAuthentication().getAuthenticationFailed());
 	}
 
 	private @Nullable InternalProvider resolveProvider(@Nullable String providerId) {

@@ -4,14 +4,14 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.scenario.shared.group.journey.JourneyState;
 import me.whereareiam.identica.model.config.Messages;
 import me.whereareiam.identica.model.pipeline.PipelineResult;
-import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
+import me.whereareiam.identica.pipeline.PipelinePhase;
+import me.whereareiam.identica.pipeline.ScenarioContext;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.scenario.shared.JourneyState;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,12 +60,10 @@ public class LoadContextPhase implements PipelinePhase<JourneyState> {
 	}
 
 	private @NotNull String failureMessage(@Nullable PipelineType pipelineType) {
-		Messages.Connection connection = messagesProvider.get().getConnection();
-		if (pipelineType == PipelineType.REGISTRATION)
-			return String.join("\n", connection.getRegistration().getRegistrationFailed());
-		if (pipelineType == PipelineType.MIGRATION)
-			return String.join("\n", connection.getMigration().getMigrationFailed());
+		Messages.Scenarios scenarios = messagesProvider.get().getScenarios();
+		if (pipelineType == PipelineType.REGISTRATION) return String.join("\n", scenarios.getRegistration().getRegistrationFailed());
+		if (pipelineType == PipelineType.MIGRATION) return String.join("\n", scenarios.getMigration().getMigrationFailed());
 
-		return String.join("\n", connection.getAuthentication().getAuthenticationFailed());
+		return String.join("\n", scenarios.getAuthentication().getAuthenticationFailed());
 	}
 }

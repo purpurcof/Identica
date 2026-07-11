@@ -1,9 +1,7 @@
 package me.whereareiam.identica.pipeline.state;
 
-import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.model.auth.request.AdvanceRequest;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.auth.request.ResumeRequest;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import org.jetbrains.annotations.NotNull;
 

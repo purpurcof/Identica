@@ -4,9 +4,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import me.whereareiam.identica.provider.IdenticaProvider;
+import me.whereareiam.identica.provider.capability.contribution.ProviderCapabilityContribution;
 import me.whereareiam.identica.provider.eligibility.ProviderEligibilityResolver;
 import me.whereareiam.identica.provider.migration.ProviderMigrationPrecheck;
-import me.whereareiam.identica.provider.profile.ProfileSubjectResolver;
+import me.whereareiam.identica.provider.subject.SubjectResolver;
 import me.whereareiam.identica.type.provider.ProviderState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -58,11 +59,15 @@ public class InternalProvider {
 	 */
 	private @Nullable Set<ProviderEligibilityResolver> eligibilityResolvers;
 	/**
-	 * Profile resolvers registered for this provider.
+	 * Subject resolvers registered for this provider.
 	 */
-	private @Nullable Set<ProfileSubjectResolver> profileSubjectResolvers;
+	private @Nullable Set<SubjectResolver> subjectResolvers;
 	/**
 	 * Migration prechecks registered for this provider.
 	 */
 	private @Nullable Set<ProviderMigrationPrecheck> migrationPrechecks;
+	/**
+	 * Capability contributions registered for this provider.
+	 */
+	private @Nullable Set<ProviderCapabilityContribution> capabilityContributions;
 }

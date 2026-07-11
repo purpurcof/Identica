@@ -3,11 +3,12 @@ package me.whereareiam.identica.provider.premium.step;
 import me.whereareiam.identica.handshake.HandshakeStore;
 import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.model.auth.AuthContext;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.StepResult;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
+import me.whereareiam.identica.provider.premium.pipeline.step.shared.OfflineCheckStep;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileSnapshot;
 import me.whereareiam.identica.provider.premium.profile.PremiumProfileStore;
 import me.whereareiam.identica.util.UniqueIdGenerator;
@@ -51,9 +52,9 @@ class OfflineCheckStepTest {
 		);
 	}
 
-	@DisplayName("Clears pending premium verification when the stored session is still offline")
+	@DisplayName("Keeps the observed premium profile snapshot when the stored session is still offline")
 	@Test
-	void rejectedOfflineSessionClearsVerifyAttempt() {
+	void rejectedOfflineSessionKeepsProfileSnapshot() {
 		String username = "whereareiam";
 		String ip = "127.0.0.1";
 		String offlineSubject = UniqueIdGenerator.offlinePlayerUniqueId(username).toString();
@@ -67,7 +68,6 @@ class OfflineCheckStepTest {
 				.join();
 
 		assertEquals(StepResult.StepStatus.FAILED, result.getStatus());
-		verify(profileStore).clear(username);
 		verify(attemptStore).clearAttempt("premium", "verify", username, ip);
 		verify(handshakeStore).invalidateInstruction(username, ip);
 	}
@@ -88,12 +88,12 @@ class OfflineCheckStepTest {
 		return messages;
 	}
 
-	private Settings settings() {
-		Settings.Connection connection = new Settings.Connection();
-		connection.setHandshakeInstructionTtl(Duration.ofMinutes(10));
+	private Engine settings() {
+		Engine.Behavior behavior = new Engine.Behavior();
+		behavior.setHandshakeInstructionTtl(Duration.ofMinutes(10));
 
-		Settings settings = new Settings();
-		settings.setConnection(connection);
+		Engine settings = new Engine();
+		settings.setBehavior(behavior);
 		return settings;
 	}
 }

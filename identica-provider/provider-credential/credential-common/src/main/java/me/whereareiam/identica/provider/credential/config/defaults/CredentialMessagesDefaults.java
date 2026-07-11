@@ -1,13 +1,13 @@
 package me.whereareiam.identica.provider.credential.config.defaults;
 
 import com.google.inject.Singleton;
-import me.whereareiam.configura.merge.defaults.MergeDefaultsProvider;
+import me.whereareiam.configura.merge.defaults.DefaultsProvider;
 import me.whereareiam.identica.provider.credential.config.CredentialMessages;
 
 import java.util.List;
 
 @Singleton
-public class CredentialMessagesDefaults implements MergeDefaultsProvider<CredentialMessages> {
+public class CredentialMessagesDefaults implements DefaultsProvider<CredentialMessages> {
 	@Override
 	public CredentialMessages supply(CredentialMessages messages) {
 		CredentialMessages.Scenario scenario = new CredentialMessages.Scenario();
@@ -24,7 +24,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"   <gray>6-32 characters, at least 1 uppercase, 1 lowercase,</gray>",
 				"   <gray>1 number, and 1 special character.</gray>",
 				" ", 
-				"  <white>Use <yellow>/pass</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/pass</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		registration.setConfirmPrompt(List.of(
@@ -34,7 +34,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>To finish your password account registration,</white>",
 				"  <white>repeat the same password you entered before.</white>",
 				" ",
-				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Registration.Status registrationStatus = new CredentialMessages.Scenario.Registration.Status();
@@ -53,7 +53,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>Welcome back to our server.</white>",
 				"  <white>Please log in to proceed.</white>",
 				" ",
-				"  <white>Use <yellow>/login</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/login</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Authentication.Status authenticationStatus = new CredentialMessages.Scenario.Authentication.Status();
@@ -100,7 +100,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>To migrate this account to the <gold>credential provider</gold>,</white>",
 				"  <white>first verify your current password.</white>",
 				" ",
-				"  <white>Use <yellow>/login</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/login</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Migration.Verification.Status migrationVerificationStatus = new CredentialMessages.Scenario.Migration.Verification.Status();
@@ -121,7 +121,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"   <gray>6-32 characters, at least 1 uppercase, 1 lowercase,</gray>",
 				"   <gray>1 number, and 1 special character.</gray>",
 				" ",
-				"  <white>Use <yellow>/pass</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/pass</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		migrationSetup.setConfirmPrompt(List.of(
@@ -131,7 +131,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <white>Repeat the same password to finish your</white>",
 				"  <white>migration to the credential provider.</white>",
 				" ",
-				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Credential]</gray> to continue.</white>",
+				"  <white>Use <yellow>/passconfirm</yellow> <gray>[Password]</gray> to continue.</white>",
 				" "
 		));
 		CredentialMessages.Scenario.Migration.Setup.Status migrationSetupStatus = new CredentialMessages.Scenario.Migration.Setup.Status();
@@ -145,12 +145,12 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 		messages.setScenario(scenario);
 
 		CredentialMessages.Completion completion = new CredentialMessages.Completion();
-		CredentialMessages.Completion.Pipeline sessionCompletion = new CredentialMessages.Completion.Pipeline();
-		CredentialMessages.Completion.Pipeline.Title sessionTitle = new CredentialMessages.Completion.Pipeline.Title();
-		sessionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");
-		sessionTitle.setSubtitle("<dark_gray>Your session was reused.</dark_gray>");
-		sessionCompletion.setTitle(sessionTitle);
-		sessionCompletion.setBody(List.of(
+		CredentialMessages.Completion.Pipeline recognitionCompletion = new CredentialMessages.Completion.Pipeline();
+		CredentialMessages.Completion.Pipeline.Title recognitionTitle = new CredentialMessages.Completion.Pipeline.Title();
+		recognitionTitle.setTitle("<gold><bold>Session Restored</bold></gold>");
+		recognitionTitle.setSubtitle("<dark_gray>Your session was reused.</dark_gray>");
+		recognitionCompletion.setTitle(recognitionTitle);
+		recognitionCompletion.setBody(List.of(
 				" ",
 				" <green><bold>Identica</bold>",
 				" ",
@@ -160,7 +160,7 @@ public class CredentialMessagesDefaults implements MergeDefaultsProvider<Credent
 				"  <gray>Enjoy your stay.</gray>",
 				" "
 		));
-		completion.setSession(sessionCompletion);
+		completion.setRecognition(recognitionCompletion);
 
 		CredentialMessages.Completion.Pipeline authenticationCompletion = new CredentialMessages.Completion.Pipeline();
 		CredentialMessages.Completion.Pipeline.Title authenticationTitle = new CredentialMessages.Completion.Pipeline.Title();

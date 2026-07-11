@@ -1,0 +1,264 @@
+---
+title: Engine
+description: Field-by-field explanation of Identica's pipeline and journey engine configuration area.
+---
+
+The engine configuration controls pipeline state timing, journey style, resume behavior, and scenario-specific concurrency.
+
+## behavior
+
+`behavior` controls engine-wide TTLs used outside any one scenario.
+
+### bridgeTtl
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"10m"`
+- Affects: temporary prepare-state and completion-pending bridge entries
+
+This TTL is used by the prepare-state store and completion pending store.
+It should be long enough to survive the handoff between connection preparation and the later scenario/completion stages.
+
+### handshakeInstructionTtl
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"10m"`
+- Affects: how long premium-provider handshake instructions stay valid
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+behavior:
+  bridgeTtl: "10m"
+  handshakeInstructionTtl: "10m"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "behavior": {
+    "bridgeTtl": "10m",
+    "handshakeInstructionTtl": "10m"
+  }
+}
+```
+  </Tab>
+</Tabs>
+
+## scenarios
+
+`scenarios` controls how authentication, registration, and migration pipelines behave.
+
+### Shared scenario fields
+
+The three scenario sections share most fields:
+
+- `pipelineTtl`: how long a waiting pipeline can be resumed
+- `advanceLockTtl`: how long advance locking prevents duplicate submits
+- `allowResume`: whether waiting state is stored and resumable
+- `allowProviderRestrictionResumeBypass`: whether resumed flows may continue while a provider restriction is active
+- `journeyMode`: whether the preferred flow style is `SEAMLESS` or `INTERACTIVE`
+- `journeyPolicy`: whether that mode is only preferred or strictly required
+
+#### pipelineTtl
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"5m"`
+- Affects: how long a waiting scenario pipeline can be resumed
+
+When a flow is pending, this TTL becomes the expiry time for its saved pipeline state.
+
+#### advanceLockTtl
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: a positive duration
+- Current default: `"5s"`
+- Affects: how long an advance or resume lock is held to stop double-submits
+
+#### allowResume
+
+<Badge type="warning">Warning</Badge>
+
+- Takes: `true` or `false`
+- Current default: `true`
+- Affects: whether waiting scenario state is saved and whether resume requests are accepted
+
+If this is `false`, waiting or reconnect-required state is cleared instead of saved.
+
+#### allowProviderRestrictionResumeBypass
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: whether resumed flows may continue while the provider they use is currently restricted
+
+This does not allow new attempts through the restriction.
+It only affects already-pending flows.
+
+#### journeyMode
+
+- Takes: `"SEAMLESS"` or `"INTERACTIVE"`
+- Current default: `"SEAMLESS"`
+- Affects: the preferred authentication journey style
+
+<Tabs items={["SEAMLESS", "INTERACTIVE"]}>
+    <Tab value="SEAMLESS">
+        `SEAMLESS` means the authentication flow is expected to continue without player interaction.
+
+        Use case: a provider can identify the player automatically and continue the flow without asking them to choose a provider, type a credential, or confirm a verification step manually.
+
+        This is best when your authentication path is intentionally automatic and you already know the provider order and available steps produce the behavior you want.
+
+        Concrete example: with the premium provider enabled, a player who joins from an offline account while using a premium username may hit the higher-priority `premium` provider first.
+        In `SEAMLESS`, the premium handshake precheck can queue a force-online path before the player ever sees an enrollment or choice step.
+        From the player's perspective, that can look like an invalid-session-style kick on the first join, which may make them think the server is premium-only.
+    </Tab>
+    <Tab value="INTERACTIVE">
+        `INTERACTIVE` means the authentication flow may prompt the player, wait for input, or otherwise require explicit interaction.
+
+        Use case: the player may need to enter a credential, choose between providers, confirm a verification code, or respond to another prompt before authentication can continue.
+
+        For most setups, `INTERACTIVE` is the easier and safer choice because the player can clearly see what Identica expects from them.
+
+        In practice, the premium handshake precheck is skipped when the preferred authentication journey mode is `INTERACTIVE`.
+        That reduces the chance of the player being pushed into a silent premium-first path before they understand what the server expects.
+    </Tab>
+</Tabs>
+
+#### journeyPolicy
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `"PREFER"` or `"STRICT"`
+- Current default: `"PREFER"`
+- Affects: whether Identica may fall back to another journey mode when the preferred one is not viable
+
+Behavior in current source:
+
+- `PREFER`: try the configured mode first, then try the other mode if needed
+- `STRICT`: use only the configured mode
+
+For most setups, `PREFER` is the better default.
+If you set `STRICT`, a flow that could have worked in the other mode may fail or end up with no useful steps instead of falling back.
+
+### authentication
+
+The `authentication` scenario controls login-time identity resolution and session opening.
+
+#### pipelineConcurrencyPolicy
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `"DENY_NEW"` or `"REPLACE_EXISTING"`
+- Current default: `"DENY_NEW"`
+- Affects: what happens when another authentication pipeline for the same identity is already pending
+
+Behavior in current source:
+
+- `DENY_NEW`: reject the new pipeline attempt
+- `REPLACE_EXISTING`: replace the existing pending pipeline with the new attempt
+
+The generated defaults prefer `SEAMLESS` for authentication.
+If you want a more explicit player-facing first join experience, switching to `INTERACTIVE` can be safer.
+
+### registration
+
+The `registration` scenario controls new-account creation and provider enrollment.
+
+#### pipelineConcurrencyPolicy
+
+<Badge type="warning">Advanced</Badge>
+
+- Takes: `"DENY_NEW"` or `"REPLACE_EXISTING"`
+- Current default: `"DENY_NEW"`
+- Affects: what happens when another registration pipeline for the same identity is already pending
+
+#### autoSelectSingleProvider
+
+- Takes: `true` or `false`
+- Current default: `false`
+- Affects: the interactive registration enrollment step when exactly one eligible provider is available
+
+If `true`, Identica auto-selects that single provider and completes the enrollment step immediately.
+If `false`, the player still receives the normal provider-selection prompt.
+
+### migration
+
+The `migration` scenario controls account migration and relinking flows.
+
+Migration does not add extra fields beyond the shared scenario fields.
+Its generated defaults differ mainly in journey style: migration prefers `INTERACTIVE` by default because visible confirmation is usually safer than a silent automatic transition.
+
+<Tabs items={["YAML", "JSON"]}>
+  <Tab value="YAML">
+```yaml
+scenarios:
+  authentication:
+    pipelineTtl: "5m"
+    advanceLockTtl: "5s"
+    allowResume: true
+    allowProviderRestrictionResumeBypass: false
+    journeyMode: "SEAMLESS"
+    journeyPolicy: "PREFER"
+    pipelineConcurrencyPolicy: "DENY_NEW"
+  registration:
+    pipelineTtl: "5m"
+    advanceLockTtl: "5s"
+    allowResume: true
+    allowProviderRestrictionResumeBypass: false
+    journeyMode: "SEAMLESS"
+    journeyPolicy: "PREFER"
+    pipelineConcurrencyPolicy: "DENY_NEW"
+    autoSelectSingleProvider: false
+  migration:
+    pipelineTtl: "5m"
+    advanceLockTtl: "5s"
+    allowResume: true
+    allowProviderRestrictionResumeBypass: false
+    journeyMode: "INTERACTIVE"
+    journeyPolicy: "PREFER"
+```
+  </Tab>
+  <Tab value="JSON">
+```json
+{
+  "scenarios": {
+    "authentication": {
+      "pipelineTtl": "5m",
+      "advanceLockTtl": "5s",
+      "allowResume": true,
+      "allowProviderRestrictionResumeBypass": false,
+      "journeyMode": "SEAMLESS",
+      "journeyPolicy": "PREFER",
+      "pipelineConcurrencyPolicy": "DENY_NEW"
+    },
+    "registration": {
+      "pipelineTtl": "5m",
+      "advanceLockTtl": "5s",
+      "allowResume": true,
+      "allowProviderRestrictionResumeBypass": false,
+      "journeyMode": "SEAMLESS",
+      "journeyPolicy": "PREFER",
+      "pipelineConcurrencyPolicy": "DENY_NEW",
+      "autoSelectSingleProvider": false
+    },
+    "migration": {
+      "pipelineTtl": "5m",
+      "advanceLockTtl": "5s",
+      "allowResume": true,
+      "allowProviderRestrictionResumeBypass": false,
+      "journeyMode": "INTERACTIVE",
+      "journeyPolicy": "PREFER"
+    }
+  }
+}
+```
+  </Tab>
+</Tabs>

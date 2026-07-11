@@ -1,14 +1,14 @@
 package me.whereareiam.identica.engine.completion;
 
 import me.whereareiam.identica.engine.pipeline.PipelineExecutor;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipeline;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipelineRegistry;
 import me.whereareiam.identica.engine.pipeline.completion.group.context.CompletionContextGroup;
 import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.BuildCompletionContextPhase;
 import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.ResolveCompletionProviderPhase;
 import me.whereareiam.identica.engine.pipeline.completion.group.context.phase.ResolveCompletionSessionPhase;
 import me.whereareiam.identica.engine.pipeline.completion.group.step.CompletionStepGroup;
 import me.whereareiam.identica.engine.pipeline.completion.group.step.phase.ExecuteCompletionStepsPhase;
+import me.whereareiam.identica.engine.pipeline.completion.registry.CompletionPipelineRegistry;
+import me.whereareiam.identica.engine.pipeline.completion.runtime.CompletionPipeline;
 import me.whereareiam.identica.identity.actor.Identity;
 import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
@@ -60,7 +60,6 @@ class CompletionPipelineTest {
 				.pipelineType(PipelineType.MIGRATION)
 				.connectionUniqueId(connectionUniqueId)
 				.accountUniqueId(accountUniqueId)
-				.authenticationRecognized(true)
 				.build();
 		Session session = Session.builder()
 				.uniqueId(accountUniqueId)
@@ -91,7 +90,6 @@ class CompletionPipelineTest {
 						&& context.getPipelineType() == PipelineType.MIGRATION
 						&& context.getSession().getProviderId().equals("credential")
 						&& context.getProvider() == provider
-						&& context.isAuthenticationRecognized()
 		));
 	}
 

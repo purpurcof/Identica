@@ -2,18 +2,24 @@ package me.whereareiam.identica.engine.pipeline;
 
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.common.event.EventController;
-import me.whereareiam.identica.event.pipeline.state.PipelineStateClearedEvent;
-import me.whereareiam.identica.event.pipeline.state.PipelineStateSavedEvent;
+import me.whereareiam.identica.engine.pipeline.scenario.PendingPipelineKickCoordinator;
+import me.whereareiam.identica.event.EventListener;
+import me.whereareiam.identica.event.base.IdenticEvent;
+import me.whereareiam.identica.event.scenario.authentication.AuthenticationRequiredEvent;
+import me.whereareiam.identica.event.scenario.authentication.AuthenticationResolvedEvent;
+import me.whereareiam.identica.event.scenario.migration.MigrationRequiredEvent;
+import me.whereareiam.identica.event.scenario.migration.MigrationResolvedEvent;
 import me.whereareiam.identica.identity.IdentityService;
+import me.whereareiam.identica.identity.actor.ConnectionIdentity;
 import me.whereareiam.identica.identity.actor.Identity;
+import me.whereareiam.identica.model.auth.AuthContext;
 import me.whereareiam.identica.model.config.Messages;
-import me.whereareiam.identica.model.pipeline.journey.JourneyStateItem;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
+import me.whereareiam.identica.model.migration.MigrationContext;
 import me.whereareiam.identica.model.scheduler.*;
 import me.whereareiam.identica.service.DeliveryService;
 import me.whereareiam.identica.service.Scheduler;
-import me.whereareiam.identica.type.pipeline.PipelineType;
+import me.whereareiam.identica.type.ScenarioResolution;
+import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
 import me.whereareiam.keystone.serializer.SerializerEngine;
@@ -27,6 +33,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,15 +58,19 @@ class PendingPipelineKickCoordinatorTest {
 			return Component.text(content.getMessage());
 		}
 
+		public @NotNull String renderTemplate(@NotNull SerializerContent content) {
+			return content.getMessage();
+		}
+
 		@Override
 		public @NotNull SerializerOptions.PlaceholderFormat getPlaceholderFormat() {
 			return SerializerOptions.PlaceholderFormat.CURLY_BRACES;
 		}
 	};
 
-	@DisplayName("Clearing a completed pipeline cancels timeout tasks by stable flow reference")
+	@DisplayName("Resolving a pending scenario cancels timeout tasks by stable flow reference")
 	@Test
-	void clearingCancelsPendingKickByStableFlowReference() {
+	void resolvedScenarioCancelsPendingKickByStableFlowReference() {
 		EventController eventManager = new EventController();
 		TestScheduler scheduler = new TestScheduler();
 		IdentityService identityService = mock(IdentityService.class);
@@ -67,23 +78,40 @@ class PendingPipelineKickCoordinatorTest {
 		TestIdentity identity = new TestIdentity(UUID.randomUUID(), "PlayerOne");
 		when(identityService.findByConnectionUniqueId(identity.getConnectionUniqueId())).thenReturn(Optional.of(identity));
 
-		new PendingPipelineKickCoordinator(this::messages, identityService, deliveryService, scheduler, eventManager);
+		new PendingPipelineKickCoordinator(
+				this::messages,
+				identityService,
+				deliveryService,
+				scheduler,
+				eventManager
+		);
 
 		UUID connectionUniqueId = identity.getConnectionUniqueId();
 		UUID accountUniqueId = UUID.randomUUID();
-		PipelineState state = pendingAuthenticationState();
+		AuthContext context = AuthContext.builder()
+				.connectionUniqueId(connectionUniqueId)
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
+				.intendedServer("auth")
+				.build();
 		long expiresAt = System.currentTimeMillis() + 60_000L;
 
-		PipelineStateReference savedReference = PipelineStateReference.builder()
-				.connectionUniqueId(connectionUniqueId)
-				.build();
-		eventManager.call(new PipelineStateSavedEvent(savedReference, state, expiresAt));
+		eventManager.call(new AuthenticationRequiredEvent(
+				connectionUniqueId,
+				accountUniqueId,
+				context,
+				false,
+				expiresAt,
+				JourneyMode.SEAMLESS
+		));
 		assertTrue(scheduler.hasDelayedTasks());
 
-		PipelineStateReference clearedReference = PipelineStateReference.builder()
-				.connectionUniqueId(connectionUniqueId)
-				.build();
-		eventManager.call(new PipelineStateClearedEvent(clearedReference, state));
+		eventManager.call(new AuthenticationResolvedEvent(
+				connectionUniqueId,
+				accountUniqueId,
+				context,
+				ScenarioResolution.COMPLETED,
+				true
+		));
 
 		assertFalse(scheduler.hasDelayedTasks());
 	}
@@ -95,54 +123,62 @@ class PendingPipelineKickCoordinatorTest {
 		TestScheduler scheduler = new TestScheduler();
 		IdentityService identityService = mock(IdentityService.class);
 		DeliveryService deliveryService = mock(DeliveryService.class);
+		ResolvedListener listener = new ResolvedListener();
+		eventManager.register(listener);
 		UUID connectionUniqueId = UUID.randomUUID();
 		UUID accountUniqueId = UUID.randomUUID();
 		TestIdentity identity = new TestIdentity(connectionUniqueId, "PlayerOne");
 		identity.setAccountUniqueId(accountUniqueId);
 		when(identityService.findByConnectionUniqueId(connectionUniqueId)).thenReturn(Optional.of(identity));
 
-		new PendingPipelineKickCoordinator(this::messages, identityService, deliveryService, scheduler, eventManager);
+		new PendingPipelineKickCoordinator(
+				this::messages,
+				identityService,
+				deliveryService,
+				scheduler,
+				eventManager
+		);
 
-		PipelineStateReference reference = PipelineStateReference.builder()
+		MigrationContext context = MigrationContext.builder()
 				.connectionUniqueId(connectionUniqueId)
-				.accountUniqueId(accountUniqueId)
+				.identity(new ConnectionIdentity(accountUniqueId, "PlayerOne", "127.0.0.1"))
+				.targetProviderId("premium")
 				.build();
-		PipelineState state = PipelineState.initial();
-		state.setPipelineType(PipelineType.MIGRATION);
-		state.putItem(new JourneyStateItem(null, null, 0), 60_000L);
-		eventManager.call(new PipelineStateSavedEvent(reference, state, System.currentTimeMillis()));
+		eventManager.call(new MigrationRequiredEvent(
+				connectionUniqueId,
+				accountUniqueId,
+				context,
+				false,
+				System.currentTimeMillis(),
+				JourneyMode.SEAMLESS
+		));
 
 		scheduler.runAll();
 
-		verify(deliveryService).queue(argThat(request ->
-				request != null
-						&& request.getTarget() != null
-						&& accountUniqueId.equals(request.getTarget().getAccountUniqueId())
-		));
+		verify(deliveryService).queue(argThat(request -> accountUniqueId.equals(request.getTarget().getAccountUniqueId())));
+		MigrationResolvedEvent resolvedEvent = listener.lastResolved.get();
+		assertTrue(resolvedEvent != null
+				&& connectionUniqueId.equals(resolvedEvent.getConnectionUniqueId())
+				&& accountUniqueId.equals(resolvedEvent.getAccountUniqueId())
+				&& resolvedEvent.getReason() == ScenarioResolution.EXPIRED
+				&& !resolvedEvent.isSessionOpened());
 	}
 
 	private Messages messages() {
 		Messages messages = new Messages();
-		Messages.Connection connection = new Messages.Connection();
-		Messages.Connection.Authentication authentication = new Messages.Connection.Authentication();
+		Messages.Scenarios connection = new Messages.Scenarios();
+		Messages.Scenarios.Authentication authentication = new Messages.Scenarios.Authentication();
 		authentication.setPipelineExpired(List.of("expired"));
-		Messages.Connection.Registration registration = new Messages.Connection.Registration();
+		Messages.Scenarios.Registration registration = new Messages.Scenarios.Registration();
 		registration.setPipelineExpired(List.of("expired"));
-		Messages.Connection.Migration migration = new Messages.Connection.Migration();
+		Messages.Scenarios.Migration migration = new Messages.Scenarios.Migration();
 		migration.setPipelineExpired(List.of("expired"));
 		migration.setCancelled(List.of("cancelled"));
 		connection.setAuthentication(authentication);
 		connection.setRegistration(registration);
 		connection.setMigration(migration);
-		messages.setConnection(connection);
+		messages.setScenarios(connection);
 		return messages;
-	}
-
-	private PipelineState pendingAuthenticationState() {
-		PipelineState state = PipelineState.initial();
-		state.setPipelineType(PipelineType.AUTHENTICATION);
-		state.putItem(new JourneyStateItem(null, null, 0), 60_000L);
-		return state;
 	}
 
 	private static final class TestScheduler implements Scheduler {
@@ -228,6 +264,15 @@ class PendingPipelineKickCoordinatorTest {
 
 		@Override
 		public void disconnect(@NonNull Component reason) {
+		}
+	}
+
+	private static final class ResolvedListener implements EventListener {
+		private final AtomicReference<MigrationResolvedEvent> lastResolved = new AtomicReference<>();
+
+		@IdenticEvent
+		public void onResolved(MigrationResolvedEvent event) {
+			lastResolved.set(event);
 		}
 	}
 }

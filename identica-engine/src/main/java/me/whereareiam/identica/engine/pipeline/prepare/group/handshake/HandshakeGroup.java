@@ -2,7 +2,7 @@ package me.whereareiam.identica.engine.pipeline.prepare.group.handshake;
 
 import com.google.inject.Singleton;
 import me.whereareiam.identica.engine.pipeline.prepare.group.AbstractPrepareGroup;
-import me.whereareiam.identica.engine.pipeline.prepare.group.PrepareGroupState;
+import me.whereareiam.identica.pipeline.state.prepare.PrepareGroupState;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton

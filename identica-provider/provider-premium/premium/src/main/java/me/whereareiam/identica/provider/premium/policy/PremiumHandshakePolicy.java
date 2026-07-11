@@ -13,7 +13,7 @@ import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.auth.handshake.HandshakeDecision;
 import me.whereareiam.identica.model.auth.handshake.HandshakeInstruction;
 import me.whereareiam.identica.model.auth.handshake.HandshakeRequest;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.model.identity.provider.AccountProviderLink;
 import me.whereareiam.identica.model.provider.InternalProvider;
@@ -44,7 +44,7 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 	private final ProviderLinkPersistenceService providerLinkPersistenceService;
 	private final PremiumProfileStore profileStore;
 	private final ProviderAttemptStore attemptStore;
-	private final Provider<Settings> settingsProvider;
+	private final Provider<Engine> engineProvider;
 	private final HandshakeStore handshakeStore;
 
 	@Override
@@ -106,9 +106,8 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
 		}
 
-		Settings settings = settingsProvider.get();
-		Settings.Connection connection = settings != null ? settings.getConnection() : null;
-		Settings.Scenario scenario = connection != null ? connection.getScenarios().getAuthentication() : null;
+		Engine engine = engineProvider.get();
+		Engine.Authentication scenario = engine != null ? engine.getScenarios().getAuthentication() : null;
 		JourneyMode preferredJourneyMode = scenario != null ? scenario.getJourneyMode() : null;
 		if (preferredJourneyMode == JourneyMode.INTERACTIVE) {
 			return CompletableFuture.completedFuture(HandshakeDecision.allow());
@@ -137,8 +136,8 @@ public class PremiumHandshakePolicy implements ProviderScopedHandshakePolicy {
 	private void requestForceOnline(String username, String ip) {
 		if (username == null || username.isBlank() || ip == null || ip.isBlank()) return;
 
-		long ttlMillis = settingsProvider.get()
-				.getConnection()
+		long ttlMillis = engineProvider.get()
+				.getBehavior()
 				.handshakeInstructionTtlMillis();
 
 		HandshakeInstruction instruction = HandshakeInstruction.create(

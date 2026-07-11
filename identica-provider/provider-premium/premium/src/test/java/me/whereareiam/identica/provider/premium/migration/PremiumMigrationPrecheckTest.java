@@ -1,7 +1,7 @@
 package me.whereareiam.identica.provider.premium.migration;
 
 import me.whereareiam.identica.handshake.HandshakeStore;
-import me.whereareiam.identica.model.config.Settings;
+import me.whereareiam.identica.model.config.Engine;
 import me.whereareiam.identica.provider.ProviderAttemptStore;
 import me.whereareiam.identica.provider.migration.MigrationPrecheckContext;
 import me.whereareiam.identica.provider.premium.config.PremiumMessages;
@@ -51,12 +51,12 @@ class PremiumMigrationPrecheckTest {
 		verify(attemptStore).markAttempt("premium", "verify", "whereareiam", "127.0.0.1");
 	}
 
-	private Settings settings() {
-		Settings.Connection connection = new Settings.Connection();
-		connection.setHandshakeInstructionTtl(Duration.ofMinutes(10));
+	private Engine settings() {
+		Engine.Behavior behavior = new Engine.Behavior();
+		behavior.setHandshakeInstructionTtl(Duration.ofMinutes(10));
 
-		Settings settings = new Settings();
-		settings.setConnection(connection);
+		Engine settings = new Engine();
+		settings.setBehavior(behavior);
 		return settings;
 	}
 

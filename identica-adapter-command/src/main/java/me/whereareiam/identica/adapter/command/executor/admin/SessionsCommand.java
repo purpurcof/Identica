@@ -5,8 +5,6 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
 import me.whereareiam.commandant.Pagination;
-import me.whereareiam.commandant.builder.PaginationBuilder;
-import me.whereareiam.commandant.model.message.PaginationMessages;
 import me.whereareiam.identica.Serializer;
 import me.whereareiam.identica.annotation.*;
 import me.whereareiam.identica.database.AccountPersistenceService;
@@ -16,13 +14,13 @@ import me.whereareiam.identica.identity.session.SessionService;
 import me.whereareiam.identica.model.Session;
 import me.whereareiam.identica.model.SessionCloseRequest;
 import me.whereareiam.identica.model.config.Commands;
-import me.whereareiam.identica.model.config.DateTimePattern;
 import me.whereareiam.identica.model.config.Messages;
+import me.whereareiam.identica.model.config.type.DateTimePattern;
 import me.whereareiam.identica.model.identity.Account;
 import me.whereareiam.identica.util.UniqueIdUtil;
 import me.whereareiam.keystone.Actor;
-import me.whereareiam.keystone.model.SerializerContent;
 import me.whereareiam.keystone.model.SerializerOptions;
+import me.whereareiam.keystone.template.message.TemplateSection;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
@@ -61,12 +59,12 @@ public class SessionsCommand {
 		Messages.Commands.Admin.Sessions messages = messagesProvider.get().getCommands().getAdmin().getSessions();
 		Messages.Commands.Admin.Sessions.Listing listMessages = messages.getListing();
 		int pageSize = commandsProvider.get().getBehavior().getSessions().getListPageSize();
-		SerializerOptions.PlaceholderFormat format = placeholderFormat();
+		SerializerOptions.PlaceholderFormat format = Serializer.getEngine().getPlaceholderFormat();
 
 		SessionService.Page pageData = sessionService.list(page, pageSize).join();
 		int total = pageData.total();
 		if (total <= 0) {
-			sendMessage(sender, listMessages.getEmpty(), Map.of());
+			sender.sendMessage(Serializer.serialize(sender, listMessages.getEmpty(), Map.of()));
 			return;
 		}
 
@@ -78,35 +76,90 @@ public class SessionsCommand {
 
 		List<Session> sessions = resolveSessions(pageData.entries());
 		if (sessions.isEmpty()) {
-			sendMessage(sender, listMessages.getEmpty(), Map.of());
+			sender.sendMessage(Serializer.serialize(sender, listMessages.getEmpty(), Map.of()));
 			return;
 		}
 
-		List<String> entries = buildEntries(listMessages.getEntry(), sessions, format, this::buildSessionEntry);
-		List<String> lines = insertEntries(listMessages.getBody(), entries, Map.of(), format);
-		String content = String.join("\n", lines);
-		String paginated = paginationBuilder(format).build(content, page, pageSize, total);
-		sender.sendMessage(Serializer.serialize(sender, paginated));
+		List<String> entries = buildEntries(listMessages.getEntry(), sessions, session -> {
+			String username = session.getEffectiveUsername();
+			if (!isPresent(username)) username = session.getOriginalUsername();
+
+			String provider = session.getProviderId();
+
+			Map<String, String> placeholders = new HashMap<>();
+			placeholders.put("username", username);
+			placeholders.put("uniqueId", session.getUniqueId().toString());
+			placeholders.put("eligibility", provider);
+			placeholders.put("session", session.getSessionId());
+			placeholders.put("ip", session.getIp());
+			return new EntryData(placeholders, isPresent(username) && isPresent(provider));
+		});
+		sender.sendMessage(Serializer.serialize(
+				sender,
+				Pagination.builder(messagesProvider.get().getCommands().getPagination())
+						.placeholderFormat(format)
+						.build()
+						.build(
+								Serializer.template(bodyTemplate(listMessages.getBody()))
+										.section("entries", section -> section
+												.lines(entries)
+												.onMissing(TemplateSection.MissingSectionPolicy.APPEND))
+										.render(),
+								page,
+								pageSize,
+								total
+						)
+		));
 	}
 
 	@Definition("admin-session-info")
 	@Command("identica admin session info <target>")
 	public void info(@NotNull Actor sender, @Argument("target") String target) {
 		Messages.Commands.Admin.Sessions messages = messagesProvider.get().getCommands().getAdmin().getSessions();
-		Messages.Commands.Admin.Sessions.Info infoMessages = messages.getInfo();
+		Messages.Commands.Admin.Sessions.Detail statusMessages = messages.getStatus();
 		String unknown = messages.getUnknown();
-		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica admin session info", infoMessages.getNotFound());
+
+		ResolvedTarget resolved = resolveTarget(sender, target, messages, "identica admin session info", statusMessages.getNotFound());
 		if (resolved == null) return;
 
 		Optional<Session> session = sessionService.findByUniqueId(resolved.uniqueId()).join();
 		if (session.isEmpty()) {
-			sendMessage(sender, infoMessages.getNotFound(), Map.of("target", target));
+			sender.sendMessage(Serializer.serialize(sender, statusMessages.getNotFound(), Map.of("target", target)));
 			return;
 		}
 
-		Map<String, String> placeholders = buildInfoPlaceholders(session.get(), unknown);
-		String info = formatLines(infoMessages.getBody(), placeholders, placeholderFormat());
-		sendMessage(sender, info, Map.of());
+		Session resolvedSession = session.get();
+		Messages.Format.Temporal temporal = messagesProvider.get().getFormat().getTemporal();
+		DateTimeFormatter dateFormatter = resolveFormatter(temporal.getDate(), DATE_FORMATTER);
+		DateTimeFormatter dateTimeFormatter = resolveFormatter(temporal.getDateTime(), TIME_FORMATTER);
+		String createdDate = resolvedSession.getCreatedAt() > 0
+				? dateFormatter.format(Instant.ofEpochMilli(resolvedSession.getCreatedAt()))
+				: unknown;
+		String createdDateTime = resolvedSession.getCreatedAt() > 0
+				? dateTimeFormatter.format(Instant.ofEpochMilli(resolvedSession.getCreatedAt()))
+				: unknown;
+
+		sender.sendMessage(Serializer.serialize(
+				sender,
+				Serializer.render(
+						String.join("\n", statusMessages.getBody().stream()
+								.filter(Objects::nonNull)
+								.toList()),
+						Map.ofEntries(
+								Map.entry("username", resolveUsername(resolvedSession, unknown)),
+								Map.entry("original", safe(resolvedSession.getOriginalUsername(), unknown)),
+								Map.entry("effective", safe(resolvedSession.getEffectiveUsername(), unknown)),
+								Map.entry("uniqueId", resolvedSession.getUniqueId().toString()),
+								Map.entry("eligibility", safe(resolvedSession.getProviderId(), unknown)),
+								Map.entry("subject", safe(resolvedSession.getProviderSubject(), unknown)),
+								Map.entry("session", safe(resolvedSession.getSessionId(), unknown)),
+								Map.entry("ip", safe(resolvedSession.getIp(), unknown)),
+								Map.entry("created", createdDateTime),
+								Map.entry("createdDate", createdDate),
+								Map.entry("createdDateTime", createdDateTime)
+						)
+				)
+		));
 	}
 
 	@Definition("admin-session-end")
@@ -120,21 +173,21 @@ public class SessionsCommand {
 
 		Optional<Session> session = sessionService.findByUniqueId(resolved.uniqueId()).join();
 		if (session.isEmpty()) {
-			sendMessage(sender, endMessages.getNotFound(), Map.of("target", target));
+			sender.sendMessage(Serializer.serialize(sender, endMessages.getNotFound(), Map.of("target", target)));
 			return;
 		}
 
 		Session resolvedSession = session.get();
 		sessionService.close(SessionCloseRequest.builder()
 				.uniqueId(resolvedSession.getUniqueId())
-				.disconnectMessage(joinLines(endMessages.getDisconnect()))
+				.disconnectMessage(String.join("\n", endMessages.getDisconnect()))
 				.build()).join();
 
 		String username = resolveUsername(resolvedSession, unknown);
-		sendMessage(sender, endMessages.getEnded(), Map.of(
+		sender.sendMessage(Serializer.serialize(sender, endMessages.getEnded(), Map.of(
 				"username", username,
 				"uniqueId", resolvedSession.getUniqueId().toString()
-		));
+		)));
 	}
 
 	private List<Session> resolveSessions(List<UUID> ids) {
@@ -169,7 +222,7 @@ public class SessionsCommand {
 
 		List<Account> matches = accountPersistenceService.findByUsername(target);
 		if (matches.isEmpty()) {
-			sendMessage(sender, notFoundMessage, Map.of("target", target));
+			sender.sendMessage(Serializer.serialize(sender, notFoundMessage, Map.of("target", target)));
 			return null;
 		}
 		if (matches.size() > 1) {
@@ -189,13 +242,7 @@ public class SessionsCommand {
 	) {
 		Messages.Commands.Admin.Sessions.Multiple multiple = messages.getMultiple();
 
-		Map<String, String> headerPlaceholders = Map.of(
-				"target", target,
-				"count", String.valueOf(matches.size())
-		);
-
-		SerializerOptions.PlaceholderFormat format = placeholderFormat();
-		List<String> entries = buildEntries(multiple.getEntry(), matches, format, account -> {
+		List<String> entries = buildEntries(multiple.getEntry(), matches, account -> {
 			String username = account.getUsername();
 			Map<String, String> placeholders = new HashMap<>();
 			placeholders.put("username", username);
@@ -203,30 +250,23 @@ public class SessionsCommand {
 			placeholders.put("command", command);
 			return new EntryData(placeholders, isPresent(username));
 		});
-		List<String> lines = insertEntries(multiple.getBody(), entries, headerPlaceholders, format);
-
-		String content = String.join("\n", lines);
-		sendMessage(sender, content, Map.of());
-	}
-
-	private PaginationBuilder paginationBuilder(SerializerOptions.PlaceholderFormat format) {
-		Messages messages = messagesProvider.get();
-		PaginationMessages pagination = messages != null
-				? messages.getCommands().getPagination()
-				: new PaginationMessages();
-		return Pagination.builder(pagination)
-				.placeholderFormat(format)
-				.build();
-	}
-
-	private SerializerOptions.PlaceholderFormat placeholderFormat() {
-		return Serializer.getEngine().getPlaceholderFormat();
+		sender.sendMessage(Serializer.serialize(
+				sender,
+				Serializer.template(bodyTemplate(multiple.getBody()))
+						.placeholders(Map.of(
+								"target", target,
+								"count", String.valueOf(matches.size())
+						))
+						.section("entries", section -> section
+								.lines(entries)
+								.onMissing(TemplateSection.MissingSectionPolicy.APPEND))
+						.render()
+		));
 	}
 
 	private <T> List<String> buildEntries(
 			Messages.Commands.EntryFormat entryFormat,
 			List<T> entriesSource,
-			SerializerOptions.PlaceholderFormat format,
 			Function<T, EntryData> entryResolver
 	) {
 		List<String> entries = new ArrayList<>();
@@ -244,164 +284,20 @@ public class SessionsCommand {
 			if (template.isBlank()) template = entryFormat.getFormat();
 			if (template.isBlank()) continue;
 
-			String entry = formatLine(template, data.placeholders(), format);
-			if (entry != null && !entry.isBlank())
-				entries.add(entry);
+			String entry = Serializer.render(template, data.placeholders());
+			if (!entry.isBlank()) entries.add(entry);
 		}
 		return entries;
 	}
 
-	private List<String> insertEntries(
-			List<String> body,
-			List<String> entries,
-			Map<String, String> placeholders,
-			SerializerOptions.PlaceholderFormat format
-	) {
-		List<String> formatted = new ArrayList<>();
-		if (body == null || body.isEmpty()) {
-			formatted.addAll(entries);
-			return formatted;
-		}
-
-		String entriesToken = format.format("entries");
-		boolean inserted = false;
-		for (String line : body) {
-			if (line != null && line.contains(entriesToken)) {
-				formatted.addAll(entries);
-				inserted = true;
-				continue;
-			}
-			if (line != null && line.isBlank()) {
-				formatted.add(line);
-				continue;
-			}
-			String formattedLine = formatLine(line, placeholders, format);
-			if (formattedLine != null && !formattedLine.isBlank()) {
-				formatted.add(formattedLine);
-			}
-		}
-		if (!inserted) {
-			formatted.addAll(entries);
-		}
-		return formatted;
-	}
-
 	private String resolveUsername(@NotNull Session session, String unknown) {
 		String effective = session.getEffectiveUsername();
-		if (effective != null && !effective.isBlank())
-			return effective;
+		if (effective != null && !effective.isBlank()) return effective;
 
 		String original = session.getOriginalUsername();
-		if (original != null && !original.isBlank())
-			return original;
+		if (original != null && !original.isBlank()) return original;
 
 		return unknown;
-	}
-
-	private String resolveUsernameOrNull(@NotNull Session session) {
-		String effective = session.getEffectiveUsername();
-		if (effective != null && !effective.isBlank())
-			return effective;
-
-		String original = session.getOriginalUsername();
-		if (original != null && !original.isBlank())
-			return original;
-
-		return null;
-	}
-
-	private EntryData buildSessionEntry(@NotNull Session session) {
-		String username = resolveUsernameOrNull(session);
-		String provider = session.getProviderId();
-		String sessionId = session.getSessionId();
-		String ip = session.getIp();
-		Map<String, String> placeholders = new HashMap<>();
-		placeholders.put("username", username);
-		placeholders.put("uniqueId", session.getUniqueId().toString());
-		placeholders.put("eligibility", provider);
-		placeholders.put("session", sessionId);
-		placeholders.put("ip", ip);
-		boolean complete = isPresent(username) && isPresent(provider);
-		return new EntryData(placeholders, complete);
-	}
-
-	private Map<String, String> buildInfoPlaceholders(@NotNull Session session, String unknown) {
-		Map<String, String> placeholders = new HashMap<>();
-		Messages.Format.Temporal temporal = messagesProvider.get().getFormat().getTemporal();
-		DateTimeFormatter dateFormatter = resolveFormatter(
-				temporal.getDate(),
-				DATE_FORMATTER
-		);
-		DateTimeFormatter dateTimeFormatter = resolveFormatter(
-				temporal.getDateTime(),
-				TIME_FORMATTER
-		);
-
-		String createdDate = session.getCreatedAt() > 0
-				? dateFormatter.format(Instant.ofEpochMilli(session.getCreatedAt()))
-				: unknown;
-		String createdDateTime = session.getCreatedAt() > 0
-				? dateTimeFormatter.format(Instant.ofEpochMilli(session.getCreatedAt()))
-				: unknown;
-
-		placeholders.put("username", resolveUsername(session, unknown));
-		placeholders.put("original", safe(session.getOriginalUsername(), unknown));
-		placeholders.put("effective", safe(session.getEffectiveUsername(), unknown));
-		placeholders.put("uniqueId", session.getUniqueId().toString());
-		placeholders.put("eligibility", safe(session.getProviderId(), unknown));
-		placeholders.put("subject", safe(session.getProviderSubject(), unknown));
-		placeholders.put("session", safe(session.getSessionId(), unknown));
-		placeholders.put("ip", safe(session.getIp(), unknown));
-		placeholders.put("created", createdDateTime);
-		placeholders.put("createdDate", createdDate);
-		placeholders.put("createdDateTime", createdDateTime);
-
-		return placeholders;
-	}
-
-	private String formatLines(
-			List<String> lines,
-			Map<String, String> placeholders,
-			SerializerOptions.PlaceholderFormat format
-	) {
-		List<String> formatted = new ArrayList<>();
-		for (String line : lines) {
-			if (line == null) continue;
-			String formattedLine = formatLine(line, placeholders, format);
-			formatted.add(formattedLine == null ? "" : formattedLine);
-		}
-
-		return String.join("\n", formatted);
-	}
-
-	private String formatLine(
-			String line, Map<String, String> placeholders,
-			SerializerOptions.PlaceholderFormat format
-	) {
-		if (line == null || line.isBlank()) return "";
-		String result = line;
-		for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-			String token = format.format(entry.getKey());
-			String value = entry.getValue() == null ? "" : entry.getValue();
-			result = result.replace(token, value);
-		}
-
-		return result;
-	}
-
-	private String joinLines(List<String> lines) {
-		return String.join("\n", lines);
-	}
-
-	private void sendMessage(@NotNull Actor sender, String message, Map<String, String> placeholders) {
-		if (message == null || message.isBlank()) return;
-		SerializerContent content = SerializerContent.builder()
-				.receiver(sender)
-				.message(message)
-				.placeholders(placeholders)
-				.build();
-
-		sender.sendMessage(Serializer.serialize(content));
 	}
 
 	private String safe(String value, String unknown) {
@@ -418,6 +314,14 @@ public class SessionsCommand {
 
 	private boolean isPresent(String value) {
 		return value != null && !value.isBlank();
+	}
+
+	private @NotNull String bodyTemplate(List<String> lines) {
+		if (lines == null || lines.isEmpty()) return "";
+
+		return String.join("\n", lines.stream()
+				.filter(Objects::nonNull)
+				.toList());
 	}
 
 	private record EntryData(Map<String, String> placeholders, boolean complete) {

@@ -1,12 +1,11 @@
 package me.whereareiam.identica.pipeline.extension;
 
-import me.whereareiam.identica.pipeline.PipelineGroup;
-import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
-import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.model.pipeline.journey.stage.JourneyStage;
 import me.whereareiam.identica.model.pipeline.journey.stage.step.JourneyStep;
+import me.whereareiam.identica.model.pipeline.phase.PhasePlacement;
+import me.whereareiam.identica.pipeline.PipelineGroup;
+import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.journey.step.Step;
-import me.whereareiam.identica.type.pipeline.PipelineScope;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
@@ -20,24 +19,76 @@ import java.util.EnumSet;
  */
 @SuppressWarnings("unused")
 public interface PipelineExtensionBuilder {
-	void registerGroup(@NotNull PipelineScope scope, @NotNull PipelineGroup<?> group);
+	/**
+	 * Registers a prepare pipeline group.
+	 *
+	 * @param group prepare pipeline group to register
+	 */
+	void registerPrepareGroup(@NotNull PipelineGroup<?> group);
 
-	void registerPhase(
-			@NotNull PipelineScope scope,
+	/**
+	 * Registers a phase in the prepare pipeline.
+	 *
+	 * @param groupId target prepare group identifier
+	 * @param phase prepare phase to register
+	 * @param placement placement relative to existing phases
+	 */
+	void registerPreparePhase(
 			@NotNull String groupId,
 			@NotNull PipelinePhase<?> phase,
 			@NotNull PhasePlacement placement
 	);
 
-	void registerStage(@NotNull PipelineScope scope, @NotNull JourneyStage stage);
+	/**
+	 * Registers a scenario pipeline group.
+	 *
+	 * @param pipelineType scenario pipeline to register into
+	 * @param group scenario pipeline group to register
+	 */
+	void registerScenarioGroup(@NotNull PipelineType pipelineType, @NotNull PipelineGroup<?> group);
 
+	/**
+	 * Registers a phase in a scenario pipeline.
+	 *
+	 * @param pipelineType scenario pipeline to register into
+	 * @param groupId target scenario group identifier
+	 * @param phase scenario phase to register
+	 * @param placement placement relative to existing phases
+	 */
+	void registerScenarioPhase(
+			@NotNull PipelineType pipelineType,
+			@NotNull String groupId,
+			@NotNull PipelinePhase<?> phase,
+			@NotNull PhasePlacement placement
+	);
+
+	/**
+	 * Registers a stage for a scenario pipeline journey.
+	 *
+	 * @param pipelineType scenario pipeline to register into
+	 * @param stage journey stage to register
+	 */
+	void registerStage(@NotNull PipelineType pipelineType, @NotNull JourneyStage stage);
+
+	/**
+	 * Registers a journey step using the scenarios declared on the step itself.
+	 *
+	 * @param step journey step to register
+	 */
 	void registerStep(@NotNull JourneyStep step);
 
+	/**
+	 * Registers a journey step for a scenario pipeline using the step's default journey modes.
+	 *
+	 * @param pipelineType scenario pipeline to register into
+	 * @param providerId provider identifier, if the step is provider-specific
+	 * @param stageType target journey stage type
+	 * @param step step to register
+	 */
 	default void registerStep(
-			@NotNull PipelineScope scope,
+			@NotNull PipelineType pipelineType,
 			@Nullable String providerId,
 			@NotNull StageType stageType,
-			@NotNull PipelineType pipelineType,
 			@NotNull Step step
 	) {
 		registerStep(JourneyStep.builder()
@@ -49,11 +100,19 @@ public interface PipelineExtensionBuilder {
 				.build());
 	}
 
+	/**
+	 * Registers a journey step for a specific journey mode in a scenario pipeline.
+	 *
+	 * @param pipelineType scenario pipeline to register into
+	 * @param providerId provider identifier, if the step is provider-specific
+	 * @param stageType target journey stage type
+	 * @param journeyMode target journey mode
+	 * @param step step to register
+	 */
 	default void registerStep(
-			@NotNull PipelineScope scope,
+			@NotNull PipelineType pipelineType,
 			@Nullable String providerId,
 			@NotNull StageType stageType,
-			@NotNull PipelineType pipelineType,
 			@NotNull JourneyMode journeyMode,
 			@NotNull Step step
 	) {
@@ -72,8 +131,8 @@ public interface PipelineExtensionBuilder {
 			@NotNull StageType stageType,
 			@NotNull Step step
 	) {
-		registerStep(PipelineScope.AUTHENTICATION, providerId, stageType, PipelineType.AUTHENTICATION, step);
-		registerStep(PipelineScope.REGISTRATION, providerId, stageType, PipelineType.REGISTRATION, step);
+		registerStep(PipelineType.AUTHENTICATION, providerId, stageType, step);
+		registerStep(PipelineType.REGISTRATION, providerId, stageType, step);
 	}
 
 	default void registerStep(
@@ -82,8 +141,8 @@ public interface PipelineExtensionBuilder {
 			@NotNull JourneyMode journeyMode,
 			@NotNull Step step
 	) {
-		registerStep(PipelineScope.AUTHENTICATION, providerId, stageType, PipelineType.AUTHENTICATION, journeyMode, step);
-		registerStep(PipelineScope.REGISTRATION, providerId, stageType, PipelineType.REGISTRATION, journeyMode, step);
+		registerStep(PipelineType.AUTHENTICATION, providerId, stageType, journeyMode, step);
+		registerStep(PipelineType.REGISTRATION, providerId, stageType, journeyMode, step);
 	}
 
 }

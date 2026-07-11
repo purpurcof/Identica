@@ -12,8 +12,6 @@ import me.whereareiam.identica.model.pipeline.journey.JourneyRuleContext;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionBlock;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionPlan;
 import me.whereareiam.identica.model.pipeline.journey.execution.JourneyExecutionStage;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
-import me.whereareiam.identica.model.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.model.provider.InternalProvider;
 import me.whereareiam.identica.pipeline.ScenarioContext;
 import me.whereareiam.identica.pipeline.journey.registry.JourneyRegistry;
@@ -22,13 +20,14 @@ import me.whereareiam.identica.pipeline.journey.registry.type.MigrationJourneyRe
 import me.whereareiam.identica.pipeline.journey.registry.type.RegistrationJourneyRegistry;
 import me.whereareiam.identica.pipeline.journey.rule.JourneyRule;
 import me.whereareiam.identica.pipeline.journey.rule.JourneyRuleScope;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.PipelineStateReference;
 import me.whereareiam.identica.pipeline.state.PipelineStateStore;
 import me.whereareiam.identica.provider.ProviderOperations;
 import me.whereareiam.identica.type.pipeline.PipelineType;
 import me.whereareiam.identica.type.pipeline.journey.JourneyExecutionPolicy;
 import me.whereareiam.identica.type.pipeline.journey.JourneyMode;
 import me.whereareiam.identica.type.pipeline.journey.StageType;
-import me.whereareiam.identica.type.provider.ProviderCapability;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,11 +73,6 @@ public class SelectProvidersRule implements JourneyRule {
 		List<InternalProvider> eligibleProviders = new ArrayList<>(
 				providerOperations.eligibleProviders(context, pipelineType, journeyMode)
 		);
-		if (pipelineType == PipelineType.MIGRATION) {
-			eligibleProviders.removeIf(provider -> provider == null
-					|| provider.getDescriptor() == null
-					|| !provider.getDescriptor().hasCapability(ProviderCapability.MIGRATION));
-		}
 		String pendingProviderId = resolvePendingProviderId(context, pipelineType);
 		String preferredProviderId = resolvePreferredProviderId(context, pipelineType);
 		Set<String> excludedProviderIds = resolveExcludedProviderIds(ctx);

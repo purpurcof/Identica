@@ -5,6 +5,7 @@ pluginManagement {
     includeBuild("build-logic")
 
     repositories {
+        mavenLocal()
         gradlePluginPortal()
         mavenCentral()
         maven("https://maven.whereareiam.me/release")
@@ -16,6 +17,7 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
 
     repositories {
+        mavenLocal()
         mavenCentral()
         maven("https://maven.whereareiam.me/release")
         maven("https://maven.whereareiam.me/development")
@@ -74,6 +76,78 @@ project(":platform-bungeecord-bootstrap").projectDir = file("identica-platform/p
 
 include(":identica-provider")
 project(":identica-provider").projectDir = file("identica-provider")
+
+include(":identica-feature")
+project(":identica-feature").projectDir = file("identica-feature")
+
+include(":identica-capability")
+project(":identica-capability").projectDir = file("identica-capability")
+
+include(":feature-verification")
+project(":feature-verification").projectDir = file("identica-feature/feature-verification/verification")
+
+include(":feature-verification-api")
+project(":feature-verification-api").projectDir = file("identica-feature/feature-verification/verification-api")
+
+include(":feature-verification-common")
+project(":feature-verification-common").projectDir = file("identica-feature/feature-verification/verification-common")
+
+include(":feature-verification-database")
+project(":feature-verification-database").projectDir = file("identica-feature/feature-verification/verification-database")
+
+include(":feature-sentinel")
+project(":feature-sentinel").projectDir = file("identica-feature/feature-sentinel/sentinel")
+
+include(":feature-sentinel-api")
+project(":feature-sentinel-api").projectDir = file("identica-feature/feature-sentinel/sentinel-api")
+
+include(":feature-sentinel-common")
+project(":feature-sentinel-common").projectDir = file("identica-feature/feature-sentinel/sentinel-common")
+
+include(":capability-authoritative-username")
+project(":capability-authoritative-username").projectDir =
+    file("identica-capability/capability-authoritative-username/authoritative-username")
+
+include(":capability-authoritative-username-api")
+project(":capability-authoritative-username-api").projectDir =
+    file("identica-capability/capability-authoritative-username/authoritative-username-api")
+
+include(":capability-authoritative-username-common")
+project(":capability-authoritative-username-common").projectDir =
+    file("identica-capability/capability-authoritative-username/authoritative-username-common")
+
+include(":capability-authoritative-username-database")
+project(":capability-authoritative-username-database").projectDir =
+    file("identica-capability/capability-authoritative-username/authoritative-username-database")
+
+include(":capability-recognition")
+project(":capability-recognition").projectDir = file("identica-capability/capability-recognition/recognition")
+
+include(":capability-recognition-api")
+project(":capability-recognition-api").projectDir = file("identica-capability/capability-recognition/recognition-api")
+
+include(":capability-recognition-common")
+project(":capability-recognition-common").projectDir = file("identica-capability/capability-recognition/recognition-common")
+
+include(":capability-restriction")
+project(":capability-restriction").projectDir = file("identica-capability/capability-restriction/restriction")
+
+include(":capability-restriction-api")
+project(":capability-restriction-api").projectDir = file("identica-capability/capability-restriction/restriction-api")
+
+include(":capability-restriction-common")
+project(":capability-restriction-common").projectDir = file("identica-capability/capability-restriction/restriction-common")
+
+include(":capability-restriction-join")
+project(":capability-restriction-join").projectDir = file("identica-capability/capability-restriction/restriction-join/join")
+
+include(":capability-restriction-join-api")
+project(":capability-restriction-join-api").projectDir =
+    file("identica-capability/capability-restriction/restriction-join/join-api")
+
+include(":capability-restriction-join-common")
+project(":capability-restriction-join-common").projectDir =
+    file("identica-capability/capability-restriction/restriction-join/join-common")
 
 include(":provider-credential")
 project(":provider-credential").projectDir = file("identica-provider/provider-credential")

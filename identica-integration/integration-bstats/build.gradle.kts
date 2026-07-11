@@ -1,7 +1,8 @@
 plugins {
-    id("common")
+    id("shared")
 }
 
 dependencies {
+    compileOnly(projects.featureVerificationApi)
     compileOnly(libs.bStats)
 }

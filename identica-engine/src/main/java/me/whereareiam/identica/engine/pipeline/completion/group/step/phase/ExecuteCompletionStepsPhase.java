@@ -3,14 +3,14 @@ package me.whereareiam.identica.engine.pipeline.completion.group.step.phase;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import lombok.RequiredArgsConstructor;
-import me.whereareiam.identica.engine.pipeline.completion.CompletionPipelineState;
 import me.whereareiam.identica.logging.Logger;
 import me.whereareiam.identica.model.pipeline.completion.CompletionContext;
 import me.whereareiam.identica.model.pipeline.phase.PhaseResult;
-import me.whereareiam.identica.model.pipeline.state.PipelineState;
 import me.whereareiam.identica.pipeline.PipelinePhase;
 import me.whereareiam.identica.pipeline.completion.extension.CompletionExtensionRegistry;
 import me.whereareiam.identica.pipeline.completion.step.CompletionStep;
+import me.whereareiam.identica.pipeline.state.PipelineState;
+import me.whereareiam.identica.pipeline.state.completion.CompletionPipelineState;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
